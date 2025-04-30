@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router";
-import "./Navigation.css";
-import logo from "../images/mugOfBeer512.png";
+import "./Header.css";
+import logo from "../../images/mugOfBeer512.png";
 
-function Navigation({ user, onLogout }) {
+function Header({ user, onLogout }) {
   return (
     <header className="header">
       <div className="container mx-auto flex justify-between items-center">
@@ -42,4 +42,4 @@ function Navigation({ user, onLogout }) {
   );
 }
 
-export default Navigation;
+export default Header;
