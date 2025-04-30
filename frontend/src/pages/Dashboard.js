@@ -15,7 +15,8 @@ function Dashboard() {
         const recipesResponse = await ApiService.recipes.getAll();
         const sessionsResponse = await ApiService.brewSessions.getAll();
 
-        // Get recent items
+        // Get recent items (last 5)
+        // Sort by created_at for recipes and brew_date for sessions
         const sortedRecipes = recipesResponse.data.recipes
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .slice(0, 5);
