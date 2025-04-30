@@ -2,10 +2,6 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import Header from "../../src/components/Header/Header";
-import { TextEncoder, TextDecoder } from "util";
-
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
 
 const renderWithRouter = (component) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
@@ -18,7 +14,7 @@ describe("Header", () => {
     expect(screen.getByText("Register")).toBeInTheDocument();
   });
 
-  test("renders user Header when user is logged in", () => {
+  test("renders user navigation when user is logged in", () => {
     const user = { username: "testuser" };
     renderWithRouter(<Header user={user} />);
     expect(screen.getByText("Recipes")).toBeInTheDocument();
@@ -38,7 +34,7 @@ describe("Header", () => {
 
   test("renders app title that links to home", () => {
     renderWithRouter(<Header />);
-    const titleLink = screen.getByText("Homebrew Tracker");
+    const titleLink = screen.getByText("Brewtracker");
     expect(titleLink).toBeInTheDocument();
     expect(titleLink.closest("a")).toHaveAttribute("href", "/");
   });
