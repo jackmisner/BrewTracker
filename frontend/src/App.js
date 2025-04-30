@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import ApiService from "./services/api";
 
 // Components
-import Navigation from "./components/Navigation";
+import Layout from "./components/Header/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -36,11 +36,15 @@ function App() {
   const handleLogin = (userData, token) => {
     setUser(userData);
     localStorage.setItem("token", token);
+    // Trigger custom event for other components
+    window.dispatchEvent(new Event("authChange"));
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("token");
+    // Trigger custom event for other components
+    window.dispatchEvent(new Event("authChange"));
   };
 
   // Protected route component
@@ -52,116 +56,60 @@ function App() {
 
   return (
     <Router>
-      <div className="app">
-        <Navigation user={user} onLogout={handleLogout} />
+      <Layout user={user} onLogout={handleLogout}>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              user ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Login onLogin={handleLogin} />
+              )
+            }
+          />
 
-        <main className="container mx-auto px-4 py-6">
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                user ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Login onLogin={handleLogin} />
-                )
-              }
-            />
+          <Route
+            path="/register"
+            element={
+              user ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Register onLogin={handleLogin} />
+              )
+            }
+          />
 
-            <Route
-              path="/register"
-              element={
-                user ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Register onLogin={handleLogin} />
-                )
-              }
-            />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+          {/* Routes for recipes */}
+          <Route
+            path="/recipes"
+            element={
+              <ProtectedRoute>
+                <div>Recipe List (To be implemented)</div>
+              </ProtectedRoute>
+            }
+          />
 
-            {/* <Route
-              path="/recipes"
-              element={
-                <ProtectedRoute>
-                  <RecipeList />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/recipes/new"
-              element={
-                <ProtectedRoute>
-                  <RecipeForm />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/recipes/:id"
-              element={
-                <ProtectedRoute>
-                  <RecipeDetail />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/recipes/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <RecipeForm isEditing={true} />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/brew-sessions"
-              element={
-                <ProtectedRoute>
-                  <BrewSessionList />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/brew-sessions/new"
-              element={
-                <ProtectedRoute>
-                  <BrewSessionForm />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/brew-sessions/:id"
-              element={
-                <ProtectedRoute>
-                  <BrewSessionDetail />
-                </ProtectedRoute>
-              }
-            /> */}
-
-            {/* <Route
-              path="/brew-sessions/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <BrewSessionForm isEditing={true} />
-                </ProtectedRoute>
-              }
-            /> */}
-          </Routes>
-        </main>
-      </div>
+          {/* Routes for brew sessions */}
+          <Route
+            path="/brew-sessions"
+            element={
+              <ProtectedRoute>
+                <div>Brew Sessions List (To be implemented)</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Layout>
     </Router>
   );
 }
