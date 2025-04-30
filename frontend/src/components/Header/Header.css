@@ -1,102 +1,49 @@
-:root {
-  --header-bg: #f1dcac;
-  --shadow-color: rgba(0, 0, 0, 0.15);
-  --text-color: #543c24;
-  --primary-color: #67733e;
-  --secondary-color: #5a7743;
-  --hover-color: rgba(180, 165, 0, 0.2);
-  --card-bg: #f1dcac;
-}
-
 .header {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 2rem;
-
-  width: 93vw;
-  transition: all 0.3s ease;
+  background-color: #92400e; /* Tailwind amber-800 */
+  color: white;
+  padding: 1rem;
 }
 
 .logo {
-  position: relative;
-
   display: flex;
-  left: 50%;
-  transform: translateX(-50%);
+  align-items: center;
+  text-decoration: none;
+  color: white;
 }
 
 .logo img {
-  height: 60px;
-  width: auto;
-  transition: opacity 0.3s ease;
-  justify-self: center;
+  height: 40px;
+  margin-right: 10px;
 }
 
 .nav {
-  position: relative;
-  right: 0;
   display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
 .nav-link {
-  padding: 0.75rem 1.25rem;
-  background-color: var(--primary-color, #67733e);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: "WonderLight", sans-serif;
+  color: white;
   text-decoration: none;
-  display: inline-block;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
 }
 
 .nav-link:hover {
-  background-color: var(--secondary-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #fde68a; /* Tailwind amber-200 */
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: 1rem;
-  }
-
-  .nav {
-    gap: 0.75rem;
-  }
-
-  .nav-link {
-    padding: 0.6rem 1rem;
-    font-size: 14px;
-  }
-
-  .logo img {
-    height: 32px;
-  }
+button.nav-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
-@media (max-width: 480px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem 0.5rem;
-  }
-
-  .nav {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .nav-link {
-    flex: 1;
-    text-align: center;
-    min-width: 100px;
-  }
+.user-greeting {
+  margin-left: 1rem;
+  padding: 0.5rem;
+  color: #fde68a; /* Tailwind amber-200 */
 }
