@@ -22,7 +22,17 @@ class Ingredient(db.Model):
     attenuation = db.Column(db.Float)  # Attenuation percentage
 
     # Relationships
-    recipes = db.relationship("Recipe", backref="ingredient", lazy=True)
+    recipe_uses = db.relationship("RecipeIngredient", back_populates="ingredient")
+
+    # Relationship to Recipe through the join table
+    recipes = db.relationship(
+        "Recipe",
+        secondary="recipe_ingredients",
+        primaryjoin="Ingredient.ingredient_id == RecipeIngredient.ingredient_id",
+        secondaryjoin="RecipeIngredient.recipe_id == Recipe.recipe_id",
+        back_populates="ingredients",
+        viewonly=True,
+    )
 
     def to_dict(self):
         return {

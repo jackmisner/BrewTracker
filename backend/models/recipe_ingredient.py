@@ -16,8 +16,9 @@ class RecipeIngredient(db.Model):
     use = db.Column(db.String(50))  # mash, boil, dry hop, etc.
     time = db.Column(db.Integer)  # time in minutes (boil time, steep time, etc.)
 
-    # Relationship to get the ingredient details
-    ingredient = db.relationship("Ingredient", backref="recipe_uses")
+    # Define relationships consistently with the parent models
+    ingredient = db.relationship("Ingredient", back_populates="recipe_uses")
+    recipe = db.relationship("Recipe", back_populates="recipe_ingredients")
 
     def to_dict(self):
         return {
