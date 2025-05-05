@@ -34,6 +34,9 @@ class Recipe(db.Model):
 
     # Relationships
     brew_sessions = db.relationship("BrewSession", backref="recipe", lazy=True)
+    ingredients = db.relationship(
+        "RecipeIngredient", backref="recipe", lazy=True, cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
