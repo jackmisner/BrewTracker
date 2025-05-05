@@ -42,6 +42,16 @@ const ApiService = {
     delete: (id) => api.delete(`/recipes/${id}`),
   },
 
+  // Ingredient endpoints
+  ingredients: {
+    getAll: () => api.get("/ingredients"),
+    getById: (id) => api.get(`/ingredients/${id}`),
+    create: (ingredientData) => api.post("/ingredients", ingredientData),
+    update: (id, ingredientData) =>
+      api.put(`/ingredients/${id}`, ingredientData),
+    delete: (id) => api.delete(`/ingredients/${id}`),
+  },
+
   // Brew session endpoints
   brewSessions: {
     getAll: () => api.get("/brew-sessions"),
