@@ -34,6 +34,17 @@ class Recipe(db.Model):
 
     # Relationships
     brew_sessions = db.relationship("BrewSession", backref="recipe", lazy=True)
+    recipe_ingredients = db.relationship("RecipeIngredient", back_populates="recipe")
+
+    # Relationship to Ingredient through the join table
+    ingredients = db.relationship(
+        "Ingredient",
+        secondary="recipe_ingredients",
+        primaryjoin="Recipe.recipe_id == RecipeIngredient.recipe_id",
+        secondaryjoin="RecipeIngredient.ingredient_id == Ingredient.ingredient_id",
+        back_populates="recipes",
+        viewonly=True,
+    )
 
     def to_dict(self):
         return {
