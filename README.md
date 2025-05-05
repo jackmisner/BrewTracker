@@ -10,6 +10,7 @@ homebrew-tracker/
 │   │   ├── user.py
 │   │   ├── recipe.py
 │   │   ├── ingredient.py
+│   │   ├── recipe_ingredient.py // Join table
 │   │   └── brew_session.py
 │   ├── routes/
 │   │   ├── __init__.py
@@ -34,6 +35,6 @@ homebrew-tracker/
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── package.json
-│   └── .env.example
+│   └── .env
 └── README.md
 ```
