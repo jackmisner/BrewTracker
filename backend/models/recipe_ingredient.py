@@ -5,9 +5,11 @@ class RecipeIngredient(db.Model):
     __tablename__ = "recipe_ingredients"
 
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey("recipe.recipe_id"), nullable=False)
+    recipe_id = db.Column(
+        db.Integer, db.ForeignKey("recipes.recipe_id"), nullable=False
+    )
     ingredient_id = db.Column(
-        db.Integer, db.ForeignKey("ingredient.ingredient_id"), nullable=False
+        db.Integer, db.ForeignKey("ingredients.ingredient_id"), nullable=False
     )
     amount = db.Column(db.Float, nullable=False)
     unit = db.Column(db.String(20), nullable=False)  # oz, lb, g, kg, etc.

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db
-from models.ingredients import Ingredient
+from models.ingredient import Ingredient
 
 ingredients_bp = Blueprint("ingredients", __name__)
 
