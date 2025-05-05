@@ -24,7 +24,7 @@ homebrew-tracker/
 │   │   ├── __init__.py
 │   │   └── helpers.py
 │   ├── requirements.txt
-│   └── .env.example
+│   └── .env
 ├── frontend/
 │   ├── public/
 │   ├── src/
