@@ -7,6 +7,7 @@ import Layout from "./components/Header/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import RecipeBuilder from "./pages/RecipeBuilder";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -95,6 +96,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <div>Recipe List (To be implemented)</div>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Routes for new recipe */}
+          <Route
+            path="/recipes/new"
+            element={
+              <ProtectedRoute>
+                <RecipeBuilder />
               </ProtectedRoute>
             }
           />
