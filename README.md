@@ -9,11 +9,13 @@ homebrew-tracker/
 │   │   ├── __init__.py
 │   │   ├── user.py
 │   │   ├── recipe.py
+│   │   ├── ingredient.py
 │   │   └── brew_session.py
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── auth.py
 │   │   ├── recipes.py
+│   │   ├── ingredients.py
 │   │   └── brew_sessions.py
 │   ├── services/
 │   │   ├── __init__.py
