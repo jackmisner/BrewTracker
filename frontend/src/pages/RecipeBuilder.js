@@ -859,19 +859,6 @@ function RecipeBuilder() {
               </div>
 
               <div>
-                <select
-                  id="hop-use"
-                  name="use"
-                  value={hopForm.use}
-                  onChange={(e) => handleFormChange("hop", e)}
-                  className="input-control"
-                >
-                  <option value="boil">Boil</option>
-                  <option value="whirlpool">Whirlpool</option>
-                  <option value="dry-hop">Dry Hop</option>
-                </select>
-              </div>
-              <div>
                 <div className="flex">
                   <input
                     type="number"
@@ -882,17 +869,28 @@ function RecipeBuilder() {
                     step="0.1"
                     min="0"
                     placeholder="Time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="input-control"
                   />
                   <select
                     id="hop-time-unit"
                     name="time_unit"
                     value={hopForm.time_unit}
                     onChange={(e) => handleFormChange("hop", e)}
-                    className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="input-control"
                   >
                     <option value="minutes">minutes</option>
                     <option value="days">days</option>
+                  </select>
+                  <select
+                    id="hop-use"
+                    name="use"
+                    value={hopForm.use}
+                    onChange={(e) => handleFormChange("hop", e)}
+                    className="input-control"
+                  >
+                    <option value="boil">Boil</option>
+                    <option value="whirlpool">Whirlpool</option>
+                    <option value="dry-hop">Dry Hop</option>
                   </select>
                 </div>
               </div>
@@ -901,7 +899,7 @@ function RecipeBuilder() {
                   id="add-hop-btn"
                   type="button"
                   onClick={() => addIngredient("hop")}
-                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                  className="btn btn-primary btn-full"
                 >
                   Add
                 </button>
@@ -910,16 +908,16 @@ function RecipeBuilder() {
           </div>
 
           {/* Yeast */}
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-4">Yeast</h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="md:col-span-2">
+          <div className="card mt-6">
+            <h3 className="card-title">Yeast</h3>
+            <div className="ingredient-form">
+              <div className="yeast-inputs">
                 <select
                   id="yeast-select"
                   name="ingredient_id"
                   value={yeastForm.ingredient_id}
                   onChange={(e) => handleFormChange("yeast", e)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="input-control"
                 >
                   <option value="">Select Yeast</option>
                   {ingredients.yeast.map((ingredient) => (
@@ -941,14 +939,14 @@ function RecipeBuilder() {
                     step="0.1"
                     min="0"
                     placeholder="Amount"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="input-control"
                   />
                   <select
                     id="yeast-unit"
                     name="unit"
                     value={yeastForm.unit}
                     onChange={(e) => handleFormChange("yeast", e)}
-                    className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="input-control"
                   >
                     <option value="pkg">pkg</option>
                   </select>
@@ -960,7 +958,7 @@ function RecipeBuilder() {
                   id="add-yeast-btn"
                   type="button"
                   onClick={() => addIngredient("yeast")}
-                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                  className="btn btn-primary btn-full"
                 >
                   Add
                 </button>
