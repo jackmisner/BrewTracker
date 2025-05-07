@@ -36,7 +36,8 @@ function RecipeBuilder() {
     amount: "",
     unit: "oz",
     use: "boil",
-    time: 60,
+    time: "",
+    time_unit: "minutes",
   });
   const [yeastForm, setYeastForm] = useState({
     ingredient_id: "",
@@ -202,6 +203,9 @@ function RecipeBuilder() {
             amount: ingredientData.amount,
             unit: ingredientData.unit,
             ingredient_type: ingredientData.ingredient_type,
+            use: ingredientData.use,
+            time: ingredientData.time,
+            time_unit: ingredientData.time_unit,
           },
         ]);
         console.log("recipeIngredients:", recipeIngredients);
@@ -218,7 +222,8 @@ function RecipeBuilder() {
             amount: "",
             unit: "oz",
             use: "boil",
-            time: 60,
+            time: "",
+            time_unit: "minutes",
           });
           break;
         case "yeast":
@@ -764,7 +769,9 @@ function RecipeBuilder() {
                     </td>
                     <td className="px-4 py-2">{ingredient.use || "-"}</td>
                     <td className="px-4 py-2">
-                      {ingredient.time ? `${ingredient.time} min` : "-"}
+                      {ingredient.time
+                        ? `${ingredient.time} ${ingredient.time_unit}`
+                        : "-"}
                     </td>
                     <td className="px-4 py-2">
                       <button
@@ -899,15 +906,42 @@ function RecipeBuilder() {
               </div>
 
               <div>
-                <input
-                  type="text"
+                <select
                   id="hop-use"
                   name="use"
                   value={hopForm.use}
                   onChange={(e) => handleFormChange("hop", e)}
-                  placeholder="Use (e.g., Boil, Dry Hop)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
+                  className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="boil">Boil</option>
+                  <option value="whirlpool">Whirlpool</option>
+                  <option value="dry-hop">Dry Hop</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex">
+                  <input
+                    type="number"
+                    id="hop-time"
+                    name="time"
+                    value={hopForm.time}
+                    onChange={(e) => handleFormChange("hop", e)}
+                    step="0.1"
+                    min="0"
+                    placeholder="Time"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <select
+                    id="hop-time-unit"
+                    name="time_unit"
+                    value={hopForm.time_unit}
+                    onChange={(e) => handleFormChange("hop", e)}
+                    className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="minutes">minutes</option>
+                    <option value="days">days</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <button
@@ -981,7 +1015,7 @@ function RecipeBuilder() {
             </div>
           </div>
 
-          {/* Adjuncts */}
+          {/* Adjuncts
           <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="text-xl font-semibold mb-4">Adjuncts</h3>
 
@@ -1042,7 +1076,7 @@ function RecipeBuilder() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
