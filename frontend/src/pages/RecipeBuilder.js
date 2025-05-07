@@ -265,6 +265,8 @@ function RecipeBuilder() {
     }
   };
 
+  // For some reason the ingredientData.ingredient_id is acutally the name of the ingredient instead of its id so for now we are using the name directly when adding the ingredient and not using this function
+  // FIXME
   const getIngredientName = (type, ingredientId) => {
     console.log("Getting ingredient name for type:", type);
     const ingredient = ingredients[type].find(
@@ -292,7 +294,7 @@ function RecipeBuilder() {
         );
         grains.forEach((grain) => {
           // Assume basic contribution to gravity
-          const gravityPoints = 0.036 * parseFloat(grain.amount); // Very simplified
+          const gravityPoints = 0.036 * parseFloat(grain.amount); // Very simplified (assumes all grains are 36 ppg) and doesn't take into account batch size
           og += gravityPoints;
         });
 
@@ -725,6 +727,61 @@ function RecipeBuilder() {
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-6">Ingredients</h2>
 
+        {/* Ingredients Tables */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-xl font-semibold mb-4">Recipe Ingredients</h3>
+
+          <div
+            className="overflow-x-auto"
+            aria-label="Ingredients table container"
+          >
+            <table className="w-full ingredients-table">
+              <thead>
+                <tr className="bg-amber-50">
+                  <th className="px-4 py-2 text-left">Type</th>
+                  <th className="px-4 py-2 text-left">Ingredient</th>
+                  <th className="px-4 py-2 text-left">Amount</th>
+                  <th className="px-4 py-2 text-left">Use</th>
+                  <th className="px-4 py-2 text-left">Time</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipeIngredients.map((ingredient) => (
+                  <tr
+                    key={`${ingredient.ingredient_type}-${ingredient.id}`}
+                    id={`ingredient-row-${ingredient.id}`}
+                    className="ingredient-row border-b"
+                  >
+                    <td className="px-4 py-2 capitalize">
+                      {ingredient.ingredient_type}
+                    </td>
+                    <td className="px-4 py-2">
+                      <strong>{ingredient.ingredient_name}</strong>
+                    </td>
+                    <td className="px-4 py-2">
+                      {ingredient.amount} {ingredient.unit}
+                    </td>
+                    <td className="px-4 py-2">{ingredient.use || "-"}</td>
+                    <td className="px-4 py-2">
+                      {ingredient.time ? `${ingredient.time} min` : "-"}
+                    </td>
+                    <td className="px-4 py-2">
+                      <button
+                        type="button"
+                        className="px-2 py-1 text-red-600 hover:text-red-800"
+                        onClick={() => removeIngredient(ingredient.id)}
+                      >
+                        <i className="fas fa-trash-alt"></i> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Fermentables */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -788,45 +845,6 @@ function RecipeBuilder() {
                   </button>
                 </div>
               </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full ingredients-table-grain">
-                <thead>
-                  <tr className="bg-amber-50">
-                    <th className="px-4 py-2 text-left">Fermentable</th>
-                    <th className="px-4 py-2 text-left">Amount</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recipeIngredients
-                    .filter((i) => i.ingredient_type === "grain")
-                    .map((ingredient) => (
-                      <tr
-                        key={ingredient.id}
-                        id={`ingredient-row-${ingredient.id}`}
-                        className="ingredient-row border-b"
-                      >
-                        <td className="px-4 py-2">
-                          <strong>{ingredient.ingredient_name}</strong>
-                        </td>
-                        <td className="px-4 py-2">
-                          {ingredient.amount} {ingredient.unit}
-                        </td>
-                        <td className="px-4 py-2">
-                          <button
-                            type="button"
-                            className="px-2 py-1 text-red-600 hover:text-red-800"
-                            onClick={() => removeIngredient(ingredient.id)}
-                          >
-                            <i className="fas fa-trash-alt"></i> Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
