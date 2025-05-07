@@ -75,7 +75,7 @@ function RecipeBuilder() {
   const fetchIngredients = async () => {
     try {
       const response = await ApiService.ingredients.getAll();
-
+      // console.log("Fetching ingredients:", response.data);
       // Group ingredients by type
       const grouped = {
         grain: [],
@@ -86,7 +86,12 @@ function RecipeBuilder() {
 
       response.data.ingredients.forEach((ingredient) => {
         if (grouped[ingredient.type]) {
+          // console.log("Adding ingredient:", ingredient.name);
           grouped[ingredient.type].push(ingredient);
+        } else {
+          console.warn(
+            `Ingredient type ${ingredient.type} not recognized. Skipping...`,
+          );
         }
       });
 
@@ -144,6 +149,9 @@ function RecipeBuilder() {
   };
 
   const addIngredient = async (type) => {
+    console.log("Trying to add ingredient to recipe");
+
+    // Define ingredientData based on type
     let ingredientData;
     switch (type) {
       case "grain":
@@ -162,9 +170,15 @@ function RecipeBuilder() {
         return;
     }
 
+    console.log("ingredientData for ingredient trying to add:", ingredientData);
+    console.log(
+      "recipeIngredients before adding new ingredient:",
+      recipeIngredients,
+    );
     try {
       // If recipe exists, add ingredient to it
       if (id) {
+        console.log("Adding ingredient to EXISTING recipe");
         const response = await ApiService.recipes.addIngredient(
           id,
           ingredientData,
@@ -172,18 +186,25 @@ function RecipeBuilder() {
         // Add new ingredient to the list
         setRecipeIngredients([...recipeIngredients, response.data]);
       } else {
+        console.log(
+          "Recipe doesn't exist yet - Adding ingredient to NEW recipe",
+        );
         // If no recipe yet, store ingredient temporarily
         setRecipeIngredients([
           ...recipeIngredients,
           {
-            ...ingredientData,
+            // ...ingredientData,
             id: `temp-${Date.now()}`,
-            ingredient_name: getIngredientName(
-              type,
-              ingredientData.ingredient_id,
-            ),
+            // ingredient_name: getIngredientName(
+            //   type,
+            //   ingredientData.ingredient_id,
+            ingredient_name: ingredientData.ingredient_id,
+            amount: ingredientData.amount,
+            unit: ingredientData.unit,
+            ingredient_type: ingredientData.ingredient_type,
           },
         ]);
+        console.log("recipeIngredients:", recipeIngredients);
       }
 
       // Reset the form
@@ -245,6 +266,7 @@ function RecipeBuilder() {
   };
 
   const getIngredientName = (type, ingredientId) => {
+    console.log("Getting ingredient name for type:", type);
     const ingredient = ingredients[type].find(
       (i) => i.id.toString() === ingredientId.toString(),
     );
@@ -718,7 +740,7 @@ function RecipeBuilder() {
                     onChange={(e) => handleFormChange("grain", e)}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="">Select Fermentable</option>
+                    <option value="">Select Grains</option>
                     {ingredients.grain.map((ingredient) => (
                       <option key={ingredient.id} value={ingredient.id}>
                         {ingredient.name}
@@ -808,6 +830,7 @@ function RecipeBuilder() {
             </div>
           </div>
         </div>
+
         {/* Hops */}
         <div className="bg-white rounded-lg shadow p-6 mt-6">
           <h3 className="text-xl font-semibold mb-4">Hops</h3>
@@ -868,63 +891,138 @@ function RecipeBuilder() {
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
-            </div>
-          </div>
-        </div>
-        {/* Yeast */}
-        <div className="mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="md:col-span-2">
-              <select
-                id="yeast-select"
-                name="ingredient_id"
-                value={yeastForm.ingredient_id}
-                onChange={(e) => handleFormChange("yeast", e)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="">Select Yeast</option>
-                {ingredients.yeast.map((ingredient) => (
-                  <option key={ingredient.id} value={ingredient.id}>
-                    {ingredient.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <div className="flex">
-                <input
-                  type="number"
-                  id="yeast-amount"
-                  name="amount"
-                  value={yeastForm.amount}
-                  onChange={(e) => handleFormChange("yeast", e)}
-                  step="0.1"
-                  min="0"
-                  placeholder="Amount"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-                <select
-                  id="yeast-unit"
-                  name="unit"
-                  value={yeastForm.unit}
-                  onChange={(e) => handleFormChange("yeast", e)}
-                  className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+              <div>
+                <button
+                  id="add-hop-btn"
+                  type="button"
+                  onClick={() => addIngredient("hop")}
+                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
                 >
-                  <option value="pkg">pkg</option>
-                </select>
+                  Add
+                </button>
               </div>
             </div>
+          </div>
 
-            <div>
-              <button
-                id="add-yeast-btn"
-                type="button"
-                onClick={() => addIngredient("yeast")}
-                className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
-              >
-                Add
-              </button>
+          {/* Yeast */}
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold mb-4">Yeast</h3>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="md:col-span-2">
+                <select
+                  id="yeast-select"
+                  name="ingredient_id"
+                  value={yeastForm.ingredient_id}
+                  onChange={(e) => handleFormChange("yeast", e)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Select Yeast</option>
+                  {ingredients.yeast.map((ingredient) => (
+                    <option key={ingredient.id} value={ingredient.id}>
+                      {ingredient.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="flex">
+                  <input
+                    type="number"
+                    id="yeast-amount"
+                    name="amount"
+                    value={yeastForm.amount}
+                    onChange={(e) => handleFormChange("yeast", e)}
+                    step="0.1"
+                    min="0"
+                    placeholder="Amount"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <select
+                    id="yeast-unit"
+                    name="unit"
+                    value={yeastForm.unit}
+                    onChange={(e) => handleFormChange("yeast", e)}
+                    className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="pkg">pkg</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  id="add-yeast-btn"
+                  type="button"
+                  onClick={() => addIngredient("yeast")}
+                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Adjuncts */}
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
+            <h3 className="text-xl font-semibold mb-4">Adjuncts</h3>
+
+            <div className="mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="md:col-span-2">
+                  <select
+                    id="adjunct-select"
+                    name="ingredient_id"
+                    value={adjunctForm.ingredient_id}
+                    onChange={(e) => handleFormChange("adjunct", e)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="">Select Adjunct</option>
+                    {ingredients.adjunct.map((ingredient) => (
+                      <option key={ingredient.id} value={ingredient.id}>
+                        {ingredient.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex">
+                    <input
+                      type="number"
+                      id="adjunct-amount"
+                      name="amount"
+                      value={adjunctForm.amount}
+                      onChange={(e) => handleFormChange("adjunct", e)}
+                      step="0.1"
+                      min="0"
+                      placeholder="Amount"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <select
+                      id="adjunct-unit"
+                      name="unit"
+                      value={adjunctForm.unit}
+                      onChange={(e) => handleFormChange("adjunct", e)}
+                      className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="oz">oz</option>
+                      <option value="g">g</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    id="add-adjunct-btn"
+                    type="button"
+                    onClick={() => addIngredient("adjunct")}
+                    className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
