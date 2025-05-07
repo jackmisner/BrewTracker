@@ -40,6 +40,14 @@ const ApiService = {
     create: (recipeData) => api.post("/recipes", recipeData),
     update: (id, recipeData) => api.put(`/recipes/${id}`, recipeData),
     delete: (id) => api.delete(`/recipes/${id}`),
+
+    // Recipe ingredient endpoints
+    getIngredients: (recipeId) => api.get(`/recipes/${recipeId}/ingredients`),
+    addIngredient: (recipeId, ingredientData) =>
+      api.post(`/recipes/${recipeId}/ingredients`, ingredientData),
+    removeIngredient: (recipeId, ingredientId) =>
+      api.delete(`/recipes/${recipeId}/ingredients/${ingredientId}`),
+    calculateMetrics: (recipeId) => api.get(`/recipes/${recipeId}/metrics`),
   },
 
   // Ingredient endpoints
