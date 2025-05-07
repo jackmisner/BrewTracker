@@ -1,0 +1,561 @@
+/* RecipeBuilder.css */
+
+/* Main container styling */
+.recipe-builder-container {
+  max-width: 1200px;
+  padding: 2rem 1rem;
+}
+
+/* Card styling enhancements */
+.recipe-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.recipe-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Form styling */
+.form-container {
+  padding: 1.5rem;
+}
+
+.form-title {
+  color: #92400e; /* amber-800 */
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #f59e0b; /* amber-500 */
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); /* amber-500 with opacity */
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.375rem;
+  color: #4b5563; /* gray-700 */
+}
+
+/* Button styling */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #b45309; /* amber-700 */
+}
+
+.btn-secondary {
+  background-color: #f59e0b; /* amber-500 */
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #d97706; /* amber-600 */
+}
+
+.btn-neutral {
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+}
+
+.btn-neutral:hover {
+  background-color: #f3f4f6;
+}
+
+/* Main metrics container / */
+.metrics-container {
+  background-color: #fffbeb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.metrics-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right, #92400e, #d97706, #fbbf24);
+}
+.metrics-title {
+  color: #92400e;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #fde68a;
+  padding-bottom: 0.5rem;
+}
+
+/* Metrics grid layout */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+/* Individual metric styling */
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.metric-item {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.metric-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716c; /* stone-500 */
+  margin-bottom: 0.375rem;
+}
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #92400e; /* amber-800 */
+  line-height: 1;
+}
+/* SRM color display */
+.color-display {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.color-info {
+  margin-right: 1rem;
+}
+.color-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716c; /* stone-500 */
+  margin-bottom: 0.25rem;
+}
+.color-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+}
+.color-swatch {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+  outline: 1px solid #e5e7eb;
+  transition: transform 0.3s ease;
+}
+.color-swatch {
+  transform: scale(1.1);
+}
+/* Balance meter styling */
+.balance-container {
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+.balance-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #78716c; /* stone-500 */
+  margin-bottom: 0.375rem;
+}
+.balance-meter {
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+.balance-progress {
+  height: 100%;
+  background: linear-gradient(to right, #fbbf24, #d97706);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.balance-description {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  color: #92400e; /* amber-800 */
+}
+/* Recipe scaling section / */
+.scaling-container {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #fde68a;
+}
+.scaling-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+  margin-bottom: 0.75rem;
+}
+.scaling-input-group {
+  display: flex;
+}
+.scaling-input {
+  flex-grow: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-right: none;
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+  transition: border-color 0.2s;
+}
+.scaling-input {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+.scaling-button {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.scaling-button {
+  background-color: #b45309; /* amber-700 */
+}
+.calculate-button {
+  width: 100%;
+  background-color: #fbbf24; /* amber-400 /
+color: #92400e; / amber-800 */
+  border: none;
+  padding: 0.625rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.calculate-button {
+  background-color: #f59e0b; /* amber-500 */
+}
+.calculate-button {
+  transform: translateY(1px);
+}
+.calculate-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+/* SRM Color definitions */
+.srm-1 {
+  background-color: #ffe699;
+}
+.srm-2 {
+  background-color: #ffd878;
+}
+.srm-3 {
+  background-color: #ffca5a;
+}
+.srm-4 {
+  background-color: #ffbf42;
+}
+.srm-5 {
+  background-color: #fbb123;
+}
+.srm-6 {
+  background-color: #f8a600;
+}
+.srm-7 {
+  background-color: #f39c00;
+}
+.srm-8 {
+  background-color: #ea8f00;
+}
+.srm-9 {
+  background-color: #e58500;
+}
+.srm-10 {
+  background-color: #de7c00;
+}
+.srm-11 {
+  background-color: #d77200;
+}
+.srm-12 {
+  background-color: #cf6900;
+}
+.srm-13 {
+  background-color: #cb6200;
+}
+.srm-14 {
+  background-color: #c35900;
+}
+.srm-15 {
+  background-color: #bb5100;
+}
+.srm-16 {
+  background-color: #b54c00;
+}
+.srm-17 {
+  background-color: #b04500;
+}
+.srm-18 {
+  background-color: #a63e00;
+}
+.srm-19 {
+  background-color: #a13700;
+}
+.srm-20 {
+  background-color: #9b3200;
+}
+.srm-21 {
+  background-color: #952d00;
+}
+.srm-22 {
+  background-color: #8e2900;
+}
+.srm-23 {
+  background-color: #882300;
+}
+.srm-24 {
+  background-color: #821e00;
+}
+.srm-25 {
+  background-color: #7b1a00;
+}
+.srm-26 {
+  background-color: #771900;
+}
+.srm-27 {
+  background-color: #701400;
+}
+.srm-28 {
+  background-color: #6a0e00;
+}
+.srm-29 {
+  background-color: #660d00;
+}
+.srm-30 + {
+  background-color: #5e0b00;
+}
+/* Animation for metrics updates */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.metric-update {
+  animation: pulse 0.6s ease;
+}
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .color-display {
+    flex-direction: column;
+    align-items: center;
+  }
+  .color-info {
+    margin-right: 0;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  /* Ingredients section */
+  .ingredients-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .ingredients-table th {
+    background-color: #fffbeb; /* amber-50 */
+    color: #92400e; /* amber-800 */
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+  }
+
+  .ingredients-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .ingredients-table tr:hover {
+    background-color: #fef3c7; /* amber-100 */
+  }
+
+  .ingredient-type {
+    text-transform: capitalize;
+    font-weight: 500;
+  }
+
+  .ingredient-name {
+    font-weight: 600;
+  }
+
+  .remove-button {
+    color: #ef4444; /* red-500 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .remove-button:hover {
+    color: #b91c1c; /* red-700 */
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .ingredients-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Add this class to newly added ingredients */
+  .new-ingredient {
+    animation: highlight 1.5s ease;
+  }
+
+  @keyframes highlight {
+    0% {
+      background-color: #fef3c7; /* amber-100 */
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  /* SRM Color scale */
+  .srm-1 {
+    background-color: #ffe699;
+  }
+  .srm-2 {
+    background-color: #ffd878;
+  }
+  .srm-3 {
+    background-color: #ffca5a;
+  }
+  .srm-4 {
+    background-color: #ffbf42;
+  }
+  .srm-5 {
+    background-color: #fbb123;
+  }
+  .srm-6 {
+    background-color: #f8a600;
+  }
+  .srm-8 {
+    background-color: #f39c00;
+  }
+  .srm-10 {
+    background-color: #ea8f00;
+  }
+  .srm-13 {
+    background-color: #e58500;
+  }
+  .srm-17 {
+    background-color: #de7c00;
+  }
+  .srm-20 {
+    background-color: #d77200;
+  }
+  .srm-25 {
+    background-color: #cf6900;
+  }
+  .srm-30 {
+    background-color: #cb6200;
+  }
+  .srm-35 {
+    background-color: #c35900;
+  }
+  .srm-40 {
+    background-color: #bb5100;
+  }
+}
