@@ -109,6 +109,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Routes for specific recipe */}
+          <Route
+            path="/recipes/:recipeId"
+            element={
+              <ProtectedRoute>
+                <div>Recipe Details (To be implemented)</div>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Routes for brew sessions */}
           <Route
