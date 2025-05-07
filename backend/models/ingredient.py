@@ -20,6 +20,17 @@ class Ingredient(db.Model):
 
     # For yeast
     attenuation = db.Column(db.Float)  # Attenuation percentage
+    manufacturer = db.Column(db.String(100), nullable=True)  # Yeast manufacturer
+    code = db.Column(db.String(50), nullable=True)  # Yeast code/identifier
+    alcohol_tolerance = db.Column(
+        db.Float, nullable=True
+    )  # Alcohol tolerance as percentage
+    min_temperature = db.Column(
+        db.Float, nullable=True
+    )  # Minimum fermentation temperature
+    max_temperature = db.Column(
+        db.Float, nullable=True
+    )  # Maximum fermentation temperature
 
     # Relationships
     recipe_uses = db.relationship("RecipeIngredient", back_populates="ingredient")
@@ -44,4 +55,9 @@ class Ingredient(db.Model):
             "color": self.color,
             "alpha_acid": self.alpha_acid,
             "attenuation": self.attenuation,
+            "manufacturer": self.manufacturer,
+            "code": self.code,
+            "alcohol_tolerance": self.alcohol_tolerance,
+            "min_temperature": self.min_temperature,
+            "max_temperature": self.max_temperature,
         }
