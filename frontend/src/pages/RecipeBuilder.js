@@ -416,27 +416,18 @@ function RecipeBuilder() {
   }
 
   return (
-    <div id="recipe-builder" className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">
-        {id ? "Edit Recipe" : "Create New Recipe"}
-      </h1>
+    <div id="recipe-builder" className="container">
+      <h1 className="page-title">{id ? "Edit Recipe" : "Create New Recipe"}</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid">
         {/* Recipe Details Form */}
-        <div className="lg:col-span-2">
-          <form
-            id="recipe-form"
-            onSubmit={handleSubmit}
-            className="bg-white rounded-lg shadow p-6"
-          >
-            <h2 className="text-xl font-semibold mb-4">Recipe Details</h2>
+        <div className="grid-col-2-3">
+          <form id="recipe-form" onSubmit={handleSubmit} className="card">
+            <h2 className="card-title">Recipe Details</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="name" className="form-label">
                   Recipe Name*
                 </label>
                 <input
@@ -445,16 +436,13 @@ function RecipeBuilder() {
                   name="name"
                   value={recipe.name}
                   onChange={handleRecipeChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="form-control"
                   required
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="style"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+              <div className="form-group">
+                <label htmlFor="style" className="form-label">
                   Style
                 </label>
                 <input
@@ -463,15 +451,12 @@ function RecipeBuilder() {
                   name="style"
                   value={recipe.style}
                   onChange={handleRecipeChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="form-control"
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="batch_size"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+              <div className="form-group">
+                <label htmlFor="batch_size" className="form-label">
                   Batch Size (gallons)*
                 </label>
                 <input
@@ -482,16 +467,13 @@ function RecipeBuilder() {
                   onChange={handleRecipeChange}
                   step="0.1"
                   min="0.1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="form-control"
                   required
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="boil_time"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+              <div className="form-group">
+                <label htmlFor="boil_time" className="form-label">
                   Boil Time (minutes)
                 </label>
                 <input
@@ -502,16 +484,13 @@ function RecipeBuilder() {
                   onChange={handleRecipeChange}
                   step="5"
                   min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="form-control"
                 />
               </div>
             </div>
 
-            <div className="mb-6">
-              <label
-                htmlFor="description"
-                className="block text-gray-700 font-medium mb-1"
-              >
+            <div className="form-group mb-6">
+              <label htmlFor="description" className="form-label">
                 Description
               </label>
               <textarea
@@ -520,16 +499,13 @@ function RecipeBuilder() {
                 value={recipe.description}
                 onChange={handleRecipeChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="form-control form-textarea"
               ></textarea>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label
-                  htmlFor="efficiency"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="efficiency" className="form-label">
                   Efficiency (%)
                 </label>
                 <input
@@ -541,30 +517,27 @@ function RecipeBuilder() {
                   step="1"
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="form-control"
                 />
               </div>
 
-              <div className="flex items-center mt-6">
+              <div className="form-check">
                 <input
                   type="checkbox"
                   id="is_public"
                   name="is_public"
                   checked={recipe.is_public}
                   onChange={handleRecipeChange}
-                  className="mr-2"
+                  className="form-check-input"
                 />
-                <label htmlFor="is_public" className="text-gray-700">
+                <label htmlFor="is_public" className="form-label mb-0">
                   Make Recipe Public
                 </label>
               </div>
             </div>
 
-            <div className="mb-6">
-              <label
-                htmlFor="notes"
-                className="block text-gray-700 font-medium mb-1"
-              >
+            <div className="form-group mb-6">
+              <label htmlFor="notes" className="form-label">
                 Brewer's Notes
               </label>
               <textarea
@@ -573,22 +546,19 @@ function RecipeBuilder() {
                 value={recipe.notes}
                 onChange={handleRecipeChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="form-control form-textarea"
               ></textarea>
             </div>
 
-            <div className="flex justify-end">
+            <div className="form-actions">
               <button
                 type="button"
                 onClick={() => navigate("/recipes")}
-                className="px-4 py-2 border border-gray-300 rounded mr-2 hover:bg-gray-100"
+                className="btn btn-default"
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
-              >
+              <button type="submit" className="btn btn-primary">
                 {id ? "Update Recipe" : "Create Recipe"}
               </button>
             </div>
@@ -596,33 +566,33 @@ function RecipeBuilder() {
         </div>
 
         {/* Recipe Metrics */}
-        <div className="lg:col-span-1">
+        <div className="grid-col-1-3">
           <div className="metrics-container">
-            <h2 className="metrics-title">Recipe Metrics</h2>
+            <h2 className="card-title">Recipe Metrics</h2>
 
             <div className="metrics-grid">
-              <div className="metric-item">
+              <div className="metric-box">
                 <div className="metric-label">Original Gravity</div>
                 <div id="og-display" className="metric-value">
                   {formatGravity(metrics.og)}
                 </div>
               </div>
 
-              <div className="metric-item">
+              <div className="metric-box">
                 <div className="metric-label">Final Gravity</div>
                 <div id="fg-display" className="metric-value">
                   {formatGravity(metrics.fg)}
                 </div>
               </div>
 
-              <div className="metric-item">
+              <div className="metric-box">
                 <div className="metric-label">ABV</div>
                 <div id="abv-display" className="metric-value">
                   {formatAbv(metrics.abv)}
                 </div>
               </div>
 
-              <div className="metric-item">
+              <div className="metric-box">
                 <div className="metric-label">IBU</div>
                 <div id="ibu-display" className="metric-value">
                   {formatIbu(metrics.ibu)}
@@ -632,8 +602,8 @@ function RecipeBuilder() {
 
             <div className="color-display">
               <div className="color-info">
-                <div className="color-label">Color</div>
-                <div id="srm-display" className="color-value">
+                <div className="metric-label">Color</div>
+                <div id="srm-display" className="metric-value">
                   {formatSrm(metrics.srm)} SRM
                 </div>
               </div>
@@ -644,7 +614,7 @@ function RecipeBuilder() {
               ></div>
             </div>
 
-            <div className="balance-container">
+            <div className="balance-meter-container">
               <div className="balance-labels">
                 <span>Malty</span>
                 <span>Balanced</span>
@@ -653,7 +623,7 @@ function RecipeBuilder() {
               <div className="balance-meter">
                 <div
                   id="balance-meter-progress"
-                  className="balance-progress"
+                  className="balance-meter-progress"
                   style={{
                     width: `${Math.min((metrics.ibu / ((metrics.og - 1) * 1000) / 2) * 100, 100)}%`,
                   }}
@@ -704,99 +674,87 @@ function RecipeBuilder() {
               id="calculate-recipe-btn"
               type="button"
               onClick={calculateRecipeMetrics}
-              className="calculate-button"
+              className="calculate-button mt-6"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z"
-                  clipRule="evenodd"
-                />
-              </svg>
               Calculate Recipe
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Ingredients Section */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-6">Ingredients</h2>
+      {/* Ingredients Section */}
+      <div className="mt-6">
+        <h2 className="section-title">Ingredients</h2>
 
-          {/* Ingredients Tables */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-4">Recipe Ingredients</h3>
+        {/* Ingredients Tables */}
+        <div className="card">
+          <h3 className="card-title">Recipe Ingredients</h3>
 
-            <div
-              className="overflow-x-auto"
-              aria-label="Ingredients table container"
-            >
-              <table className="w-full ingredients-table">
-                <thead>
-                  <tr className="bg-amber-50">
-                    <th className="px-4 py-2 text-left">Type</th>
-                    <th className="px-4 py-2 text-left">Ingredient</th>
-                    <th className="px-4 py-2 text-left">Amount</th>
-                    <th className="px-4 py-2 text-left">Use</th>
-                    <th className="px-4 py-2 text-left">Time</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
+          <div className="ingredients-table-container">
+            <table className="ingredients-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Ingredient</th>
+                  <th>Amount</th>
+                  <th>Use</th>
+                  <th>Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipeIngredients.map((ingredient) => (
+                  <tr
+                    key={`${ingredient.ingredient_type}-${ingredient.id}`}
+                    id={`ingredient-row-${ingredient.id}`}
+                    className="ingredient-row"
+                  >
+                    <td className="ingredient-type">
+                      {ingredient.ingredient_type}
+                    </td>
+                    <td className="ingredient-name">
+                      {ingredient.ingredient_name}
+                    </td>
+                    <td>
+                      {ingredient.amount} {ingredient.unit}
+                    </td>
+                    <td>{ingredient.use || "-"}</td>
+                    <td>
+                      {ingredient.time
+                        ? `${ingredient.time} ${ingredient.time_unit}`
+                        : "-"}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="ingredient-action"
+                        onClick={() => removeIngredient(ingredient.id)}
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recipeIngredients.map((ingredient) => (
-                    <tr
-                      key={`${ingredient.ingredient_type}-${ingredient.id}`}
-                      id={`ingredient-row-${ingredient.id}`}
-                      className="ingredient-row border-b"
-                    >
-                      <td className="px-4 py-2 capitalize">
-                        {ingredient.ingredient_type}
-                      </td>
-                      <td className="px-4 py-2">
-                        <strong>{ingredient.ingredient_name}</strong>
-                      </td>
-                      <td className="px-4 py-2">
-                        {ingredient.amount} {ingredient.unit}
-                      </td>
-                      <td className="px-4 py-2">{ingredient.use || "-"}</td>
-                      <td className="px-4 py-2">
-                        {ingredient.time
-                          ? `${ingredient.time} ${ingredient.time_unit}`
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-2">
-                        <button
-                          type="button"
-                          className="px-2 py-1 text-red-600 hover:text-red-800"
-                          onClick={() => removeIngredient(ingredient.id)}
-                        >
-                          <i className="fas fa-trash-alt"></i> Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Fermentables */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-xl font-semibold mb-4">Fermentables</h3>
+        <div className="grid">
+          {/* Fermentables */}
+          <div className="grid-col-2-3">
+            <div className="card">
+              <h3 className="card-title">Fermentables</h3>
 
-              <div className="mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-2">
+              <div className="ingredient-form">
+                <div className="ingredient-inputs">
+                  <div>
                     <select
                       id="grain-select"
                       name="ingredient_id"
                       value={grainForm.ingredient_id}
                       onChange={(e) => handleFormChange("grain", e)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="input-control"
                     >
                       <option value="">Select Grains</option>
                       {ingredients.grain.map((ingredient) => (
@@ -808,7 +766,7 @@ function RecipeBuilder() {
                   </div>
 
                   <div>
-                    <div className="flex">
+                    <div className="input-group">
                       <input
                         type="number"
                         id="grain-amount"
@@ -818,14 +776,14 @@ function RecipeBuilder() {
                         step="0.1"
                         min="0"
                         placeholder="Amount"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="input-control"
                       />
                       <select
                         id="grain-unit"
                         name="unit"
                         value={grainForm.unit}
                         onChange={(e) => handleFormChange("grain", e)}
-                        className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="input-addon"
                       >
                         <option value="lb">lb</option>
                         <option value="oz">oz</option>
@@ -840,7 +798,7 @@ function RecipeBuilder() {
                       id="add-grain-btn"
                       type="button"
                       onClick={() => addIngredient("grain")}
-                      className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                      className="btn btn-primary btn-full"
                     >
                       Add
                     </button>
@@ -849,167 +807,168 @@ function RecipeBuilder() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Hops */}
-          <div className="bg-white rounded-lg shadow p-6 mt-6">
-            <h3 className="text-xl font-semibold mb-4">Hops</h3>
+        {/* Hops */}
+        <div className="card mt-6">
+          <h3 className="card-title">Hops</h3>
 
-            <div className="mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div className="md:col-span-2">
-                  <select
-                    id="hop-select"
-                    name="ingredient_id"
-                    value={hopForm.ingredient_id}
+          <div className="ingredient-form">
+            <div className="hop-inputs">
+              <div>
+                <select
+                  id="hop-select"
+                  name="ingredient_id"
+                  value={hopForm.ingredient_id}
+                  onChange={(e) => handleFormChange("hop", e)}
+                  className="input-control"
+                >
+                  <option value="">Select Hop</option>
+                  {ingredients.hop.map((ingredient) => (
+                    <option key={ingredient.id} value={ingredient.id}>
+                      {ingredient.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="input-group">
+                  <input
+                    type="number"
+                    id="hop-amount"
+                    name="amount"
+                    value={hopForm.amount}
                     onChange={(e) => handleFormChange("hop", e)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    step="0.1"
+                    min="0"
+                    placeholder="Amount"
+                    className="input-control"
+                  />
+                  <select
+                    id="hop-unit"
+                    name="unit"
+                    value={hopForm.unit}
+                    onChange={(e) => handleFormChange("hop", e)}
+                    className="input-addon"
                   >
-                    <option value="">Select Hop</option>
-                    {ingredients.hop.map((ingredient) => (
-                      <option key={ingredient.id} value={ingredient.id}>
-                        {ingredient.name}
-                      </option>
-                    ))}
+                    <option value="oz">oz</option>
+                    <option value="g">g</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <div className="flex">
-                    <input
-                      type="number"
-                      id="hop-amount"
-                      name="amount"
-                      value={hopForm.amount}
-                      onChange={(e) => handleFormChange("hop", e)}
-                      step="0.1"
-                      min="0"
-                      placeholder="Amount"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                    <select
-                      id="hop-unit"
-                      name="unit"
-                      value={hopForm.unit}
-                      onChange={(e) => handleFormChange("hop", e)}
-                      className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="oz">oz</option>
-                      <option value="g">g</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
+              <div>
+                <select
+                  id="hop-use"
+                  name="use"
+                  value={hopForm.use}
+                  onChange={(e) => handleFormChange("hop", e)}
+                  className="input-control"
+                >
+                  <option value="boil">Boil</option>
+                  <option value="whirlpool">Whirlpool</option>
+                  <option value="dry-hop">Dry Hop</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex">
+                  <input
+                    type="number"
+                    id="hop-time"
+                    name="time"
+                    value={hopForm.time}
+                    onChange={(e) => handleFormChange("hop", e)}
+                    step="0.1"
+                    min="0"
+                    placeholder="Time"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
                   <select
-                    id="hop-use"
-                    name="use"
-                    value={hopForm.use}
+                    id="hop-time-unit"
+                    name="time_unit"
+                    value={hopForm.time_unit}
                     onChange={(e) => handleFormChange("hop", e)}
                     className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="boil">Boil</option>
-                    <option value="whirlpool">Whirlpool</option>
-                    <option value="dry-hop">Dry Hop</option>
+                    <option value="minutes">minutes</option>
+                    <option value="days">days</option>
                   </select>
                 </div>
-                <div>
-                  <div className="flex">
-                    <input
-                      type="number"
-                      id="hop-time"
-                      name="time"
-                      value={hopForm.time}
-                      onChange={(e) => handleFormChange("hop", e)}
-                      step="0.1"
-                      min="0"
-                      placeholder="Time"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                    <select
-                      id="hop-time-unit"
-                      name="time_unit"
-                      value={hopForm.time_unit}
-                      onChange={(e) => handleFormChange("hop", e)}
-                      className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="minutes">minutes</option>
-                      <option value="days">days</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <button
-                    id="add-hop-btn"
-                    type="button"
-                    onClick={() => addIngredient("hop")}
-                    className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
-                  >
-                    Add
-                  </button>
-                </div>
+              </div>
+              <div>
+                <button
+                  id="add-hop-btn"
+                  type="button"
+                  onClick={() => addIngredient("hop")}
+                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                >
+                  Add
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Yeast */}
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold mb-4">Yeast</h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div className="md:col-span-2">
-                  <select
-                    id="yeast-select"
-                    name="ingredient_id"
-                    value={yeastForm.ingredient_id}
+          {/* Yeast */}
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold mb-4">Yeast</h3>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="md:col-span-2">
+                <select
+                  id="yeast-select"
+                  name="ingredient_id"
+                  value={yeastForm.ingredient_id}
+                  onChange={(e) => handleFormChange("yeast", e)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Select Yeast</option>
+                  {ingredients.yeast.map((ingredient) => (
+                    <option key={ingredient.id} value={ingredient.id}>
+                      {ingredient.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="flex">
+                  <input
+                    type="number"
+                    id="yeast-amount"
+                    name="amount"
+                    value={yeastForm.amount}
                     onChange={(e) => handleFormChange("yeast", e)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    step="0.1"
+                    min="0"
+                    placeholder="Amount"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <select
+                    id="yeast-unit"
+                    name="unit"
+                    value={yeastForm.unit}
+                    onChange={(e) => handleFormChange("yeast", e)}
+                    className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="">Select Yeast</option>
-                    {ingredients.yeast.map((ingredient) => (
-                      <option key={ingredient.id} value={ingredient.id}>
-                        {ingredient.name}
-                      </option>
-                    ))}
+                    <option value="pkg">pkg</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <div className="flex">
-                    <input
-                      type="number"
-                      id="yeast-amount"
-                      name="amount"
-                      value={yeastForm.amount}
-                      onChange={(e) => handleFormChange("yeast", e)}
-                      step="0.1"
-                      min="0"
-                      placeholder="Amount"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                    <select
-                      id="yeast-unit"
-                      name="unit"
-                      value={yeastForm.unit}
-                      onChange={(e) => handleFormChange("yeast", e)}
-                      className="px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      <option value="pkg">pkg</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <button
-                    id="add-yeast-btn"
-                    type="button"
-                    onClick={() => addIngredient("yeast")}
-                    className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
-                  >
-                    Add
-                  </button>
-                </div>
+              <div>
+                <button
+                  id="add-yeast-btn"
+                  type="button"
+                  onClick={() => addIngredient("yeast")}
+                  className="w-full px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+                >
+                  Add
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Adjuncts
+          {/* Adjuncts
           <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="text-xl font-semibold mb-4">Adjuncts</h3>
 
@@ -1071,7 +1030,6 @@ function RecipeBuilder() {
               </div>
             </div>
           </div> */}
-          </div>
         </div>
       </div>
     </div>
