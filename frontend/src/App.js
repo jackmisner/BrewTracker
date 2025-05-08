@@ -7,7 +7,7 @@ import Layout from "./components/Header/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import RecipeBuilder from "./pages/RecipeBuilder";
+import RecipeBuilder from "./components/RecipeBuilder/RecipeBuilder";
 
 function App() {
   const [user, setUser] = useState(null);
