@@ -49,7 +49,10 @@ function HopInput({ hops, onAdd }) {
             >
               <option value="">Select Hop</option>
               {hops.map((ingredient) => (
-                <option key={ingredient.id} value={ingredient.id}>
+                <option
+                  key={ingredient.ingredient_id}
+                  value={ingredient.ingredient_id}
+                >
                   {ingredient.name}
                 </option>
               ))}

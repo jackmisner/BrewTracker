@@ -34,6 +34,7 @@ function RecipeBuilder() {
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Recipe metrics
   const [metrics, setMetrics] = useState({
@@ -107,6 +108,7 @@ function RecipeBuilder() {
   };
 
   const addIngredient = async (type, ingredientData) => {
+    console.log("ingredientData:", ingredientData);
     try {
       // If recipe exists, add ingredient to it
       if (id) {
@@ -122,7 +124,11 @@ function RecipeBuilder() {
           ...recipeIngredients,
           {
             id: `temp-${Date.now()}`,
-            ingredient_name: ingredientData.ingredient_id,
+            ingredient_id: ingredientData.ingredient_id,
+            ingredient_name: getIngredientName(
+              ingredientData.ingredient_id,
+              type,
+            ),
             amount: ingredientData.amount,
             unit: ingredientData.unit,
             ingredient_type: type,
@@ -139,6 +145,14 @@ function RecipeBuilder() {
       console.error("Error adding ingredient:", err);
       setError("Failed to add ingredient");
     }
+  };
+
+  // Helper function to get ingredient name from ID
+  const getIngredientName = (ingredientId, type) => {
+    const ingredient = ingredients[type]?.find(
+      (i) => i.ingredient_id === parseInt(ingredientId),
+    );
+    return ingredient ? ingredient.name : "Unknown";
   };
 
   const removeIngredient = async (ingredientId) => {
@@ -227,6 +241,8 @@ function RecipeBuilder() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setError("");
 
     try {
       const recipeData = {
@@ -238,34 +254,74 @@ function RecipeBuilder() {
         estimated_srm: metrics.srm,
       };
 
-      let response;
+      let recipeResponse;
+      let newRecipeId = id;
+
       if (id) {
         // Update existing recipe
-        response = await ApiService.recipes.update(id, recipeData);
+        recipeResponse = await ApiService.recipes.update(id, recipeData);
       } else {
         // Create new recipe
-        response = await ApiService.recipes.create(recipeData);
+        recipeResponse = await ApiService.recipes.create(recipeData);
+
+        if (!recipeResponse.data || !recipeResponse.data.recipe) {
+          throw new Error("Failed to create recipe: Invalid server response");
+        }
+
+        newRecipeId = recipeResponse.data.recipe.recipe_id;
 
         // Add any ingredients that were added before saving
-        const newRecipeId = response.data.recipe.recipe_id;
-        for (const ingredient of recipeIngredients) {
-          if (ingredient.id.toString().startsWith("temp-")) {
-            // Remove temporary id
-            const {
-              id: tempId,
-              ingredient_name,
-              ...ingredientData
-            } = ingredient;
-            await ApiService.recipes.addIngredient(newRecipeId, ingredientData);
-          }
+        if (recipeIngredients.length > 0) {
+          const saveIngredientPromises = recipeIngredients.map(
+            async (ingredient) => {
+              if (ingredient.id.toString().startsWith("temp-")) {
+                // Extract data for API call
+                const {
+                  id: tempId,
+                  ingredient_name,
+                  ingredient_type,
+                  ...ingredientData
+                } = ingredient;
+
+                // Make sure we're sending the right format
+                const ingredientPayload = {
+                  ...ingredientData,
+                  ingredient_type: ingredient_type,
+                };
+
+                try {
+                  await ApiService.recipes.addIngredient(
+                    newRecipeId,
+                    ingredientPayload,
+                  );
+                } catch (err) {
+                  console.error(
+                    `Error saving ingredient ${ingredient.ingredient_name}:`,
+                    err,
+                  );
+                  throw new Error(
+                    `Failed to save ingredient: ${ingredient.ingredient_name}`,
+                  );
+                }
+              }
+            },
+          );
+
+          // Wait for all ingredient saves to complete
+          await Promise.all(saveIngredientPromises);
         }
       }
 
+      // Show success message
+      alert("Recipe saved successfully!");
+
       // Navigate to recipe detail page
-      navigate(`/recipes/${response.data.recipe.recipe_id}`);
+      navigate(`/recipes/${newRecipeId}`);
     } catch (err) {
       console.error("Error saving recipe:", err);
-      setError("Failed to save recipe");
+      setError(`Failed to save recipe: ${err.message || "Unknown error"}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -273,17 +329,15 @@ function RecipeBuilder() {
     return <div className="text-center py-10">Loading...</div>;
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
-        {error}
-      </div>
-    );
-  }
-
   return (
     <div id="recipe-builder" className="container">
       <h1 className="page-title">{id ? "Edit Recipe" : "Create New Recipe"}</h1>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+          {error}
+        </div>
+      )}
 
       <div className="grid">
         {/* Recipe Details Form */}
@@ -294,6 +348,7 @@ function RecipeBuilder() {
             onSubmit={handleSubmit}
             onCancel={() => navigate("/recipes")}
             isEditing={!!id}
+            saving={saving}
           />
         </div>
 
@@ -317,7 +372,6 @@ function RecipeBuilder() {
           onRemove={removeIngredient}
         />
 
-        {/* <div className="grid"> */}
         {/* Grains */}
         <div className="grid-col-2-3">
           <GrainInput
@@ -325,7 +379,6 @@ function RecipeBuilder() {
             onAdd={(data) => addIngredient("grain", data)}
           />
         </div>
-        {/* </div> */}
 
         {/* Hops */}
         <HopInput

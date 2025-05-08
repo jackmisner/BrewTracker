@@ -48,7 +48,7 @@ function GrainInput({ grains, onAdd }) {
             >
               <option value="">Select Grains</option>
               {grains.map((grain) => (
-                <option key={grain.id} value={grain.id}>
+                <option key={grain.ingredient_id} value={grain.ingredient_id}>
                   {grain.name}
                 </option>
               ))}

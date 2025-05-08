@@ -45,7 +45,7 @@ function YeastInput({ yeasts, onAdd }) {
             >
               <option value="">Select Yeast</option>
               {yeasts.map((yeast) => (
-                <option key={yeast.id} value={yeast.id}>
+                <option key={yeast.ingredient_id} value={yeast.ingredient_id}>
                   {yeast.name}
                 </option>
               ))}
