@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "BrewTracker",
+  "name": "BrewTracker",
+  "description": "A web application for tracking and managing your beer brewing process.",
   "icons": [
     {
       "src": "mugOfBeer.ico",

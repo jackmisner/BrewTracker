@@ -1,6 +1,6 @@
 import React from "react";
 
-function IngredientsList({ ingredients, onRemove }) {
+function IngredientsList({ ingredients, onRemove, isEditing }) {
   if (!ingredients || ingredients.length === 0) {
     return (
       <div className="card">
@@ -18,12 +18,12 @@ function IngredientsList({ ingredients, onRemove }) {
         <table className="ingredients-table">
           <thead>
             <tr>
-              <th>Type</th>
+              {isEditing && <th>Type</th>}
               <th>Ingredient</th>
               <th>Amount</th>
               <th>Use</th>
               <th>Time</th>
-              <th>Actions</th>
+              {isEditing && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -33,9 +33,11 @@ function IngredientsList({ ingredients, onRemove }) {
                 id={`ingredient-row-${ingredient.id}`}
                 className="ingredient-row"
               >
-                <td className="ingredient-type">
-                  {ingredient.ingredient_type}
-                </td>
+                {isEditing && (
+                  <td className="ingredient-type">
+                    {ingredient.ingredient_type}
+                  </td>
+                )}
                 <td className="ingredient-name">
                   {ingredient.ingredient_name}
                 </td>
@@ -48,15 +50,17 @@ function IngredientsList({ ingredients, onRemove }) {
                     ? `${ingredient.time} ${ingredient.time_unit || ""}`
                     : "-"}
                 </td>
-                <td>
-                  <button
-                    type="button"
-                    className="ingredient-action"
-                    onClick={() => onRemove(ingredient.id)}
-                  >
-                    Remove
-                  </button>
-                </td>
+                {isEditing && (
+                  <td>
+                    <button
+                      type="button"
+                      className="ingredient-action"
+                      onClick={() => onRemove(ingredient.id)}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

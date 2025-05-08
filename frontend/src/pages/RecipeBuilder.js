@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import ApiService from "../../services/api";
-import "./RecipeBuilder.css";
+import ApiService from "../services/api";
+import "../components/RecipeBuilder/RecipeBuilder.css";
 
 // Import components
-import RecipeDetails from "./RecipeDetails";
-import RecipeMetrics from "./RecipeMetrics";
-import IngredientsList from "./IngredientsList";
-import GrainInput from "./GrainInput";
-import HopInput from "./HopInput";
-import YeastInput from "./YeastInput";
-import AdjunctInput from "./AdjunctInput";
+import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
+import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
+import IngredientsList from "../components/RecipeBuilder/IngredientsList";
+import GrainInput from "../components/RecipeBuilder/GrainInput";
+import HopInput from "../components/RecipeBuilder/HopInput";
+import YeastInput from "../components/RecipeBuilder/YeastInput";
+import AdjunctInput from "../components/RecipeBuilder/AdjunctInput";
 
 function RecipeBuilder() {
   const { id } = useParams();
@@ -108,7 +108,7 @@ function RecipeBuilder() {
   };
 
   const addIngredient = async (type, ingredientData) => {
-    console.log("ingredientData:", ingredientData);
+    // console.log("ingredientData:", ingredientData);
     try {
       // If recipe exists, add ingredient to it
       if (id) {
@@ -347,7 +347,7 @@ function RecipeBuilder() {
             onChange={handleRecipeChange}
             onSubmit={handleSubmit}
             onCancel={() => navigate("/recipes")}
-            isEditing={!!id}
+            isEditing={!!id || true}
             saving={saving}
           />
         </div>
@@ -370,6 +370,7 @@ function RecipeBuilder() {
         <IngredientsList
           ingredients={recipeIngredients}
           onRemove={removeIngredient}
+          isEditing={!!id || true}
         />
 
         {/* Grains */}
