@@ -740,8 +740,8 @@ function RecipeBuilder() {
           </div>
         </div>
 
+        {/* Fermentables */}
         <div className="grid">
-          {/* Fermentables */}
           <div className="grid-col-2-3">
             <div className="card">
               <h3 className="card-title">Fermentables</h3>
