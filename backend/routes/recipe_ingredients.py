@@ -128,15 +128,21 @@ def remove_recipe_ingredient(recipe_id, ingredient_id):
 def calculate_recipe_metrics(recipe_id):
     current_user_id = get_jwt_identity()
 
-    # Get the recipe
+    # Get the recipe with its ingredients
     recipe = Recipe.query.filter_by(recipe_id=recipe_id).first()
-
     if not recipe:
         return jsonify({"error": "Recipe not found"}), 404
 
-    # Check if user owns the recipe or recipe is public
+    # Authorization check
     if recipe.user_id != current_user_id and not recipe.is_public:
         return jsonify({"error": "Unauthorized access"}), 403
+
+    # Get all ingredients with a single query to avoid N+1 problem
+    recipe_ingredients = (
+        RecipeIngredient.query.join(Ingredient)
+        .filter(RecipeIngredient.recipe_id == recipe_id)
+        .all()
+    )
 
     # Calculate metrics using helper functions
     og = calculate_og(recipe)
