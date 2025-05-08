@@ -8,12 +8,11 @@ import { useEffect } from "react";
 
 const ViewRecipe = () => {
   const { recipeId } = useParams();
-  //   console.log("id:", recipeId);
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [ingredients, setIngredients] = useState([]);
-  //   const [metrics, setMetrics] = useState({});
+  const [metrics, setMetrics] = useState({});
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -21,11 +20,13 @@ const ViewRecipe = () => {
         const recipeResponse = await ApiService.recipes.getById(recipeId);
         const ingredientsResponse =
           await ApiService.recipes.getIngredients(recipeId);
-        // console.log("response.data:", recipeResponse.data);
-        // console.log("ingredientsResponse.data:", ingredientsResponse.data);
+        const metricsResponse =
+          await ApiService.recipes.calculateMetrics(recipeId);
+        console.log("metricsResponse.data:", metricsResponse.data);
+
         setRecipe(recipeResponse.data);
         setIngredients(ingredientsResponse.data);
-        // setMetrics(recipeResponse.data.metrics);
+        setMetrics(metricsResponse.data);
       } catch (error) {
         console.error("Error fetching recipe:", error);
         setError("Failed to load recipe.");
@@ -54,7 +55,7 @@ const ViewRecipe = () => {
         recipeId={recipeId}
         isEditing={false}
       />
-      {/* <RecipeMetrics recipeId={recipeId} /> */}
+      <RecipeMetrics metrics={metrics.metrics} recipeId={recipeId} />
       <IngredientsList
         ingredients={ingredients.ingredients} // Pass the ingredients data
         recipeId={recipeId}

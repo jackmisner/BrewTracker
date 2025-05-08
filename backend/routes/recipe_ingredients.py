@@ -4,6 +4,13 @@ from models import db
 from models.recipe import Recipe
 from models.recipe_ingredient import RecipeIngredient
 from models.ingredient import Ingredient
+from utils.helpers import (
+    calculate_og,
+    calculate_fg,
+    calculate_abv,
+    calculate_ibu,
+    calculate_srm,
+)
 
 recipe_ingredients_bp = Blueprint("recipe_ingredients", __name__)
 
@@ -121,83 +128,28 @@ def remove_recipe_ingredient(recipe_id, ingredient_id):
 def calculate_recipe_metrics(recipe_id):
     current_user_id = get_jwt_identity()
 
-    # Get the recipe
+    # Get the recipe with its ingredients
     recipe = Recipe.query.filter_by(recipe_id=recipe_id).first()
-
     if not recipe:
         return jsonify({"error": "Recipe not found"}), 404
 
-    # Check if user owns the recipe or recipe is public
+    # Authorization check
     if recipe.user_id != current_user_id and not recipe.is_public:
         return jsonify({"error": "Unauthorized access"}), 403
 
-    # Get all ingredients for the recipe
-    recipe_ingredients = RecipeIngredient.query.filter_by(recipe_id=recipe_id).all()
+    # Get all ingredients with a single query to avoid N+1 problem
+    recipe_ingredients = (
+        RecipeIngredient.query.join(Ingredient)
+        .filter(RecipeIngredient.recipe_id == recipe_id)
+        .all()
+    )
 
-    # Calculate metrics
-    og = 1.0
-    srm = 0.0
-    ibu = 0.0
-
-    # Calculate original gravity and SRM from grains
-    for ri in recipe_ingredients:
-        ingredient = Ingredient.query.get(ri.ingredient_id)
-
-        if ingredient and ingredient.type == "grain" and ingredient.potential:
-            # Convert amount to pounds if needed
-            weight_lb = ri.amount
-            if ri.unit == "oz":
-                weight_lb = ri.amount / 16
-            elif ri.unit == "kg":
-                weight_lb = ri.amount * 2.20462
-            elif ri.unit == "g":
-                weight_lb = ri.amount * 0.00220462
-
-            # Calculate gravity points contribution
-            gravity_points = ingredient.potential * weight_lb / recipe.batch_size
-            og += gravity_points / 1000
-
-            # Calculate SRM contribution if color exists
-            if ingredient.color:
-                srm_contribution = ingredient.color * weight_lb / recipe.batch_size
-                srm += srm_contribution
-
-    # Calculate IBUs from hops
-    for ri in recipe_ingredients:
-        ingredient = Ingredient.query.get(ri.ingredient_id)
-
-        if (
-            ingredient
-            and ingredient.type == "hop"
-            and ingredient.alpha_acid
-            and ri.use == "boil"
-            and ri.time
-        ):
-            # Convert amount to ounces if needed
-            weight_oz = ri.amount
-            if ri.unit == "g":
-                weight_oz = ri.amount * 0.035274
-
-            # Simplified IBU calculation
-            utilization = min(0.3, 1.65 * 0.000125 ** (ri.time - 1.0107))
-            ibu_contribution = (
-                weight_oz * ingredient.alpha_acid * utilization * 74.89
-            ) / recipe.batch_size
-            ibu += ibu_contribution
-
-    # Estimate final gravity based on attenuation
-    # Use a default attenuation of 75% if none available from yeast
-    attenuation = 0.75
-    for ri in recipe_ingredients:
-        ingredient = Ingredient.query.get(ri.ingredient_id)
-        if ingredient and ingredient.type == "yeast" and ingredient.attenuation:
-            attenuation = ingredient.attenuation / 100
-            break
-
-    fg = og - ((og - 1.0) * attenuation)
-
-    # Calculate ABV
-    abv = (og - fg) * 131.25
+    # Calculate metrics using helper functions
+    og = calculate_og(recipe)
+    fg = calculate_fg(recipe)
+    abv = calculate_abv(recipe)
+    ibu = calculate_ibu(recipe)
+    srm = calculate_srm(recipe)
 
     # Update recipe with calculated metrics
     recipe.estimated_og = og
