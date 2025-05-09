@@ -18,22 +18,21 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
   const formatSrm = (srm) => {
     return srm ? parseFloat(srm).toFixed(1) : "0.0";
   };
-
   const getSrmColor = (srm) => {
     if (!srm || srm <= 0) return "#FFE699";
-    if (srm <= 2) return "#FFD878";
-    if (srm <= 3) return "#FFCA5A";
-    if (srm <= 4) return "#FFBF42";
-    if (srm <= 6) return "#FBB123";
-    if (srm <= 8) return "#F8A600";
-    if (srm <= 10) return "#F39C00";
-    if (srm <= 13) return "#EA8F00";
-    if (srm <= 17) return "#E58500";
-    if (srm <= 20) return "#D37600";
-    if (srm <= 24) return "#CB6600";
-    if (srm <= 29) return "#C05600";
-    if (srm <= 35) return "#A64C00";
-    return "#8D4000";
+    if (srm > 0 && srm <= 2) return "#FFE699";
+    if (srm > 2 && srm <= 3) return "#FFCA5A";
+    if (srm > 3 && srm <= 4) return "#FFBF42";
+    if (srm > 4 && srm <= 6) return "#FBB123";
+    if (srm > 6 && srm <= 8) return "#F39C00";
+    if (srm > 8 && srm <= 10) return "#E58500";
+    if (srm > 10 && srm <= 13) return "#CF6900";
+    if (srm > 13 && srm <= 17) return "#BB5100";
+    if (srm > 17 && srm <= 20) return "#A13700";
+    if (srm > 20 && srm <= 24) return "#8E2900";
+    if (srm > 24 && srm <= 29) return "#701400";
+    if (srm > 29 && srm <= 35) return "#600903";
+    return "#3D0708"; // for srm > 35
   };
 
   const getBalanceRatio = () => {
