@@ -1,40 +1,14 @@
 import React, { useState } from "react";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+  getSrmColour,
+} from "../../utils/recipeCalculations";
 
 function RecipeMetrics({ metrics, onCalculate, onScale }) {
   const [scaleVolume, setScaleVolume] = useState("");
-
-  const formatGravity = (gravity) => {
-    return gravity ? parseFloat(gravity).toFixed(3) : "1.000";
-  };
-
-  const formatAbv = (abv) => {
-    return abv ? `${parseFloat(abv).toFixed(1)}%` : "0.0%";
-  };
-
-  const formatIbu = (ibu) => {
-    return ibu ? Math.round(ibu).toString() : "0";
-  };
-
-  const formatSrm = (srm) => {
-    return srm ? parseFloat(srm).toFixed(1) : "0.0";
-  };
-
-  const getSrmColor = (srm) => {
-    if (!srm || srm <= 0) return "#FFE699";
-    if (srm <= 2) return "#FFD878";
-    if (srm <= 3) return "#FFCA5A";
-    if (srm <= 4) return "#FFBF42";
-    if (srm <= 6) return "#FBB123";
-    if (srm <= 8) return "#F8A600";
-    if (srm <= 10) return "#F39C00";
-    if (srm <= 13) return "#EA8F00";
-    if (srm <= 17) return "#E58500";
-    if (srm <= 20) return "#D37600";
-    if (srm <= 24) return "#CB6600";
-    if (srm <= 29) return "#C05600";
-    if (srm <= 35) return "#A64C00";
-    return "#8D4000";
-  };
 
   const getBalanceRatio = () => {
     if (metrics.ibu === 0) return 0;
@@ -96,7 +70,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
 
       <div className="color-display">
         <div className="color-info">
-          <div className="metric-label">Color</div>
+          <div className="metric-label">Colour</div>
           <div id="srm-display" className="metric-value">
             {formatSrm(metrics.srm)} SRM
           </div>
@@ -104,7 +78,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
         <div
           id="color-swatch"
           className="color-swatch"
-          style={{ backgroundColor: getSrmColor(metrics.srm) }}
+          style={{ backgroundColor: getSrmColour(metrics.srm) }}
         ></div>
       </div>
 

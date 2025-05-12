@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function GrainInput({ grains, onAdd }) {
+function GrainInput({ grains, onAdd, onCalculate }) {
   const [grainForm, setGrainForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -24,6 +24,7 @@ function GrainInput({ grains, onAdd }) {
     }
 
     onAdd(grainForm);
+    onCalculate();
     // Reset form
     setGrainForm({
       ingredient_id: "",
