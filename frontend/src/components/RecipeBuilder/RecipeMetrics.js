@@ -1,39 +1,14 @@
 import React, { useState } from "react";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+  getSrmColour,
+} from "../../utils/recipeCalculations";
 
 function RecipeMetrics({ metrics, onCalculate, onScale }) {
   const [scaleVolume, setScaleVolume] = useState("");
-
-  const formatGravity = (gravity) => {
-    return gravity ? parseFloat(gravity).toFixed(3) : "1.000";
-  };
-
-  const formatAbv = (abv) => {
-    return abv ? `${parseFloat(abv).toFixed(1)}%` : "0.0%";
-  };
-
-  const formatIbu = (ibu) => {
-    return ibu ? Math.round(ibu).toString() : "0";
-  };
-
-  const formatSrm = (srm) => {
-    return srm ? parseFloat(srm).toFixed(1) : "0.0";
-  };
-  const getSrmColor = (srm) => {
-    if (!srm || srm <= 0) return "#FFE699";
-    if (srm > 0 && srm <= 2) return "#FFE699";
-    if (srm > 2 && srm <= 3) return "#FFCA5A";
-    if (srm > 3 && srm <= 4) return "#FFBF42";
-    if (srm > 4 && srm <= 6) return "#FBB123";
-    if (srm > 6 && srm <= 8) return "#F39C00";
-    if (srm > 8 && srm <= 10) return "#E58500";
-    if (srm > 10 && srm <= 13) return "#CF6900";
-    if (srm > 13 && srm <= 17) return "#BB5100";
-    if (srm > 17 && srm <= 20) return "#A13700";
-    if (srm > 20 && srm <= 24) return "#8E2900";
-    if (srm > 24 && srm <= 29) return "#701400";
-    if (srm > 29 && srm <= 35) return "#600903";
-    return "#3D0708"; // for srm > 35
-  };
 
   const getBalanceRatio = () => {
     if (metrics.ibu === 0) return 0;
@@ -95,7 +70,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
 
       <div className="color-display">
         <div className="color-info">
-          <div className="metric-label">Color</div>
+          <div className="metric-label">Colour</div>
           <div id="srm-display" className="metric-value">
             {formatSrm(metrics.srm)} SRM
           </div>
@@ -103,7 +78,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
         <div
           id="color-swatch"
           className="color-swatch"
-          style={{ backgroundColor: getSrmColor(metrics.srm) }}
+          style={{ backgroundColor: getSrmColour(metrics.srm) }}
         ></div>
       </div>
 

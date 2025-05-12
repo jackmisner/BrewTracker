@@ -11,6 +11,13 @@ import GrainInput from "../components/RecipeBuilder/GrainInput";
 import HopInput from "../components/RecipeBuilder/HopInput";
 import YeastInput from "../components/RecipeBuilder/YeastInput";
 import AdjunctInput from "../components/RecipeBuilder/AdjunctInput";
+import {
+  calculateOG,
+  calculateFG,
+  calculateABV,
+  calculateIBU,
+  calculateSRM,
+} from "../utils/recipeCalculations";
 
 function RecipeBuilder() {
   const { id } = useParams();
@@ -108,7 +115,6 @@ function RecipeBuilder() {
   };
 
   const addIngredient = async (type, ingredientData) => {
-    // console.log("ingredientData:", ingredientData);
     try {
       // If recipe exists, add ingredient to it
       if (id) {
@@ -126,6 +132,10 @@ function RecipeBuilder() {
             id: `temp-${Date.now()}`,
             ingredient_id: ingredientData.ingredient_id,
             ingredient_name: getIngredientName(
+              ingredientData.ingredient_id,
+              type,
+            ),
+            associated_metrics: getIngredientData(
               ingredientData.ingredient_id,
               type,
             ),
@@ -153,6 +163,20 @@ function RecipeBuilder() {
       (i) => i.ingredient_id === parseInt(ingredientId),
     );
     return ingredient ? ingredient.name : "Unknown";
+  };
+
+  // Helper function to get relevant ingredient data from ID
+  const getIngredientData = (ingredientId, type) => {
+    const ingredient = ingredients[type]?.find(
+      (i) => i.ingredient_id === parseInt(ingredientId),
+    );
+    if (type === "grain") {
+      return { potential: ingredient.potential, colour: ingredient.color };
+    } else if (type === "hop") {
+      return { alpha_acid: ingredient.alpha_acid };
+    } else if (type === "yeast") {
+      return { attenuation: ingredient.attenuation };
+    }
   };
 
   const removeIngredient = async (ingredientId) => {
@@ -183,41 +207,22 @@ function RecipeBuilder() {
         setMetrics(response.data.metrics);
       } else {
         // Client-side estimation for new recipes
-        // This is simplified - the server would do more accurate calculations
-        let og = 1.0;
-        let srm = 0;
-        let ibu = 0;
+        // This uses the same formulas as the server-side calculations
 
-        // Simple OG calculation based on grain amounts
-        const grains = recipeIngredients.filter(
-          (i) => i.ingredient_type === "grain",
+        const og = calculateOG(
+          recipeIngredients,
+          recipe.batch_size,
+          recipe.efficiency,
         );
-        grains.forEach((grain) => {
-          // Assume basic contribution to gravity
-          const gravityPoints = 0.036 * parseFloat(grain.amount); // Very simplified (assumes all grains are 36 ppg) and doesn't take into account batch size
-          og += gravityPoints;
-        });
-
-        // Simple SRM calculation
-        grains.forEach((grain) => {
-          // Simplified SRM contribution
-          const srmContribution = 0.2 * parseFloat(grain.amount); // Very simplified
-          srm += srmContribution;
-        });
-
-        // Simple IBU calculation
-        const hops = recipeIngredients.filter(
-          (i) => i.ingredient_type === "hop",
+        const fg = calculateFG(recipeIngredients, og);
+        const abv = calculateABV(og, fg);
+        const ibu = calculateIBU(
+          recipeIngredients,
+          og,
+          recipe.batch_size,
+          recipe.boil_time,
         );
-        hops.forEach((hop) => {
-          // Simplified IBU contribution
-          const ibuContribution = 5 * parseFloat(hop.amount); // Very simplified
-          ibu += ibuContribution;
-        });
-
-        // Simple FG and ABV calculation
-        const fg = og - 0.005; // Very simplified
-        const abv = (og - fg) * 131.25;
+        const srm = calculateSRM(recipeIngredients, recipe.batch_size);
 
         setMetrics({
           og: og,
@@ -234,9 +239,41 @@ function RecipeBuilder() {
   };
 
   const handleScaleRecipe = (newBatchSize) => {
-    // Implement recipe scaling logic here
-    console.log("Scaling recipe to", newBatchSize, "gallons");
-    // Would need to update all ingredient amounts proportionally
+    if (!newBatchSize || isNaN(newBatchSize) || newBatchSize <= 0) {
+      setError("Invalid batch size for scaling");
+      return;
+    }
+
+    // Get current batch size
+    const currentBatchSize = recipe.batch_size;
+
+    // Calculate scaling factor
+    const scalingFactor = newBatchSize / currentBatchSize;
+
+    // Update the recipe batch size
+    const updatedRecipe = {
+      ...recipe,
+      batch_size: newBatchSize,
+    };
+
+    // Scale all ingredient amounts
+    const scaledIngredients = recipeIngredients.map((ingredient) => {
+      return {
+        ...ingredient,
+        amount: (parseFloat(ingredient.amount) * scalingFactor).toFixed(2),
+      };
+    });
+
+    // Update state
+    setRecipe(updatedRecipe);
+    setRecipeIngredients(scaledIngredients);
+
+    // Recalculate metrics with new values
+    setTimeout(() => calculateRecipeMetrics(), 0);
+
+    console.log(
+      `Recipe scaled from ${currentBatchSize} to ${newBatchSize} gallons`,
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -378,6 +415,7 @@ function RecipeBuilder() {
           <GrainInput
             grains={ingredients.grain}
             onAdd={(data) => addIngredient("grain", data)}
+            onCalculate={calculateRecipeMetrics}
           />
         </div>
 
