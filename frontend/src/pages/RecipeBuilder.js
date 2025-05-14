@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import ApiService from "../services/api";
 import "../components/RecipeBuilder/RecipeBuilder.css";
@@ -20,7 +20,7 @@ import {
 } from "../utils/recipeCalculations";
 
 function RecipeBuilder() {
-  const { id: recipeId } = useParams();
+  const { recipeId } = useParams();
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState({
     name: "",
