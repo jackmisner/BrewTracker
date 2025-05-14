@@ -32,16 +32,18 @@ export function convertToOunces(amount, unit) {
 }
 
 // Calculate Original Gravity
-export function calculateOG(recipeIngredients, batchSize, efficiency = 75) {
+export function calculateOG(recipeIngredients, batchSize, efficiency) {
   let totalPoints = 0.0;
   const grains = recipeIngredients.filter((i) => i.ingredient_type === "grain");
-
+  console.log('efficiency:', efficiency);
+  // Use passed efficiency if provided, otherwise default to 75
+  const brewingEfficiency = efficiency !== undefined ? efficiency : 75;
+  
   for (const grain of grains) {
     // Get grain potential - use a default if not available
-    const potential = grain.associated_metrics.potential || 36; // Default to typical base malt potential
-    // console.log("potential:", potential);
+    const potential = grain.associated_metrics.potential || 36; // Default to typical base malt potential if no value
     const weightLb = convertToPounds(parseFloat(grain.amount), grain.unit);
-    totalPoints += weightLb * potential * (efficiency / 100);
+    totalPoints += weightLb * potential * (brewingEfficiency / 100);
   }
 
   // Calculate gravity points per gallon, then convert to specific gravity

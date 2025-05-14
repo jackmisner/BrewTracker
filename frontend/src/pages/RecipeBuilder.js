@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import ApiService from "../services/api";
 import "../components/RecipeBuilder/RecipeBuilder.css";
@@ -20,7 +20,7 @@ import {
 } from "../utils/recipeCalculations";
 
 function RecipeBuilder() {
-  const { id } = useParams();
+  const { recipeId } = useParams();
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState({
     name: "",
@@ -57,12 +57,12 @@ function RecipeBuilder() {
     fetchIngredients();
 
     // If editing an existing recipe, fetch it
-    if (id) {
-      fetchRecipe(id);
+    if (recipeId) {
+      fetchRecipe(recipeId);
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [recipeId]);
 
   const fetchIngredients = async () => {
     try {
@@ -117,8 +117,8 @@ function RecipeBuilder() {
   const addIngredient = async (type, ingredientData) => {
     try {
       // If recipe exists, add ingredient to it
-      if (id) {
-        const response = await ApiService.recipes.addIngredient(id, {
+      if (recipeId) {
+        const response = await ApiService.recipes.addIngredient(recipeId, {
           ...ingredientData,
           ingredient_type: type,
         });
@@ -181,9 +181,9 @@ function RecipeBuilder() {
 
   const removeIngredient = async (ingredientId) => {
     try {
-      if (id && !ingredientId.toString().startsWith("temp-")) {
+      if (recipeId && !ingredientId.toString().startsWith("temp-")) {
         // If recipe exists and ingredient is saved, remove from database
-        await ApiService.recipes.removeIngredient(id, ingredientId);
+        await ApiService.recipes.removeIngredient(recipeId, ingredientId);
       }
 
       // Remove from local state
@@ -201,9 +201,9 @@ function RecipeBuilder() {
 
   const calculateRecipeMetrics = async () => {
     try {
-      if (id) {
+      if (recipeId) {
         // If recipe exists, get calculated metrics from server
-        const response = await ApiService.recipes.calculateMetrics(id);
+        const response = await ApiService.recipes.calculateMetrics(recipeId);
         setMetrics(response.data.metrics);
       } else {
         // Client-side estimation for new recipes
@@ -292,11 +292,11 @@ function RecipeBuilder() {
       };
 
       let recipeResponse;
-      let newRecipeId = id;
+      let newRecipeId = recipeId;
 
-      if (id) {
+      if (recipeId) {
         // Update existing recipe
-        recipeResponse = await ApiService.recipes.update(id, recipeData);
+        recipeResponse = await ApiService.recipes.update(recipeId, recipeData);
       } else {
         // Create new recipe
         recipeResponse = await ApiService.recipes.create(recipeData);
@@ -368,7 +368,7 @@ function RecipeBuilder() {
 
   return (
     <div id="recipe-builder" className="container">
-      <h1 className="page-title">{id ? "Edit Recipe" : "Create New Recipe"}</h1>
+      <h1 className="page-title">{recipeId ? "Edit Recipe" : "Create New Recipe"}</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
@@ -384,7 +384,7 @@ function RecipeBuilder() {
             onChange={handleRecipeChange}
             onSubmit={handleSubmit}
             onCancel={() => navigate("/recipes")}
-            isEditing={!!id || true}
+            isEditing={!!recipeId || true}
             saving={saving}
           />
         </div>
@@ -407,7 +407,7 @@ function RecipeBuilder() {
         <IngredientsList
           ingredients={recipeIngredients}
           onRemove={removeIngredient}
-          isEditing={!!id || true}
+          isEditing={!!recipeId || true}
         />
 
         {/* Grains */}
@@ -423,18 +423,21 @@ function RecipeBuilder() {
         <HopInput
           hops={ingredients.hop}
           onAdd={(data) => addIngredient("hop", data)}
+          onCalculate={calculateRecipeMetrics}
         />
 
         {/* Yeast */}
         <YeastInput
           yeasts={ingredients.yeast}
           onAdd={(data) => addIngredient("yeast", data)}
+          onCalculate={calculateRecipeMetrics}
         />
 
         {/* Adjuncts  */}
         <AdjunctInput
           adjuncts={ingredients.adjunct}
           onAdd={(data) => addIngredient("adjunct", data)}
+          onCalculate={calculateRecipeMetrics}
         />
       </div>
     </div>

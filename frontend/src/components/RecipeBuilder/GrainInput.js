@@ -15,7 +15,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!grainForm.ingredient_id || !grainForm.amount) {
@@ -23,7 +23,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
       return; // Basic validation
     }
 
-    onAdd(grainForm);
+    await onAdd(grainForm);
     onCalculate();
     // Reset form
     setGrainForm({
