@@ -117,7 +117,7 @@ def calculate_og(recipe):
     for ri in recipe.recipe_ingredients:
         if ri.ingredient.type == "grain" and ri.ingredient.potential:
             weight_lb = convert_to_pounds(ri.amount, ri.unit)
-            total_points += weight_lb * ri.ingredient.potential
+            total_points += (weight_lb * ri.ingredient.potential)*(recipe.efficiency / 100.0)
 
     og = 1.0 + (total_points / recipe.batch_size / 1000.0)
     return round(og, 3)
