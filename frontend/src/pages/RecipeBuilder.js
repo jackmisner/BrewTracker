@@ -423,18 +423,21 @@ function RecipeBuilder() {
         <HopInput
           hops={ingredients.hop}
           onAdd={(data) => addIngredient("hop", data)}
+          onCalculate={calculateRecipeMetrics}
         />
 
         {/* Yeast */}
         <YeastInput
           yeasts={ingredients.yeast}
           onAdd={(data) => addIngredient("yeast", data)}
+          onCalculate={calculateRecipeMetrics}
         />
 
         {/* Adjuncts  */}
         <AdjunctInput
           adjuncts={ingredients.adjunct}
           onAdd={(data) => addIngredient("adjunct", data)}
+          onCalculate={calculateRecipeMetrics}
         />
       </div>
     </div>

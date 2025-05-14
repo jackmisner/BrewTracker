@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function HopInput({ hops, onAdd }) {
+function HopInput({ hops, onAdd, onCalculate }) {
   const [hopForm, setHopForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -16,22 +16,25 @@ function HopInput({ hops, onAdd }) {
       [name]: value,
     }));
   };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!hopForm.ingredient_id || !hopForm.amount) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    onAdd(hopForm);
-    setHopForm({
-      ingredient_id: "",
-      amount: "",
-      unit: "oz",
-      use: "boil",
-      time: "",
-      time_unit: "minutes",
-    });
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!hopForm.ingredient_id || !hopForm.amount) {
+    alert("Please fill in all required fields.");
+    return;
+  }
+  
+  await onAdd(hopForm);  // Wait for the ingredient to be added
+  onCalculate();  // Then calculate metrics
+  
+  setHopForm({
+    ingredient_id: "",
+    amount: "",
+    unit: "oz",
+    use: "boil",
+    time: "",
+    time_unit: "minutes",
+  });
+};
 
   return (
     <div className="card mt-6">

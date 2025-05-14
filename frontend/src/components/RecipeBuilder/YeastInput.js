@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function YeastInput({ yeasts, onAdd }) {
+function YeastInput({ yeasts, onAdd, onCalculate }) {
   const [yeastForm, setYeastForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -13,7 +13,7 @@ function YeastInput({ yeasts, onAdd }) {
       [name]: value,
     });
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!yeastForm.ingredient_id || !yeastForm.amount) {
@@ -21,7 +21,8 @@ function YeastInput({ yeasts, onAdd }) {
       return; // Basic validation
     }
 
-    onAdd(yeastForm);
+    await onAdd(yeastForm);
+    onCalculate();
     // Reset form
     setYeastForm({
       ingredient_id: "",

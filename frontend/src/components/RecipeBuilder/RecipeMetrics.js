@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   formatGravity,
   formatAbv,
@@ -9,6 +9,12 @@ import {
 
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   const [scaleVolume, setScaleVolume] = useState("");
+
+useEffect(() => {
+  if (metrics && onCalculate) {
+    onCalculate();
+  }
+}, [metrics, onCalculate, metrics.og, metrics.fg, metrics.abv, metrics.ibu, metrics.srm]); // Add specific dependencies
 
   const getBalanceRatio = () => {
     if (metrics.ibu === 0) return 0;
