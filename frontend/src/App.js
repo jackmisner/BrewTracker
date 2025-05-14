@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import RecipeBuilder from "./pages/RecipeBuilder";
 import ViewRecipe from "./pages/ViewRecipe";
+import AllRecipes from "./pages/AllRecipes";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -96,7 +97,7 @@ function App() {
             path="/recipes"
             element={
               <ProtectedRoute>
-                <div>Recipe List (To be implemented)</div>
+                <AllRecipes />
               </ProtectedRoute>
             }
           />
