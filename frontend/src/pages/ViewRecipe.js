@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import ApiService from "../services/api";
 import { useParams } from "react-router";
-import { useEffect } from "react";
 
 const ViewRecipe = () => {
   const { recipeId } = useParams();
