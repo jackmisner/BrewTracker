@@ -17,11 +17,8 @@ const ViewRecipe = () => {
     const fetchRecipe = async () => {
       try {
         const recipeResponse = await ApiService.recipes.getById(recipeId);
-        const ingredientsResponse =
-          await ApiService.recipes.getIngredients(recipeId);
-        const metricsResponse =
-          await ApiService.recipes.calculateMetrics(recipeId);
-        // console.log("metricsResponse.data:", metricsResponse.data);
+        const ingredientsResponse = await ApiService.recipes.getIngredients(recipeId);
+        const metricsResponse = await ApiService.recipes.calculateMetrics(recipeId);
 
         setRecipe(recipeResponse.data);
         setIngredients(ingredientsResponse.data);
@@ -36,6 +33,7 @@ const ViewRecipe = () => {
 
     fetchRecipe();
   }, [recipeId]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -50,17 +48,23 @@ const ViewRecipe = () => {
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-4">View Recipe: </h1>
       <RecipeDetails
-        recipe={recipe.recipe} // Pass the full recipe object
+        recipe={recipe.recipe}
         recipeId={recipeId}
         isEditing={false}
       />
-      <RecipeMetrics metrics={metrics.metrics} recipeId={recipeId} showScale={true}/>
+      <RecipeMetrics 
+        metrics={metrics.metrics} 
+        recipeId={recipeId} 
+        onScale={null}
+        cardView={false}
+      />
       <IngredientsList
-        ingredients={ingredients.ingredients} // Pass the ingredients data
+        ingredients={ingredients.ingredients}
         recipeId={recipeId}
         isEditing={false}
       />
     </div>
   );
 };
+
 export default ViewRecipe;

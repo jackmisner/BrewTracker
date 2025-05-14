@@ -7,7 +7,7 @@ import {
   getSrmColour,
 } from "../../utils/recipeCalculations";
 
-function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
+function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   const [scaleVolume, setScaleVolume] = useState("");
 
   const getBalanceRatio = () => {
@@ -34,11 +34,28 @@ function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
     }
   };
 
-  return (
-    <div className="metrics-container">
-      <h2 className="card-title">Recipe Metrics</h2>
+  // Use different class names for cardView
+  const containerClass = cardView 
+    ? "card-metrics-container" 
+    : "metrics-container";
+  
+  const metricsGridClass = cardView 
+    ? "card-metrics-grid" 
+    : "metrics-grid";
+  
+  const colorDisplayClass = cardView 
+    ? "card-color-display" 
+    : "color-display";
+  
+  const balanceMeterContainerClass = cardView 
+    ? "card-balance-meter-container" 
+    : "balance-meter-container";
 
-      <div className="metrics-grid">
+  return (
+    <div className={containerClass}>
+      {!cardView && <h2 className="card-title">Recipe Metrics</h2>}
+
+      <div className={metricsGridClass}>
         <div className="metric-box">
           <div className="metric-label">Original Gravity</div>
           <div id="og-display" className="metric-value">
@@ -68,7 +85,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
         </div>
       </div>
 
-      <div className="color-display">
+      <div className={colorDisplayClass}>
         <div className="color-info">
           <div className="metric-label">Colour</div>
           <div id="srm-display" className="metric-value">
@@ -82,7 +99,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
         ></div>
       </div>
 
-      <div className="balance-meter-container">
+      <div className={balanceMeterContainerClass}>
         <div className="balance-labels">
           <span>Malty</span>
           <span>Balanced</span>
@@ -102,41 +119,47 @@ function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
         </div>
       </div>
 
-      {showScale && (
-        <div className="scaling-container">
-          <h3 className="scaling-title">Recipe Scaling</h3>
-          <div className="scaling-input-group">
-            <input
-              type="number"
-              id="scale-volume"
-              name="scale-volume"
-              placeholder="New batch size"
-              step="0.1"
-              min="0.1"
-              value={scaleVolume}
-              onChange={(e) => setScaleVolume(e.target.value)}
-              className="scaling-input"
-            />
-            <button
-              id="scale-recipe-btn"
-              type="button"
-              onClick={handleScaleSubmit}
-              className="scaling-button"
-            >
-              Scale
-            </button>
-          </div>
-        </div>
-      )}
+      {!cardView && (
+        <>
+          {onScale && (
+            <div className="scaling-container">
+              <h3 className="scaling-title">Recipe Scaling</h3>
+              <div className="scaling-input-group">
+                <input
+                  type="number"
+                  id="scale-volume"
+                  name="scale-volume"
+                  placeholder="New batch size"
+                  step="0.1"
+                  min="0.1"
+                  value={scaleVolume}
+                  onChange={(e) => setScaleVolume(e.target.value)}
+                  className="scaling-input"
+                />
+                <button
+                  id="scale-recipe-btn"
+                  type="button"
+                  onClick={handleScaleSubmit}
+                  className="scaling-button"
+                >
+                  Scale
+                </button>
+              </div>
+            </div>
+          )}
 
-      <button
-        id="calculate-recipe-btn"
-        type="button"
-        onClick={onCalculate}
-        className="calculate-button mt-6"
-      >
-        Calculate Recipe
-      </button>
+          {onCalculate && (
+            <button
+              id="calculate-recipe-btn"
+              type="button"
+              onClick={onCalculate}
+              className="calculate-button mt-6"
+            >
+              Calculate Recipe
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
