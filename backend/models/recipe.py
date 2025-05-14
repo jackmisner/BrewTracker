@@ -34,7 +34,7 @@ class Recipe(db.Model):
 
     # Relationships
     brew_sessions = db.relationship("BrewSession", backref="recipe", lazy=True)
-    recipe_ingredients = db.relationship("RecipeIngredient", back_populates="recipe")
+    recipe_ingredients = db.relationship("RecipeIngredient", back_populates="recipe",cascade="all, delete-orphan")
 
     # Relationship to Ingredient through the join table
     ingredients = db.relationship(

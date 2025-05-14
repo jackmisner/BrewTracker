@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import ApiService from "../services/api";
 import RecipeCardContainer from "../components/RecipeCardContainer";
 
@@ -6,28 +6,31 @@ const AllRecipes = () => {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    useEffect(() => {
-        const fetchRecipes = async () => {
-            try {
-                const recipesResponse = await ApiService.recipes.getAll();
-                if (recipesResponse.status !== 200) {
-                    throw new Error("Failed to fetch recipes");
-                }
-                const sortedRecipes = recipesResponse.data.recipes
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 5);
-            setRecipes(sortedRecipes);
-            console.log('sortedRecipes:', sortedRecipes);
-            } catch (err) {
-                console.error("Error fetching recipes:", err);
-                setError("Failed to load recipes");
-            } finally {
-                setLoading(false);
+    
+    const fetchRecipes = async () => {
+        try {
+            setLoading(true);
+            const recipesResponse = await ApiService.recipes.getAll();
+            if (recipesResponse.status !== 200) {
+                throw new Error("Failed to fetch recipes");
             }
-        };
+            const sortedRecipes = recipesResponse.data.recipes
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 5);
+            setRecipes(sortedRecipes);
+            // console.log('sortedRecipes:', sortedRecipes);
+        } catch (err) {
+            console.error("Error fetching recipes:", err);
+            setError("Failed to load recipes");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchRecipes();
     }, []);
+    
     return (
         <div className="container mx-auto px-4 py-6">
             {loading && <div className="text-center py-10">Loading...</div>}
@@ -45,4 +48,5 @@ const AllRecipes = () => {
         </div>
     );
 }
+
 export default AllRecipes;

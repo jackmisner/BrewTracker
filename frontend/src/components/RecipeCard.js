@@ -1,8 +1,10 @@
 import RecipeMetrics from "./RecipeBuilder/RecipeMetrics";
 import ApiService from "../services/api";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
-const RecipeCard = ({ recipe }) => {
+const RecipeCard = ({ recipe, onDelete }) => {
+  const navigate = useNavigate();
   const formattedDate = new Date(recipe.created_at).toLocaleDateString();
   const [metrics, setMetrics] = useState({
     og: 1.0,
@@ -11,6 +13,54 @@ const RecipeCard = ({ recipe }) => {
     ibu: 0,
     srm: 0
   });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const viewRecipe = () => {
+    navigate(`/recipes/${recipe.recipe_id}`);
+  }
+
+  const editRecipe = () => {
+    // Navigate to the edit page (which uses RecipeBuilder component)
+    navigate(`/recipes/${recipe.recipe_id}/edit`);
+  }
+  
+  const deleteRecipe = async () => {
+    if (window.confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
+      setIsDeleting(true);
+      try {
+        // Debug: Log the recipe_id being deleted
+        console.log("Deleting recipe with ID:", recipe.recipe_id);
+        
+        // Make the API call to delete the recipe
+        const response = await ApiService.recipes.delete(recipe.recipe_id);
+        
+        // Debug: Log the response
+        console.log("Delete response:", response);
+        
+        // Call the onDelete callback to refresh the parent component
+        if (onDelete) {
+          onDelete(recipe.recipe_id);
+        }
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+        // More detailed error logging
+        if (error.response) {
+          // Server responded with an error status code
+          console.error("Error response data:", error.response.data);
+          console.error("Error response status:", error.response.status);
+        } else if (error.request) {
+          // Request was made but no response received
+          console.error("No response received from server");
+        } else {
+          // Something else caused the error
+          console.error("Error message:", error.message);
+        }
+        alert(`Failed to delete recipe: ${error.response?.data?.error || error.message || "Unknown error"}`);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  }
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -39,6 +89,22 @@ const RecipeCard = ({ recipe }) => {
       
       <div className="recipe-card-footer">
         <span>Created on: {formattedDate}</span>
+      </div>
+
+      <div className="recipe-card-actions">
+        <button className="recipe-card-button" onClick={viewRecipe}>
+          View
+        </button>
+        <button className="recipe-card-button" onClick={editRecipe}>
+          Edit
+        </button>
+        <button 
+          className="recipe-card-button" 
+          onClick={deleteRecipe} 
+          disabled={isDeleting}
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </button>
       </div>
     </div>
   );
