@@ -28,15 +28,8 @@ const RecipeCard = ({ recipe, onDelete }) => {
     if (window.confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
       setIsDeleting(true);
       try {
-        // Debug: Log the recipe_id being deleted
-        console.log("Deleting recipe with ID:", recipe.recipe_id);
-        
-        // Make the API call to delete the recipe
-        const response = await ApiService.recipes.delete(recipe.recipe_id);
-        
-        // Debug: Log the response
-        console.log("Delete response:", response);
-        
+        await ApiService.recipes.delete(recipe.recipe_id);
+
         // Call the onDelete callback to refresh the parent component
         if (onDelete) {
           onDelete(recipe.recipe_id);
