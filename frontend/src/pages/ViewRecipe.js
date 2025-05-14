@@ -21,7 +21,7 @@ const ViewRecipe = () => {
           await ApiService.recipes.getIngredients(recipeId);
         const metricsResponse =
           await ApiService.recipes.calculateMetrics(recipeId);
-        console.log("metricsResponse.data:", metricsResponse.data);
+        // console.log("metricsResponse.data:", metricsResponse.data);
 
         setRecipe(recipeResponse.data);
         setIngredients(ingredientsResponse.data);
@@ -54,7 +54,7 @@ const ViewRecipe = () => {
         recipeId={recipeId}
         isEditing={false}
       />
-      <RecipeMetrics metrics={metrics.metrics} recipeId={recipeId} />
+      <RecipeMetrics metrics={metrics.metrics} recipeId={recipeId} showScale={true}/>
       <IngredientsList
         ingredients={ingredients.ingredients} // Pass the ingredients data
         recipeId={recipeId}

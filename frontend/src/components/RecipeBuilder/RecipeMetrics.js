@@ -7,7 +7,7 @@ import {
   getSrmColour,
 } from "../../utils/recipeCalculations";
 
-function RecipeMetrics({ metrics, onCalculate, onScale }) {
+function RecipeMetrics({ metrics, onCalculate, onScale, showScale }) {
   const [scaleVolume, setScaleVolume] = useState("");
 
   const getBalanceRatio = () => {
@@ -102,30 +102,32 @@ function RecipeMetrics({ metrics, onCalculate, onScale }) {
         </div>
       </div>
 
-      <div className="scaling-container">
-        <h3 className="scaling-title">Recipe Scaling</h3>
-        <div className="scaling-input-group">
-          <input
-            type="number"
-            id="scale-volume"
-            name="scale-volume"
-            placeholder="New batch size"
-            step="0.1"
-            min="0.1"
-            value={scaleVolume}
-            onChange={(e) => setScaleVolume(e.target.value)}
-            className="scaling-input"
-          />
-          <button
-            id="scale-recipe-btn"
-            type="button"
-            onClick={handleScaleSubmit}
-            className="scaling-button"
-          >
-            Scale
-          </button>
+      {showScale && (
+        <div className="scaling-container">
+          <h3 className="scaling-title">Recipe Scaling</h3>
+          <div className="scaling-input-group">
+            <input
+              type="number"
+              id="scale-volume"
+              name="scale-volume"
+              placeholder="New batch size"
+              step="0.1"
+              min="0.1"
+              value={scaleVolume}
+              onChange={(e) => setScaleVolume(e.target.value)}
+              className="scaling-input"
+            />
+            <button
+              id="scale-recipe-btn"
+              type="button"
+              onClick={handleScaleSubmit}
+              className="scaling-button"
+            >
+              Scale
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         id="calculate-recipe-btn"
