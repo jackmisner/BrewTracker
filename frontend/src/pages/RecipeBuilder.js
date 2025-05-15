@@ -128,6 +128,13 @@ function RecipeBuilder() {
   const fetchIngredients = async () => {
     try {
       const response = await ApiService.ingredients.getAll();
+      // console.log("Ingredients API Response:", response.data);
+
+      // Check if response data is an array directly or nested in an 'ingredients' property
+      const ingredientsData = Array.isArray(response.data)
+        ? response.data
+        : response.data.ingredients || [];
+
       // Group ingredients by type
       const grouped = {
         grain: [],
@@ -136,7 +143,7 @@ function RecipeBuilder() {
         adjunct: [],
       };
 
-      response.data.ingredients.forEach((ingredient) => {
+      ingredientsData.forEach((ingredient) => {
         if (grouped[ingredient.type]) {
           grouped[ingredient.type].push(ingredient);
         } else {
@@ -149,6 +156,7 @@ function RecipeBuilder() {
       setIngredients(grouped);
     } catch (err) {
       console.error("Error fetching ingredients:", err);
+      console.log("Error details:", err.response?.data);
       setError("Failed to load ingredients");
     }
   };
@@ -220,10 +228,9 @@ function RecipeBuilder() {
     }
   };
 
-  // Helper function to get ingredient name from ID
   const getIngredientName = (ingredientId, type) => {
     const ingredient = ingredients[type]?.find(
-      (i) => i.ingredient_id === parseInt(ingredientId)
+      (i) => String(i.ingredient_id) === String(ingredientId)
     );
     return ingredient ? ingredient.name : "Unknown";
   };
@@ -231,8 +238,10 @@ function RecipeBuilder() {
   // Helper function to get relevant ingredient data from ID
   const getIngredientData = (ingredientId, type) => {
     const ingredient = ingredients[type]?.find(
-      (i) => i.ingredient_id === parseInt(ingredientId)
+      (i) => String(i.ingredient_id) === String(ingredientId)
     );
+    if (!ingredient) return {};
+
     if (type === "grain") {
       return { potential: ingredient.potential, colour: ingredient.color };
     } else if (type === "hop") {
@@ -240,6 +249,7 @@ function RecipeBuilder() {
     } else if (type === "yeast") {
       return { attenuation: ingredient.attenuation };
     }
+    return {};
   };
 
   const removeIngredient = async (ingredientId) => {
@@ -342,6 +352,7 @@ function RecipeBuilder() {
     setError("");
 
     try {
+      // Prepare recipe data with metrics
       const recipeData = {
         ...recipe,
         estimated_og: metrics.og,
@@ -351,71 +362,65 @@ function RecipeBuilder() {
         estimated_srm: metrics.srm,
       };
 
+      // Format ingredients for MongoDB
+      // In MongoDB, ingredients are embedded in the recipe document
+      const formattedIngredients = recipeIngredients.map((ing) => {
+        // Only include necessary fields for MongoDB model
+        return {
+          ingredient_id: ing.ingredient_id, // This should be a string in MongoDB
+          name:
+            ing.ingredient_name ||
+            getIngredientName(ing.ingredient_id, ing.ingredient_type),
+          type: ing.ingredient_type,
+          amount: parseFloat(ing.amount),
+          unit: ing.unit,
+          use: ing.use,
+          time: parseInt(ing.time) || 0,
+        };
+      });
+
+      // Add ingredients to recipe data
+      recipeData.ingredients = formattedIngredients;
+
       let recipeResponse;
-      let newRecipeId = recipeId;
 
       if (recipeId) {
         // Update existing recipe
         recipeResponse = await ApiService.recipes.update(recipeId, recipeData);
+
+        // Check response
+        if (!recipeResponse.data) {
+          throw new Error("Failed to update recipe: Invalid server response");
+        }
+
+        alert("Recipe updated successfully!");
       } else {
         // Create new recipe
         recipeResponse = await ApiService.recipes.create(recipeData);
 
-        if (!recipeResponse.data || !recipeResponse.data.recipe) {
+        // Check response
+        if (!recipeResponse.data) {
           throw new Error("Failed to create recipe: Invalid server response");
         }
 
-        newRecipeId = recipeResponse.data.recipe.recipe_id;
+        alert("Recipe created successfully!");
 
-        // Add any ingredients that were added before saving
-        if (recipeIngredients.length > 0) {
-          const saveIngredientPromises = recipeIngredients.map(
-            async (ingredient) => {
-              if (ingredient.id.toString().startsWith("temp-")) {
-                // Extract data for API call
-                const {
-                  id: tempId,
-                  ingredient_name,
-                  ingredient_type,
-                  ...ingredientData
-                } = ingredient;
+        // Get the new recipe ID
+        const newRecipeId =
+          recipeResponse.data.recipe_id ||
+          recipeResponse.data._id ||
+          recipeResponse.data.id;
 
-                // Make sure we're sending the right format
-                const ingredientPayload = {
-                  ...ingredientData,
-                  ingredient_type: ingredient_type,
-                };
-
-                try {
-                  await ApiService.recipes.addIngredient(
-                    newRecipeId,
-                    ingredientPayload
-                  );
-                } catch (err) {
-                  console.error(
-                    `Error saving ingredient ${ingredient.ingredient_name}:`,
-                    err
-                  );
-                  throw new Error(
-                    `Failed to save ingredient: ${ingredient.ingredient_name}`
-                  );
-                }
-              }
-            }
-          );
-
-          // Wait for all ingredient saves to complete
-          await Promise.all(saveIngredientPromises);
+        if (!newRecipeId) {
+          throw new Error("Failed to get new recipe ID from server response");
         }
+
+        // Navigate to the new recipe
+        navigate(`/recipes/${newRecipeId}`);
       }
-
-      // Show success message
-      alert("Recipe saved successfully!");
-
-      // Navigate to recipe detail page
-      navigate(`/recipes/${newRecipeId}`);
     } catch (err) {
       console.error("Error saving recipe:", err);
+      console.log("Error response:", err.response?.data);
       setError(`Failed to save recipe: ${err.message || "Unknown error"}`);
     } finally {
       setSaving(false);

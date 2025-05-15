@@ -146,13 +146,7 @@ class Recipe(Document):
 
     meta = {
         "collection": "recipes",
-        "indexes": [
-            "user_id",
-            "name",
-            "style",
-            ("user_id", "is_public"),
-            {"fields": ["created_at"], "expireAfterSeconds": -1},
-        ],
+        "indexes": ["user_id", "name", "style", ("user_id", "is_public"), "created_at"],
     }
 
     def to_dict(self):
