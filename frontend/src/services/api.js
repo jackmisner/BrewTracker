@@ -1,4 +1,3 @@
-// Modified api.js to ensure proper error handling for delete operations
 import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
@@ -25,31 +24,22 @@ api.interceptors.request.use(
   }
 );
 
-// Debug interceptor to log all API requests
-// api.interceptors.request.use(
-//   (config) => {
-//     console.log(`${config.method.toUpperCase()} Request to: ${config.url}`);
-//     return config;
-//   },
-//   (error) => {
-//     console.error("Request error:", error);
-//     return Promise.reject(error);
-//   }
-// );
+// Handle ObjectID conversion in responses (if needed)
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle different error codes, including MongoDB-specific errors
+    if (error.response && error.response.data && error.response.data.error) {
+      // Log or handle specific MongoDB errors
+      console.error("API Error:", error.response.data.error);
+    }
+    return Promise.reject(error);
+  }
+);
 
-// // Debug interceptor to log all API responses
-// api.interceptors.response.use(
-//   (response) => {
-//     console.log(`Response from ${response.config.url}:`, response.status);
-//     return response;
-//   },
-//   (error) => {
-//     console.error("Response error:", error);
-//     return Promise.reject(error);
-//   }
-// );
-
-// API service methods
+// API service methods - same interface as before, but now working with MongoDB
 const ApiService = {
   // Auth endpoints
   auth: {
@@ -60,38 +50,73 @@ const ApiService = {
 
   // Recipe endpoints
   recipes: {
-    getAll: () => api.get("/recipes"),
+    getAll: (page = 1, perPage = 10) =>
+      api.get(`/recipes?page=${page}&per_page=${perPage}`),
     getById: (id) => api.get(`/recipes/${id}`),
     create: (recipeData) => api.post("/recipes", recipeData),
     update: (id, recipeData) => api.put(`/recipes/${id}`, recipeData),
     delete: (id) => api.delete(`/recipes/${id}`),
+    search: (query, page = 1, perPage = 10) =>
+      api.get(`/search/recipes?q=${query}&page=${page}&per_page=${perPage}`),
 
     // Recipe ingredient endpoints
     getIngredients: (recipeId) => api.get(`/recipes/${recipeId}/ingredients`),
     addIngredient: (recipeId, ingredientData) =>
       api.post(`/recipes/${recipeId}/ingredients`, ingredientData),
-    removeIngredient: (recipeId, ingredientId) =>
-      api.delete(`/recipes/${recipeId}/ingredients/${ingredientId}`),
+    removeIngredient: (recipeId, index) =>
+      api.delete(`/recipes/${recipeId}/ingredients/${index}`),
     calculateMetrics: (recipeId) => api.get(`/recipes/${recipeId}/metrics`),
   },
 
   // Ingredient endpoints
   ingredients: {
-    getAll: () => api.get("/ingredients"),
+    getAll: (type, search) => {
+      let url = "/ingredients";
+      const params = [];
+      if (type) params.push(`type=${type}`);
+      if (search) params.push(`search=${search}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      return api.get(url);
+    },
     getById: (id) => api.get(`/ingredients/${id}`),
     create: (ingredientData) => api.post("/ingredients", ingredientData),
     update: (id, ingredientData) =>
       api.put(`/ingredients/${id}`, ingredientData),
     delete: (id) => api.delete(`/ingredients/${id}`),
+    getRecipes: (ingredientId, page = 1, perPage = 10) =>
+      api.get(
+        `/ingredients/${ingredientId}/recipes?page=${page}&per_page=${perPage}`
+      ),
   },
 
   // Brew session endpoints
   brewSessions: {
-    getAll: () => api.get("/brew-sessions"),
+    getAll: (page = 1, perPage = 10) =>
+      api.get(`/brew-sessions?page=${page}&per_page=${perPage}`),
     getById: (id) => api.get(`/brew-sessions/${id}`),
     create: (sessionData) => api.post("/brew-sessions", sessionData),
     update: (id, sessionData) => api.put(`/brew-sessions/${id}`, sessionData),
     delete: (id) => api.delete(`/brew-sessions/${id}`),
+
+    // Fermentation data endpoints
+    getFermentationData: (sessionId) =>
+      api.get(`/brew-sessions/${sessionId}/fermentation`),
+    addFermentationEntry: (sessionId, entryData) =>
+      api.post(`/brew-sessions/${sessionId}/fermentation`, entryData),
+    updateFermentationEntry: (sessionId, entryIndex, entryData) =>
+      api.put(
+        `/brew-sessions/${sessionId}/fermentation/${entryIndex}`,
+        entryData
+      ),
+    deleteFermentationEntry: (sessionId, entryIndex) =>
+      api.delete(`/brew-sessions/${sessionId}/fermentation/${entryIndex}`),
+    getFermentationStats: (sessionId) =>
+      api.get(`/brew-sessions/${sessionId}/fermentation/stats`),
+  },
+
+  // Dashboard and statistics
+  dashboard: {
+    getData: () => api.get("/dashboard"),
   },
 };
 
