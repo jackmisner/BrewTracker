@@ -16,22 +16,24 @@ function GrainInput({ grains, onAdd, onCalculate }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!grainForm.ingredient_id || !grainForm.amount) {
-      alert("Please fill in all required fields.");
-      return; // Basic validation
-    }
+  if (!grainForm.ingredient_id || !grainForm.amount) {
+    alert("Please fill in all required fields.");
+    return;
+  }
 
-    await onAdd(grainForm);
-    await onCalculate();
-    // Reset form
-    setGrainForm({
-      ingredient_id: "",
-      amount: "",
-      unit: "lb",
-    });
-  };
+  // Just call onAdd without awaiting or calling onCalculate
+  onAdd(grainForm);
+  
+  // Reset form
+  setGrainForm({
+    ingredient_id: "",
+    amount: "",
+    unit: "lb",
+  });
+};
+
 
   return (
     <div className="card">

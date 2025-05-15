@@ -193,16 +193,17 @@ function RecipeBuilder() {
       };
     }
 
-    // Update state in a single operation
+    // Update state using the callback form to ensure we have the latest state
     setRecipeIngredients(prevIngredients => [...prevIngredients, newIngredient]);
     
-    // Force a metrics recalculation after state update
-    calculateRecipeMetrics();
+    // We're relying on the useEffect to handle the metric recalculation
+    // Don't call calculateRecipeMetrics() directly here
   } catch (err) {
     console.error("Error adding ingredient:", err);
     setError("Failed to add ingredient");
   }
 };
+
 
   // Helper function to get ingredient name from ID
   const getIngredientName = (ingredientId, type) => {

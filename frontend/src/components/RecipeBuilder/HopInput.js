@@ -23,8 +23,8 @@ function HopInput({ hops, onAdd, onCalculate }) {
     return;
   }
   
-  await onAdd(hopForm);  // Wait for the ingredient to be added
-  await onCalculate();  // Then calculate metrics
+  onAdd(hopForm);  // Wait for the ingredient to be added
+
   
   setHopForm({
     ingredient_id: "",
