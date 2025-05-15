@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function AdjunctInput({ adjuncts, onAdd, onCalculate}) {
+function AdjunctInput({ adjuncts, onAdd, onCalculate }) {
   const [adjunctForm, setAdjunctForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -24,7 +24,7 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate}) {
       return;
     }
     onAdd(adjunctForm);
-    
+
     setAdjunctForm({
       ingredient_id: "",
       amount: "",

@@ -9,7 +9,7 @@ import {
 
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   const [scaleVolume, setScaleVolume] = useState("");
-  
+
   // Removed the problematic useEffect to break the infinite update cycle
 
   const getBalanceRatio = () => {
@@ -37,20 +37,16 @@ function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   };
 
   // Use different class names for cardView
-  const containerClass = cardView 
-    ? "card-metrics-container" 
+  const containerClass = cardView
+    ? "card-metrics-container"
     : "metrics-container";
-  
-  const metricsGridClass = cardView 
-    ? "card-metrics-grid" 
-    : "metrics-grid";
-  
-  const colorDisplayClass = cardView 
-    ? "card-color-display" 
-    : "color-display";
-  
-  const balanceMeterContainerClass = cardView 
-    ? "card-balance-meter-container" 
+
+  const metricsGridClass = cardView ? "card-metrics-grid" : "metrics-grid";
+
+  const colorDisplayClass = cardView ? "card-color-display" : "color-display";
+
+  const balanceMeterContainerClass = cardView
+    ? "card-balance-meter-container"
     : "balance-meter-container";
 
   return (

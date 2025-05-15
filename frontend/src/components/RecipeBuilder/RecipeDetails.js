@@ -19,8 +19,8 @@ function RecipeDetails({
       type === "checkbox"
         ? checked
         : type === "number"
-          ? parseFloat(value)
-          : value;
+        ? parseFloat(value)
+        : value;
 
     onChange({
       ...recipe,

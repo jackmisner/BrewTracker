@@ -17,24 +17,23 @@ function HopInput({ hops, onAdd, onCalculate }) {
     }));
   };
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!hopForm.ingredient_id || !hopForm.amount) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-  
-  onAdd(hopForm);  // Wait for the ingredient to be added
+    e.preventDefault();
+    if (!hopForm.ingredient_id || !hopForm.amount) {
+      alert("Please fill in all required fields.");
+      return;
+    }
 
-  
-  setHopForm({
-    ingredient_id: "",
-    amount: "",
-    unit: "oz",
-    use: "boil",
-    time: "",
-    time_unit: "minutes",
-  });
-};
+    onAdd(hopForm); // Wait for the ingredient to be added
+
+    setHopForm({
+      ingredient_id: "",
+      amount: "",
+      unit: "oz",
+      use: "boil",
+      time: "",
+      time_unit: "minutes",
+    });
+  };
 
   return (
     <div className="card mt-6">

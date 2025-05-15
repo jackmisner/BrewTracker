@@ -11,19 +11,19 @@ const RecipeCard = ({ recipe, onDelete }) => {
     fg: 1.0,
     abv: 0.0,
     ibu: 0,
-    srm: 0
+    srm: 0,
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const viewRecipe = () => {
     navigate(`/recipes/${recipe.recipe_id}`);
-  }
+  };
 
   const editRecipe = () => {
     // Navigate to the edit page (which uses RecipeBuilder component)
     navigate(`/recipes/${recipe.recipe_id}/edit`);
-  }
-  
+  };
+
   const deleteRecipe = async () => {
     if (window.confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
       setIsDeleting(true);
@@ -48,17 +48,23 @@ const RecipeCard = ({ recipe, onDelete }) => {
           // Something else caused the error
           console.error("Error message:", error.message);
         }
-        alert(`Failed to delete recipe: ${error.response?.data?.error || error.message || "Unknown error"}`);
+        alert(
+          `Failed to delete recipe: ${
+            error.response?.data?.error || error.message || "Unknown error"
+          }`
+        );
       } finally {
         setIsDeleting(false);
       }
     }
-  }
+  };
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await ApiService.recipes.calculateMetrics(recipe.recipe_id);
+        const response = await ApiService.recipes.calculateMetrics(
+          recipe.recipe_id
+        );
         setMetrics(response.data.metrics);
       } catch (error) {
         console.error("Error fetching metrics:", error);
@@ -77,9 +83,9 @@ const RecipeCard = ({ recipe, onDelete }) => {
           {recipe.description || "No description available."}
         </p>
       </div>
-      
+
       <RecipeMetrics metrics={metrics} cardView={true} />
-      
+
       <div className="recipe-card-footer">
         <span>Created on: {formattedDate}</span>
       </div>
@@ -91,9 +97,9 @@ const RecipeCard = ({ recipe, onDelete }) => {
         <button className="recipe-card-button" onClick={editRecipe}>
           Edit
         </button>
-        <button 
-          className="recipe-card-button" 
-          onClick={deleteRecipe} 
+        <button
+          className="recipe-card-button"
+          onClick={deleteRecipe}
           disabled={isDeleting}
         >
           {isDeleting ? "Deleting..." : "Delete"}
