@@ -35,7 +35,7 @@ export function convertToOunces(amount, unit) {
 export function calculateOG(recipeIngredients, batchSize, efficiency) {
   let totalPoints = 0.0;
   const grains = recipeIngredients.filter((i) => i.ingredient_type === "grain");
-  console.log('efficiency:', efficiency);
+  // console.log('efficiency:', efficiency);
   // Use passed efficiency if provided, otherwise default to 75
   const brewingEfficiency = efficiency !== undefined ? efficiency : 75;
   

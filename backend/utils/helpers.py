@@ -132,10 +132,10 @@ def calculate_fg(recipe):
     max_attenuation = 0
     for ri in recipe.recipe_ingredients:
         if ri.ingredient.type == "yeast" and ri.ingredient.attenuation:
-            max_attenuation = max(max_attenuation, ri.ingredient.attenuation)
+            max_attenuation = max(max_attenuation, ri.ingredient.attenuation) # Set max attenuation to yeast attenuation if found, otherwise 0
 
     og = calculate_og(recipe)  # Calculate OG if not already set
-    fg = og - ((og - 1.0) * (max_attenuation / 100.0))
+    fg = og - ((og - 1.0) * (max_attenuation / 100.0)) # Calculate FG using max attenuation (will return og if no yeast found)
     return round(fg, 3)
 
 

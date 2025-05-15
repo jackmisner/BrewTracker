@@ -24,7 +24,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
     }
 
     await onAdd(grainForm);
-    onCalculate();
+    await onCalculate();
     // Reset form
     setGrainForm({
       ingredient_id: "",
