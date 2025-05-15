@@ -28,7 +28,7 @@ function Login({ onLogin }) {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          "Failed to login. Please check your credentials.",
+          "Failed to login. Please check your credentials."
       );
     } finally {
       setLoading(false);

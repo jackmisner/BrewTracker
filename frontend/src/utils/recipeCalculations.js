@@ -38,7 +38,7 @@ export function calculateOG(recipeIngredients, batchSize, efficiency) {
   // console.log('efficiency:', efficiency);
   // Use passed efficiency if provided, otherwise default to 75
   const brewingEfficiency = efficiency !== undefined ? efficiency : 75;
-  
+
   for (const grain of grains) {
     // Get grain potential - use a default if not available
     const potential = grain.associated_metrics.potential || 36; // Default to typical base malt potential if no value

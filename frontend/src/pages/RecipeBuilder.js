@@ -66,7 +66,6 @@ function RecipeBuilder() {
 
   // Calculate metrics function (wrapped in useCallback)
 
-
   const calculateRecipeMetrics = useCallback(async () => {
     try {
       if (recipeId) {
@@ -80,7 +79,7 @@ function RecipeBuilder() {
         const og = calculateOG(
           recipeIngredients,
           recipe.batch_size,
-          recipe.efficiency,
+          recipe.efficiency
         );
         const fg = calculateFG(recipeIngredients, og);
         const abv = calculateABV(og, fg);
@@ -88,7 +87,7 @@ function RecipeBuilder() {
           recipeIngredients,
           og,
           recipe.batch_size,
-          recipe.boil_time,
+          recipe.boil_time
         );
         const srm = calculateSRM(recipeIngredients, recipe.batch_size);
 
@@ -117,7 +116,14 @@ function RecipeBuilder() {
     if (!loading && recipeIngredients.length >= 0) {
       calculateRecipeMetrics();
     }
-  }, [recipeIngredients, recipe.batch_size, recipe.efficiency, recipe.boil_time, calculateRecipeMetrics, loading]);
+  }, [
+    recipeIngredients,
+    recipe.batch_size,
+    recipe.efficiency,
+    recipe.boil_time,
+    calculateRecipeMetrics,
+    loading,
+  ]);
 
   const fetchIngredients = async () => {
     try {
@@ -135,7 +141,7 @@ function RecipeBuilder() {
           grouped[ingredient.type].push(ingredient);
         } else {
           console.warn(
-            `Ingredient type ${ingredient.type} not recognized. Skipping...`,
+            `Ingredient type ${ingredient.type} not recognized. Skipping...`
           );
         }
       });
@@ -153,8 +159,9 @@ function RecipeBuilder() {
       setRecipe(response.data.recipe);
 
       // Fetch recipe ingredients
-      const ingredientsResponse =
-        await ApiService.recipes.getIngredients(recipeId);
+      const ingredientsResponse = await ApiService.recipes.getIngredients(
+        recipeId
+      );
       setRecipeIngredients(ingredientsResponse.data.ingredients);
 
       setLoading(false);
@@ -170,45 +177,53 @@ function RecipeBuilder() {
   };
 
   const addIngredient = async (type, ingredientData) => {
-  try {
-    let newIngredient;
-    if (recipeId) {
-      const response = await ApiService.recipes.addIngredient(recipeId, {
-        ...ingredientData,
-        ingredient_type: type,
-      });
-      newIngredient = response.data;
-    } else {
-      newIngredient = {
-        id: `temp-${Date.now()}`,
-        ingredient_id: ingredientData.ingredient_id,
-        ingredient_name: getIngredientName(ingredientData.ingredient_id, type),
-        associated_metrics: getIngredientData(ingredientData.ingredient_id, type),
-        amount: ingredientData.amount,
-        unit: ingredientData.unit,
-        ingredient_type: type,
-        use: ingredientData.use,
-        time: ingredientData.time,
-        time_unit: ingredientData.time_unit,
-      };
+    try {
+      let newIngredient;
+      if (recipeId) {
+        const response = await ApiService.recipes.addIngredient(recipeId, {
+          ...ingredientData,
+          ingredient_type: type,
+        });
+        newIngredient = response.data;
+      } else {
+        newIngredient = {
+          id: `temp-${Date.now()}`,
+          ingredient_id: ingredientData.ingredient_id,
+          ingredient_name: getIngredientName(
+            ingredientData.ingredient_id,
+            type
+          ),
+          associated_metrics: getIngredientData(
+            ingredientData.ingredient_id,
+            type
+          ),
+          amount: ingredientData.amount,
+          unit: ingredientData.unit,
+          ingredient_type: type,
+          use: ingredientData.use,
+          time: ingredientData.time,
+          time_unit: ingredientData.time_unit,
+        };
+      }
+
+      // Update state using the callback form to ensure we have the latest state
+      setRecipeIngredients((prevIngredients) => [
+        ...prevIngredients,
+        newIngredient,
+      ]);
+
+      // We're relying on the useEffect to handle the metric recalculation
+      // Don't call calculateRecipeMetrics() directly here
+    } catch (err) {
+      console.error("Error adding ingredient:", err);
+      setError("Failed to add ingredient");
     }
-
-    // Update state using the callback form to ensure we have the latest state
-    setRecipeIngredients(prevIngredients => [...prevIngredients, newIngredient]);
-    
-    // We're relying on the useEffect to handle the metric recalculation
-    // Don't call calculateRecipeMetrics() directly here
-  } catch (err) {
-    console.error("Error adding ingredient:", err);
-    setError("Failed to add ingredient");
-  }
-};
-
+  };
 
   // Helper function to get ingredient name from ID
   const getIngredientName = (ingredientId, type) => {
     const ingredient = ingredients[type]?.find(
-      (i) => i.ingredient_id === parseInt(ingredientId),
+      (i) => i.ingredient_id === parseInt(ingredientId)
     );
     return ingredient ? ingredient.name : "Unknown";
   };
@@ -216,7 +231,7 @@ function RecipeBuilder() {
   // Helper function to get relevant ingredient data from ID
   const getIngredientData = (ingredientId, type) => {
     const ingredient = ingredients[type]?.find(
-      (i) => i.ingredient_id === parseInt(ingredientId),
+      (i) => i.ingredient_id === parseInt(ingredientId)
     );
     if (type === "grain") {
       return { potential: ingredient.potential, colour: ingredient.color };
@@ -236,7 +251,7 @@ function RecipeBuilder() {
 
       // Remove from local state
       setRecipeIngredients(
-        recipeIngredients.filter((i) => i.id !== ingredientId),
+        recipeIngredients.filter((i) => i.id !== ingredientId)
       );
 
       // Metrics will be recalculated by the useEffect
@@ -317,7 +332,7 @@ function RecipeBuilder() {
 
     // Metrics will be recalculated by the useEffect
     console.log(
-      `Recipe scaled from ${currentBatchSize} to ${newBatchSize} gallons`,
+      `Recipe scaled from ${currentBatchSize} to ${newBatchSize} gallons`
     );
   };
 
@@ -374,19 +389,19 @@ function RecipeBuilder() {
                 try {
                   await ApiService.recipes.addIngredient(
                     newRecipeId,
-                    ingredientPayload,
+                    ingredientPayload
                   );
                 } catch (err) {
                   console.error(
                     `Error saving ingredient ${ingredient.ingredient_name}:`,
-                    err,
+                    err
                   );
                   throw new Error(
-                    `Failed to save ingredient: ${ingredient.ingredient_name}`,
+                    `Failed to save ingredient: ${ingredient.ingredient_name}`
                   );
                 }
               }
-            },
+            }
           );
 
           // Wait for all ingredient saves to complete
@@ -413,7 +428,9 @@ function RecipeBuilder() {
 
   return (
     <div id="recipe-builder" className="container">
-      <h1 className="page-title">{recipeId ? "Edit Recipe" : "Create New Recipe"}</h1>
+      <h1 className="page-title">
+        {recipeId ? "Edit Recipe" : "Create New Recipe"}
+      </h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">

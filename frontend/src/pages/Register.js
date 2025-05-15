@@ -50,7 +50,7 @@ function Register({ onLogin }) {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          "Failed to register. Please check your information.",
+          "Failed to register. Please check your information."
       );
     } finally {
       setLoading(false);

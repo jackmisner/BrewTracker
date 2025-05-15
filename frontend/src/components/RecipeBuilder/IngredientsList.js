@@ -3,7 +3,6 @@ import React, { useMemo } from "react";
 function IngredientsList({ ingredients, onRemove, isEditing }) {
   // Custom sorting function
   const sortIngredients = (ingredients) => {
-
     // Define the type order
     const typeOrder = {
       grain: 1,
@@ -21,18 +20,18 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     // Create a copy of the ingredients array to avoid mutating the original
     return [...ingredients].sort((a, b) => {
       // First, sort by ingredient type according to the specified order
-      const typeA = a.ingredient_type || '';
-      const typeB = b.ingredient_type || '';
-      
+      const typeA = a.ingredient_type || "";
+      const typeB = b.ingredient_type || "";
+
       // Get the order values, defaulting to a high number for unknown types
       const orderA = typeOrder[typeA] || 999;
       const orderB = typeOrder[typeB] || 999;
-      
+
       // If types are different, sort by type order
       if (orderA !== orderB) {
         return orderA - orderB;
       }
-      
+
       // If types are the same, apply specific sorting logic for each type
       if (typeA === "grain") {
         // Group identical grains together
@@ -44,24 +43,24 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
         // Sort hops by use type (boil, whirlpool, dry hop)
         const useA = (a.use || "").toLowerCase();
         const useB = (b.use || "").toLowerCase();
-        
+
         const useOrderA = hopUseOrder[useA] || 999;
         const useOrderB = hopUseOrder[useB] || 999;
-        
+
         if (useOrderA !== useOrderB) {
           return useOrderA - useOrderB;
         }
-        
+
         // For same use type, sort by time (higher first)
         const timeA = parseFloat(a.time) || 0;
         const timeB = parseFloat(b.time) || 0;
-        
+
         return timeB - timeA; // Higher time first
       } else if (typeA === "yeast") {
         // Just sort yeast alphabetically if needed
         return a.ingredient_name.localeCompare(b.ingredient_name);
       }
-      
+
       // Default case - sort by ID to maintain stable order
       return a.id - b.id;
     });

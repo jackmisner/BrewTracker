@@ -17,8 +17,12 @@ const ViewRecipe = () => {
     const fetchRecipe = async () => {
       try {
         const recipeResponse = await ApiService.recipes.getById(recipeId);
-        const ingredientsResponse = await ApiService.recipes.getIngredients(recipeId);
-        const metricsResponse = await ApiService.recipes.calculateMetrics(recipeId);
+        const ingredientsResponse = await ApiService.recipes.getIngredients(
+          recipeId
+        );
+        const metricsResponse = await ApiService.recipes.calculateMetrics(
+          recipeId
+        );
 
         setRecipe(recipeResponse.data);
         setIngredients(ingredientsResponse.data);
@@ -52,9 +56,9 @@ const ViewRecipe = () => {
         recipeId={recipeId}
         isEditing={false}
       />
-      <RecipeMetrics 
-        metrics={metrics.metrics} 
-        recipeId={recipeId} 
+      <RecipeMetrics
+        metrics={metrics.metrics}
+        recipeId={recipeId}
         onScale={null}
         cardView={false}
       />
