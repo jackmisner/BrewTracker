@@ -22,38 +22,45 @@ homebrew-tracker/
 ├── backend/
 │   ├── app.py
 │   ├── config.py
-│   ├── models/
+│   ├── migrations/ // Database management
+│   ├── models/ // Database models
 │   │   ├── __init__.py
 │   │   ├── user.py
 │   │   ├── recipe.py
 │   │   ├── ingredient.py
-│   │   ├── recipe_ingredient.py // Join table
+│   │   ├── recipe_ingredient.py // Join table for assigning ingredients to recipes
 │   │   └── brew_session.py
-│   ├── routes/
+│   ├── routes/ // Backend routes for handling incoming HTTP requests
 │   │   ├── __init__.py
 │   │   ├── auth.py
 │   │   ├── recipes.py
 │   │   ├── ingredients.py
+│   │   ├── recipe_ingredients.py
 │   │   └── brew_sessions.py
 │   ├── services/
 │   │   ├── __init__.py
-│   │   └── db.py
+│   │   └── db.py // Provides static methods for interacting with the database models related to users, recipes, and brew sessions
+│   ├── tests/
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   └── helpers.py
+│   │   └── helpers.py // Various brewing related calculations and formatters
 │   ├── requirements.txt
 │   └── .env
 ├── frontend/
 │   ├── public/
 │   ├── src/
-│   │   ├── components/
+│   │   ├── components/ 
+│   │   ├── images/
 │   │   ├── pages/
 │   │   ├── services/
+|   |   |   └── api.js // API for communictating with the backend server
+│   │   ├── utils/
+|   |   |   └── recipeCalculations.js // Frontend recipe metric calculations for recipes not added to the database yet (less accurate than backend calcs)
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── package.json
 │   └── .env
-└── README.md
+└── README.md // The document you are currently reading!
 ```
 
 ## 📋 Requirements
