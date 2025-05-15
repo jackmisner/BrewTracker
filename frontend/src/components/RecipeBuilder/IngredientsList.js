@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 function IngredientsList({ ingredients, onRemove, isEditing }) {
   // Custom sorting function
   const sortIngredients = (ingredients) => {
-    console.log('ingredients:', ingredients);
+
     // Define the type order
     const typeOrder = {
       grain: 1,
@@ -21,9 +21,8 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     // Create a copy of the ingredients array to avoid mutating the original
     return [...ingredients].sort((a, b) => {
       // First, sort by ingredient type according to the specified order
-
-      const typeA = a.ingredient.type || '';
-      const typeB = b.ingredient.type || '';
+      const typeA = a.ingredient_type || '';
+      const typeB = b.ingredient_type || '';
       
       // Get the order values, defaulting to a high number for unknown types
       const orderA = typeOrder[typeA] || 999;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function AdjunctInput({ adjuncts, onAdd }) {
+function AdjunctInput({ adjuncts, onAdd, onCalculate}) {
   const [adjunctForm, setAdjunctForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -17,13 +17,14 @@ function AdjunctInput({ adjuncts, onAdd }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!adjunctForm.ingredient_id || !adjunctForm.amount) {
       alert("Please fill in all required fields.");
       return;
     }
-    onAdd(adjunctForm);
+    await onAdd(adjunctForm);
+    await onCalculate();
     setAdjunctForm({
       ingredient_id: "",
       amount: "",

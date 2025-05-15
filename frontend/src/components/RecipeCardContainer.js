@@ -5,13 +5,10 @@ const RecipeCardContainer = ({ recipes: initialRecipes }) => {
   const [recipes, setRecipes] = useState(initialRecipes);
   
   const handleDeleteRecipe = (deletedRecipeId) => {
-    console.log("Removing recipe with ID:", deletedRecipeId);
-    console.log("Before deletion - recipes count:", recipes.length);
-    
+   
     // Filter out the deleted recipe from the state
     const updatedRecipes = recipes.filter(recipe => recipe.recipe_id !== deletedRecipeId);
-    console.log("After deletion - recipes count:", updatedRecipes.length);
-    
+    // Update the state with the new list of recipes    
     setRecipes(updatedRecipes);
   };
   

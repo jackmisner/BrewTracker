@@ -22,7 +22,7 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
     }
 
     await onAdd(yeastForm);
-    onCalculate();
+    await onCalculate();
     // Reset form
     setYeastForm({
       ingredient_id: "",
