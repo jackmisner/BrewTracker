@@ -2,6 +2,7 @@ import RecipeMetrics from "./RecipeBuilder/RecipeMetrics";
 import ApiService from "../services/api";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import "./RecipeCard.css";
 
 const RecipeCard = ({ recipe, onDelete }) => {
   const navigate = useNavigate();
