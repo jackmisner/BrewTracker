@@ -1,13 +1,7 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    jwt_required,
-    get_jwt_identity,
-)
-from models import db
-from models.user import User
-from datetime import datetime
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from datetime import datetime, timedelta
+from models.mongo_models import User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -16,73 +10,48 @@ auth_bp = Blueprint("auth", __name__)
 def register():
     data = request.get_json()
 
-    # Check if required fields are present
-    if not all(k in data for k in ("username", "email", "password")):
-        return jsonify({"error": "Missing required fields"}), 400
+    # Check if user exists
+    if User.objects(username=data.get("username")).first():
+        return jsonify({"error": "Username already exists"}), 400
 
-    # Check if user already exists
-    if User.query.filter_by(username=data["username"]).first():
-        return jsonify({"error": "Username already exists"}), 409
-
-    if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"error": "Email already exists"}), 409
+    if User.objects(email=data.get("email")).first():
+        return jsonify({"error": "Email already exists"}), 400
 
     # Create new user
-    new_user = User(username=data["username"], email=data["email"])
-    new_user.set_password(data["password"])
+    user = User(username=data.get("username"), email=data.get("email"))
+    user.set_password(data.get("password"))
+    user.save()
 
-    db.session.add(new_user)
-    db.session.commit()
-
-    return (
-        jsonify(
-            {"message": "User registered successfully", "user": new_user.to_dict()}
-        ),
-        201,
-    )
+    return jsonify({"message": "User created successfully"}), 201
 
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
+    user = User.objects(username=data.get("username")).first()
 
-    # Check if required fields are present
-    if not all(k in data for k in ("username", "password")):
-        return jsonify({"error": "Missing username or password"}), 400
+    if user and user.check_password(data.get("password")):
+        # Update last login
+        user.last_login = datetime.utcnow()
+        user.save()
 
-    # Find user
-    user = User.query.filter_by(username=data["username"]).first()
+        # Create access token
+        expires = timedelta(days=1)
+        access_token = create_access_token(identity=str(user.id), expires_delta=expires)
 
-    # Verify user and password
-    if not user or not user.check_password(data["password"]):
-        return jsonify({"error": "Invalid username or password"}), 401
+        # Return both token and basic user info
+        return jsonify({"access_token": access_token, "user": user.to_dict()}), 200
 
-    # Update last login time
-    user.last_login = datetime.utcnow()
-    db.session.commit()
-
-    # Generate access token
-    access_token = create_access_token(identity=user.user_id)
-
-    return (
-        jsonify(
-            {
-                "message": "Login successful",
-                "access_token": access_token,
-                "user": user.to_dict(),
-            }
-        ),
-        200,
-    )
+    return jsonify({"error": "Invalid credentials"}), 401
 
 
 @auth_bp.route("/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user_id = get_jwt_identity()
+    user = User.objects(id=user_id).first()
 
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    return jsonify({"user": user.to_dict()}), 200
+    return jsonify(user.to_dict()), 200

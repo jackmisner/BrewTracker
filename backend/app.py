@@ -1,14 +1,14 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from models import db
+from mongoengine import connect
+import os
+import config
 from routes.auth import auth_bp
 from routes.recipes import recipes_bp
 from routes.recipe_ingredients import recipe_ingredients_bp
 from routes.ingredients import ingredients_bp
 from routes.brew_sessions import brew_sessions_bp
-import config
 
 
 def create_app(config_class=None):
@@ -20,8 +20,7 @@ def create_app(config_class=None):
         app.config.from_object(config.Config)
 
     # Initialize extensions
-    db.init_app(app)
-    Migrate(app, db)
+    connect(host=app.config["MONGO_URI"])
     JWTManager(app)
     CORS(app)
 

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db
-from models.recipe import Recipe
+from bson import ObjectId
+from models.mongo_models import Recipe, User
+from services.mongodb_service import MongoDBService
 
 recipes_bp = Blueprint("recipes", __name__)
 
@@ -9,117 +10,117 @@ recipes_bp = Blueprint("recipes", __name__)
 @recipes_bp.route("", methods=["GET"])
 @jwt_required()
 def get_recipes():
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
 
-    # Get all recipes for the current user
-    recipes = Recipe.query.filter_by(user_id=current_user_id).all()
+    result = MongoDBService.get_user_recipes(user_id, page, per_page)
 
-    return jsonify({"recipes": [recipe.to_dict() for recipe in recipes]}), 200
+    recipes = [recipe.to_dict() for recipe in result["items"]]
+
+    return (
+        jsonify(
+            {
+                "recipes": recipes,
+                "pagination": {
+                    "page": result["page"],
+                    "pages": result["pages"],
+                    "per_page": result["per_page"],
+                    "total": result["total"],
+                    "has_next": result["has_next"],
+                    "has_prev": result["has_prev"],
+                    "next_num": result["next_num"],
+                    "prev_num": result["prev_num"],
+                },
+            }
+        ),
+        200,
+    )
 
 
-@recipes_bp.route("/<int:recipe_id>", methods=["GET"])
+@recipes_bp.route("/<recipe_id>", methods=["GET"])
 @jwt_required()
 def get_recipe(recipe_id):
-    current_user_id = get_jwt_identity()
-
-    # Get specific recipe
-    recipe = Recipe.query.filter_by(recipe_id=recipe_id).first()
+    recipe = Recipe.objects(id=recipe_id).first()
 
     if not recipe:
         return jsonify({"error": "Recipe not found"}), 404
 
-    # Check if user owns the recipe or recipe is public
-    if recipe.user_id != current_user_id and not recipe.is_public:
-        return jsonify({"error": "Unauthorized access"}), 403
+    # Check if user has access to this recipe
+    user_id = get_jwt_identity()
+    if str(recipe.user_id) != user_id and not recipe.is_public:
+        return jsonify({"error": "Access denied"}), 403
 
-    return jsonify({"recipe": recipe.to_dict()}), 200
+    return jsonify(recipe.to_dict()), 200
 
 
 @recipes_bp.route("", methods=["POST"])
 @jwt_required()
 def create_recipe():
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Validate required fields
-    if "name" not in data or "batch_size" not in data:
-        return jsonify({"error": "Recipe name and batch size are required"}), 400
+    # Add user_id to the recipe data
+    data["user_id"] = ObjectId(user_id)
 
-    # Create new recipe
-    new_recipe = Recipe(
-        user_id=current_user_id,
-        name=data["name"],
-        style=data.get("style"),
-        batch_size=data["batch_size"],
-        description=data.get("description"),
-        is_public=data.get("is_public", False),
-        estimated_og=data.get("estimated_og"),
-        estimated_fg=data.get("estimated_fg"),
-        estimated_abv=data.get("estimated_abv"),
-        estimated_ibu=data.get("estimated_ibu"),
-        estimated_srm=data.get("estimated_srm"),
-        boil_time=data.get("boil_time"),
-        efficiency=data.get("efficiency"),
-        notes=data.get("notes"),
-        parent_recipe_id=data.get("parent_recipe_id"),
-    )
+    # Create recipe
+    recipe = MongoDBService.create_recipe(data)
 
-    db.session.add(new_recipe)
-    db.session.commit()
-
-    return (
-        jsonify(
-            {"message": "Recipe created successfully", "recipe": new_recipe.to_dict()}
-        ),
-        201,
-    )
+    if recipe:
+        return jsonify(recipe.to_dict()), 201
+    else:
+        return jsonify({"error": "Failed to create recipe"}), 400
 
 
-@recipes_bp.route("/<int:recipe_id>", methods=["PUT"])
+@recipes_bp.route("/<recipe_id>", methods=["PUT"])
 @jwt_required()
 def update_recipe(recipe_id):
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Find recipe
-    recipe = Recipe.query.filter_by(recipe_id=recipe_id).first()
-
+    # Check if recipe exists and belongs to user
+    recipe = Recipe.objects(id=recipe_id).first()
     if not recipe:
         return jsonify({"error": "Recipe not found"}), 404
 
-    # Check if user owns the recipe
-    if recipe.user_id != current_user_id:
-        return jsonify({"error": "Unauthorized access"}), 403
+    if str(recipe.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
 
-    # Update recipe fields
-    for key, value in data.items():
-        if hasattr(recipe, key):
-            setattr(recipe, key, value)
+    # Update recipe
+    updated_recipe, message = MongoDBService.update_recipe(recipe_id, data)
 
-    db.session.commit()
-
-    return (
-        jsonify({"message": "Recipe updated successfully", "recipe": recipe.to_dict()}),
-        200,
-    )
+    if updated_recipe:
+        return jsonify(updated_recipe.to_dict()), 200
+    else:
+        return jsonify({"error": message}), 400
 
 
-@recipes_bp.route("/<int:recipe_id>", methods=["DELETE"])
+@recipes_bp.route("/<recipe_id>", methods=["DELETE"])
 @jwt_required()
 def delete_recipe(recipe_id):
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
 
-    # Find recipe
-    recipe = Recipe.query.filter_by(recipe_id=recipe_id).first()
-
+    # Check if recipe exists and belongs to user
+    recipe = Recipe.objects(id=recipe_id).first()
     if not recipe:
         return jsonify({"error": "Recipe not found"}), 404
 
-    # Check if user owns the recipe
-    if recipe.user_id != current_user_id:
-        return jsonify({"error": "Unauthorized access"}), 403
+    if str(recipe.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
 
-    db.session.delete(recipe)
-    db.session.commit()
+    # Delete recipe
+    recipe.delete()
 
     return jsonify({"message": "Recipe deleted successfully"}), 200
+
+
+@recipes_bp.route("/<recipe_id>/metrics", methods=["GET"])
+@jwt_required()
+def get_recipe_metrics(recipe_id):
+    # Calculate recipe statistics
+    stats = MongoDBService.calculate_recipe_stats(recipe_id)
+
+    if stats:
+        return jsonify(stats), 200
+    else:
+        return jsonify({"message": "No completed brew sessions for this recipe"}), 404

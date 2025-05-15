@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db
-from models.brew_session import BrewSession
-from models.recipe import Recipe
+from bson import ObjectId
+from models.mongo_models import BrewSession, Recipe
+from services.mongodb_service import MongoDBService
 
 brew_sessions_bp = Blueprint("brew_sessions", __name__)
 
@@ -10,137 +10,228 @@ brew_sessions_bp = Blueprint("brew_sessions", __name__)
 @brew_sessions_bp.route("", methods=["GET"])
 @jwt_required()
 def get_brew_sessions():
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
 
-    # Get all brew sessions for the current user
-    brew_sessions = BrewSession.query.filter_by(user_id=current_user_id).all()
+    result = MongoDBService.get_user_brew_sessions(user_id, page, per_page)
+
+    sessions = [session.to_dict() for session in result["items"]]
 
     return (
-        jsonify({"brew_sessions": [session.to_dict() for session in brew_sessions]}),
+        jsonify(
+            {
+                "brew_sessions": sessions,
+                "pagination": {
+                    "page": result["page"],
+                    "pages": result["pages"],
+                    "per_page": result["per_page"],
+                    "total": result["total"],
+                    "has_next": result["has_next"],
+                    "has_prev": result["has_prev"],
+                    "next_num": result["next_num"],
+                    "prev_num": result["prev_num"],
+                },
+            }
+        ),
         200,
     )
 
 
-@brew_sessions_bp.route("/<int:session_id>", methods=["GET"])
+@brew_sessions_bp.route("/<session_id>", methods=["GET"])
 @jwt_required()
 def get_brew_session(session_id):
-    current_user_id = get_jwt_identity()
+    session = BrewSession.objects(id=session_id).first()
 
-    # Get specific brew session
-    brew_session = BrewSession.query.filter_by(session_id=session_id).first()
-
-    if not brew_session:
+    if not session:
         return jsonify({"error": "Brew session not found"}), 404
 
-    # Check if user owns the brew session
-    if brew_session.user_id != current_user_id:
-        return jsonify({"error": "Unauthorized access"}), 403
+    # Check if user has access
+    user_id = get_jwt_identity()
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
 
-    return jsonify({"brew_session": brew_session.to_dict()}), 200
+    return jsonify(session.to_dict()), 200
 
 
 @brew_sessions_bp.route("", methods=["POST"])
 @jwt_required()
 def create_brew_session():
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Validate required fields
-    if "recipe_id" not in data:
-        return jsonify({"error": "Recipe ID is required"}), 400
+    # Add user_id to the session data
+    data["user_id"] = ObjectId(user_id)
 
-    # Check if recipe exists and user has access
-    recipe = Recipe.query.filter_by(recipe_id=data["recipe_id"]).first()
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
+    # Create brew session
+    session = MongoDBService.create_brew_session(data)
 
-    if recipe.user_id != current_user_id and not recipe.is_public:
-        return jsonify({"error": "Unauthorized access to recipe"}), 403
-
-    # Create new brew session
-    new_session = BrewSession(
-        recipe_id=data["recipe_id"],
-        user_id=current_user_id,
-        brew_date=data.get("brew_date"),
-        name=data.get("name"),
-        status=data.get("status", "planned"),
-        mash_temp=data.get("mash_temp"),
-        actual_og=data.get("actual_og"),
-        actual_fg=data.get("actual_fg"),
-        actual_abv=data.get("actual_abv"),
-        actual_efficiency=data.get("actual_efficiency"),
-        fermentation_start_date=data.get("fermentation_start_date"),
-        fermentation_end_date=data.get("fermentation_end_date"),
-        packaging_date=data.get("packaging_date"),
-        tasting_notes=data.get("tasting_notes"),
-        batch_rating=data.get("batch_rating"),
-        photos_url=data.get("photos_url"),
-    )
-
-    db.session.add(new_session)
-    db.session.commit()
-
-    return (
-        jsonify(
-            {
-                "message": "Brew session created successfully",
-                "brew_session": new_session.to_dict(),
-            }
-        ),
-        201,
-    )
+    if session:
+        return jsonify(session.to_dict()), 201
+    else:
+        return jsonify({"error": "Failed to create brew session"}), 400
 
 
-@brew_sessions_bp.route("/<int:session_id>", methods=["PUT"])
+@brew_sessions_bp.route("/<session_id>", methods=["PUT"])
 @jwt_required()
 def update_brew_session(session_id):
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Find brew session
-    brew_session = BrewSession.query.filter_by(session_id=session_id).first()
-
-    if not brew_session:
+    # Check if session exists and belongs to user
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
         return jsonify({"error": "Brew session not found"}), 404
 
-    # Check if user owns the brew session
-    if brew_session.user_id != current_user_id:
-        return jsonify({"error": "Unauthorized access"}), 403
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
 
-    # Update brew session fields
-    for key, value in data.items():
-        if hasattr(brew_session, key):
-            setattr(brew_session, key, value)
+    # Update session
+    updated_session, message = MongoDBService.update_brew_session(session_id, data)
 
-    db.session.commit()
-
-    return (
-        jsonify(
-            {
-                "message": "Brew session updated successfully",
-                "brew_session": brew_session.to_dict(),
-            }
-        ),
-        200,
-    )
+    if updated_session:
+        return jsonify(updated_session.to_dict()), 200
+    else:
+        return jsonify({"error": message}), 400
 
 
-@brew_sessions_bp.route("/<int:session_id>", methods=["DELETE"])
+@brew_sessions_bp.route("/<session_id>", methods=["DELETE"])
 @jwt_required()
 def delete_brew_session(session_id):
-    current_user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
 
-    # Find brew session
-    brew_session = BrewSession.query.filter_by(session_id=session_id).first()
-
-    if not brew_session:
+    # Check if session exists and belongs to user
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
         return jsonify({"error": "Brew session not found"}), 404
 
-    # Check if user owns the brew session
-    if brew_session.user_id != current_user_id:
-        return jsonify({"error": "Unauthorized access"}), 403
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
 
-    db.session.delete(brew_session)
-    db.session.commit()
+    # Delete session
+    session.delete()
 
     return jsonify({"message": "Brew session deleted successfully"}), 200
+
+
+# Fermentation data endpoints
+@brew_sessions_bp.route("/<session_id>/fermentation", methods=["GET"])
+@jwt_required()
+def get_fermentation_data(session_id):
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get fermentation data
+    data, message = MongoDBService.get_fermentation_data(session_id)
+
+    if data is not None:
+        return jsonify(data), 200
+    else:
+        return jsonify({"error": message}), 404
+
+
+@brew_sessions_bp.route("/<session_id>/fermentation", methods=["POST"])
+@jwt_required()
+def add_fermentation_entry(session_id):
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Add fermentation entry
+    success, message = MongoDBService.add_fermentation_entry(session_id, data)
+
+    if success:
+        # Get updated fermentation data
+        updated_data, _ = MongoDBService.get_fermentation_data(session_id)
+        return jsonify(updated_data), 201
+    else:
+        return jsonify({"error": message}), 400
+
+
+@brew_sessions_bp.route("/<session_id>/fermentation/<int:entry_index>", methods=["PUT"])
+@jwt_required()
+def update_fermentation_entry(session_id, entry_index):
+    user_id = get_jwt_identity()
+    data = request.get_json()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Update fermentation entry
+    success, message = MongoDBService.update_fermentation_entry(
+        session_id, entry_index, data
+    )
+
+    if success:
+        # Get updated fermentation data
+        updated_data, _ = MongoDBService.get_fermentation_data(session_id)
+        return jsonify(updated_data), 200
+    else:
+        return jsonify({"error": message}), 400
+
+
+@brew_sessions_bp.route(
+    "/<session_id>/fermentation/<int:entry_index>", methods=["DELETE"]
+)
+@jwt_required()
+def delete_fermentation_entry(session_id, entry_index):
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Delete fermentation entry
+    success, message = MongoDBService.delete_fermentation_entry(session_id, entry_index)
+
+    if success:
+        # Get updated fermentation data
+        updated_data, _ = MongoDBService.get_fermentation_data(session_id)
+        return jsonify(updated_data), 200
+    else:
+        return jsonify({"error": message}), 400
+
+
+@brew_sessions_bp.route("/<session_id>/fermentation/stats", methods=["GET"])
+@jwt_required()
+def get_fermentation_stats(session_id):
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get fermentation statistics
+    stats, message = MongoDBService.get_fermentation_stats(session_id)
+
+    if stats is not None:
+        return jsonify(stats), 200
+    else:
+        return jsonify({"error": message}), 404
