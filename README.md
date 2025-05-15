@@ -1,4 +1,4 @@
-# Homebrew Tracker App - Project Structure
+# BrewTracker - Project Structure
 
 ```
 homebrew-tracker/
