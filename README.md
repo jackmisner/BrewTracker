@@ -1,5 +1,3 @@
-# BrewTracker - Project Structure
-
 # 🍺 BrewTracker
 
 A comprehensive brewing management application that helps homebrewers create, manage, and track their beer recipes and brewing sessions.
