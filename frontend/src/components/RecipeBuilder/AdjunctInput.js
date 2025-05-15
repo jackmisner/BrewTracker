@@ -23,8 +23,8 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate}) {
       alert("Please fill in all required fields.");
       return;
     }
-    await onAdd(adjunctForm);
-    await onCalculate();
+    onAdd(adjunctForm);
+    
     setAdjunctForm({
       ingredient_id: "",
       amount: "",

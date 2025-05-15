@@ -21,8 +21,8 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
       return; // Basic validation
     }
 
-    await onAdd(yeastForm);
-    await onCalculate();
+    onAdd(yeastForm);
+    
     // Reset form
     setYeastForm({
       ingredient_id: "",
