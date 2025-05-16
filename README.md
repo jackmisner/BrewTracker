@@ -31,31 +31,33 @@ homebrew-tracker/
 │   │   ├── auth.py
 │   │   ├── recipes.py
 │   │   ├── ingredients.py
-│   │   ├── recipe_ingredients.py
 │   │   └── brew_sessions.py
 │   ├── services/
 │   │   ├── __init__.py
 │   │   └── mongodb_service.py // Provides methods for interacting with MongoDB
-│   ├── tests/
+│   ├── tests/ // Backend tests
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   └── helpers.py // Various brewing related calculations and formatters
 │   ├── requirements.txt
-│   └── .env
+│   └── .env // Environment variables for setting database locations
 ├── frontend/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/
+│   │   ├── hooks/ // Custom ReactJS hook implementations
 │   │   ├── images/
 │   │   ├── pages/
 │   │   ├── services/
-|   |   |   └── api.js // API for communictating with the backend server
+|   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
+|   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
 │   │   ├── utils/
 |   |   |   └── recipeCalculations.js // Frontend recipe metric calculations for recipes not added to the database yet (less accurate than backend calcs)
 │   │   ├── App.js
 │   │   └── index.js
+│   ├── tests/ // Frontend tests
 │   ├── package.json
-│   └── .env
+│   └── .env // Environment variable for linking frontend to backend
 └── README.md // The document you are currently reading!
 ```
 
