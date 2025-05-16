@@ -67,13 +67,13 @@ function RecipeBuilder() {
   const calculateRecipeMetrics = useCallback(async () => {
     try {
       // Log current ingredients for debugging
-      console.log("Calculating metrics with ingredients:", recipeIngredients);
-      console.log("Current recipe state:", recipe);
+      // console.log("Calculating metrics with ingredients:", recipeIngredients);
+      // console.log("Current recipe state:", recipe);
 
       if (recipeId) {
         // If recipe exists, get calculated metrics from server
         const response = await ApiService.recipes.calculateMetrics(recipeId);
-        console.log("Server metrics response:", response.data);
+        // console.log("Server metrics response:", response.data);
 
         if (response.data) {
           setMetrics({
@@ -87,6 +87,7 @@ function RecipeBuilder() {
       } else {
         // Client-side estimation for new recipes
         // Make sure we use proper field names
+        console.log("recipeIngredients:", recipeIngredients);
         const mappedIngredients = recipeIngredients.map((ing) => ({
           // Map ingredients to the format expected by calculation functions
           ingredient_id: ing.ingredient_id,
@@ -226,6 +227,8 @@ function RecipeBuilder() {
         unit: ingredientData.unit,
         use: ingredientData.use || "",
         time: ingredientData.time || 0,
+        // Include any calculation-specific fields
+        ...getIngredientData(ingredientData.ingredient_id, type),
       };
 
       // Update state using the callback form to ensure we have the latest state
@@ -261,7 +264,7 @@ function RecipeBuilder() {
     if (!ingredient) return {};
 
     if (type === "grain") {
-      return { potential: ingredient.potential, colour: ingredient.color };
+      return { potential: ingredient.potential, color: ingredient.color };
     } else if (type === "hop") {
       return { alpha_acid: ingredient.alpha_acid };
     } else if (type === "yeast") {
@@ -323,9 +326,9 @@ function RecipeBuilder() {
     setRecipeIngredients(scaledIngredients);
 
     // Metrics will be recalculated by the useEffect
-    console.log(
-      `Recipe scaled from ${currentBatchSize} to ${newBatchSize} gallons`
-    );
+    // console.log(
+    //   `Recipe scaled from ${currentBatchSize} to ${newBatchSize} gallons`
+    // );
   };
 
   const handleSubmit = async (e) => {
@@ -335,9 +338,9 @@ function RecipeBuilder() {
 
     try {
       // Log current state for debugging
-      console.log("Current recipe:", recipe);
-      console.log("Current recipe ingredients:", recipeIngredients);
-      console.log("Current metrics:", metrics);
+      // console.log("Current recipe:", recipe);
+      // console.log("Current recipe ingredients:", recipeIngredients);
+      // console.log("Current metrics:", metrics);
 
       // Prepare recipe data with metrics
       const recipeData = {
@@ -371,7 +374,7 @@ function RecipeBuilder() {
       // Add ingredients to recipe data
       recipeData.ingredients = formattedIngredients;
 
-      console.log("Sending data to server:", recipeData);
+      // console.log("Sending data to server:", recipeData);
 
       let recipeResponse;
 
@@ -379,7 +382,7 @@ function RecipeBuilder() {
         // Update existing recipe
         recipeResponse = await ApiService.recipes.update(recipeId, recipeData);
 
-        console.log("Update recipe response:", recipeResponse);
+        // console.log("Update recipe response:", recipeResponse);
 
         if (!recipeResponse.data) {
           throw new Error("Failed to update recipe: Invalid server response");
@@ -390,7 +393,7 @@ function RecipeBuilder() {
         // Create new recipe
         recipeResponse = await ApiService.recipes.create(recipeData);
 
-        console.log("Create recipe response:", recipeResponse);
+        // console.log("Create recipe response:", recipeResponse);
 
         if (!recipeResponse.data) {
           throw new Error("Failed to create recipe: Invalid server response");

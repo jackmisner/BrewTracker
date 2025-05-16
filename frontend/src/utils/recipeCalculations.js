@@ -34,20 +34,19 @@ export function convertToOunces(amount, unit) {
 // Calculate Original Gravity
 export function calculateOG(recipeIngredients, batchSize, efficiency) {
   let totalPoints = 0.0;
-  const grains = recipeIngredients.filter((i) => i.ingredient_type === "grain");
-  // console.log('efficiency:', efficiency);
+  const grains = recipeIngredients.filter((i) => i.type === "grain");
   // Use passed efficiency if provided, otherwise default to 75
   const brewingEfficiency = efficiency !== undefined ? efficiency : 75;
-
+  const batchSizeGallons = batchSize || 5.0; // Default to 5 gallons if not provided
   for (const grain of grains) {
     // Get grain potential - use a default if not available
-    const potential = grain.associated_metrics.potential || 36; // Default to typical base malt potential if no value
+    const potential = grain.potential || 36; // Default to typical base malt potential if no value
     const weightLb = convertToPounds(parseFloat(grain.amount), grain.unit);
     totalPoints += weightLb * potential * (brewingEfficiency / 100);
   }
 
   // Calculate gravity points per gallon, then convert to specific gravity
-  const gravityPoints = totalPoints / batchSize;
+  const gravityPoints = totalPoints / batchSizeGallons;
   const og = 1.0 + gravityPoints / 1000.0;
 
   return parseFloat(og.toFixed(3));
@@ -58,14 +57,14 @@ export function calculateFG(recipeIngredients, og) {
   // Find yeast with highest attenuation
   let maxAttenuation = 0; // Default attenuation if no yeast is specified
 
-  const yeasts = recipeIngredients.filter((i) => i.ingredient_type === "yeast");
+  const yeasts = recipeIngredients.filter((i) => i.type === "yeast");
   for (const yeast of yeasts) {
+    console.log("yeast:", yeast);
     // Get yeast attenuation - use a default if not available
-    const attenuation = yeast.associated_metrics.attenuation || 0; // Default to 0% attenuation if no yeast specified
+    const attenuation = yeast.attenuation || 0; // Default to 0% attenuation if no yeast specified
     if (attenuation > maxAttenuation) {
       maxAttenuation = attenuation;
     }
-    // console.log("attenuation:", attenuation);
   }
 
   // Calculate FG using attenuation
@@ -90,7 +89,7 @@ export function calculateABV(og, fg, useSimplifiedFormula = true) {
 export function calculateIBU(recipeIngredients, og, batchSize, boilTime = 60) {
   let totalIBU = 0.0;
 
-  const hops = recipeIngredients.filter((i) => i.ingredient_type === "hop");
+  const hops = recipeIngredients.filter((i) => i.type === "hop");
 
   for (const hop of hops) {
     // Skip if not used in boil or has no time
@@ -103,8 +102,7 @@ export function calculateIBU(recipeIngredients, og, batchSize, boilTime = 60) {
     }
 
     // Get hop alpha acid - use a default if not available
-    const alphaAcid = hop.associated_metrics.alpha_acid || 5.0; // Default to 5% alpha acid
-    // console.log("alphaAcid:", alphaAcid);
+    const alphaAcid = hop.alpha_acid || 5.0; // Default to 5% alpha acid
     const weightOz = convertToOunces(parseFloat(hop.amount), hop.unit);
     const time = parseFloat(hop.time);
 
@@ -127,14 +125,13 @@ export function calculateIBU(recipeIngredients, og, batchSize, boilTime = 60) {
 export function calculateSRM(recipeIngredients, batchSize) {
   let totalMCU = 0.0;
 
-  const grains = recipeIngredients.filter((i) => i.ingredient_type === "grain");
+  const grains = recipeIngredients.filter((i) => i.type === "grain");
 
   for (const grain of grains) {
-    // Get grain colour - use a default if not available
-    const colour = grain.associated_metrics.colour || 2.0; // Default to typical base malt colour
-    // console.log("colour:", colour);
+    // Get grain color - use a default if not available
+    const color = grain.color || 2.0; // Default to typical base malt color
     const weightLb = convertToPounds(parseFloat(grain.amount), grain.unit);
-    const mcuContribution = colour * weightLb;
+    const mcuContribution = color * weightLb;
     totalMCU += mcuContribution;
   }
 
@@ -164,7 +161,7 @@ export function formatSrm(srm) {
   return srm ? parseFloat(srm).toFixed(1) : "0.0";
 }
 
-// Get colour hex code from SRM value
+// Get color hex code from SRM value
 export function getSrmColour(srm) {
   if (!srm || srm <= 0) return "#FFE699";
   if (srm > 0 && srm <= 2) return "#FFE699";
