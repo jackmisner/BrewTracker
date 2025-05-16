@@ -10,8 +10,6 @@ import {
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   const [scaleVolume, setScaleVolume] = useState("");
 
-  // Removed the problematic useEffect to break the infinite update cycle
-
   const getBalanceRatio = () => {
     if (metrics.ibu === 0) return 0;
     return metrics.ibu / ((metrics.og - 1) * 1000) / 2;

@@ -141,6 +141,40 @@ class MongoDBService:
             result = list(BrewSession.objects.aggregate(pipeline))
 
             if not result:
+                # No completed brew sessions, return predicted recipe metrics if available
+                recipe = Recipe.objects(id=recipe_id).first()
+                if recipe:
+                    return {
+                        "og": (
+                            recipe.estimated_og
+                            if hasattr(recipe, "estimated_og")
+                            else None
+                        ),
+                        "fg": (
+                            recipe.estimated_fg
+                            if hasattr(recipe, "estimated_fg")
+                            else None
+                        ),
+                        "abv": (
+                            recipe.estimated_abv
+                            if hasattr(recipe, "estimated_abv")
+                            else None
+                        ),
+                        "ibu": (
+                            recipe.estimated_ibu
+                            if hasattr(recipe, "estimated_ibu")
+                            else None
+                        ),
+                        "srm": (
+                            recipe.estimated_srm
+                            if hasattr(recipe, "estimated_srm")
+                            else None
+                        ),
+                        "efficiency": (
+                            recipe.efficiency if hasattr(recipe, "efficiency") else None
+                        ),
+                        "total_brews": 0,
+                    }
                 return None
 
             stats = result[0]
@@ -249,71 +283,6 @@ class MongoDBService:
             return {"recent_sessions": [], "recent_recipes": []}
 
     @staticmethod
-    def add_ingredient_to_recipe(recipe_id, ingredient_data):
-        """Add an ingredient to a recipe"""
-        try:
-            # Get the recipe
-            recipe = Recipe.objects(id=recipe_id).first()
-            if not recipe:
-                return False, "Recipe not found"
-
-            # Get the ingredient
-            ingredient_id = ingredient_data.get("ingredient_id")
-            ingredient = Ingredient.objects(id=ingredient_id).first()
-            if not ingredient:
-                return False, "Ingredient not found"
-
-            # Create new recipe ingredient
-            recipe_ingredient = RecipeIngredient(
-                ingredient_id=ingredient.id,
-                name=ingredient.name,
-                type=ingredient.type,
-                amount=ingredient_data.get("amount"),
-                unit=ingredient_data.get("unit"),
-                use=ingredient_data.get("use"),
-                time=ingredient_data.get("time", 0),
-                potential=ingredient.potential,
-                color=ingredient.color,
-                alpha_acid=ingredient.alpha_acid,
-                attenuation=ingredient.attenuation,
-            )
-
-            # Add to recipe's ingredients list
-            recipe.ingredients.append(recipe_ingredient)
-            recipe.updated_at = datetime.utcnow()
-            recipe.save()
-
-            return True, "Ingredient added successfully"
-
-        except Exception as e:
-            print(f"Database error: {e}")
-            return False, str(e)
-
-    @staticmethod
-    def remove_ingredient_from_recipe(recipe_id, ingredient_index):
-        """Remove an ingredient from a recipe by index"""
-        try:
-            # Get the recipe
-            recipe = Recipe.objects(id=recipe_id).first()
-            if not recipe:
-                return False, "Recipe not found"
-
-            # Check if index is valid
-            if ingredient_index < 0 or ingredient_index >= len(recipe.ingredients):
-                return False, "Invalid ingredient index"
-
-            # Remove the ingredient at the specified index
-            recipe.ingredients.pop(ingredient_index)
-            recipe.updated_at = datetime.utcnow()
-            recipe.save()
-
-            return True, "Ingredient removed successfully"
-
-        except Exception as e:
-            print(f"Database error: {e}")
-            return False, str(e)
-
-    @staticmethod
     def create_recipe(recipe_data):
         """Create a new recipe with embedded ingredients"""
         try:
@@ -343,7 +312,7 @@ class MongoDBService:
 
     @staticmethod
     def update_recipe(recipe_id, recipe_data):
-        """Update an existing recipe"""
+        """Update an existing recipe with support for embedded ingredients"""
         try:
             # Get the recipe
             recipe = Recipe.objects(id=recipe_id).first()
@@ -353,10 +322,17 @@ class MongoDBService:
             # Extract ingredients if included
             ingredients_data = recipe_data.pop("ingredients", None)
 
+            # Log data for debugging
+            print(f"Updating recipe {recipe_id}")
+            print(f"Recipe data: {recipe_data}")
+            print(f"Ingredients data: {ingredients_data}")
+
             # Update recipe fields
             for key, value in recipe_data.items():
                 if hasattr(recipe, key):
                     setattr(recipe, key, value)
+                else:
+                    print(f"Warning: Field '{key}' not found in Recipe model")
 
             # Update ingredients if provided
             if ingredients_data is not None:
@@ -365,26 +341,33 @@ class MongoDBService:
 
                 # Add new ingredients
                 for ing_data in ingredients_data:
-                    ingredient_id = ing_data.get("ingredient_id")
-                    if ingredient_id:
-                        # Get ingredient from database
-                        ingredient = Ingredient.objects(id=ingredient_id).first()
-                        if ingredient:
-                            # Create recipe ingredient
-                            recipe_ingredient = RecipeIngredient(
-                                ingredient_id=ingredient.id,
-                                name=ingredient.name,
-                                type=ingredient.type,
-                                amount=ing_data.get("amount"),
-                                unit=ing_data.get("unit"),
-                                use=ing_data.get("use"),
-                                time=ing_data.get("time", 0),
-                                potential=ingredient.potential,
-                                color=ingredient.color,
-                                alpha_acid=ingredient.alpha_acid,
-                                attenuation=ingredient.attenuation,
-                            )
-                            recipe.ingredients.append(recipe_ingredient)
+                    # Create RecipeIngredient embedded document
+                    from models.mongo_models import RecipeIngredient
+
+                    # Only include fields that exist in the RecipeIngredient model
+                    recipe_ingredient_fields = {
+                        "ingredient_id": ing_data.get("ingredient_id"),
+                        "name": ing_data.get("name"),
+                        "type": ing_data.get("type"),
+                        "amount": float(ing_data.get("amount", 0)),
+                        "unit": ing_data.get("unit", ""),
+                        "use": ing_data.get("use", ""),
+                        "time": int(ing_data.get("time", 0)),
+                        "potential": ing_data.get("potential"),
+                        "color": ing_data.get("color"),
+                        "alpha_acid": ing_data.get("alpha_acid"),
+                        "attenuation": ing_data.get("attenuation"),
+                    }
+
+                    # Filter out None values to avoid validation errors
+                    recipe_ingredient_fields = {
+                        k: v
+                        for k, v in recipe_ingredient_fields.items()
+                        if v is not None
+                    }
+
+                    recipe_ingredient = RecipeIngredient(**recipe_ingredient_fields)
+                    recipe.ingredients.append(recipe_ingredient)
 
             # Update timestamp
             recipe.updated_at = datetime.utcnow()
@@ -395,36 +378,35 @@ class MongoDBService:
             return recipe, "Recipe updated successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
-            return None, str(e)
+            print(f"Database error updating recipe: {e}")
 
-    @staticmethod
-    def add_fermentation_entry(session_id, entry_data):
-        """Add a fermentation data entry to a brew session"""
-        try:
-            # Get the brew session
-            session = BrewSession.objects(id=session_id).first()
-            if not session:
-                return False, "Brew session not found"
+    # @staticmethod
+    # def add_fermentation_entry(session_id, entry_data):
+    #     """Add a fermentation data entry to a brew session"""
+    #     try:
+    #         # Get the brew session
+    #         session = BrewSession.objects(id=session_id).first()
+    #         if not session:
+    #             return False, "Brew session not found"
 
-            # Create new fermentation entry
-            from mongo_models import FermentationEntry
+    #         # Create new fermentation entry
+    #         from mongo_models import FermentationEntry
 
-            # Set default entry date if not provided
-            if "entry_date" not in entry_data:
-                entry_data["entry_date"] = datetime.utcnow()
+    #         # Set default entry date if not provided
+    #         if "entry_date" not in entry_data:
+    #             entry_data["entry_date"] = datetime.utcnow()
 
-            fermentation_entry = FermentationEntry(**entry_data)
+    #         fermentation_entry = FermentationEntry(**entry_data)
 
-            # Add to session's fermentation data list
-            session.fermentation_data.append(fermentation_entry)
-            session.save()
+    #         # Add to session's fermentation data list
+    #         session.fermentation_data.append(fermentation_entry)
+    #         session.save()
 
-            return True, "Fermentation entry added successfully"
+    #         return True, "Fermentation entry added successfully"
 
-        except Exception as e:
-            print(f"Database error: {e}")
-            return False, str(e)
+    #     except Exception as e:
+    #         print(f"Database error: {e}")
+    #         return False, str(e)
 
     @staticmethod
     def get_fermentation_data(session_id):

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 
 function IngredientsList({ ingredients, onRemove, isEditing }) {
+  // console.log("ingredients:", ingredients);
   // Custom sorting function
   const sortIngredients = (ingredients) => {
     // Define the type order
@@ -8,6 +9,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       grain: 1,
       hop: 2,
       yeast: 3,
+      adjunct: 4,
     };
 
     // Define the use order for hops
@@ -20,8 +22,8 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     // Create a copy of the ingredients array to avoid mutating the original
     return [...ingredients].sort((a, b) => {
       // First, sort by ingredient type according to the specified order
-      const typeA = a.ingredient_type || "";
-      const typeB = b.ingredient_type || "";
+      const typeA = a.type || "";
+      const typeB = b.type || "";
 
       // Get the order values, defaulting to a high number for unknown types
       const orderA = typeOrder[typeA] || 999;
@@ -35,8 +37,8 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       // If types are the same, apply specific sorting logic for each type
       if (typeA === "grain") {
         // Group identical grains together
-        if (a.ingredient_name !== b.ingredient_name) {
-          return a.ingredient_name.localeCompare(b.ingredient_name);
+        if (a.name !== b.name) {
+          return a.name.localeCompare(b.name);
         }
         return 0;
       } else if (typeA === "hop") {
@@ -58,7 +60,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
         return timeB - timeA; // Higher time first
       } else if (typeA === "yeast") {
         // Just sort yeast alphabetically if needed
-        return a.ingredient_name.localeCompare(b.ingredient_name);
+        return a.name.localeCompare(b.name);
       }
 
       // Default case - sort by ID to maintain stable order
@@ -100,25 +102,21 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
           <tbody>
             {sortedIngredients.map((ingredient) => (
               <tr
-                key={`${ingredient.ingredient_type}-${ingredient.id}`}
+                key={`${ingredient.type}-${ingredient.id}`}
                 id={`ingredient-row-${ingredient.id}`}
                 className="ingredient-row"
               >
                 {isEditing && (
-                  <td className="ingredient-type">
-                    {ingredient.ingredient_type}
-                  </td>
+                  <td className="ingredient-type">{ingredient.type}</td>
                 )}
-                <td className="ingredient-name">
-                  {ingredient.ingredient_name}
-                </td>
+                <td className="ingredient-name">{ingredient.name}</td>
                 <td>
                   {ingredient.amount} {ingredient.unit}
                 </td>
                 <td>{ingredient.use || "-"}</td>
                 <td>
                   {ingredient.time
-                    ? `${ingredient.time} ${ingredient.time_unit || ""}`
+                    ? `${ingredient.time} ${ingredient.time_unit || "min"}`
                     : "-"}
                 </td>
                 {isEditing && (

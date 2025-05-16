@@ -15,7 +15,7 @@ const AllRecipes = () => {
         throw new Error("Failed to fetch recipes");
       }
       const sortedRecipes = recipesResponse.data.recipes
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
         .slice(0, 5);
       setRecipes(sortedRecipes);
       // console.log('sortedRecipes:', sortedRecipes);
