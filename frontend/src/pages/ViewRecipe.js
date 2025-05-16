@@ -17,15 +17,11 @@ const ViewRecipe = () => {
     const fetchRecipe = async () => {
       try {
         const recipeResponse = await ApiService.recipes.getById(recipeId);
-        const ingredientsResponse = await ApiService.recipes.getIngredients(
-          recipeId
-        );
+        setRecipe(recipeResponse.data);
+        setIngredients(recipeResponse.data.ingredients);
         const metricsResponse = await ApiService.recipes.calculateMetrics(
           recipeId
         );
-
-        setRecipe(recipeResponse.data);
-        setIngredients(ingredientsResponse.data);
         setMetrics(metricsResponse.data);
       } catch (error) {
         console.error("Error fetching recipe:", error);
@@ -47,23 +43,19 @@ const ViewRecipe = () => {
   if (!recipe) {
     return <div className="text-red-500">Recipe not found.</div>;
   }
-
+  console.log("metrics in view recipe:", metrics);
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-4">View Recipe: </h1>
-      <RecipeDetails
-        recipe={recipe.recipe}
-        recipeId={recipeId}
-        isEditing={false}
-      />
+      <RecipeDetails recipe={recipe} recipeId={recipeId} isEditing={false} />
       <RecipeMetrics
-        metrics={metrics.metrics}
+        metrics={metrics}
         recipeId={recipeId}
         onScale={null}
         cardView={false}
       />
       <IngredientsList
-        ingredients={ingredients.ingredients}
+        ingredients={ingredients}
         recipeId={recipeId}
         isEditing={false}
       />

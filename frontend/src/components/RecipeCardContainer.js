@@ -7,7 +7,7 @@ const RecipeCardContainer = ({ recipes: initialRecipes }) => {
   const handleDeleteRecipe = (deletedRecipeId) => {
     // Filter out the deleted recipe from the state
     const updatedRecipes = recipes.filter(
-      (recipe) => recipe.recipe_id !== deletedRecipeId
+      (recipe) => recipe._id !== deletedRecipeId
     );
     // Update the state with the new list of recipes
     setRecipes(updatedRecipes);
@@ -20,7 +20,7 @@ const RecipeCardContainer = ({ recipes: initialRecipes }) => {
       ) : (
         recipes.map((recipe) => (
           <RecipeCard
-            key={recipe.recipe_id}
+            key={recipe._id}
             recipe={recipe}
             onDelete={handleDeleteRecipe}
           />

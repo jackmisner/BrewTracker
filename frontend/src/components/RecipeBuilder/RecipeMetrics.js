@@ -8,9 +8,8 @@ import {
 } from "../../utils/recipeCalculations";
 
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
+  console.log("metrics passed to RecipeMetrics:", metrics);
   const [scaleVolume, setScaleVolume] = useState("");
-
-  // Removed the problematic useEffect to break the infinite update cycle
 
   const getBalanceRatio = () => {
     if (metrics.ibu === 0) return 0;

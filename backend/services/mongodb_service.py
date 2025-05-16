@@ -141,6 +141,40 @@ class MongoDBService:
             result = list(BrewSession.objects.aggregate(pipeline))
 
             if not result:
+                # No completed brew sessions, return predicted recipe metrics if available
+                recipe = Recipe.objects(id=recipe_id).first()
+                if recipe:
+                    return {
+                        "og": (
+                            recipe.estimated_og
+                            if hasattr(recipe, "estimated_og")
+                            else None
+                        ),
+                        "fg": (
+                            recipe.estimated_fg
+                            if hasattr(recipe, "estimated_fg")
+                            else None
+                        ),
+                        "abv": (
+                            recipe.estimated_abv
+                            if hasattr(recipe, "estimated_abv")
+                            else None
+                        ),
+                        "ibu": (
+                            recipe.estimated_ibu
+                            if hasattr(recipe, "estimated_ibu")
+                            else None
+                        ),
+                        "srm": (
+                            recipe.estimated_srm
+                            if hasattr(recipe, "estimated_srm")
+                            else None
+                        ),
+                        "efficiency": (
+                            recipe.efficiency if hasattr(recipe, "efficiency") else None
+                        ),
+                        "total_brews": 0,
+                    }
                 return None
 
             stats = result[0]
