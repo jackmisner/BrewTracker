@@ -87,7 +87,7 @@ function RecipeBuilder() {
       } else {
         // Client-side estimation for new recipes
         // Make sure we use proper field names
-        console.log("recipeIngredients:", recipeIngredients);
+        // console.log("recipeIngredients:", recipeIngredients);
         const mappedIngredients = recipeIngredients.map((ing) => ({
           // Map ingredients to the format expected by calculation functions
           ingredient_id: ing.ingredient_id,
@@ -104,7 +104,7 @@ function RecipeBuilder() {
           attenuation: ing.attenuation,
         }));
 
-        console.log("Mapped ingredients for calculation:", mappedIngredients);
+        // console.log("Mapped ingredients for calculation:", mappedIngredients);
 
         // Now calculate metrics with properly formatted data
         const og = calculateOG(

@@ -59,7 +59,7 @@ export function calculateFG(recipeIngredients, og) {
 
   const yeasts = recipeIngredients.filter((i) => i.type === "yeast");
   for (const yeast of yeasts) {
-    console.log("yeast:", yeast);
+    // console.log("yeast:", yeast);
     // Get yeast attenuation - use a default if not available
     const attenuation = yeast.attenuation || 0; // Default to 0% attenuation if no yeast specified
     if (attenuation > maxAttenuation) {
