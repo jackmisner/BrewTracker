@@ -23,7 +23,6 @@ homebrew-tracker/
 ├── backend/
 │   ├── app.py
 │   ├── config.py
-│   ├── migrations/ // Database management
 │   ├── models/ // Database models
 │   │   ├── __init__.py
 │   │   └── mongo_models.py // MongoDB models for users, recipes, ingredients, and brew sessions
