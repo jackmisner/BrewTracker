@@ -8,7 +8,6 @@ import {
 } from "../../utils/recipeCalculations";
 
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
-  console.log("metrics passed to RecipeMetrics:", metrics);
   const [scaleVolume, setScaleVolume] = useState("");
 
   const getBalanceRatio = () => {

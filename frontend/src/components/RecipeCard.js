@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import "./RecipeCard.css";
 
 const RecipeCard = ({ recipe, onDelete }) => {
-  console.log("recipe:", recipe);
+  // console.log("recipe:", recipe);
   const navigate = useNavigate();
   const formattedDate = new Date(recipe.created_at).toLocaleDateString();
   const [metrics, setMetrics] = useState({
@@ -67,7 +67,7 @@ const RecipeCard = ({ recipe, onDelete }) => {
         const response = await ApiService.recipes.calculateMetrics(
           recipe.recipe_id
         );
-        console.log("response:", response);
+
         setMetrics(response.data);
       } catch (error) {
         console.error("Error fetching metrics:", error);

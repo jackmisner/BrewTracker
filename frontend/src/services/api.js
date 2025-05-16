@@ -39,7 +39,6 @@ api.interceptors.response.use(
   }
 );
 
-// API service methods - same interface as before, but now working with MongoDB
 const ApiService = {
   // Auth endpoints
   auth: {
@@ -61,17 +60,9 @@ const ApiService = {
       console.log("Sending recipe data to update:", recipeData);
       return api.put(`/recipes/${id}`, recipeData);
     },
-
     delete: (id) => api.delete(`/recipes/${id}`),
     search: (query, page = 1, perPage = 10) =>
       api.get(`/search/recipes?q=${query}&page=${page}&per_page=${perPage}`),
-
-    // Recipe ingredient endpoints
-    getIngredients: (recipeId) => api.get(`/recipes/${recipeId}/ingredients`),
-    addIngredient: (recipeId, ingredientData) =>
-      api.post(`/recipes/${recipeId}/ingredients`, ingredientData),
-    removeIngredient: (recipeId, index) =>
-      api.delete(`/recipes/${recipeId}/ingredients/${index}`),
     calculateMetrics: (recipeId) => api.get(`/recipes/${recipeId}/metrics`),
   },
 

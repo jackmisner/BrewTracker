@@ -8,6 +8,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       grain: 1,
       hop: 2,
       yeast: 3,
+      adjunct: 4,
     };
 
     // Define the use order for hops
@@ -58,7 +59,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
         return timeB - timeA; // Higher time first
       } else if (typeA === "yeast") {
         // Just sort yeast alphabetically if needed
-        return a.ingredient_name.localeCompare(b.ingredient_name);
+        return a.name.localeCompare(b.name);
       }
 
       // Default case - sort by ID to maintain stable order
@@ -114,7 +115,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
                 <td>{ingredient.use || "-"}</td>
                 <td>
                   {ingredient.time
-                    ? `${ingredient.time} ${ingredient.time_unit || ""}`
+                    ? `${ingredient.time} ${ingredient.time_unit || "min"}`
                     : "-"}
                 </td>
                 {isEditing && (

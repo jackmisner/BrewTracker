@@ -64,33 +64,66 @@ function RecipeBuilder() {
     }
   }, [recipeId]);
 
-  // Calculate metrics function (wrapped in useCallback)
-
   const calculateRecipeMetrics = useCallback(async () => {
     try {
+      // Log current ingredients for debugging
+      console.log("Calculating metrics with ingredients:", recipeIngredients);
+      console.log("Current recipe state:", recipe);
+
       if (recipeId) {
         // If recipe exists, get calculated metrics from server
         const response = await ApiService.recipes.calculateMetrics(recipeId);
-        setMetrics(response.data.metrics);
+        console.log("Server metrics response:", response.data);
+
+        if (response.data) {
+          setMetrics({
+            og: response.data.og || response.data.avg_og || 1.0,
+            fg: response.data.fg || response.data.avg_fg || 1.0,
+            abv: response.data.abv || response.data.avg_abv || 0.0,
+            ibu: response.data.ibu || 0,
+            srm: response.data.srm || 0,
+          });
+        }
       } else {
         // Client-side estimation for new recipes
-        // This uses the same formulas as the server-side calculations
+        // Make sure we use proper field names
+        const mappedIngredients = recipeIngredients.map((ing) => ({
+          // Map ingredients to the format expected by calculation functions
+          ingredient_id: ing.ingredient_id,
+          name: ing.name,
+          type: ing.type,
+          amount: parseFloat(ing.amount),
+          unit: ing.unit,
+          use: ing.use || "",
+          time: parseInt(ing.time) || 0,
+          // Include any calculation-specific fields
+          potential: ing.potential,
+          color: ing.color,
+          alpha_acid: ing.alpha_acid,
+          attenuation: ing.attenuation,
+        }));
 
+        console.log("Mapped ingredients for calculation:", mappedIngredients);
+
+        // Now calculate metrics with properly formatted data
         const og = calculateOG(
-          recipeIngredients,
+          mappedIngredients,
           recipe.batch_size,
           recipe.efficiency
         );
-        const fg = calculateFG(recipeIngredients, og);
+        const fg = calculateFG(mappedIngredients, og);
         const abv = calculateABV(og, fg);
         const ibu = calculateIBU(
-          recipeIngredients,
+          mappedIngredients,
           og,
           recipe.batch_size,
           recipe.boil_time
         );
-        const srm = calculateSRM(recipeIngredients, recipe.batch_size);
+        const srm = calculateSRM(mappedIngredients, recipe.batch_size);
 
+        console.log("Calculated metrics:", { og, fg, abv, ibu, srm });
+
+        // Update the metrics state with new values
         setMetrics({
           og: og,
           fg: fg,
@@ -164,13 +197,10 @@ function RecipeBuilder() {
   const fetchRecipe = async (recipeId) => {
     try {
       const response = await ApiService.recipes.getById(recipeId);
-      setRecipe(response.data.recipe);
+      setRecipe(response.data);
 
-      // Fetch recipe ingredients
-      const ingredientsResponse = await ApiService.recipes.getIngredients(
-        recipeId
-      );
-      setRecipeIngredients(ingredientsResponse.data.ingredients);
+      // Use ingredients directly from recipe response
+      setRecipeIngredients(response.data.ingredients || []);
 
       setLoading(false);
     } catch (err) {
@@ -186,42 +216,30 @@ function RecipeBuilder() {
 
   const addIngredient = async (type, ingredientData) => {
     try {
-      let newIngredient;
-      if (recipeId) {
-        const response = await ApiService.recipes.addIngredient(recipeId, {
-          ...ingredientData,
-          ingredient_type: type,
-        });
-        newIngredient = response.data;
-      } else {
-        newIngredient = {
-          id: `temp-${Date.now()}`,
-          ingredient_id: ingredientData.ingredient_id,
-          ingredient_name: getIngredientName(
-            ingredientData.ingredient_id,
-            type
-          ),
-          associated_metrics: getIngredientData(
-            ingredientData.ingredient_id,
-            type
-          ),
-          amount: ingredientData.amount,
-          unit: ingredientData.unit,
-          ingredient_type: type,
-          use: ingredientData.use,
-          time: ingredientData.time,
-          time_unit: ingredientData.time_unit,
-        };
-      }
+      // Create new ingredient object
+      const newIngredient = {
+        id: `temp-${Date.now()}`, // Temporary ID for client-side tracking
+        ingredient_id: ingredientData.ingredient_id,
+        name: getIngredientName(ingredientData.ingredient_id, type),
+        type: type,
+        amount: ingredientData.amount,
+        unit: ingredientData.unit,
+        use: ingredientData.use || "",
+        time: ingredientData.time || 0,
+      };
 
       // Update state using the callback form to ensure we have the latest state
-      setRecipeIngredients((prevIngredients) => [
-        ...prevIngredients,
-        newIngredient,
-      ]);
+      const updatedIngredients = [...recipeIngredients, newIngredient];
+      setRecipeIngredients(updatedIngredients);
 
-      // We're relying on the useEffect to handle the metric recalculation
-      // Don't call calculateRecipeMetrics() directly here
+      // If editing an existing recipe, update it on the server
+      if (recipeId) {
+        const updatedRecipe = {
+          ...recipe,
+          ingredients: updatedIngredients,
+        };
+        await ApiService.recipes.update(recipeId, updatedRecipe);
+      }
     } catch (err) {
       console.error("Error adding ingredient:", err);
       setError("Failed to add ingredient");
@@ -254,61 +272,25 @@ function RecipeBuilder() {
 
   const removeIngredient = async (ingredientId) => {
     try {
-      if (recipeId && !ingredientId.toString().startsWith("temp-")) {
-        // If recipe exists and ingredient is saved, remove from database
-        await ApiService.recipes.removeIngredient(recipeId, ingredientId);
-      }
-
       // Remove from local state
-      setRecipeIngredients(
-        recipeIngredients.filter((i) => i.id !== ingredientId)
+      const updatedIngredients = recipeIngredients.filter(
+        (i) => i.id !== ingredientId
       );
+      setRecipeIngredients(updatedIngredients);
 
-      // Metrics will be recalculated by the useEffect
+      // If recipe exists, update it on the server with the filtered ingredients
+      if (recipeId) {
+        const updatedRecipe = {
+          ...recipe,
+          ingredients: updatedIngredients,
+        };
+        await ApiService.recipes.update(recipeId, updatedRecipe);
+      }
     } catch (err) {
       console.error("Error removing ingredient:", err);
       setError("Failed to remove ingredient");
     }
   };
-
-  // const calculateRecipeMetrics = async () => {
-  //   try {
-  //     if (recipeId) {
-  //       // If recipe exists, get calculated metrics from server
-  //       const response = await ApiService.recipes.calculateMetrics(recipeId);
-  //       setMetrics(response.data.metrics);
-  //     } else {
-  //       // Client-side estimation for new recipes
-  //       // This uses the same formulas as the server-side calculations
-
-  //       const og = calculateOG(
-  //         recipeIngredients,
-  //         recipe.batch_size,
-  //         recipe.efficiency,
-  //       );
-  //       const fg = calculateFG(recipeIngredients, og);
-  //       const abv = calculateABV(og, fg);
-  //       const ibu = calculateIBU(
-  //         recipeIngredients,
-  //         og,
-  //         recipe.batch_size,
-  //         recipe.boil_time,
-  //       );
-  //       const srm = calculateSRM(recipeIngredients, recipe.batch_size);
-
-  //       setMetrics({
-  //         og: og,
-  //         fg: fg,
-  //         abv: abv,
-  //         ibu: ibu,
-  //         srm: srm,
-  //       });
-  //     }
-  //   } catch (err) {
-  //     console.error("Error calculating metrics:", err);
-  //     setError("Failed to calculate recipe metrics");
-  //   }
-  // };
 
   const handleScaleRecipe = (newBatchSize) => {
     if (!newBatchSize || isNaN(newBatchSize) || newBatchSize <= 0) {
@@ -352,6 +334,11 @@ function RecipeBuilder() {
     setError("");
 
     try {
+      // Log current state for debugging
+      console.log("Current recipe:", recipe);
+      console.log("Current recipe ingredients:", recipeIngredients);
+      console.log("Current metrics:", metrics);
+
       // Prepare recipe data with metrics
       const recipeData = {
         ...recipe,
@@ -363,24 +350,28 @@ function RecipeBuilder() {
       };
 
       // Format ingredients for MongoDB
-      // In MongoDB, ingredients are embedded in the recipe document
+      // Make sure we're using the field names expected by the MongoDB model
       const formattedIngredients = recipeIngredients.map((ing) => {
-        // Only include necessary fields for MongoDB model
         return {
-          ingredient_id: ing.ingredient_id, // This should be a string in MongoDB
-          name:
-            ing.ingredient_name ||
-            getIngredientName(ing.ingredient_id, ing.ingredient_type),
-          type: ing.ingredient_type,
+          ingredient_id: ing.ingredient_id,
+          name: ing.name,
+          type: ing.type,
           amount: parseFloat(ing.amount),
           unit: ing.unit,
-          use: ing.use,
+          use: ing.use || "",
           time: parseInt(ing.time) || 0,
+          // Include any calculation-specific fields if needed
+          potential: ing.potential,
+          color: ing.color,
+          alpha_acid: ing.alpha_acid,
+          attenuation: ing.attenuation,
         };
       });
 
       // Add ingredients to recipe data
       recipeData.ingredients = formattedIngredients;
+
+      console.log("Sending data to server:", recipeData);
 
       let recipeResponse;
 
@@ -388,7 +379,8 @@ function RecipeBuilder() {
         // Update existing recipe
         recipeResponse = await ApiService.recipes.update(recipeId, recipeData);
 
-        // Check response
+        console.log("Update recipe response:", recipeResponse);
+
         if (!recipeResponse.data) {
           throw new Error("Failed to update recipe: Invalid server response");
         }
@@ -398,7 +390,8 @@ function RecipeBuilder() {
         // Create new recipe
         recipeResponse = await ApiService.recipes.create(recipeData);
 
-        // Check response
+        console.log("Create recipe response:", recipeResponse);
+
         if (!recipeResponse.data) {
           throw new Error("Failed to create recipe: Invalid server response");
         }
