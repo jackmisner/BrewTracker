@@ -53,8 +53,15 @@ const ApiService = {
     getAll: (page = 1, perPage = 10) =>
       api.get(`/recipes?page=${page}&per_page=${perPage}`),
     getById: (id) => api.get(`/recipes/${id}`),
-    create: (recipeData) => api.post("/recipes", recipeData),
-    update: (id, recipeData) => api.put(`/recipes/${id}`, recipeData),
+    create: (recipeData) => {
+      console.log("Sending recipe data to create:", recipeData);
+      return api.post("/recipes", recipeData);
+    },
+    update: (id, recipeData) => {
+      console.log("Sending recipe data to update:", recipeData);
+      return api.put(`/recipes/${id}`, recipeData);
+    },
+
     delete: (id) => api.delete(`/recipes/${id}`),
     search: (query, page = 1, perPage = 10) =>
       api.get(`/search/recipes?q=${query}&page=${page}&per_page=${perPage}`),

@@ -315,36 +315,18 @@ class MongoDBService:
 
     @staticmethod
     def create_recipe(recipe_data):
-        """Create a new recipe"""
+        """Create a new recipe with embedded ingredients"""
         try:
-            # Extract ingredients data
+            # Extract ingredients data if provided
             ingredients_data = recipe_data.pop("ingredients", [])
 
-            # Create recipe without ingredients first
+            # Create recipe object
             recipe = Recipe(**recipe_data)
 
-            # Process and add ingredients
+            # Process and add ingredients as embedded documents
             for ing_data in ingredients_data:
-                ingredient_id = ing_data.get("ingredient_id")
-                if ingredient_id:
-                    # Get ingredient from database
-                    ingredient = Ingredient.objects(id=ingredient_id).first()
-                    if ingredient:
-                        # Create recipe ingredient
-                        recipe_ingredient = RecipeIngredient(
-                            ingredient_id=ingredient.id,
-                            name=ingredient.name,
-                            type=ingredient.type,
-                            amount=ing_data.get("amount"),
-                            unit=ing_data.get("unit"),
-                            use=ing_data.get("use"),
-                            time=ing_data.get("time", 0),
-                            potential=ingredient.potential,
-                            color=ingredient.color,
-                            alpha_acid=ingredient.alpha_acid,
-                            attenuation=ingredient.attenuation,
-                        )
-                        recipe.ingredients.append(recipe_ingredient)
+                recipe_ingredient = RecipeIngredient(**ing_data)
+                recipe.ingredients.append(recipe_ingredient)
 
             # Set creation timestamps
             now = datetime.utcnow()
@@ -355,9 +337,8 @@ class MongoDBService:
             recipe.save()
 
             return recipe
-
         except Exception as e:
-            print(f"Database error: {e}")
+            print(f"Database error creating recipe: {e}")
             return None
 
     @staticmethod
