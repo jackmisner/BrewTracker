@@ -22,10 +22,8 @@ function RecipeDetails({
         ? parseFloat(value)
         : value;
 
-    onChange({
-      ...recipe,
-      [name]: newValue,
-    });
+    // Just pass the field name and new value, not the entire recipe object
+    onChange(name, newValue);
   };
 
   return (
