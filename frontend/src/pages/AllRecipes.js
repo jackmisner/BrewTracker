@@ -6,7 +6,7 @@ const AllRecipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [refresh, setRefresh] = useState(0);
   const fetchRecipes = async () => {
     try {
       setLoading(true);
@@ -18,7 +18,6 @@ const AllRecipes = () => {
         .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
         .slice(0, 5);
       setRecipes(sortedRecipes);
-      // console.log('sortedRecipes:', sortedRecipes);
     } catch (err) {
       console.error("Error fetching recipes:", err);
       setError("Failed to load recipes");
@@ -27,9 +26,15 @@ const AllRecipes = () => {
     }
   };
 
+  // Function to trigger a refresh of the recipes
+  const refreshTrigger = () => {
+    setRefresh((prev) => prev + 1);
+  };
+
+  // Fetch recipes when the component mounts or when refresh is triggered
   useEffect(() => {
     fetchRecipes();
-  }, []);
+  }, [refresh]);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -43,7 +48,10 @@ const AllRecipes = () => {
         <div className="text-center py-10">No recipes found.</div>
       )}
       {!loading && !error && recipes.length > 0 && (
-        <RecipeCardContainer recipes={recipes} />
+        <RecipeCardContainer
+          recipes={recipes}
+          refreshTrigger={refreshTrigger}
+        />
       )}
     </div>
   );

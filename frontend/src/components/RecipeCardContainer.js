@@ -1,7 +1,7 @@
 import { useState } from "react";
 import RecipeCard from "./RecipeCard";
 
-const RecipeCardContainer = ({ recipes: initialRecipes }) => {
+const RecipeCardContainer = ({ recipes: initialRecipes, refreshTrigger }) => {
   const [recipes, setRecipes] = useState(initialRecipes);
 
   const handleDeleteRecipe = (deletedRecipeId) => {
@@ -11,6 +11,8 @@ const RecipeCardContainer = ({ recipes: initialRecipes }) => {
     );
     // Update the state with the new list of recipes
     setRecipes(updatedRecipes);
+    // Call the refreshTrigger function to refresh the parent component
+    refreshTrigger();
   };
 
   return (
