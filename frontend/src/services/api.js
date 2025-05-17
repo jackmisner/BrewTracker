@@ -64,6 +64,8 @@ const ApiService = {
     search: (query, page = 1, perPage = 10) =>
       api.get(`/search/recipes?q=${query}&page=${page}&per_page=${perPage}`),
     calculateMetrics: (recipeId) => api.get(`/recipes/${recipeId}/metrics`),
+    calculateMetricsPreview: (recipeData) =>
+      api.post("/recipes/calculate-metrics-preview", recipeData),
   },
 
   // Ingredient endpoints

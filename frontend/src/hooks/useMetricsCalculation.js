@@ -1,13 +1,6 @@
 // hooks/useMetricsCalculation.js
 import { useState, useCallback, useEffect } from "react";
 import ApiService from "../services/api";
-import {
-  calculateOG,
-  calculateFG,
-  calculateABV,
-  calculateIBU,
-  calculateSRM,
-} from "../utils/recipeCalculations";
 
 export function useMetricsCalculation(
   recipeId,
@@ -26,23 +19,13 @@ export function useMetricsCalculation(
 
   const calculateRecipeMetrics = useCallback(async () => {
     try {
-      if (recipeId) {
-        // If recipe exists, get calculated metrics from server
-        const response = await ApiService.recipes.calculateMetrics(recipeId);
+      // Always use the preview endpoint to get real-time updates
+      // based on the current recipe state (including unsaved changes)
 
-        if (response.data) {
-          setMetrics({
-            og: response.data.og || response.data.avg_og || 1.0,
-            fg: response.data.fg || response.data.avg_fg || 1.0,
-            abv: response.data.abv || response.data.avg_abv || 0.0,
-            ibu: response.data.ibu || 0,
-            srm: response.data.srm || 0,
-          });
-        }
-      } else {
-        // Client-side estimation for new recipes
-        const mappedIngredients = recipeIngredients.map((ing) => ({
-          // Map ingredients to the format expected by calculation functions
+      // Prepare the recipe data with current ingredients
+      const recipeData = {
+        ...recipe,
+        ingredients: recipeIngredients.map((ing) => ({
           ingredient_id: ing.ingredient_id,
           name: ing.name,
           type: ing.type,
@@ -50,51 +33,28 @@ export function useMetricsCalculation(
           unit: ing.unit,
           use: ing.use || "",
           time: parseInt(ing.time) || 0,
-          // Include any calculation-specific fields
+          // Include calculation-specific fields
           potential: ing.potential,
           color: ing.color,
           alpha_acid: ing.alpha_acid,
           attenuation: ing.attenuation,
-        }));
+        })),
+      };
 
-        // Calculate metrics with properly formatted data
-        const og = calculateOG(
-          mappedIngredients,
-          recipe.batch_size,
-          recipe.efficiency
-        );
-        const fg = calculateFG(mappedIngredients, og);
-        const abv = calculateABV(og, fg);
-        const ibu = calculateIBU(
-          mappedIngredients,
-          og,
-          recipe.batch_size,
-          recipe.boil_time
-        );
-        const srm = calculateSRM(mappedIngredients, recipe.batch_size);
+      // Send to backend for calculation
+      const response = await ApiService.recipes.calculateMetricsPreview(
+        recipeData
+      );
 
-        // Update the metrics state with new values
-        setMetrics({
-          og: og,
-          fg: fg,
-          abv: abv,
-          ibu: ibu,
-          srm: srm,
-        });
-      }
+      // Update metrics state with results
+      setMetrics(response.data);
     } catch (err) {
       console.error("Error calculating metrics:", err);
       setError("Failed to calculate recipe metrics");
     }
-  }, [
-    recipeId,
-    recipeIngredients,
-    recipe.batch_size,
-    recipe.efficiency,
-    recipe.boil_time,
-  ]);
+  }, [recipeIngredients, recipe]);
 
-  // Calculate metrics when recipe ingredients change
+  // Calculate metrics when recipe ingredients or parameters change
   useEffect(() => {
     if (!loading && recipeIngredients.length >= 0) {
       calculateRecipeMetrics();

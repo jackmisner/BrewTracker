@@ -5,7 +5,7 @@ import {
   formatIbu,
   formatSrm,
   getSrmColour,
-} from "../../utils/recipeCalculations";
+} from "../../utils/formatUtils";
 
 function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
   const [scaleVolume, setScaleVolume] = useState("");

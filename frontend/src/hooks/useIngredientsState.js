@@ -73,21 +73,21 @@ export function useIngredientsState() {
 
   const addIngredient = async (type, ingredientData) => {
     try {
-      // Create new ingredient object
+      // Create new ingredient object with a consistent ID format
       const newIngredient = {
-        id: `temp-${Date.now()}`, // Temporary ID for client-side tracking
-        ingredient_id: ingredientData.ingredient_id,
+        id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        ingredient_id: ingredientData.ingredient_id, // This should be the MongoDB ID
         name: getIngredientName(ingredientData.ingredient_id, type),
         type: type,
         amount: ingredientData.amount,
         unit: ingredientData.unit,
         use: ingredientData.use || "",
         time: ingredientData.time || 0,
-        // Include any calculation-specific fields
+        // Include calculation-specific fields
         ...getIngredientData(ingredientData.ingredient_id, type),
       };
 
-      // Update state using the callback form to ensure we have the latest state
+      // Update state
       setRecipeIngredients((prevIngredients) => [
         ...prevIngredients,
         newIngredient,
@@ -103,10 +103,17 @@ export function useIngredientsState() {
 
   const removeIngredient = async (ingredientId) => {
     try {
+      console.log("Removing ingredient with ID:", ingredientId);
+      console.log("Current ingredients before removal:", recipeIngredients);
+
       // Remove from local state
-      setRecipeIngredients((prevIngredients) =>
-        prevIngredients.filter((i) => i.id !== ingredientId)
-      );
+      setRecipeIngredients((prevIngredients) => {
+        const filtered = prevIngredients.filter(
+          (i) => String(i.id) !== String(ingredientId)
+        );
+        console.log("Ingredients after removal:", filtered);
+        return filtered;
+      });
     } catch (err) {
       console.error("Error removing ingredient:", err);
       setError("Failed to remove ingredient");
