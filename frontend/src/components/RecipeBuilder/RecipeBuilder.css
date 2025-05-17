@@ -731,3 +731,73 @@
 .mt-6 {
   margin-top: 1.5rem;
 }
+
+/* Standardized ingredient inputs for all ingredient types */
+.ingredient-inputs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Mobile-first approach */
+@media (min-width: 768px) {
+  .ingredient-inputs {
+    grid-template-columns: 3fr 2fr 1fr; /* Standard layout for most inputs */
+  }
+  
+  /* Special layout for hops which need extra fields */
+  .hop-inputs {
+    grid-template-columns: 3fr 1fr 3fr 1fr;
+  }
+  
+  /* For adjuncts which need custom layout */
+  .adjunct-inputs {
+    grid-template-columns: 3fr 2fr 1fr;
+  }
+}
+
+/* For larger screens, give more space */
+@media (min-width: 992px) {
+  .ingredient-inputs {
+    grid-template-columns: 3fr 2fr 1fr;
+  }
+  
+  .hop-inputs {
+    grid-template-columns: 3fr 1fr 3fr 1fr;
+  }
+}
+
+/* Standard button styling across all ingredient inputs */
+.ingredient-form .btn-primary {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Make input groups consistent */
+.input-group {
+  display: flex;
+  width: 100%;
+}
+
+.input-group .input-control {
+  flex: 3;
+}
+
+.input-group .input-addon,
+.input-group select.input-control {
+  flex: 1;
+}
+
+/* Fix for the hop time inputs */
+.hop-time-container {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.hop-time-container .input-control,
+.hop-time-container select {
+  flex: 1;
+}

@@ -6,6 +6,7 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
     amount: "",
     unit: "pkg",
   });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setYeastForm({
@@ -13,6 +14,7 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
       [name]: value,
     });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -30,6 +32,7 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
       unit: "pkg",
     });
   };
+
   return (
     <div className="card">
       <h3 className="card-title">Yeast</h3>
@@ -53,33 +56,32 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
             </select>
           </div>
 
-          <div>
-            <div className="input-group">
-              <input
-                type="number"
-                name="amount"
-                value={yeastForm.amount}
-                onChange={handleChange}
-                className="input-control"
-                placeholder="Amount"
-              />
-              <select
-                name="unit"
-                value={yeastForm.unit}
-                onChange={handleChange}
-                className="input-control"
-              >
-                <option value="pkg">pkg</option>
-              </select>
-            </div>
+          <div className="input-group">
+            <input
+              type="number"
+              name="amount"
+              value={yeastForm.amount}
+              onChange={handleChange}
+              className="input-control"
+              placeholder="Amount"
+            />
+            <select
+              name="unit"
+              value={yeastForm.unit}
+              onChange={handleChange}
+              className="input-addon"
+            >
+              <option value="pkg">pkg</option>
+            </select>
           </div>
+
           <div>
             <button
               type="button"
               className="btn btn-primary"
               onClick={handleSubmit}
             >
-              Add Yeast
+              Add
             </button>
           </div>
         </div>
@@ -87,4 +89,5 @@ function YeastInput({ yeasts, onAdd, onCalculate }) {
     </div>
   );
 }
+
 export default YeastInput;

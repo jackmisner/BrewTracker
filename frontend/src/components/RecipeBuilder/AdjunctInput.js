@@ -39,7 +39,7 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate }) {
       <h3 className="card-title">Adjuncts</h3>
 
       <div className="ingredient-form">
-        <div className="adjunct-inputs">
+        <div className="ingredient-inputs adjunct-inputs">
           <div>
             <select
               id="adjunct-select"
@@ -57,36 +57,35 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate }) {
             </select>
           </div>
 
-          <div>
-            <div className="input-group">
-              <input
-                type="number"
-                name="amount"
-                value={adjunctForm.amount}
-                onChange={handleChange}
-                placeholder="Amount"
-                className="input-control"
-              />
-              <select
-                name="unit"
-                value={adjunctForm.unit}
-                onChange={handleChange}
-                className="input-control"
-              >
-                <option value="oz">oz</option>
-                <option value="g">g</option>
-                <option value="lb">lb</option>
-                <option value="kg">kg</option>
-              </select>
-            </div>
+          <div className="input-group">
+            <input
+              type="number"
+              name="amount"
+              value={adjunctForm.amount}
+              onChange={handleChange}
+              placeholder="Amount"
+              className="input-control"
+            />
+            <select
+              name="unit"
+              value={adjunctForm.unit}
+              onChange={handleChange}
+              className="input-addon"
+            >
+              <option value="oz">oz</option>
+              <option value="g">g</option>
+              <option value="lb">lb</option>
+              <option value="kg">kg</option>
+            </select>
           </div>
+
           <div>
             <button
               type="button"
               onClick={handleSubmit}
               className="btn btn-primary"
             >
-              Add Adjunct
+              Add
             </button>
           </div>
         </div>
