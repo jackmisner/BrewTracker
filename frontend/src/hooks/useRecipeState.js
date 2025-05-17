@@ -40,8 +40,11 @@ export function useRecipeState(recipeId) {
     }
   };
 
-  const handleRecipeChange = (updatedRecipe) => {
-    setRecipe(updatedRecipe);
+  const handleRecipeChange = (fieldName, newValue) => {
+    setRecipe((prevRecipe) => ({
+      ...prevRecipe,
+      [fieldName]: newValue,
+    }));
   };
 
   const handleScaleRecipe = (newBatchSize) => {

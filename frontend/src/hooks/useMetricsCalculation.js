@@ -1,5 +1,4 @@
-// hooks/useMetricsCalculation.js
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import ApiService from "../services/api";
 
 export function useMetricsCalculation(
@@ -16,57 +15,72 @@ export function useMetricsCalculation(
     srm: 0,
   });
   const [error, setError] = useState("");
+  const debounceTimerRef = useRef(null);
 
-  const calculateRecipeMetrics = useCallback(async () => {
-    try {
-      // Always use the preview endpoint to get real-time updates
-      // based on the current recipe state (including unsaved changes)
+  // Extract only the properties that affect calculations
+  const batchSize = recipe.batch_size;
+  const efficiency = recipe.efficiency;
+  const boilTime = recipe.boil_time;
 
-      // Prepare the recipe data with current ingredients
-      const recipeData = {
-        ...recipe,
-        ingredients: recipeIngredients.map((ing) => ({
-          ingredient_id: ing.ingredient_id,
-          name: ing.name,
-          type: ing.type,
-          amount: parseFloat(ing.amount),
-          unit: ing.unit,
-          use: ing.use || "",
-          time: parseInt(ing.time) || 0,
-          // Include calculation-specific fields
-          potential: ing.potential,
-          color: ing.color,
-          alpha_acid: ing.alpha_acid,
-          attenuation: ing.attenuation,
-        })),
-      };
+  // This function creates the payload we'll send to the API
+  const prepareCalculationData = useCallback(() => {
+    return {
+      batch_size: batchSize,
+      efficiency: efficiency,
+      boil_time: boilTime,
+      ingredients: recipeIngredients.map((ing) => ({
+        ingredient_id: ing.ingredient_id,
+        name: ing.name,
+        type: ing.type,
+        amount: parseFloat(ing.amount),
+        unit: ing.unit,
+        use: ing.use || "",
+        time: parseInt(ing.time) || 0,
+        potential: ing.potential,
+        color: ing.color,
+        alpha_acid: ing.alpha_acid,
+        attenuation: ing.attenuation,
+      })),
+    };
+  }, [batchSize, efficiency, boilTime, recipeIngredients]);
 
-      // Send to backend for calculation
-      const response = await ApiService.recipes.calculateMetricsPreview(
-        recipeData
-      );
-
-      // Update metrics state with results
-      setMetrics(response.data);
-    } catch (err) {
-      console.error("Error calculating metrics:", err);
-      setError("Failed to calculate recipe metrics");
+  // This function handles the actual API call with debouncing
+  const calculateRecipeMetrics = useCallback(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-  }, [recipeIngredients, recipe]);
 
-  // Calculate metrics when recipe ingredients or parameters change
+    // Set a new timer
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        console.log("Calculating metrics...");
+
+        const recipeData = prepareCalculationData();
+        const response = await ApiService.recipes.calculateMetricsPreview(
+          recipeData
+        );
+        setMetrics(response.data);
+      } catch (err) {
+        console.error("Error calculating metrics:", err);
+        setError("Failed to calculate recipe metrics");
+      }
+    }, 500); // 500ms debounce delay
+  }, [prepareCalculationData]);
+
+  // Calculate metrics when recipe ingredients or brew parameters change
   useEffect(() => {
-    if (!loading && recipeIngredients.length >= 0) {
+    if (!loading) {
       calculateRecipeMetrics();
     }
-  }, [
-    recipeIngredients,
-    recipe.batch_size,
-    recipe.efficiency,
-    recipe.boil_time,
-    calculateRecipeMetrics,
-    loading,
-  ]);
+
+    // Cleanup timer on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [calculateRecipeMetrics, loading]);
 
   return { metrics, calculateRecipeMetrics, error };
 }
