@@ -1,10 +1,11 @@
-from utils.helpers import (
+from backend.utils.brewing_calculation_core import (
     convert_to_pounds,
     convert_to_ounces,
-    format_gravity,
-    format_abv,
-    format_ibu,
-    format_srm,
+    calc_og_core,
+    calc_fg_core,
+    calc_abv_core,
+    calc_ibu_core,
+    calc_srm_core,
 )
 
 
@@ -20,12 +21,9 @@ def calculate_og_preview(recipe_data):
             weight_lb = convert_to_pounds(
                 float(ing.get("amount", 0)), ing.get("unit", "lb")
             )
-            total_points += (weight_lb * float(ing.get("potential", 0))) * (
-                efficiency / 100.0
-            )
+            total_points += weight_lb * float(ing.get("potential", 0))
 
-    og = 1.0 + (total_points / batch_size / 1000.0)
-    return round(og, 3)
+    return calc_og_core(total_points, batch_size, efficiency)
 
 
 def calculate_fg_preview(recipe_data):
@@ -39,8 +37,7 @@ def calculate_fg_preview(recipe_data):
             max_attenuation = max(max_attenuation, float(ing.get("attenuation", 0)))
 
     og = calculate_og_preview(recipe_data)
-    fg = og - ((og - 1.0) * (max_attenuation / 100.0))
-    return round(fg, 3)
+    return calc_fg_core(og, max_attenuation)
 
 
 def calculate_abv_preview(recipe_data):
@@ -48,19 +45,15 @@ def calculate_abv_preview(recipe_data):
     og = calculate_og_preview(recipe_data)
     fg = calculate_fg_preview(recipe_data)
 
-    abv = (og - fg) * 131.25
-    return round(abv, 1)
+    return calc_abv_core(og, fg)
 
 
 def calculate_ibu_preview(recipe_data):
     """Calculate IBUs using Tinseth formula"""
     batch_size = float(recipe_data.get("batch_size", 5))
-    boil_time = int(recipe_data.get("boil_time", 60))
     ingredients = recipe_data.get("ingredients", [])
 
-    total_ibu = 0.0
-    og = calculate_og_preview(recipe_data)
-
+    hops_data = []
     for ing in ingredients:
         if (
             ing.get("type") == "hop"
@@ -73,19 +66,11 @@ def calculate_ibu_preview(recipe_data):
             )
             alpha_acid = float(ing.get("alpha_acid", 0))
             time = int(ing.get("time", 0))
+            use_type = ing.get("use")
+            hops_data.append((weight_oz, alpha_acid, time, use_type))
 
-            # Utilization calculations
-            utilization_factor = 0.3 if ing.get("use") == "whirlpool" else 1.0
-            gravity_factor = 1.65 * pow(0.000125, og - 1.0)
-            time_factor = (1.0 - pow(2.718, -0.04 * time)) / 4.15
-            utilization = gravity_factor * time_factor * utilization_factor
-
-            # IBU calculation
-            aau = weight_oz * alpha_acid
-            ibu_contribution = aau * utilization * 74.9 / batch_size
-            total_ibu += ibu_contribution
-
-    return round(total_ibu, 1)
+    og = calculate_og_preview(recipe_data)
+    return calc_ibu_core(hops_data, og, batch_size)
 
 
 def calculate_srm_preview(recipe_data):
@@ -93,18 +78,16 @@ def calculate_srm_preview(recipe_data):
     batch_size = float(recipe_data.get("batch_size", 5))
     ingredients = recipe_data.get("ingredients", [])
 
-    total_mcu = 0.0
+    grain_colors = []
     for ing in ingredients:
         if ing.get("type") == "grain" and ing.get("color"):
             weight_lb = convert_to_pounds(
                 float(ing.get("amount", 0)), ing.get("unit", "lb")
             )
-            mcu_contribution = float(ing.get("color", 0)) * weight_lb
-            total_mcu += mcu_contribution
+            color = float(ing.get("color", 0))
+            grain_colors.append((weight_lb, color))
 
-    mcu = total_mcu / batch_size
-    srm = 1.4922 * pow(mcu, 0.6859)
-    return round(srm, 1)
+    return calc_srm_core(grain_colors, batch_size)
 
 
 def calculate_all_metrics_preview(recipe_data):

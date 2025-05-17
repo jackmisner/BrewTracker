@@ -1,3 +1,5 @@
+// This file contains utility functions for formatting various values
+
 // Format gravity values (like "1.048")
 export function formatGravity(gravity) {
   return gravity ? parseFloat(gravity).toFixed(3) : "1.000";

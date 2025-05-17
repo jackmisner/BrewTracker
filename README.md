@@ -38,7 +38,9 @@ homebrew-tracker/
 │   ├── tests/ // Backend tests
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   └── helpers.py // Various brewing related calculations and formatters
+│   │   ├── brewing_calculation_core.py  # Core brewing calculation formulae
+│   │   ├── recipe_orm_calculator.py     # Calculations for database models
+│   │   └── recipe_api_calculator.py     # Calculations for API preview requests
 │   ├── requirements.txt
 │   └── .env // Environment variables for setting database locations
 ├── frontend/
@@ -52,7 +54,7 @@ homebrew-tracker/
 |   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
 |   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
 │   │   ├── utils/
-|   |   |   └── recipeCalculations.js // Frontend recipe metric calculations for recipes not added to the database yet (less accurate than backend calcs)
+|   |   |   └── formatUtils.js // Utility functions for formatting units for displaying to the end user
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── tests/ // Frontend tests
