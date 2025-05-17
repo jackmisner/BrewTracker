@@ -1,3 +1,14 @@
+from backend.utils.brewing_calculation_core import (
+    convert_to_pounds,
+    convert_to_ounces,
+    calc_og_core,
+    calc_fg_core,
+    calc_abv_core,
+    calc_ibu_core,
+    calc_srm_core,
+)
+
+
 # Formating functions for various attributes
 def format_gravity(gravity):
     return f"{float(gravity):.3f}" if gravity else "1.000"
@@ -108,6 +119,17 @@ def convert_to_pounds(amount, unit):
     return amount  # Default to assuming pounds if unit not recognized
 
 
+def convert_to_ounces(amount, unit):
+    """Convert weight to ounces"""
+    if unit == "g":
+        return amount / 28.3495
+    elif unit == "kg":
+        return amount * 35.274
+    elif unit == "lb":
+        return amount * 16.0
+    return amount  # Default to ounces
+
+
 def calculate_og(recipe):
     """Calculate original gravity from recipe ingredients"""
     if not recipe or not hasattr(recipe, "recipe_ingredients"):
@@ -117,10 +139,9 @@ def calculate_og(recipe):
     for ri in recipe.recipe_ingredients:
         if ri.ingredient.type == "grain" and ri.ingredient.potential:
             weight_lb = convert_to_pounds(ri.amount, ri.unit)
-            total_points += (weight_lb * ri.ingredient.potential)*(recipe.efficiency / 100.0)
+            total_points += weight_lb * ri.ingredient.potential
 
-    og = 1.0 + (total_points / recipe.batch_size / 1000.0)
-    return round(og, 3)
+    return calc_og_core(total_points, recipe.batch_size, recipe.efficiency)
 
 
 def calculate_fg(recipe):
@@ -132,23 +153,17 @@ def calculate_fg(recipe):
     max_attenuation = 0
     for ri in recipe.recipe_ingredients:
         if ri.ingredient.type == "yeast" and ri.ingredient.attenuation:
-            max_attenuation = max(max_attenuation, ri.ingredient.attenuation) # Set max attenuation to yeast attenuation if found, otherwise 0
+            max_attenuation = max(max_attenuation, ri.ingredient.attenuation)
 
-    og = calculate_og(recipe)  # Calculate OG if not already set
-    fg = og - ((og - 1.0) * (max_attenuation / 100.0)) # Calculate FG using max attenuation (will return og if no yeast found)
-    return round(fg, 3)
+    og = calculate_og(recipe)
+    return calc_fg_core(og, max_attenuation)
 
 
 def calculate_abv(recipe):
     """Calculate ABV using OG and FG"""
     og = calculate_og(recipe)
     fg = calculate_fg(recipe)
-
-    if not og or not fg:
-        return 0.0
-
-    abv = (og - fg) * 131.25
-    return round(abv, 1)
+    return calc_abv_core(og, fg)
 
 
 def calculate_ibu(recipe):
@@ -156,9 +171,7 @@ def calculate_ibu(recipe):
     if not recipe or not hasattr(recipe, "recipe_ingredients"):
         return 0.0
 
-    total_ibu = 0.0
-    og = calculate_og(recipe)
-
+    hops_data = []
     for ri in recipe.recipe_ingredients:
         if (
             ri.ingredient.type == "hop"
@@ -166,23 +179,14 @@ def calculate_ibu(recipe):
             and ri.use in ["boil", "whirlpool"]
             and ri.time
         ):
-
             weight_oz = convert_to_ounces(ri.amount, ri.unit)
             alpha_acid = ri.ingredient.alpha_acid
             time = ri.time
+            use_type = ri.use
+            hops_data.append((weight_oz, alpha_acid, time, use_type))
 
-            # Utilization calculations
-            utilization_factor = 0.3 if ri.use == "whirlpool" else 1.0
-            gravity_factor = 1.65 * pow(0.000125, og - 1.0)
-            time_factor = (1.0 - pow(2.718, -0.04 * time)) / 4.15
-            utilization = gravity_factor * time_factor * utilization_factor
-
-            # IBU calculation
-            aau = weight_oz * alpha_acid
-            ibu_contribution = aau * utilization * 74.9 / recipe.batch_size
-            total_ibu += ibu_contribution
-
-    return round(total_ibu, 1)
+    og = calculate_og(recipe)
+    return calc_ibu_core(hops_data, og, recipe.batch_size)
 
 
 def calculate_srm(recipe):
@@ -190,24 +194,11 @@ def calculate_srm(recipe):
     if not recipe or not hasattr(recipe, "recipe_ingredients"):
         return 0.0
 
-    total_mcu = 0.0
+    grain_colors = []
     for ri in recipe.recipe_ingredients:
         if ri.ingredient.type == "grain" and ri.ingredient.color:
             weight_lb = convert_to_pounds(ri.amount, ri.unit)
-            mcu_contribution = ri.ingredient.color * weight_lb
-            total_mcu += mcu_contribution
+            color = ri.ingredient.color
+            grain_colors.append((weight_lb, color))
 
-    mcu = total_mcu / recipe.batch_size
-    srm = 1.4922 * pow(mcu, 0.6859)
-    return round(srm, 1)
-
-
-def convert_to_ounces(amount, unit):
-    """Convert weight to ounces"""
-    if unit == "g":
-        return amount / 28.3495
-    elif unit == "kg":
-        return amount * 35.274
-    elif unit == "lb":
-        return amount * 16.0
-    return amount  # Default to ounces
+    return calc_srm_core(grain_colors, recipe.batch_size)
