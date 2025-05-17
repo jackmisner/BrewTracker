@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
 from models.mongo_models import Recipe, User
 from services.mongodb_service import MongoDBService
+from utils.recipe_calculations import calculate_all_metrics_preview
 
 recipes_bp = Blueprint("recipes", __name__)
 
@@ -124,3 +125,19 @@ def get_recipe_metrics(recipe_id):
         return jsonify(stats), 200
     else:
         return jsonify({"message": "No completed brew sessions for this recipe"}), 404
+
+
+@recipes_bp.route("/calculate-metrics-preview", methods=["POST"])
+@jwt_required()
+def calculate_metrics_preview():
+    """Calculate metrics for a recipe that hasn't been saved to the database yet"""
+    try:
+        data = request.get_json()
+
+        # Calculate metrics
+        metrics = calculate_all_metrics_preview(data)
+
+        return jsonify(metrics), 200
+    except Exception as e:
+        print(f"Error calculating metrics: {e}")
+        return jsonify({"error": f"Failed to calculate metrics: {str(e)}"}), 400

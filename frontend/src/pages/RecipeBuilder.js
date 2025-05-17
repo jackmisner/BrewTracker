@@ -61,6 +61,43 @@ function RecipeBuilder() {
     fetchIngredients();
   }, []);
 
+  useEffect(() => {
+    // When recipe is loaded and not in loading state
+    if (
+      !loading &&
+      recipe &&
+      recipe.ingredients &&
+      recipe.ingredients.length > 0
+    ) {
+      // Map each ingredient to ensure it has an id field for client-side operations
+      const ingredientsWithIds = recipe.ingredients.map((ingredient) => {
+        // Give each ingredient a consistent id property for the frontend
+        return {
+          ...ingredient,
+          id:
+            ingredient.id ||
+            // If this is a MongoDB ObjectId
+            (ingredient._id
+              ? String(ingredient._id)
+              : // If we have ingredient_id from your database
+              ingredient.ingredient_id
+              ? `ing-${String(ingredient.ingredient_id)}`
+              : // Fallback to generate a unique ID
+                `existing-${Date.now()}-${Math.random()
+                  .toString(36)
+                  .substr(2, 9)}`),
+        };
+      });
+
+      console.log(
+        "Setting recipe ingredients with proper IDs:",
+        ingredientsWithIds
+      );
+      // Set the recipe ingredients to the ingredients state
+      setRecipeIngredients(ingredientsWithIds);
+    }
+  }, [recipe, loading, setRecipeIngredients]);
+
   // Handle recipe scaling
   const handleRecipeScaling = (newBatchSize) => {
     // Scale the recipe (batch size)
