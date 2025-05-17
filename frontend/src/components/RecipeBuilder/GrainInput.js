@@ -57,32 +57,30 @@ function GrainInput({ grains, onAdd, onCalculate }) {
             </select>
           </div>
 
-          <div>
-            <div className="input-group">
-              <input
-                type="number"
-                id="grain-amount"
-                name="amount"
-                value={grainForm.amount}
-                onChange={handleChange}
-                step="0.1"
-                min="0"
-                placeholder="Amount"
-                className="input-control"
-              />
-              <select
-                id="grain-unit"
-                name="unit"
-                value={grainForm.unit}
-                onChange={handleChange}
-                className="input-addon"
-              >
-                <option value="lb">lb</option>
-                <option value="oz">oz</option>
-                <option value="kg">kg</option>
-                <option value="g">g</option>
-              </select>
-            </div>
+          <div className="input-group">
+            <input
+              type="number"
+              id="grain-amount"
+              name="amount"
+              value={grainForm.amount}
+              onChange={handleChange}
+              step="0.1"
+              min="0"
+              placeholder="Amount"
+              className="input-control"
+            />
+            <select
+              id="grain-unit"
+              name="unit"
+              value={grainForm.unit}
+              onChange={handleChange}
+              className="input-addon"
+            >
+              <option value="lb">lb</option>
+              <option value="oz">oz</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+            </select>
           </div>
 
           <div>
@@ -90,7 +88,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               id="add-grain-btn"
               type="button"
               onClick={handleSubmit}
-              className="btn btn-primary btn-full"
+              className="btn btn-primary"
             >
               Add
             </button>
