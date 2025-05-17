@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
 from models.mongo_models import Recipe, User
 from services.mongodb_service import MongoDBService
-from utils.recipe_calculations import calculate_all_metrics_preview
+from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 recipes_bp = Blueprint("recipes", __name__)
 
