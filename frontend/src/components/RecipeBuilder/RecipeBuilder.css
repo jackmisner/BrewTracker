@@ -715,14 +715,14 @@
 /* ===== Hop-specific styling ===== */
 .hop-alpha-container {
   position: relative;
-  width: 100px;
+  width: 130px;
   flex-shrink: 0;
 }
 
 .hop-alpha-input {
-  width: 70px;
+  width: 80px;
   padding: 0.5rem 0.5rem;
-  padding-right: 35px;
+  padding-right: 50px;
   border: 1px solid #d1d5db;
   border-radius: 0.25rem;
 }

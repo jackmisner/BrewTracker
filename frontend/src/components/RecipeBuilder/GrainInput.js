@@ -105,6 +105,8 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               value={grainForm.color}
               onChange={handleChange}
               step="0.5"
+              min="0"
+              max="550"
               placeholder="Colour"
               className="grain-color-input"
             />

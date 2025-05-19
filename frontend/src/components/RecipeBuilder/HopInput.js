@@ -106,6 +106,7 @@ function HopInput({ hops, onAdd, onCalculate }) {
               value={hopForm.alpha_acid}
               onChange={handleChange}
               step="0.1"
+              min="0"
               placeholder="Alpha Acid"
               className="hop-alpha-input"
             />
