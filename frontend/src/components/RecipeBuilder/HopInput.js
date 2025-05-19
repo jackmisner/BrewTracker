@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 function HopInput({ hops, onAdd, onCalculate }) {
   const [hopForm, setHopForm] = useState({
     ingredient_id: "",
     amount: "",
+    alpha_acid: "",
     unit: "oz",
     use: "boil",
     time: "",
@@ -12,10 +13,22 @@ function HopInput({ hops, onAdd, onCalculate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setHopForm((prev) => ({
-      ...prev,
+
+    // Create updated form data
+    const updatedForm = {
+      ...hopForm,
       [name]: value,
-    }));
+    };
+
+    // If the ingredient_id changed, look up the alpha_acid value
+    if (name === "ingredient_id" && value) {
+      const selectedHop = hops.find((hop) => hop.ingredient_id === value);
+      if (selectedHop && selectedHop.alpha_acid) {
+        updatedForm.alpha_acid = selectedHop.alpha_acid;
+      }
+    }
+
+    setHopForm(updatedForm);
   };
 
   const handleSubmit = async (e) => {
@@ -24,12 +37,12 @@ function HopInput({ hops, onAdd, onCalculate }) {
       alert("Please fill in all required fields.");
       return;
     }
-
-    onAdd(hopForm); // Wait for the ingredient to be added
+    onAdd(hopForm);
 
     setHopForm({
       ingredient_id: "",
       amount: "",
+      alpha_acid: "",
       unit: "oz",
       use: "boil",
       time: "",
@@ -62,7 +75,19 @@ function HopInput({ hops, onAdd, onCalculate }) {
               ))}
             </select>
           </div>
-
+          <div className="alpha-acid-container">
+            <input
+              type="number"
+              id="alpha-acid"
+              name="alpha_acid"
+              value={hopForm.alpha_acid}
+              onChange={handleChange}
+              step="0.1"
+              placeholder="Alpha Acid"
+              className="input-control"
+            />
+            <span className="alpha-acid-unit">%AA</span>
+          </div>
           <div className="input-group">
             <input
               type="number"

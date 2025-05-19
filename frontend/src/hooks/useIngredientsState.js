@@ -73,10 +73,13 @@ export function useIngredientsState() {
 
   const addIngredient = async (type, ingredientData) => {
     try {
+      // Get base data from database
+      const baseData = getIngredientData(ingredientData.ingredient_id, type);
+
       // Create new ingredient object with a consistent ID format
       const newIngredient = {
         id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        ingredient_id: ingredientData.ingredient_id, // This should be the MongoDB ID
+        ingredient_id: ingredientData.ingredient_id,
         name: getIngredientName(ingredientData.ingredient_id, type),
         type: type,
         amount: ingredientData.amount,
@@ -84,8 +87,13 @@ export function useIngredientsState() {
         use: ingredientData.use || "",
         time: ingredientData.time || 0,
         // Include calculation-specific fields
-        ...getIngredientData(ingredientData.ingredient_id, type),
+        ...baseData,
       };
+
+      // Override with custom values if provided
+      if (type === "hop" && ingredientData.alpha_acid) {
+        newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid);
+      }
 
       // Update state
       setRecipeIngredients((prevIngredients) => [
@@ -103,15 +111,15 @@ export function useIngredientsState() {
 
   const removeIngredient = async (ingredientId) => {
     try {
-      console.log("Removing ingredient with ID:", ingredientId);
-      console.log("Current ingredients before removal:", recipeIngredients);
+      // console.log("Removing ingredient with ID:", ingredientId);
+      // console.log("Current ingredients before removal:", recipeIngredients);
 
       // Remove from local state
       setRecipeIngredients((prevIngredients) => {
         const filtered = prevIngredients.filter(
           (i) => String(i.id) !== String(ingredientId)
         );
-        console.log("Ingredients after removal:", filtered);
+        // console.log("Ingredients after removal:", filtered);
         return filtered;
       });
     } catch (err) {
