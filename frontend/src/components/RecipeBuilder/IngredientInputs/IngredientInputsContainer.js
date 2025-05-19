@@ -1,5 +1,3 @@
-// components/RecipeBuilder/IngredientInputsContainer.js
-import React from "react";
 import GrainInput from "./GrainInput";
 import HopInput from "./HopInput";
 import YeastInput from "./YeastInput";

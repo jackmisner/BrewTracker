@@ -53,6 +53,7 @@ homebrew-tracker/
 │   │   ├── services/
 |   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
 |   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
+│   │   ├── styles/ // CSS for various frontend components
 │   │   ├── utils/
 |   |   |   └── formatUtils.js // Utility functions for formatting units for displaying to the end user
 │   │   ├── App.js
@@ -177,6 +178,7 @@ Visit `http://localhost:3000` to access the application.
   - Add/edit/delete recipes
   - Ingredient management
   - Automatic metric calculations
+  - Cloning of existing recipes with linkages to parents recipe for version control
 - 📊 Brewing Metrics
   - Original Gravity (OG)
   - Final Gravity (FG)

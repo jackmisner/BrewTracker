@@ -12,7 +12,7 @@ import { useRecipeForm } from "../hooks/useRecipeForm";
 import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
-import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputsContainer";
+import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
 
 function RecipeBuilder() {
   const { recipeId } = useParams();
