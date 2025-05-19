@@ -1,12 +1,11 @@
-import React, { useState } from "react";
 import RecipeMetrics from "./RecipeBuilder/RecipeMetrics";
+import RecipeActions from "./RecipeActions";
 import ApiService from "../services/api";
-import { useEffect } from "react";
-import { useNavigate } from "react-router";
-import "./RecipeCard.css";
+import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router";
+import "../styles/RecipeCard.css";
 
 const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
-  const navigate = useNavigate();
   const formattedDate = new Date(recipe.created_at).toLocaleDateString();
   const [metrics, setMetrics] = useState({
     og: 1.0,
@@ -15,89 +14,6 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
     ibu: 0,
     srm: 0,
   });
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isCloning, setIsCloning] = useState(false);
-
-  const viewRecipe = () => {
-    navigate(`/recipes/${recipe.recipe_id}`);
-  };
-
-  const editRecipe = () => {
-    // Navigate to the edit page (which uses RecipeBuilder component)
-    navigate(`/recipes/${recipe.recipe_id}/edit`);
-  };
-
-  const cloneRecipe = async () => {
-    setIsCloning(true);
-    try {
-      const response = await ApiService.recipes.clone(recipe.recipe_id);
-
-      if (response.status === 201) {
-        alert(`Recipe cloned successfully!`);
-
-        // If we have a refreshTrigger function, call it to update the recipe list
-        if (refreshTrigger) {
-          refreshTrigger();
-        }
-
-        // Navigate to the new recipe
-        navigate(`/recipes/${response.data.recipe_id}/edit`);
-      }
-    } catch (error) {
-      console.error("Error cloning recipe:", error);
-      // More detailed error logging
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-      } else if (error.request) {
-        console.error("No response received from server");
-      } else {
-        console.error("Error message:", error.message);
-      }
-      alert(
-        `Failed to clone recipe: ${
-          error.response?.data?.error || error.message || "Unknown error"
-        }`
-      );
-    } finally {
-      setIsCloning(false);
-    }
-  };
-
-  const deleteRecipe = async () => {
-    if (window.confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
-      setIsDeleting(true);
-      try {
-        await ApiService.recipes.delete(recipe.recipe_id);
-
-        // Call the onDelete callback to refresh the parent component
-        if (onDelete) {
-          onDelete(recipe.recipe_id);
-        }
-      } catch (error) {
-        console.error("Error deleting recipe:", error);
-        // More detailed error logging
-        if (error.response) {
-          // Server responded with an error status code
-          console.error("Error response data:", error.response.data);
-          console.error("Error response status:", error.response.status);
-        } else if (error.request) {
-          // Request was made but no response received
-          console.error("No response received from server");
-        } else {
-          // Something else caused the error
-          console.error("Error message:", error.message);
-        }
-        alert(
-          `Failed to delete recipe: ${
-            error.response?.data?.error || error.message || "Unknown error"
-          }`
-        );
-      } finally {
-        setIsDeleting(false);
-      }
-    }
-  };
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -134,38 +50,13 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
         <span>Created on: {formattedDate}</span>
       </div>
 
-      <div className="recipe-card-actions">
-        <button className="recipe-card-button view-button" onClick={viewRecipe}>
-          View
-        </button>
-        <button className="recipe-card-button edit-button" onClick={editRecipe}>
-          Edit
-        </button>
-        <button
-          className="recipe-card-button clone-button"
-          onClick={cloneRecipe}
-          disabled={isCloning}
-        >
-          {isCloning ? "Cloning..." : "Clone"}
-        </button>
-        <button
-          className="recipe-card-button delete-button"
-          onClick={deleteRecipe}
-          disabled={isDeleting}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-        {/* Placeholder for brew button - to be implemented later */}
-        {/* 
-        <button 
-          className="recipe-card-button brew-button"
-          onClick={() => {}}
-          disabled={true}
-        >
-          Brew
-        </button>
-        */}
-      </div>
+      <RecipeActions
+        recipe={recipe}
+        compact={true}
+        refreshTrigger={refreshTrigger}
+        onDelete={onDelete}
+        showViewButton={true}
+      />
     </div>
   );
 };

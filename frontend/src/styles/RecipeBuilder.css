@@ -989,21 +989,10 @@ border-color: #ef4444; /* red-500 /
 color: #ef4444; / red-500 */
 }
 .recipe-card-button.delete-button:hover {
-background-color: #fef2f2; /* red-50 /
-color: #dc2626; / red-600 */
+background-color: #fef2f2; /* red-50 */
+color: #dc2626; /* red-600 */
 }
-/* Add brew button (placeholder for future implementation) */
-.recipe-card-button.brew-button {
-background-color: #10b981; /* emerald-500 */
-color: white;
-}
-.recipe-card-button.brew-button:hover {
-background-color: #059669; /* emerald-600 */
-}
-.recipe-card-button.brew-button:disabled {
-opacity: 0.6;
-cursor: not-allowed;
-}
+
 /* Responsive button adjustments */
 @media (max-width: 480px) {
 .recipe-card-button {

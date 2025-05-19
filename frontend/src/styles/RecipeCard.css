@@ -139,26 +139,26 @@ transform 0.1s;
 text-align: center;
 border: 1px solid transparent;
 }
-.recipe-card-button:first-child {
+.recipe-card-button.view-button {
 background-color: #f59e0b; /* amber-500 */
 color: white;
 }
-.recipe-card-button:first-child:hover {
+.recipe-card-button.view-button:hover {
 background-color: #d97706; /* amber-600 */
 }
-.recipe-card-button:nth-child(2) {
+.recipe-card-button.edit-button {
 background-color: #d97706; /* amber-600 */
 color: white;
 }
-.recipe-card-button:nth-child(2):hover {
+.recipe-card-button.edit-button:hover {
 background-color: #b45309; /* amber-700 */
 }
-.recipe-card-button:last-child {
+.recipe-card-button.delete-button {
 background-color: white;
 border-color: #ef4444; /* red-500 /
 color: #ef4444; / red-500 */
 }
-.recipe-card-button:last-child:hover {
+.recipe-card-button.delete-button:hover {
 background-color: #fef2f2; /* red-50 /
 color: #dc2626; / red-600 */
 }
@@ -291,6 +291,16 @@ background-color: #952d00;
 .delete-button:hover {
   background-color: #fef2f2; /* red-50 */
   color: #dc2626; /* red-600 */
+}
+.brew-button {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  flex: 1;
+  min-width: 150px;
+}
+
+.brew-button:hover:not(:disabled) {
+  background-color: #059669; /* emerald-600 */
 }
 
 /* Add version badge styling */
