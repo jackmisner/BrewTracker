@@ -3,16 +3,31 @@ import React, { useState } from "react";
 function GrainInput({ grains, onAdd, onCalculate }) {
   const [grainForm, setGrainForm] = useState({
     ingredient_id: "",
+    color: "",
     amount: "",
     unit: "lb",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setGrainForm({
+
+    // Create updated form data
+    const updatedForm = {
       ...grainForm,
       [name]: value,
-    });
+    };
+
+    // If the ingredient_id changed, look up the lovibond value
+    if (name === "ingredient_id" && value) {
+      const selectedGrain = grains.find(
+        (grain) => grain.ingredient_id === value
+      );
+      if (selectedGrain && selectedGrain.color) {
+        updatedForm.color = selectedGrain.color;
+      }
+    }
+
+    setGrainForm(updatedForm);
   };
 
   const handleSubmit = async (e) => {
@@ -29,6 +44,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
     // Reset form
     setGrainForm({
       ingredient_id: "",
+      color: "",
       amount: "",
       unit: "lb",
     });
@@ -56,7 +72,19 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               ))}
             </select>
           </div>
-
+          <div className="lovibond-container">
+            <input
+              type="number"
+              id="color"
+              name="color"
+              value={grainForm.color}
+              onChange={handleChange}
+              step="0.5"
+              placeholder="Colour"
+              className="input-control"
+            />
+            <span className="colour-unit">°L</span>
+          </div>
           <div className="input-group">
             <input
               type="number"

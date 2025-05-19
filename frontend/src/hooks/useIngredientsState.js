@@ -86,6 +86,7 @@ export function useIngredientsState() {
         unit: ingredientData.unit,
         use: ingredientData.use || "",
         time: ingredientData.time || 0,
+        time_unit: ingredientData.time_unit || "",
         // Include calculation-specific fields
         ...baseData,
       };
@@ -93,6 +94,10 @@ export function useIngredientsState() {
       // Override with custom values if provided
       if (type === "hop" && ingredientData.alpha_acid) {
         newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid);
+      }
+
+      if (type === "grain" && ingredientData.color) {
+        newIngredient.color = parseFloat(ingredientData.color);
       }
 
       // Update state
