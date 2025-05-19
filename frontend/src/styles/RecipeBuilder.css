@@ -10,6 +10,7 @@
    8. Ingredient Inputs
    9. SRM Colors
    10. Utilities & Animations
+   11. Recipe Version History
    ========================================================================== */
 
 /* ==========================================================================
@@ -858,3 +859,144 @@
 .mt-2 { margin-top: 0.5rem; }
 .mt-4 { margin-top: 1rem; }
 .mt-6 { margin-top: 1.5rem; }
+
+/* ==========================================================================
+11. Recipe Version History
+========================================================================== */
+/* Version container */
+.version-history {
+margin-top: 2rem;
+padding: 1rem;
+background-color: #fffbeb; /* amber-50 */
+border-radius: 0.5rem;
+border: 1px solid #fcd34d; /* amber-300 */
+}
+.version-history-title {
+font-size: 1.25rem;
+color: #92400e; /* amber-800 */
+margin-bottom: 0.75rem;
+font-weight: 600;
+border-bottom: 1px solid #fde68a; /* amber-200 */
+padding-bottom: 0.5rem;
+}
+.parent-version, .current-version, .child-versions {
+margin-bottom: 1rem;
+}
+.parent-version h4, .current-version h4, .child-versions h4 {
+font-size: 0.875rem;
+color: #b45309; /* amber-700 */
+margin-bottom: 0.25rem;
+font-weight: 500;
+}
+.parent-link {
+color: #d97706; /* amber-600 */
+text-decoration: none;
+font-weight: 500;
+}
+.parent-link:hover {
+text-decoration: underline;
+}
+.version-badge {
+display: inline-block;
+font-size: 0.75rem;
+background-color: #fde68a; /* amber-200 /
+color: #92400e; / amber-800 */
+padding: 0.25rem 0.5rem;
+border-radius: 9999px;
+font-weight: 600;
+}
+.derived-recipes-list {
+list-style-type: disc;
+margin-left: 1.5rem;
+}
+.derived-recipes-list a {
+color: #d97706; /* amber-600 */
+text-decoration: none;
+}
+.derived-recipes-list a:hover {
+text-decoration: underline;
+}
+.version-history-loading {
+padding: 1rem;
+text-align: center;
+color: #6b7280; /* gray-500 */
+}
+.version-history-error {
+padding: 1rem;
+text-align: center;
+color: #ef4444; /* red-500 */
+}
+/* Recipe card version badge */
+.recipe-card-version {
+display: inline-block;
+font-size: 0.75rem;
+background-color: #fffbeb; /* amber-50 */
+color: #b45309; /* amber-700 */
+padding: 0.25rem 0.5rem;
+border-radius: 9999px;
+margin-bottom: 0.5rem;
+border: 1px solid #fcd34d; /* amber-300 */
+}
+/* Update recipe card actions for clone button */
+.recipe-card-actions {
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+margin-top: 1rem;
+gap: 0.5rem;
+}
+.recipe-card-button {
+flex: 1;
+min-width: calc(33% - 0.5rem); /* For better alignment with 3 buttons */
+padding: 0.5rem 0.75rem;
+border-radius: 0.25rem;
+font-weight: 500;
+font-size: 0.875rem;
+cursor: pointer;
+transition:
+background-color 0.2s,
+border-color 0.2s,
+transform 0.1s;
+text-align: center;
+border: 1px solid transparent;
+}
+/* Clone button styling */
+.recipe-card-button.clone-button {
+background-color: #fbbf24; /* amber-400 */
+color: white;
+}
+.recipe-card-button.clone-button:hover {
+background-color: #f59e0b; /* amber-500 */
+}
+/* Renamed other buttons for clarity */
+.recipe-card-button.view-button {
+background-color: #f59e0b; /* amber-500 */
+color: white;
+}
+.recipe-card-button.view-button:hover {
+background-color: #d97706; /* amber-600 */
+}
+.recipe-card-button.edit-button {
+background-color: #d97706; /* amber-600 */
+color: white;
+}
+.recipe-card-button.edit-button:hover {
+background-color: #b45309; /* amber-700 */
+}
+.recipe-card-button.delete-button {
+background-color: white;
+border-color: #ef4444; /* red-500 /
+color: #ef4444; / red-500 */
+}
+.recipe-card-button.delete-button:hover {
+background-color: #fef2f2; /* red-50 */
+color: #dc2626; /* red-600 */
+}
+
+/* Responsive button adjustments */
+@media (max-width: 480px) {
+.recipe-card-button {
+min-width: 100%;
+margin-bottom: 0.25rem;
+}
+}

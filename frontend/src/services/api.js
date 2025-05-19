@@ -66,6 +66,8 @@ const ApiService = {
     calculateMetrics: (recipeId) => api.get(`/recipes/${recipeId}/metrics`),
     calculateMetricsPreview: (recipeData) =>
       api.post("/recipes/calculate-metrics-preview", recipeData),
+    clone: (id) => api.post(`/recipes/${id}/clone`),
+    getVersionHistory: (id) => api.get(`/recipes/${id}/versions`),
   },
 
   // Ingredient endpoints

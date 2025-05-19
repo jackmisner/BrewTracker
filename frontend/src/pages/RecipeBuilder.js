@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import "../components/RecipeBuilder/RecipeBuilder.css";
+import "../styles/RecipeBuilder.css";
 
 // Import custom hooks
 import { useRecipeState } from "../hooks/useRecipeState";
