@@ -233,3 +233,82 @@ background-color: #9b3200;
 .srm-21 {
 background-color: #952d00;
 }
+
+.recipe-card-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.recipe-card-button {
+  flex: 1;
+  min-width: calc(50% - 0.5rem); /* For better alignment on smaller screens */
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: 
+    background-color 0.2s,
+    border-color 0.2s,
+    transform 0.1s;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+/* Button styling - updated to accommodate 4 buttons */
+.view-button {
+  background-color: #f59e0b; /* amber-500 */
+  color: white;
+}
+.view-button:hover {
+  background-color: #d97706; /* amber-600 */
+}
+
+.edit-button {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+}
+.edit-button:hover {
+  background-color: #b45309; /* amber-700 */
+}
+
+.clone-button {
+  background-color: #fbbf24; /* amber-400 */
+  color: white;
+}
+.clone-button:hover {
+  background-color: #f59e0b; /* amber-500 */
+}
+
+.delete-button {
+  background-color: white;
+  border-color: #ef4444; /* red-500 */
+  color: #ef4444; /* red-500 */
+}
+.delete-button:hover {
+  background-color: #fef2f2; /* red-50 */
+  color: #dc2626; /* red-600 */
+}
+
+/* Add version badge styling */
+.recipe-card-version {
+  display: inline-block;
+  font-size: 0.75rem;
+  background-color: #fffbeb; /* amber-50 */
+  color: #b45309; /* amber-700 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #fcd34d; /* amber-300 */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 480px) {
+  .recipe-card-button {
+    min-width: 100%;
+    margin-bottom: 0.25rem;
+  }
+}

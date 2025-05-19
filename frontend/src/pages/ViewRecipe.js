@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
+import RecipeVersionHistory from "../components/RecipeBuilder/RecipeVersionHistory";
 import ApiService from "../services/api";
 import { useParams } from "react-router";
 
@@ -47,6 +48,11 @@ const ViewRecipe = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-4">View Recipe: </h1>
+      <RecipeVersionHistory
+        recipeId={recipe.recipe_id}
+        version={recipe.version}
+        parentRecipeId={recipe.parent_recipe_id}
+      />
       <RecipeDetails recipe={recipe} recipeId={recipeId} isEditing={false} />
       <RecipeMetrics
         metrics={metrics}

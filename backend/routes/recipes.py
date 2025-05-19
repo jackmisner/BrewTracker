@@ -141,3 +141,62 @@ def calculate_metrics_preview():
     except Exception as e:
         print(f"Error calculating metrics: {e}")
         return jsonify({"error": f"Failed to calculate metrics: {str(e)}"}), 400
+
+
+@recipes_bp.route("/<recipe_id>/clone", methods=["POST"])
+@jwt_required()
+def clone_recipe(recipe_id):
+    user_id = get_jwt_identity()
+
+    # Clone the recipe
+    cloned_recipe, message = MongoDBService.clone_recipe(recipe_id, user_id)
+
+    if cloned_recipe:
+        return jsonify(cloned_recipe.to_dict()), 201
+    else:
+        return jsonify({"error": message}), 400
+
+
+@recipes_bp.route("/<recipe_id>/versions", methods=["GET"])
+@jwt_required()
+def get_recipe_versions(recipe_id):
+    user_id = get_jwt_identity()
+
+    # Get the recipe
+    recipe = Recipe.objects(id=recipe_id).first()
+    if not recipe:
+        return jsonify({"error": "Recipe not found"}), 404
+
+    # Check if user has access
+    if str(recipe.user_id) != user_id and not recipe.is_public:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get parent recipe if exists
+    parent_recipe = None
+    if recipe.parent_recipe_id:
+        parent = Recipe.objects(id=recipe.parent_recipe_id).first()
+        if parent:
+            parent_recipe = {
+                "recipe_id": str(parent.id),
+                "name": parent.name,
+                "version": parent.version,
+            }
+
+    # Get child versions
+    child_versions = []
+    children = Recipe.objects(parent_recipe_id=recipe_id)
+    for child in children:
+        child_versions.append(
+            {"recipe_id": str(child.id), "name": child.name, "version": child.version}
+        )
+
+    return (
+        jsonify(
+            {
+                "current_version": recipe.version,
+                "parent_recipe": parent_recipe,
+                "child_versions": child_versions,
+            }
+        ),
+        200,
+    )

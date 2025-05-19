@@ -380,6 +380,75 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error updating recipe: {e}")
 
+    @staticmethod
+    def clone_recipe(recipe_id, user_id):
+        """Create a new version of an existing recipe"""
+        try:
+            # Get the original recipe
+            original_recipe = Recipe.objects(id=recipe_id).first()
+            if not original_recipe:
+                return None, "Original recipe not found"
+
+            # Check if user has access to this recipe
+            if (
+                str(original_recipe.user_id) != user_id
+                and not original_recipe.is_public
+            ):
+                return None, "Access denied"
+
+            # Create new recipe object as a copy of the original
+            new_recipe = Recipe()
+            new_recipe.user_id = ObjectId(user_id)
+            new_recipe.name = f"{original_recipe.name} (v{original_recipe.version + 1})"
+            new_recipe.style = original_recipe.style
+            new_recipe.batch_size = original_recipe.batch_size
+            new_recipe.description = original_recipe.description
+            new_recipe.is_public = original_recipe.is_public
+            new_recipe.boil_time = original_recipe.boil_time
+            new_recipe.efficiency = original_recipe.efficiency
+            new_recipe.notes = original_recipe.notes
+
+            # Set version info
+            new_recipe.parent_recipe_id = original_recipe.id
+            new_recipe.version = original_recipe.version + 1
+
+            # Set estimated values
+            new_recipe.estimated_og = original_recipe.estimated_og
+            new_recipe.estimated_fg = original_recipe.estimated_fg
+            new_recipe.estimated_abv = original_recipe.estimated_abv
+            new_recipe.estimated_ibu = original_recipe.estimated_ibu
+            new_recipe.estimated_srm = original_recipe.estimated_srm
+
+            # Copy ingredients
+            for ing in original_recipe.ingredients:
+                new_ing = RecipeIngredient()
+                new_ing.ingredient_id = ing.ingredient_id
+                new_ing.name = ing.name
+                new_ing.type = ing.type
+                new_ing.amount = ing.amount
+                new_ing.unit = ing.unit
+                new_ing.use = ing.use
+                new_ing.time = ing.time
+                new_ing.potential = ing.potential
+                new_ing.color = ing.color
+                new_ing.alpha_acid = ing.alpha_acid
+                new_ing.attenuation = ing.attenuation
+
+                new_recipe.ingredients.append(new_ing)
+
+            # Set creation timestamps
+            now = datetime.utcnow()
+            new_recipe.created_at = now
+            new_recipe.updated_at = now
+
+            # Save the new recipe
+            new_recipe.save()
+
+            return new_recipe, "Recipe cloned successfully"
+        except Exception as e:
+            print(f"Database error cloning recipe: {e}")
+            return None, str(e)
+
     # @staticmethod
     # def add_fermentation_entry(session_id, entry_data):
     #     """Add a fermentation data entry to a brew session"""
