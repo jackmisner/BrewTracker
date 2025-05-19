@@ -79,7 +79,7 @@ function RecipeBuilder() {
             // If this is a MongoDB ObjectId
             (ingredient._id
               ? String(ingredient._id)
-              : // If we have ingredient_id from your database
+              : // If we have ingredient_id from the database
               ingredient.ingredient_id
               ? `ing-${String(ingredient.ingredient_id)}`
               : // Fallback to generate a unique ID
@@ -89,11 +89,6 @@ function RecipeBuilder() {
         };
       });
 
-      // console.log(
-      //   "Setting recipe ingredients with proper IDs:",
-      //   ingredientsWithIds
-      // );
-      // Set the recipe ingredients to the ingredients state
       setRecipeIngredients(ingredientsWithIds);
     }
   }, [recipe, loading, setRecipeIngredients]);

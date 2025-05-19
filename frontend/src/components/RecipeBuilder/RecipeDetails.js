@@ -146,7 +146,7 @@ function RecipeDetails({
                 className="btn btn-primary"
                 disabled={saving}
               >
-                {saving ? "Saving..." : "Update Recipe"}
+                {saving ? "Saving..." : "Save Recipe"}
               </button>
               <button
                 type="button"
