@@ -144,7 +144,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
             </div>
           )}
 
-          {onCalculate && (
+          {/* {onCalculate && (
             <button
               id="calculate-recipe-btn"
               type="button"
@@ -153,7 +153,7 @@ function RecipeMetrics({ metrics, onCalculate, onScale, cardView = false }) {
             >
               Calculate Recipe
             </button>
-          )}
+          )} */}
         </>
       )}
     </div>
