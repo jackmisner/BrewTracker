@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 function HopInput({ hops, onAdd, onCalculate }) {
   const [hopForm, setHopForm] = useState({
     ingredient_id: "",
     amount: "",
+    alpha_acid: "",
     unit: "oz",
     use: "boil",
     time: "",
@@ -12,10 +13,22 @@ function HopInput({ hops, onAdd, onCalculate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setHopForm((prev) => ({
-      ...prev,
+
+    // Create updated form data
+    const updatedForm = {
+      ...hopForm,
       [name]: value,
-    }));
+    };
+
+    // If the ingredient_id changed, look up the alpha_acid value
+    if (name === "ingredient_id" && value) {
+      const selectedHop = hops.find((hop) => hop.ingredient_id === value);
+      if (selectedHop && selectedHop.alpha_acid) {
+        updatedForm.alpha_acid = selectedHop.alpha_acid;
+      }
+    }
+
+    setHopForm(updatedForm);
   };
 
   const handleSubmit = async (e) => {
@@ -24,12 +37,12 @@ function HopInput({ hops, onAdd, onCalculate }) {
       alert("Please fill in all required fields.");
       return;
     }
-
-    onAdd(hopForm); // Wait for the ingredient to be added
+    onAdd(hopForm);
 
     setHopForm({
       ingredient_id: "",
       amount: "",
+      alpha_acid: "",
       unit: "oz",
       use: "boil",
       time: "",
@@ -41,15 +54,38 @@ function HopInput({ hops, onAdd, onCalculate }) {
     <div className="card mt-6">
       <h3 className="card-title">Hops</h3>
 
-      <div className="ingredient-form">
-        <div className="ingredient-inputs hop-inputs">
-          <div>
+      <div className="hop-form">
+        <div className="hop-inputs">
+          <div className="hop-amount-container">
+            <input
+              type="number"
+              id="hop-amount"
+              name="amount"
+              value={hopForm.amount}
+              onChange={handleChange}
+              step="0.1"
+              min="0"
+              placeholder="Amount"
+              className="hop-amount-input"
+            />
+            <select
+              id="hop-unit"
+              name="unit"
+              value={hopForm.unit}
+              onChange={handleChange}
+              className="hop-unit-select"
+            >
+              <option value="oz">oz</option>
+              <option value="g">g</option>
+            </select>
+          </div>
+          <div className="hop-selector">
             <select
               id="hop-select"
               name="ingredient_id"
               value={hopForm.ingredient_id}
               onChange={handleChange}
-              className="input-control"
+              className="hop-select-control"
             >
               <option value="">Select Hop</option>
               {hops.map((ingredient) => (
@@ -62,29 +98,18 @@ function HopInput({ hops, onAdd, onCalculate }) {
               ))}
             </select>
           </div>
-
-          <div className="input-group">
+          <div className="hop-alpha-container">
             <input
               type="number"
-              id="hop-amount"
-              name="amount"
-              value={hopForm.amount}
+              id="alpha-acid"
+              name="alpha_acid"
+              value={hopForm.alpha_acid}
               onChange={handleChange}
               step="0.1"
-              min="0"
-              placeholder="Amount"
-              className="input-control"
+              placeholder="Alpha Acid"
+              className="hop-alpha-input"
             />
-            <select
-              id="hop-unit"
-              name="unit"
-              value={hopForm.unit}
-              onChange={handleChange}
-              className="input-addon"
-            >
-              <option value="oz">oz</option>
-              <option value="g">g</option>
-            </select>
+            <span className="hop-alpha-unit">%AA</span>
           </div>
 
           <div className="hop-time-container">
@@ -97,14 +122,14 @@ function HopInput({ hops, onAdd, onCalculate }) {
               step="0.1"
               min="0"
               placeholder="Time"
-              className="input-control"
+              className="hop-time-input"
             />
             <select
               id="hop-time-unit"
               name="time_unit"
               value={hopForm.time_unit}
               onChange={handleChange}
-              className="input-control"
+              className="hop-time-unit-select"
             >
               <option value="minutes">minutes</option>
               <option value="days">days</option>
@@ -114,7 +139,7 @@ function HopInput({ hops, onAdd, onCalculate }) {
               name="use"
               value={hopForm.use}
               onChange={handleChange}
-              className="input-control"
+              className="hop-use-select"
             >
               <option value="boil">Boil</option>
               <option value="whirlpool">Whirlpool</option>
@@ -122,12 +147,12 @@ function HopInput({ hops, onAdd, onCalculate }) {
             </select>
           </div>
 
-          <div>
+          <div className="hop-button-container">
             <button
               id="add-hop-btn"
               type="button"
               onClick={handleSubmit}
-              className="btn btn-primary"
+              className="hop-add-button btn-primary"
             >
               Add
             </button>

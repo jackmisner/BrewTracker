@@ -89,10 +89,10 @@ function RecipeBuilder() {
         };
       });
 
-      console.log(
-        "Setting recipe ingredients with proper IDs:",
-        ingredientsWithIds
-      );
+      // console.log(
+      //   "Setting recipe ingredients with proper IDs:",
+      //   ingredientsWithIds
+      // );
       // Set the recipe ingredients to the ingredients state
       setRecipeIngredients(ingredientsWithIds);
     }

@@ -53,11 +53,11 @@ const ApiService = {
       api.get(`/recipes?page=${page}&per_page=${perPage}`),
     getById: (id) => api.get(`/recipes/${id}`),
     create: (recipeData) => {
-      console.log("Sending recipe data to create:", recipeData);
+      // console.log("Sending recipe data to create:", recipeData);
       return api.post("/recipes", recipeData);
     },
     update: (id, recipeData) => {
-      console.log("Sending recipe data to update:", recipeData);
+      // console.log("Sending recipe data to update:", recipeData);
       return api.put(`/recipes/${id}`, recipeData);
     },
     delete: (id) => api.delete(`/recipes/${id}`),

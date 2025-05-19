@@ -54,12 +54,14 @@ export function useMetricsCalculation(
     // Set a new timer
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        console.log("Calculating metrics...");
+        // console.log("Calculating metrics...");
 
         const recipeData = prepareCalculationData();
+        // console.log("recipeData for calculating metrics:", recipeData);
         const response = await ApiService.recipes.calculateMetricsPreview(
           recipeData
         );
+        // console.log("Metrics Response:", response.data);
         setMetrics(response.data);
       } catch (err) {
         console.error("Error calculating metrics:", err);
