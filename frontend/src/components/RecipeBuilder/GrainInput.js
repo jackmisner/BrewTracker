@@ -54,38 +54,9 @@ function GrainInput({ grains, onAdd, onCalculate }) {
     <div className="card">
       <h3 className="card-title">Fermentables</h3>
 
-      <div className="ingredient-form">
-        <div className="ingredient-inputs">
-          <div>
-            <select
-              id="grain-select"
-              name="ingredient_id"
-              value={grainForm.ingredient_id}
-              onChange={handleChange}
-              className="input-control"
-            >
-              <option value="">Select Grains</option>
-              {grains.map((grain) => (
-                <option key={grain.ingredient_id} value={grain.ingredient_id}>
-                  {grain.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="lovibond-container">
-            <input
-              type="number"
-              id="color"
-              name="color"
-              value={grainForm.color}
-              onChange={handleChange}
-              step="0.5"
-              placeholder="Colour"
-              className="input-control"
-            />
-            <span className="colour-unit">°L</span>
-          </div>
-          <div className="input-group">
+      <div className="grain-form">
+        <div className="grain-inputs">
+          <div className="grain-amount-container">
             <input
               type="number"
               id="grain-amount"
@@ -95,14 +66,14 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               step="0.1"
               min="0"
               placeholder="Amount"
-              className="input-control"
+              className="grain-amount-input"
             />
             <select
               id="grain-unit"
               name="unit"
               value={grainForm.unit}
               onChange={handleChange}
-              className="input-addon"
+              className="grain-unit-select"
             >
               <option value="lb">lb</option>
               <option value="oz">oz</option>
@@ -110,13 +81,42 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               <option value="g">g</option>
             </select>
           </div>
+          <div className="grain-selector">
+            <select
+              id="grain-select"
+              name="ingredient_id"
+              value={grainForm.ingredient_id}
+              onChange={handleChange}
+              className="grain-select-control"
+            >
+              <option value="">Select Grains</option>
+              {grains.map((grain) => (
+                <option key={grain.ingredient_id} value={grain.ingredient_id}>
+                  {grain.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grain-lovibond-container">
+            <input
+              type="number"
+              id="color"
+              name="color"
+              value={grainForm.color}
+              onChange={handleChange}
+              step="0.5"
+              placeholder="Colour"
+              className="grain-color-input"
+            />
+            <span className="grain-color-unit">°L</span>
+          </div>
 
-          <div>
+          <div className="grain-button-container">
             <button
               id="add-grain-btn"
               type="button"
               onClick={handleSubmit}
-              className="btn btn-primary"
+              className="grain-add-button btn-primary"
             >
               Add
             </button>

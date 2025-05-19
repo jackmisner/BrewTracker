@@ -38,15 +38,36 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate }) {
     <div className="card mt-6">
       <h3 className="card-title">Adjuncts</h3>
 
-      <div className="ingredient-form">
-        <div className="ingredient-inputs adjunct-inputs">
-          <div>
+      <div className="adjunct-form">
+        <div className="adjunct-inputs">
+          <div className="adjunct-amount-container">
+            <input
+              type="number"
+              name="amount"
+              value={adjunctForm.amount}
+              onChange={handleChange}
+              placeholder="Amount"
+              className="adjunct-amount-input"
+            />
+            <select
+              name="unit"
+              value={adjunctForm.unit}
+              onChange={handleChange}
+              className="adjunct-unit-select"
+            >
+              <option value="oz">oz</option>
+              <option value="g">g</option>
+              <option value="lb">lb</option>
+              <option value="kg">kg</option>
+            </select>
+          </div>
+          <div className="adjunct-selector">
             <select
               id="adjunct-select"
               name="ingredient_id"
               value={adjunctForm.ingredient_id}
               onChange={handleChange}
-              className="input-control"
+              className="adjunct-select-control"
             >
               <option value="">Select Adjunct</option>
               {adjuncts.map((ingredient) => (
@@ -57,33 +78,11 @@ function AdjunctInput({ adjuncts, onAdd, onCalculate }) {
             </select>
           </div>
 
-          <div className="input-group">
-            <input
-              type="number"
-              name="amount"
-              value={adjunctForm.amount}
-              onChange={handleChange}
-              placeholder="Amount"
-              className="input-control"
-            />
-            <select
-              name="unit"
-              value={adjunctForm.unit}
-              onChange={handleChange}
-              className="input-addon"
-            >
-              <option value="oz">oz</option>
-              <option value="g">g</option>
-              <option value="lb">lb</option>
-              <option value="kg">kg</option>
-            </select>
-          </div>
-
-          <div>
+          <div className="adjunct-button-container">
             <button
               type="button"
               onClick={handleSubmit}
-              className="btn btn-primary"
+              className="adjunct-add-button btn-primary"
             >
               Add
             </button>
