@@ -1,7 +1,14 @@
 from datetime import datetime
 from bson import ObjectId
 from pymongo.errors import PyMongoError
-from models.mongo_models import User, Recipe, Ingredient, BrewSession, RecipeIngredient
+from models.mongo_models import (
+    User,
+    Recipe,
+    Ingredient,
+    BrewSession,
+    RecipeIngredient,
+    FermentationEntry,
+)
 
 
 class MongoDBService:
@@ -449,33 +456,48 @@ class MongoDBService:
             print(f"Database error cloning recipe: {e}")
             return None, str(e)
 
-    # @staticmethod
-    # def add_fermentation_entry(session_id, entry_data):
-    #     """Add a fermentation data entry to a brew session"""
-    #     try:
-    #         # Get the brew session
-    #         session = BrewSession.objects(id=session_id).first()
-    #         if not session:
-    #             return False, "Brew session not found"
+    @staticmethod
+    def create_brew_session(session_data):
+        """Create a new brew session"""
+        print(f"Creating brew session with data: {session_data}")
+        try:
+            # Set default values
+            session_data["brew_date"] = datetime.utcnow()
+            session_data["status"] = "in_progress"
 
-    #         # Create new fermentation entry
-    #         from mongo_models import FermentationEntry
+            # Create the brew session
+            brew_session = BrewSession(**session_data)
+            brew_session.save()
 
-    #         # Set default entry date if not provided
-    #         if "entry_date" not in entry_data:
-    #             entry_data["entry_date"] = datetime.utcnow()
+            return brew_session, "Brew session created successfully"
+        except Exception as e:
+            print(f"Database error creating brew session: {e}")
+            return None, str(e)
 
-    #         fermentation_entry = FermentationEntry(**entry_data)
+    @staticmethod
+    def add_fermentation_entry(session_id, entry_data):
+        """Add a fermentation data entry to a brew session"""
+        try:
+            # Get the brew session
+            session = BrewSession.objects(id=session_id).first()
+            if not session:
+                return False, "Brew session not found"
 
-    #         # Add to session's fermentation data list
-    #         session.fermentation_data.append(fermentation_entry)
-    #         session.save()
+            # Set default entry date if not provided
+            if "entry_date" not in entry_data:
+                entry_data["entry_date"] = datetime.utcnow()
 
-    #         return True, "Fermentation entry added successfully"
+            fermentation_entry = FermentationEntry(**entry_data)
 
-    #     except Exception as e:
-    #         print(f"Database error: {e}")
-    #         return False, str(e)
+            # Add to session's fermentation data list
+            session.fermentation_data.append(fermentation_entry)
+            session.save()
+
+            return True, "Fermentation entry added successfully"
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return False, str(e)
 
     @staticmethod
     def get_fermentation_data(session_id):
