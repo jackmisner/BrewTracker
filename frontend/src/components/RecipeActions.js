@@ -75,7 +75,8 @@ const RecipeActions = ({
   };
 
   const handleBrew = () => {
-    alert("Brewing functionality not implemented yet.");
+    // Navigate to create brew session page with recipe ID
+    navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`);
   };
 
   // Define classes based on compact mode

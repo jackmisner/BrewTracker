@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import ApiService from "./services/api";
 
@@ -10,6 +10,10 @@ import Dashboard from "./pages/Dashboard";
 import RecipeBuilder from "./pages/RecipeBuilder";
 import ViewRecipe from "./pages/ViewRecipe";
 import AllRecipes from "./pages/AllRecipes";
+import BrewSessionList from "./components/BrewSessions/BrewSessionList";
+import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
+import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
+import EditBrewSession from "./components/BrewSessions/EditBrewSession";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -135,7 +139,34 @@ function App() {
             path="/brew-sessions"
             element={
               <ProtectedRoute>
-                <div>Brew Sessions List (To be implemented)</div>
+                <BrewSessionList />
+              </ProtectedRoute>
+            }
+          />
+          {/* Route for creating a new brew session */}
+          <Route
+            path="/brew-sessions/new"
+            element={
+              <ProtectedRoute>
+                <CreateBrewSession />
+              </ProtectedRoute>
+            }
+          />
+          {/* Route for viewing a specific brew session */}
+          <Route
+            path="/brew-sessions/:sessionId"
+            element={
+              <ProtectedRoute>
+                <ViewBrewSession />
+              </ProtectedRoute>
+            }
+          />
+          {/* Route for editing a specific brew session */}
+          <Route
+            path="/brew-sessions/:sessionId/edit"
+            element={
+              <ProtectedRoute>
+                <EditBrewSession />
               </ProtectedRoute>
             }
           />

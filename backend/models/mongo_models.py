@@ -229,6 +229,7 @@ class BrewSession(Document):
     fermentation_data = ListField(EmbeddedDocumentField(FermentationEntry))
 
     # Tasting and notes
+    notes = StringField()
     tasting_notes = StringField()
     batch_rating = IntField()  # 1-5 scale
     photos_url = StringField(max_length=200)
@@ -268,6 +269,7 @@ class BrewSession(Document):
                 self.packaging_date.isoformat() if self.packaging_date else None
             ),
             "fermentation_data": [entry.to_dict() for entry in self.fermentation_data],
+            "notes": self.notes,
             "tasting_notes": self.tasting_notes,
             "batch_rating": self.batch_rating,
             "photos_url": self.photos_url,

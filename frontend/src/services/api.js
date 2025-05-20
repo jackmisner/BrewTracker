@@ -39,6 +39,34 @@ api.interceptors.response.use(
   }
 );
 
+// // Debug interceptor to log all API requests
+// api.interceptors.request.use(
+//   (config) => {
+//     console.log(`${config.method.toUpperCase()} Request to: ${config.url}`);
+//     return config;
+//   },
+//   (error) => {
+//     console.error("Request error:", error);
+//     return Promise.reject(error);
+//   }
+// );
+
+// // Debug interceptor to log all API responses
+// api.interceptors.response.use(
+//   (response) => {
+//     console.log(
+//       `Response from ${response.config.url}:`,
+//       response.status,
+//       response.data
+//     );
+//     return response;
+//   },
+//   (error) => {
+//     console.error("Response error:", error);
+//     return Promise.reject(error);
+//   }
+// );
+
 const ApiService = {
   // Auth endpoints
   auth: {

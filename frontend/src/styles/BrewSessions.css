@@ -1,0 +1,921 @@
+/* ==========================================================================
+   TABLE OF CONTENTS
+   1. Brew Session List
+   2. Create/Edit Brew Session
+   3. View Brew Session
+   4. Fermentation Tracker
+   5. Status Badges & Indicators
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Brew Session List
+   ========================================================================== */
+.brew-sessions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.brew-sessions-filter {
+  margin-bottom: 1.5rem;
+}
+
+.filter-label {
+  display: block;
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.filter-select {
+  width: 100%;
+  max-width: 300px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* Empty state */
+.brew-sessions-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 0.5rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.brew-sessions-empty a {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #d97706; /* amber-600 */
+  text-decoration: none;
+}
+
+.brew-sessions-empty a:hover {
+  text-decoration: underline;
+  color: #b45309; /* amber-700 */
+}
+
+/* Brew session table */
+.brew-sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.brew-sessions-table th {
+  background-color: #f9fafb; /* gray-50 */
+  color: #4b5563; /* gray-700 */
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e5e7eb; /* gray-200 */
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.brew-sessions-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+.brew-sessions-table tr:hover {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.brew-sessions-table tr:last-child td {
+  border-bottom: none;
+}
+
+.session-name-cell a {
+  color: #d97706; /* amber-600 */
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.session-name-cell a:hover {
+  color: #b45309; /* amber-700 */
+  text-decoration: underline;
+}
+
+.session-date-cell {
+  color: #6b7280; /* gray-500 */
+  white-space: nowrap;
+}
+
+.session-metrics-cell {
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.session-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.session-action-link {
+  color: #d97706; /* amber-600 */
+  text-decoration: none;
+  margin-left: 1rem;
+  font-weight: 500;
+}
+
+.session-action-link:hover {
+  color: #b45309; /* amber-700 */
+  text-decoration: underline;
+}
+
+/* Table pagination */
+.brew-sessions-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: white;
+  border-top: 1px solid #e5e7eb; /* gray-200 */
+  font-size: 0.875rem;
+}
+
+.pagination-info {
+  color: #6b7280; /* gray-500 */
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 0.125rem;
+  border-radius: 0.25rem;
+  background-color: white;
+  border: 1px solid #d1d5db; /* gray-300 */
+  color: #4b5563; /* gray-700 */
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #f3f4f6; /* gray-100 */
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pagination-button.active {
+  background-color: #fffbeb; /* amber-50 */
+  border-color: #f59e0b; /* amber-500 */
+  color: #d97706; /* amber-600 */
+  font-weight: 600;
+}
+
+.pagination-button.prev,
+.pagination-button.next {
+  font-size: 1rem;
+}
+
+@media (max-width: 767px) {
+  .brew-sessions-table th:nth-child(4),
+  .brew-sessions-table td:nth-child(4) {
+    display: none;
+  }
+  
+  .session-actions-cell {
+    text-align: right;
+  }
+  
+  .session-action-link {
+    margin-left: 0.5rem;
+  }
+}
+
+/* ==========================================================================
+   2. Create/Edit Brew Session
+   ========================================================================== */
+.brew-session-form {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.recipe-preview {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #fffbeb; /* amber-50 */
+  border-radius: 0.5rem;
+}
+
+.recipe-preview h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #92400e; /* amber-800 */
+}
+
+.recipe-preview-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.recipe-preview-metric {
+  font-size: 0.875rem;
+}
+
+.brew-session-form-group {
+  margin-bottom: 1rem;
+}
+
+.brew-session-form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.brew-session-form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.brew-session-form-control:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.brew-session-form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.brew-session-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.brew-session-form-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.brew-session-cancel-button {
+  background-color: #e5e7eb; /* gray-200 */
+  color: #4b5563; /* gray-700 */
+  border: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.brew-session-cancel-button:hover {
+  background-color: #d1d5db; /* gray-300 */
+}
+
+.brew-session-submit-button {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+  border: 1px solid #d97706; /* amber-600 */
+}
+
+.brew-session-submit-button:hover {
+  background-color: #b45309; /* amber-700 */
+  border-color: #b45309; /* amber-700 */
+}
+
+.brew-session-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .brew-session-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ==========================================================================
+   3. View Brew Session
+   ========================================================================== */
+.brew-session-header {
+  margin-bottom: 1.5rem;
+}
+
+.brew-session-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.brew-session-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.brew-session-status-container {
+  display: flex;
+  align-items: center;
+}
+
+.brew-session-status-label {
+  margin-right: 0.5rem;
+  font-weight: 600;
+  color: #4b5563; /* gray-700 */
+}
+
+.brew-session-update-status {
+  display: flex;
+  align-items: center;
+}
+
+.brew-session-update-label {
+  margin-right: 0.5rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.brew-session-tab-container {
+  margin-bottom: 1.5rem;
+}
+
+.brew-session-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.brew-session-tab {
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  color: #6b7280; /* gray-500 */
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.brew-session-tab:hover {
+  color: #4b5563; /* gray-700 */
+}
+
+.brew-session-tab.active {
+  color: #d97706; /* amber-600 */
+  border-bottom-color: #d97706; /* amber-600 */
+}
+
+.brew-session-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.brew-session-section {
+  margin-bottom: 2rem;
+}
+
+.brew-session-section:last-child {
+  margin-bottom: 0;
+}
+
+.brew-session-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #92400e; /* amber-800 */
+}
+
+.brew-session-recipe {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #fffbeb; /* amber-50 */
+  border-radius: 0.5rem;
+}
+
+.brew-session-recipe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.brew-session-recipe-name {
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+}
+
+.brew-session-recipe-style {
+  font-size: 0.875rem;
+  color: #b45309; /* amber-700 */
+}
+
+.brew-session-recipe-link {
+  color: #d97706; /* amber-600 */
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.brew-session-recipe-link:hover {
+  color: #b45309; /* amber-700 */
+  text-decoration: underline;
+}
+
+.brew-session-timeline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.brew-session-timeline-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.brew-session-timeline-label {
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.brew-session-timeline-date {
+  font-weight: 500;
+}
+
+.brew-session-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .brew-session-metrics {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.brew-session-metric {
+  background-color: #f9fafb; /* gray-50 */
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.brew-session-metric-label {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.brew-session-metric-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+}
+
+.brew-session-metric-est {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  margin-top: 0.25rem;
+}
+
+.brew-session-notes {
+  background-color: #f9fafb; /* gray-50 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.brew-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.brew-session-action-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.brew-session-edit-button {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+  border: 1px solid #d97706; /* amber-600 */
+}
+
+.brew-session-edit-button:hover {
+  background-color: #b45309; /* amber-700 */
+  border-color: #b45309; /* amber-700 */
+}
+
+.brew-session-delete-button {
+  background-color: white;
+  color: #ef4444; /* red-500 */
+  border: 1px solid #ef4444; /* red-500 */
+}
+
+.brew-session-delete-button:hover {
+  background-color: #fef2f2; /* red-50 */
+  color: #dc2626; /* red-600 */
+}
+
+.brewing-data {
+  margin-top: 1rem;
+}
+
+.brewing-data-item {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.brewing-data-label {
+  width: 150px;
+  font-weight: 500;
+  color: #6b7280; /* gray-500 */
+}
+
+.brewing-data-value {
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   4. Fermentation Tracker
+   ========================================================================== */
+.fermentation-tracker {
+  margin-bottom: 2rem;
+}
+
+.fermentation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.fermentation-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+}
+
+.fermentation-form {
+  background-color: #f9fafb; /* gray-50 */
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fermentation-form-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.fermentation-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .fermentation-form-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.fermentation-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.fermentation-input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.fermentation-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.fermentation-input:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.fermentation-textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.fermentation-textarea:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.fermentation-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fermentation-submit-button {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+  border: 1px solid #d97706; /* amber-600 */
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.fermentation-submit-button:hover:not(:disabled) {
+  background-color: #b45309; /* amber-700 */
+  border-color: #b45309; /* amber-700 */
+}
+
+.fermentation-submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.fermentation-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .fermentation-stats {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.fermentation-stat-card {
+  background-color: #f9fafb; /* gray-50 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.fermentation-stat-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.fermentation-stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.fermentation-stat-label {
+  color: #6b7280; /* gray-500 */
+}
+
+.fermentation-stat-value {
+  font-weight: 500;
+}
+
+.fermentation-chart {
+  background-color: white;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 0.5rem;
+  padding: 1rem;
+  height: 400px;
+  margin-bottom: 1.5rem;
+}
+
+.fermentation-comparison {
+  background-color: #f9fafb; /* gray-50 */
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fermentation-comparison-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: #4b5563; /* gray-700 */
+}
+
+.fermentation-comparison-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.fermentation-comparison-row:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.fermentation-comparison-col {
+  text-align: center;
+  flex: 1;
+}
+
+.fermentation-comparison-label {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.fermentation-comparison-value {
+  font-weight: 500;
+}
+
+.fermentation-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.fermentation-table th {
+  background-color: #f9fafb; /* gray-50 */
+  color: #4b5563; /* gray-700 */
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e5e7eb; /* gray-200 */
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fermentation-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.fermentation-table tr:hover {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.fermentation-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fermentation-delete-button {
+  color: #ef4444; /* red-500 */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.fermentation-delete-button:hover {
+  color: #dc2626; /* red-600 */
+  text-decoration: underline;
+}
+
+.fermentation-table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .fermentation-table th:nth-child(4),
+  .fermentation-table td:nth-child(4) {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   5. Status Badges & Indicators
+   ========================================================================== */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-planned {
+  background-color: #dbeafe; /* blue-100 */
+  color: #1e40af; /* blue-800 */
+}
+
+.status-in-progress {
+  background-color: #fef3c7; /* amber-100 */
+  color: #92400e; /* amber-800 */
+}
+
+.status-fermenting {
+  background-color: #e0e7ff; /* indigo-100 */
+  color: #4338ca; /* indigo-700 */
+}
+
+.status-conditioning {
+  background-color: #d1fae5; /* emerald-100 */
+  color: #065f46; /* emerald-800 */
+}
+
+.status-completed {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+}
+
+.status-archived {
+  background-color: #f3f4f6; /* gray-100 */
+  color: #4b5563; /* gray-700 */
+}
+
+.status-button {
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: none;
+  text-transform: capitalize;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Star rating */
+.rating-stars {
+  display: flex;
+}
+
+.rating-star {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #d1d5db; /* gray-300 */
+}
+
+.rating-star.filled {
+  color: #fbbf24; /* amber-400 */
+}
