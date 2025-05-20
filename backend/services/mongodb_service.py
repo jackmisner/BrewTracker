@@ -12,6 +12,11 @@ from models.mongo_models import (
 
 
 class MongoDBService:
+
+    ###########################################################
+    #                       User Methods                      #
+    ###########################################################
+
     @staticmethod
     def get_user_by_id(user_id):
         """Retrieve a user by ID"""
@@ -29,6 +34,32 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error: {e}")
             return None
+
+    @staticmethod
+    def get_recent_activity(user_id, limit=5):
+        """Get recent brewing activity for a user"""
+        try:
+            # Get recent brew sessions
+            recent_sessions = (
+                BrewSession.objects(user_id=user_id).order_by("-brew_date").limit(limit)
+            )
+
+            # Get recent recipes
+            recent_recipes = (
+                Recipe.objects(user_id=user_id).order_by("-created_at").limit(limit)
+            )
+
+            return {
+                "recent_sessions": [session.to_dict() for session in recent_sessions],
+                "recent_recipes": [recipe.to_dict() for recipe in recent_recipes],
+            }
+        except Exception as e:
+            print(f"Database error: {e}")
+            return {"recent_sessions": [], "recent_recipes": []}
+
+    ###########################################################
+    #                       Recipe Methods                    #
+    ###########################################################
 
     @staticmethod
     def get_user_recipes(user_id, page=1, per_page=10):
@@ -73,58 +104,6 @@ class MongoDBService:
                 "next_num": None,
                 "prev_num": None,
             }
-
-    @staticmethod
-    def get_user_brew_sessions(user_id, page=1, per_page=10):
-        """Get all brew sessions for a user with pagination"""
-        try:
-            # Calculate skip value
-            skip = (page - 1) * per_page
-
-            # Get brew sessions with pagination
-            sessions = BrewSession.objects(user_id=user_id).skip(skip).limit(per_page)
-
-            # Count total documents
-            total = BrewSession.objects(user_id=user_id).count()
-
-            # Calculate pagination metadata
-            total_pages = (total + per_page - 1) // per_page
-            has_next = page < total_pages
-            has_prev = page > 1
-
-            return {
-                "items": sessions,
-                "page": page,
-                "per_page": per_page,
-                "total": total,
-                "pages": total_pages,
-                "has_next": has_next,
-                "has_prev": has_prev,
-                "next_num": page + 1 if has_next else None,
-                "prev_num": page - 1 if has_prev else None,
-            }
-        except Exception as e:
-            print(f"Database error: {e}")
-            return {
-                "items": [],
-                "page": page,
-                "per_page": per_page,
-                "total": 0,
-                "pages": 0,
-                "has_next": False,
-                "has_prev": False,
-                "next_num": None,
-                "prev_num": None,
-            }
-
-    @staticmethod
-    def get_recipe_brew_sessions(recipe_id):
-        """Get all brew sessions for a specific recipe"""
-        try:
-            return BrewSession.objects(recipe_id=recipe_id)
-        except Exception as e:
-            print(f"Database error: {e}")
-            return []
 
     @staticmethod
     def calculate_recipe_stats(recipe_id):
@@ -266,28 +245,6 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error: {e}")
             return []
-
-    @staticmethod
-    def get_recent_activity(user_id, limit=5):
-        """Get recent brewing activity for a user"""
-        try:
-            # Get recent brew sessions
-            recent_sessions = (
-                BrewSession.objects(user_id=user_id).order_by("-brew_date").limit(limit)
-            )
-
-            # Get recent recipes
-            recent_recipes = (
-                Recipe.objects(user_id=user_id).order_by("-created_at").limit(limit)
-            )
-
-            return {
-                "recent_sessions": [session.to_dict() for session in recent_sessions],
-                "recent_recipes": [recipe.to_dict() for recipe in recent_recipes],
-            }
-        except Exception as e:
-            print(f"Database error: {e}")
-            return {"recent_sessions": [], "recent_recipes": []}
 
     @staticmethod
     def create_recipe(recipe_data):
@@ -457,6 +414,158 @@ class MongoDBService:
             return None, str(e)
 
     @staticmethod
+    def search_recipes(query, page=1, per_page=10):
+        """Search recipes by name or style"""
+        try:
+            # Create text index if it doesn't exist (only needs to be done once)
+            # Recipe.create_index([("name", "text"), ("style", "text"), ("description", "text")])
+
+            # Search using the text index
+            recipes = (
+                Recipe.objects.search_text(query)
+                .filter(is_public=True)
+                .skip((page - 1) * per_page)
+                .limit(per_page)
+            )
+
+            # Count total results
+            total = Recipe.objects.search_text(query).filter(is_public=True).count()
+
+            # Calculate pagination info
+            total_pages = (total + per_page - 1) // per_page
+            has_next = page < total_pages
+            has_prev = page > 1
+
+            return {
+                "items": recipes,
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "pages": total_pages,
+                "has_next": has_next,
+                "has_prev": has_prev,
+                "next_num": page + 1 if has_next else None,
+                "prev_num": page - 1 if has_prev else None,
+            }
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return {
+                "items": [],
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "pages": 0,
+                "has_next": False,
+                "has_prev": False,
+                "next_num": None,
+                "prev_num": None,
+            }
+
+    @staticmethod
+    def get_ingredient_recipes(ingredient_id, page=1, per_page=10):
+        """Find public recipes that use a specific ingredient"""
+        try:
+            # Query recipes that contain the ingredient in the embedded array
+            recipes = (
+                Recipe.objects(ingredients__ingredient_id=ingredient_id, is_public=True)
+                .skip((page - 1) * per_page)
+                .limit(per_page)
+            )
+
+            # Count total results
+            total = Recipe.objects(
+                ingredients__ingredient_id=ingredient_id, is_public=True
+            ).count()
+
+            # Calculate pagination info
+            total_pages = (total + per_page - 1) // per_page
+            has_next = page < total_pages
+            has_prev = page > 1
+
+            return {
+                "items": recipes,
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "pages": total_pages,
+                "has_next": has_next,
+                "has_prev": has_prev,
+                "next_num": page + 1 if has_next else None,
+                "prev_num": page - 1 if has_prev else None,
+            }
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return {
+                "items": [],
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "pages": 0,
+                "has_next": False,
+                "has_prev": False,
+                "next_num": None,
+                "prev_num": None,
+            }
+
+    ###########################################################
+    #                   Brew Session Methods                  #
+    ###########################################################
+
+    @staticmethod
+    def get_user_brew_sessions(user_id, page=1, per_page=10):
+        """Get all brew sessions for a user with pagination"""
+        try:
+            # Calculate skip value
+            skip = (page - 1) * per_page
+
+            # Get brew sessions with pagination
+            sessions = BrewSession.objects(user_id=user_id).skip(skip).limit(per_page)
+
+            # Count total documents
+            total = BrewSession.objects(user_id=user_id).count()
+
+            # Calculate pagination metadata
+            total_pages = (total + per_page - 1) // per_page
+            has_next = page < total_pages
+            has_prev = page > 1
+
+            return {
+                "items": sessions,
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "pages": total_pages,
+                "has_next": has_next,
+                "has_prev": has_prev,
+                "next_num": page + 1 if has_next else None,
+                "prev_num": page - 1 if has_prev else None,
+            }
+        except Exception as e:
+            print(f"Database error: {e}")
+            return {
+                "items": [],
+                "page": page,
+                "per_page": per_page,
+                "total": 0,
+                "pages": 0,
+                "has_next": False,
+                "has_prev": False,
+                "next_num": None,
+                "prev_num": None,
+            }
+
+    @staticmethod
+    def get_recipe_brew_sessions(recipe_id):
+        """Get all brew sessions for a specific recipe"""
+        try:
+            return BrewSession.objects(recipe_id=recipe_id)
+        except Exception as e:
+            print(f"Database error: {e}")
+            return []
+
+    @staticmethod
     def create_brew_session(session_data):
         """Create a new brew session"""
         print(f"Creating brew session with data: {session_data}")
@@ -469,10 +578,36 @@ class MongoDBService:
             brew_session = BrewSession(**session_data)
             brew_session.save()
 
-            return brew_session, "Brew session created successfully"
+            return brew_session
         except Exception as e:
             print(f"Database error creating brew session: {e}")
             return None, str(e)
+
+    @staticmethod
+    def update_brew_session(session_id, session_data):
+        """Update an existing brew session"""
+        try:
+            # Get the brew session
+            brew_session = BrewSession.objects(id=session_id).first()
+            if not brew_session:
+                return None, "Brew session not found"
+
+            # Update fields
+            for key, value in session_data.items():
+                if hasattr(brew_session, key):
+                    setattr(brew_session, key, value)
+
+            # Save the updated session
+            brew_session.save()
+
+            return brew_session
+        except Exception as e:
+            print(f"Database error updating brew session: {e}")
+            return None, str(e)
+
+    ###########################################################
+    #                   Fermentation Methods                  #
+    ###########################################################
 
     @staticmethod
     def add_fermentation_entry(session_id, entry_data):
@@ -651,99 +786,3 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error: {e}")
             return None, str(e)
-
-    @staticmethod
-    def search_recipes(query, page=1, per_page=10):
-        """Search recipes by name or style"""
-        try:
-            # Create text index if it doesn't exist (only needs to be done once)
-            # Recipe.create_index([("name", "text"), ("style", "text"), ("description", "text")])
-
-            # Search using the text index
-            recipes = (
-                Recipe.objects.search_text(query)
-                .filter(is_public=True)
-                .skip((page - 1) * per_page)
-                .limit(per_page)
-            )
-
-            # Count total results
-            total = Recipe.objects.search_text(query).filter(is_public=True).count()
-
-            # Calculate pagination info
-            total_pages = (total + per_page - 1) // per_page
-            has_next = page < total_pages
-            has_prev = page > 1
-
-            return {
-                "items": recipes,
-                "page": page,
-                "per_page": per_page,
-                "total": total,
-                "pages": total_pages,
-                "has_next": has_next,
-                "has_prev": has_prev,
-                "next_num": page + 1 if has_next else None,
-                "prev_num": page - 1 if has_prev else None,
-            }
-
-        except Exception as e:
-            print(f"Database error: {e}")
-            return {
-                "items": [],
-                "page": page,
-                "per_page": per_page,
-                "total": 0,
-                "pages": 0,
-                "has_next": False,
-                "has_prev": False,
-                "next_num": None,
-                "prev_num": None,
-            }
-
-    @staticmethod
-    def get_ingredient_recipes(ingredient_id, page=1, per_page=10):
-        """Find public recipes that use a specific ingredient"""
-        try:
-            # Query recipes that contain the ingredient in the embedded array
-            recipes = (
-                Recipe.objects(ingredients__ingredient_id=ingredient_id, is_public=True)
-                .skip((page - 1) * per_page)
-                .limit(per_page)
-            )
-
-            # Count total results
-            total = Recipe.objects(
-                ingredients__ingredient_id=ingredient_id, is_public=True
-            ).count()
-
-            # Calculate pagination info
-            total_pages = (total + per_page - 1) // per_page
-            has_next = page < total_pages
-            has_prev = page > 1
-
-            return {
-                "items": recipes,
-                "page": page,
-                "per_page": per_page,
-                "total": total,
-                "pages": total_pages,
-                "has_next": has_next,
-                "has_prev": has_prev,
-                "next_num": page + 1 if has_next else None,
-                "prev_num": page - 1 if has_prev else None,
-            }
-
-        except Exception as e:
-            print(f"Database error: {e}")
-            return {
-                "items": [],
-                "page": page,
-                "per_page": per_page,
-                "total": 0,
-                "pages": 0,
-                "has_next": False,
-                "has_prev": False,
-                "next_num": None,
-                "prev_num": None,
-            }

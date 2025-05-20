@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ApiService from "../../services/api";
+import "../../styles/BrewSessions.css";
 
 const FermentationTracker = ({
   sessionId,
@@ -179,7 +180,7 @@ const FermentationTracker = ({
   };
 
   const handleDelete = async (index) => {
-    if (confirm("Are you sure you want to delete this entry?")) {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
         await ApiService.brewSessions.deleteFermentationEntry(sessionId, index);
         fetchFermentationData(); // Refresh data
@@ -232,34 +233,27 @@ const FermentationTracker = ({
   const attenuation = calculateAttenuation();
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Fermentation Tracking</h2>
+    <div className="fermentation-tracker">
+      <div className="fermentation-header">
+        <h2 className="fermentation-title">Fermentation Tracking</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+          className="btn btn-primary"
         >
           {showForm ? "Cancel" : "Add Entry"}
         </button>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       {/* Form for adding new fermentation data */}
       {showForm && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="text-lg font-medium mb-3">New Fermentation Reading</h3>
+        <div className="fermentation-form">
+          <h3 className="fermentation-form-title">New Fermentation Reading</h3>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label
-                  htmlFor="gravity"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+            <div className="fermentation-form-grid">
+              <div className="fermentation-input-group">
+                <label htmlFor="gravity" className="fermentation-input-label">
                   Gravity
                 </label>
                 <input
@@ -270,13 +264,13 @@ const FermentationTracker = ({
                   placeholder="e.g. 1.050"
                   value={formData.gravity}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="fermentation-input"
                 />
               </div>
-              <div>
+              <div className="fermentation-input-group">
                 <label
                   htmlFor="temperature"
-                  className="block text-gray-700 font-medium mb-1"
+                  className="fermentation-input-label"
                 >
                   Temperature (°F)
                 </label>
@@ -288,14 +282,11 @@ const FermentationTracker = ({
                   placeholder="e.g. 68.5"
                   value={formData.temperature}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="fermentation-input"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="ph"
-                  className="block text-gray-700 font-medium mb-1"
-                >
+              <div className="fermentation-input-group">
+                <label htmlFor="ph" className="fermentation-input-label">
                   pH (optional)
                 </label>
                 <input
@@ -306,15 +297,12 @@ const FermentationTracker = ({
                   placeholder="e.g. 4.5"
                   value={formData.ph}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="fermentation-input"
                 />
               </div>
             </div>
-            <div className="mb-4">
-              <label
-                htmlFor="notes"
-                className="block text-gray-700 font-medium mb-1"
-              >
+            <div className="fermentation-input-group">
+              <label htmlFor="notes" className="fermentation-input-label">
                 Notes
               </label>
               <textarea
@@ -324,14 +312,14 @@ const FermentationTracker = ({
                 placeholder="Any observations about the fermentation"
                 value={formData.notes}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                className="fermentation-textarea"
               ></textarea>
             </div>
-            <div className="flex justify-end">
+            <div className="fermentation-form-actions">
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 disabled:bg-gray-400"
+                className="fermentation-submit-button"
               >
                 {submitting ? "Saving..." : "Save Reading"}
               </button>
@@ -341,102 +329,104 @@ const FermentationTracker = ({
       )}
 
       {loading ? (
-        <div className="text-center py-10">Loading fermentation data...</div>
+        <div className="loading-message">Loading fermentation data...</div>
       ) : (
         <>
           {/* Fermentation stats summary */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-md font-medium mb-2">Gravity</h3>
+            <div className="fermentation-stats">
+              <div className="fermentation-stat-card">
+                <h3 className="fermentation-stat-title">Gravity</h3>
                 {stats.gravity.initial && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Initial:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Initial:</span>
+                    <span className="fermentation-stat-value">
                       {stats.gravity.initial.toFixed(3)}
                     </span>
-                  </p>
+                  </div>
                 )}
                 {stats.gravity.current && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Current:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Current:</span>
+                    <span className="fermentation-stat-value">
                       {stats.gravity.current.toFixed(3)}
                     </span>
-                  </p>
+                  </div>
                 )}
                 {stats.gravity.drop && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Drop:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Drop:</span>
+                    <span className="fermentation-stat-value">
                       {stats.gravity.drop.toFixed(3)}
                     </span>
-                  </p>
+                  </div>
                 )}
                 {stats.gravity.attenuation && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Attenuation:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">
+                      Attenuation:
+                    </span>
+                    <span className="fermentation-stat-value">
                       {stats.gravity.attenuation.toFixed(1)}%
                     </span>
-                  </p>
+                  </div>
                 )}
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-md font-medium mb-2">Temperature</h3>
+              <div className="fermentation-stat-card">
+                <h3 className="fermentation-stat-title">Temperature</h3>
                 {stats.temperature.min !== null && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Min:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Min:</span>
+                    <span className="fermentation-stat-value">
                       {stats.temperature.min.toFixed(1)}°F
                     </span>
-                  </p>
+                  </div>
                 )}
                 {stats.temperature.max !== null && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Max:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Max:</span>
+                    <span className="fermentation-stat-value">
                       {stats.temperature.max.toFixed(1)}°F
                     </span>
-                  </p>
+                  </div>
                 )}
                 {stats.temperature.avg !== null && (
-                  <p className="mb-1">
-                    <span className="text-gray-600">Avg:</span>{" "}
-                    <span className="font-medium">
+                  <div className="fermentation-stat-row">
+                    <span className="fermentation-stat-label">Avg:</span>
+                    <span className="fermentation-stat-value">
                       {stats.temperature.avg.toFixed(1)}°F
                     </span>
-                  </p>
+                  </div>
                 )}
               </div>
 
               {stats.ph.data.length > 0 && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-md font-medium mb-2">pH</h3>
+                <div className="fermentation-stat-card">
+                  <h3 className="fermentation-stat-title">pH</h3>
                   {stats.ph.min !== null && (
-                    <p className="mb-1">
-                      <span className="text-gray-600">Min:</span>{" "}
-                      <span className="font-medium">
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Min:</span>
+                      <span className="fermentation-stat-value">
                         {stats.ph.min.toFixed(1)}
                       </span>
-                    </p>
+                    </div>
                   )}
                   {stats.ph.max !== null && (
-                    <p className="mb-1">
-                      <span className="text-gray-600">Max:</span>{" "}
-                      <span className="font-medium">
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Max:</span>
+                      <span className="fermentation-stat-value">
                         {stats.ph.max.toFixed(1)}
                       </span>
-                    </p>
+                    </div>
                   )}
                   {stats.ph.avg !== null && (
-                    <p className="mb-1">
-                      <span className="text-gray-600">Avg:</span>{" "}
-                      <span className="font-medium">
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Avg:</span>
+                      <span className="fermentation-stat-value">
                         {stats.ph.avg.toFixed(1)}
                       </span>
-                    </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -445,67 +435,75 @@ const FermentationTracker = ({
 
           {/* Expected vs actual visualization */}
           {recipeData.estimated_og && recipeData.estimated_fg && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-3">
+            <div className="brew-session-section">
+              <h3 className="section-title">
                 Expected vs. Actual Fermentation
               </h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between mb-4">
-                  <div>
-                    <p className="text-gray-600 text-sm">Expected OG</p>
-                    <p className="font-medium">
+              <div className="fermentation-comparison">
+                <div className="fermentation-comparison-row">
+                  <div className="fermentation-comparison-col">
+                    <span className="fermentation-comparison-label">
+                      Expected OG
+                    </span>
+                    <div className="fermentation-comparison-value">
                       {recipeData.estimated_og.toFixed(3)}
-                    </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Expected FG</p>
-                    <p className="font-medium">
+                  <div className="fermentation-comparison-col">
+                    <span className="fermentation-comparison-label">
+                      Expected FG
+                    </span>
+                    <div className="fermentation-comparison-value">
                       {recipeData.estimated_fg.toFixed(3)}
-                    </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">
+                  <div className="fermentation-comparison-col">
+                    <span className="fermentation-comparison-label">
                       Expected Attenuation
-                    </p>
-                    <p className="font-medium">
+                    </span>
+                    <div className="fermentation-comparison-value">
                       {(
                         ((recipeData.estimated_og - recipeData.estimated_fg) /
                           (recipeData.estimated_og - 1.0)) *
                         100
                       ).toFixed(1)}
                       %
-                    </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Actual readings */}
                 {fermentationData.length > 0 && (
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm">Actual OG</p>
-                      <p className="font-medium">
+                  <div className="fermentation-comparison-row">
+                    <div className="fermentation-comparison-col">
+                      <span className="fermentation-comparison-label">
+                        Actual OG
+                      </span>
+                      <div className="fermentation-comparison-value">
                         {fermentationData[0].gravity
                           ? fermentationData[0].gravity.toFixed(3)
                           : "-"}
-                      </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-600 text-sm">Current Gravity</p>
-                      <p className="font-medium">
+                    <div className="fermentation-comparison-col">
+                      <span className="fermentation-comparison-label">
+                        Current Gravity
+                      </span>
+                      <div className="fermentation-comparison-value">
                         {fermentationData[fermentationData.length - 1].gravity
                           ? fermentationData[
                               fermentationData.length - 1
                             ].gravity.toFixed(3)
                           : "-"}
-                      </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-600 text-sm">
+                    <div className="fermentation-comparison-col">
+                      <span className="fermentation-comparison-label">
                         Current Attenuation
-                      </p>
-                      <p className="font-medium">
+                      </span>
+                      <div className="fermentation-comparison-value">
                         {attenuation ? `${attenuation}%` : "-"}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -515,14 +513,9 @@ const FermentationTracker = ({
 
           {/* Chart visualization */}
           {chartData.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-3">
-                Fermentation Progress
-              </h3>
-              <div
-                className="bg-white border border-gray-200 rounded-lg p-4"
-                style={{ height: "400px" }}
-              >
+            <div className="brew-session-section">
+              <h3 className="section-title">Fermentation Progress</h3>
+              <div className="fermentation-chart">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={chartData}
@@ -565,63 +558,49 @@ const FermentationTracker = ({
           )}
 
           {/* Data Table */}
-          <div>
-            <h3 className="text-lg font-medium mb-3">Fermentation Data Log</h3>
+          <div className="brew-session-section">
+            <h3 className="section-title">Fermentation Data Log</h3>
             {fermentationData.length === 0 ? (
-              <p className="text-gray-500 italic">
+              <p className="empty-message">
                 No fermentation data recorded yet.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="fermentation-table-responsive">
+                <table className="fermentation-table">
+                  <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Gravity
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Temperature
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        pH
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Notes
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th>Date & Time</th>
+                      <th>Gravity</th>
+                      <th>Temperature</th>
+                      <th>pH</th>
+                      <th>Notes</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {fermentationData.map((entry, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={index}>
+                        <td>
                           {new Date(entry.entry_date).toLocaleDateString()}{" "}
                           {new Date(entry.entry_date).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td>
                           {entry.gravity ? entry.gravity.toFixed(3) : "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td>
                           {entry.temperature
                             ? `${entry.temperature.toFixed(1)}°F`
                             : "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {entry.ph ? entry.ph.toFixed(1) : "-"}
-                        </td>
-                        <td className="px-6 py-4">{entry.notes || "-"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td>{entry.ph ? entry.ph.toFixed(1) : "-"}</td>
+                        <td>{entry.notes || "-"}</td>
+                        <td>
                           <button
                             onClick={() => handleDelete(index)}
-                            className="text-red-600 hover:text-red-900"
+                            className="fermentation-delete-button"
                           >
                             Delete
                           </button>

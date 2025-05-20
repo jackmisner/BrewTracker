@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import ApiService from "../../services/api";
 import { RecipeService } from "../../services/RecipeService";
+import "../../styles/BrewSessions.css";
 
 const CreateBrewSession = () => {
   const navigate = useNavigate();
@@ -74,35 +75,31 @@ const CreateBrewSession = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className="loading-message">Loading...</div>;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
-        {error}
-      </div>
-    );
+    return <div className="error-message">{error}</div>;
   }
 
   if (!recipeId) {
     return (
-      <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4">
+      <div className="warning-message">
         No recipe selected. Please select a recipe to brew.
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Start New Brew Session</h1>
+    <div className="container">
+      <h1 className="page-title">Start New Brew Session</h1>
 
       {recipe && (
-        <div className="mb-6 p-4 bg-amber-50 rounded-lg">
-          <h2 className="text-lg font-semibold">Recipe: {recipe.name}</h2>
-          {recipe.style && <p>Style: {recipe.style}</p>}
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
+        <div className="recipe-preview">
+          <h2>{recipe.name}</h2>
+          {recipe.style && <p>{recipe.style}</p>}
+          <div className="recipe-preview-metrics">
+            <div className="recipe-preview-metric">
               <p>Batch Size: {recipe.batch_size} gallons</p>
               {recipe.estimated_og && (
                 <p>Est. OG: {recipe.estimated_og.toFixed(3)}</p>
@@ -111,7 +108,7 @@ const CreateBrewSession = () => {
                 <p>Est. FG: {recipe.estimated_fg.toFixed(3)}</p>
               )}
             </div>
-            <div>
+            <div className="recipe-preview-metric">
               {recipe.estimated_abv && (
                 <p>Est. ABV: {recipe.estimated_abv.toFixed(1)}%</p>
               )}
@@ -126,12 +123,9 @@ const CreateBrewSession = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
-        <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="block text-gray-700 font-semibold mb-2"
-          >
+      <form onSubmit={handleSubmit} className="brew-session-form">
+        <div className="brew-session-form-group">
+          <label htmlFor="name" className="brew-session-form-label">
             Session Name
           </label>
           <input
@@ -140,16 +134,13 @@ const CreateBrewSession = () => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+            className="brew-session-form-control"
             required
           />
         </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="brew_date"
-            className="block text-gray-700 font-semibold mb-2"
-          >
+        <div className="brew-session-form-group">
+          <label htmlFor="brew_date" className="brew-session-form-label">
             Brew Date
           </label>
           <input
@@ -158,16 +149,13 @@ const CreateBrewSession = () => {
             name="brew_date"
             value={formData.brew_date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+            className="brew-session-form-control"
             required
           />
         </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="status"
-            className="block text-gray-700 font-semibold mb-2"
-          >
+        <div className="brew-session-form-group">
+          <label htmlFor="status" className="brew-session-form-label">
             Status
           </label>
           <select
@@ -175,7 +163,7 @@ const CreateBrewSession = () => {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+            className="brew-session-form-control"
             required
           >
             <option value="planned">Planned</option>
@@ -187,11 +175,8 @@ const CreateBrewSession = () => {
           </select>
         </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="notes"
-            className="block text-gray-700 font-semibold mb-2"
-          >
+        <div className="brew-session-form-group">
+          <label htmlFor="notes" className="brew-session-form-label">
             Brew Day Notes
           </label>
           <textarea
@@ -200,21 +185,21 @@ const CreateBrewSession = () => {
             value={formData.notes}
             onChange={handleChange}
             rows="4"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+            className="brew-session-form-control brew-session-form-textarea"
           ></textarea>
         </div>
 
-        <div className="flex justify-end">
+        <div className="brew-session-form-actions">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-400"
+            className="brew-session-form-button brew-session-cancel-button"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+            className="brew-session-form-button brew-session-submit-button"
           >
             Start Brew Session
           </button>

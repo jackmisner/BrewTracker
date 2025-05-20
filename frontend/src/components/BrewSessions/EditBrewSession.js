@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import ApiService from "../../services/api";
+import "../../styles/BrewSessions.css";
 
 const EditBrewSession = () => {
   const { sessionId } = useParams();
@@ -120,38 +121,29 @@ const EditBrewSession = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading brew session...</div>;
+    return <div className="loading-message">Loading brew session...</div>;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
-        {error}
-      </div>
-    );
+    return <div className="error-message">{error}</div>;
   }
 
   if (!session) {
-    return <div className="text-center py-10">Brew session not found</div>;
+    return <div className="empty-message">Brew session not found</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Brew Session</h1>
+    <div className="container">
+      <h1 className="page-title">Edit Brew Session</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <form onSubmit={handleSubmit} className="brew-session-form">
+        <div className="brew-session-grid">
           {/* Basic Information */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">
-              Basic Information
-            </h2>
+            <h2 className="section-title">Basic Information</h2>
 
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-gray-700 font-medium mb-2"
-              >
+            <div className="brew-session-form-group">
+              <label htmlFor="name" className="brew-session-form-label">
                 Session Name
               </label>
               <input
@@ -160,15 +152,12 @@ const EditBrewSession = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                className="brew-session-form-control"
               />
             </div>
 
-            <div className="mb-4">
-              <label
-                htmlFor="status"
-                className="block text-gray-700 font-medium mb-2"
-              >
+            <div className="brew-session-form-group">
+              <label htmlFor="status" className="brew-session-form-label">
                 Status
               </label>
               <select
@@ -176,7 +165,7 @@ const EditBrewSession = () => {
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                className="brew-session-form-control"
                 required
               >
                 <option value="planned">Planned</option>
@@ -188,11 +177,8 @@ const EditBrewSession = () => {
               </select>
             </div>
 
-            <div className="mb-4">
-              <label
-                htmlFor="brew_date"
-                className="block text-gray-700 font-medium mb-2"
-              >
+            <div className="brew-session-form-group">
+              <label htmlFor="brew_date" className="brew-session-form-label">
                 Brew Date
               </label>
               <input
@@ -201,15 +187,12 @@ const EditBrewSession = () => {
                 name="brew_date"
                 value={formData.brew_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                className="brew-session-form-control"
               />
             </div>
 
-            <div className="mb-4">
-              <label
-                htmlFor="mash_temp"
-                className="block text-gray-700 font-medium mb-2"
-              >
+            <div className="brew-session-form-group">
+              <label htmlFor="mash_temp" className="brew-session-form-label">
                 Mash Temperature (°F)
               </label>
               <input
@@ -219,23 +202,18 @@ const EditBrewSession = () => {
                 name="mash_temp"
                 value={formData.mash_temp}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                className="brew-session-form-control"
               />
             </div>
           </div>
 
           {/* Metrics and Timeline */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">
-              Metrics and Timeline
-            </h2>
+            <h2 className="section-title">Metrics and Timeline</h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="brew-session-grid">
               <div>
-                <label
-                  htmlFor="actual_og"
-                  className="block text-gray-700 font-medium mb-2"
-                >
+                <label htmlFor="actual_og" className="brew-session-form-label">
                   Original Gravity
                 </label>
                 <input
@@ -245,14 +223,11 @@ const EditBrewSession = () => {
                   name="actual_og"
                   value={formData.actual_og}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
               <div>
-                <label
-                  htmlFor="actual_fg"
-                  className="block text-gray-700 font-medium mb-2"
-                >
+                <label htmlFor="actual_fg" className="brew-session-form-label">
                   Final Gravity
                 </label>
                 <input
@@ -262,17 +237,14 @@ const EditBrewSession = () => {
                   name="actual_fg"
                   value={formData.actual_fg}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="brew-session-grid">
               <div>
-                <label
-                  htmlFor="actual_abv"
-                  className="block text-gray-700 font-medium mb-2"
-                >
+                <label htmlFor="actual_abv" className="brew-session-form-label">
                   ABV (%)
                 </label>
                 <input
@@ -282,13 +254,13 @@ const EditBrewSession = () => {
                   name="actual_abv"
                   value={formData.actual_abv}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
               <div>
                 <label
                   htmlFor="actual_efficiency"
-                  className="block text-gray-700 font-medium mb-2"
+                  className="brew-session-form-label"
                 >
                   Efficiency (%)
                 </label>
@@ -299,16 +271,16 @@ const EditBrewSession = () => {
                   name="actual_efficiency"
                   value={formData.actual_efficiency}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 mb-4">
-              <div>
+            <div>
+              <div className="brew-session-form-group">
                 <label
                   htmlFor="fermentation_start_date"
-                  className="block text-gray-700 font-medium mb-2"
+                  className="brew-session-form-label"
                 >
                   Fermentation Start Date
                 </label>
@@ -318,13 +290,13 @@ const EditBrewSession = () => {
                   name="fermentation_start_date"
                   value={formData.fermentation_start_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
-              <div>
+              <div className="brew-session-form-group">
                 <label
                   htmlFor="fermentation_end_date"
-                  className="block text-gray-700 font-medium mb-2"
+                  className="brew-session-form-label"
                 >
                   Fermentation End Date
                 </label>
@@ -334,13 +306,13 @@ const EditBrewSession = () => {
                   name="fermentation_end_date"
                   value={formData.fermentation_end_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
-              <div>
+              <div className="brew-session-form-group">
                 <label
                   htmlFor="packaging_date"
-                  className="block text-gray-700 font-medium mb-2"
+                  className="brew-session-form-label"
                 >
                   Packaging Date
                 </label>
@@ -350,7 +322,7 @@ const EditBrewSession = () => {
                   name="packaging_date"
                   value={formData.packaging_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+                  className="brew-session-form-control"
                 />
               </div>
             </div>
@@ -358,16 +330,11 @@ const EditBrewSession = () => {
         </div>
 
         {/* Tasting Notes and Rating */}
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4 border-b pb-2">
-            Tasting and Evaluation
-          </h2>
+        <div>
+          <h2 className="section-title">Tasting and Evaluation</h2>
 
-          <div className="mb-4">
-            <label
-              htmlFor="tasting_notes"
-              className="block text-gray-700 font-medium mb-2"
-            >
+          <div className="brew-session-form-group">
+            <label htmlFor="tasting_notes" className="brew-session-form-label">
               Tasting Notes
             </label>
             <textarea
@@ -376,15 +343,12 @@ const EditBrewSession = () => {
               rows="4"
               value={formData.tasting_notes}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+              className="brew-session-form-control brew-session-form-textarea"
             ></textarea>
           </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="batch_rating"
-              className="block text-gray-700 font-medium mb-2"
-            >
+          <div className="brew-session-form-group">
+            <label htmlFor="batch_rating" className="brew-session-form-label">
               Batch Rating (1-5)
             </label>
             <select
@@ -392,7 +356,7 @@ const EditBrewSession = () => {
               name="batch_rating"
               value={formData.batch_rating}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+              className="brew-session-form-control"
             >
               <option value="">Select Rating</option>
               <option value="1">1 - Poor</option>
@@ -404,18 +368,18 @@ const EditBrewSession = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="brew-session-form-actions">
           <button
             type="button"
             onClick={() => navigate(`/brew-sessions/${sessionId}`)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-400"
+            className="brew-session-form-button brew-session-cancel-button"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 disabled:bg-gray-400"
+            className="brew-session-form-button brew-session-submit-button"
           >
             {submitting ? "Saving..." : "Save Changes"}
           </button>

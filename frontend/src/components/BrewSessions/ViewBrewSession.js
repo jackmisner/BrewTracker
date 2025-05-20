@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import ApiService from "../../services/api";
 import FermentationTracker from "./FermentationTracker";
+import "../../styles/BrewSessions.css";
 
 const ViewBrewSession = () => {
   const { sessionId } = useParams();
@@ -45,7 +46,9 @@ const ViewBrewSession = () => {
 
   const updateSessionStatus = async (newStatus) => {
     if (
-      confirm(`Are you sure you want to update the status to "${newStatus}"?`)
+      window.confirm(
+        `Are you sure you want to update the status to "${newStatus}"?`
+      )
     ) {
       try {
         setIsUpdating(true);
@@ -90,7 +93,7 @@ const ViewBrewSession = () => {
 
   const handleDelete = async () => {
     if (
-      confirm(
+      window.confirm(
         "Are you sure you want to delete this brew session? This action cannot be undone."
       )
     ) {
@@ -105,38 +108,19 @@ const ViewBrewSession = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading brew session...</div>;
+    return <div className="loading-message">Loading brew session...</div>;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
-        {error}
-      </div>
-    );
+    return <div className="error-message">{error}</div>;
   }
 
   if (!session) {
-    return <div className="text-center py-10">Brew session not found</div>;
+    return <div className="empty-message">Brew session not found</div>;
   }
 
   const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "planned":
-        return "bg-blue-100 text-blue-800";
-      case "in-progress":
-        return "bg-yellow-100 text-yellow-800";
-      case "fermenting":
-        return "bg-purple-100 text-purple-800";
-      case "conditioning":
-        return "bg-green-100 text-green-800";
-      case "completed":
-        return "bg-green-500 text-white";
-      case "archived":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+    return `status-badge status-${status}`;
   };
 
   // Determine valid next statuses based on current status
@@ -162,21 +146,21 @@ const ViewBrewSession = () => {
   const nextStatuses = getNextStatuses();
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">
+    <div className="container">
+      <div className="brew-sessions-header">
+        <h1 className="brew-session-title">
           {session.name || `Brew Session #${sessionId.substring(0, 6)}`}
         </h1>
-        <div className="flex space-x-2">
+        <div className="brew-session-actions">
           <button
             onClick={() => navigate(`/brew-sessions/${sessionId}/edit`)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="brew-session-action-button brew-session-edit-button"
           >
             Edit Session
           </button>
           <button
             onClick={handleDelete}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            className="brew-session-action-button brew-session-delete-button"
           >
             Delete Session
           </button>
@@ -184,96 +168,84 @@ const ViewBrewSession = () => {
       </div>
 
       {/* Session status indicator and controls */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <span className="text-gray-700 font-semibold">Status: </span>
-            <span
-              className={`ml-2 px-3 py-1 rounded-full text-sm ${getStatusBadgeClass(
-                session.status
-              )}`}
-            >
-              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-            </span>
-          </div>
-
-          {nextStatuses.length > 0 && (
-            <div className="flex items-center">
-              <span className="text-gray-700 mr-2">Update Status:</span>
-              {nextStatuses.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => updateSessionStatus(status)}
-                  disabled={isUpdating}
-                  className={`ml-2 px-3 py-1 rounded text-sm ${getStatusBadgeClass(
-                    status
-                  )} hover:opacity-80`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
-          )}
+      <div className="brew-session-controls">
+        <div className="brew-session-status-container">
+          <span className="brew-session-status-label">Status: </span>
+          <span className={getStatusBadgeClass(session.status)}>
+            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+          </span>
         </div>
+
+        {nextStatuses.length > 0 && (
+          <div className="brew-session-update-status">
+            <span className="brew-session-update-label">Update Status:</span>
+            {nextStatuses.map((status) => (
+              <button
+                key={status}
+                onClick={() => updateSessionStatus(status)}
+                disabled={isUpdating}
+                className={`status-button status-${status}`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tab navigation */}
-      <div className="mb-6">
-        <nav className="flex border-b border-gray-200">
+      <div className="brew-session-tab-container">
+        <div className="brew-session-tabs">
           <button
             onClick={() => setActiveTab("details")}
-            className={`py-2 px-4 text-center ${
-              activeTab === "details"
-                ? "border-b-2 border-amber-500 font-medium text-amber-600"
-                : "text-gray-500 hover:text-gray-700"
+            className={`brew-session-tab ${
+              activeTab === "details" ? "active" : ""
             }`}
           >
             Details
           </button>
           <button
             onClick={() => setActiveTab("fermentation")}
-            className={`py-2 px-4 text-center ${
-              activeTab === "fermentation"
-                ? "border-b-2 border-amber-500 font-medium text-amber-600"
-                : "text-gray-500 hover:text-gray-700"
+            className={`brew-session-tab ${
+              activeTab === "fermentation" ? "active" : ""
             }`}
           >
             Fermentation Tracking
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`py-2 px-4 text-center ${
-              activeTab === "notes"
-                ? "border-b-2 border-amber-500 font-medium text-amber-600"
-                : "text-gray-500 hover:text-gray-700"
+            className={`brew-session-tab ${
+              activeTab === "notes" ? "active" : ""
             }`}
           >
             Notes & Analysis
           </button>
-        </nav>
+        </div>
       </div>
 
       {/* Tab content */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="brew-session-content">
         {activeTab === "details" && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Session Details</h2>
+            <h2 className="brew-session-section-title">Session Details</h2>
 
             {/* Recipe Information */}
             {recipe && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">Recipe</h3>
-                <div className="bg-amber-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-start">
+              <div className="brew-session-section">
+                <h3 className="section-title">Recipe</h3>
+                <div className="brew-session-recipe">
+                  <div className="brew-session-recipe-header">
                     <div>
-                      <p className="font-semibold">{recipe.name}</p>
+                      <p className="brew-session-recipe-name">{recipe.name}</p>
                       {recipe.style && (
-                        <p className="text-sm text-gray-600">{recipe.style}</p>
+                        <p className="brew-session-recipe-style">
+                          {recipe.style}
+                        </p>
                       )}
                     </div>
                     <button
                       onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
-                      className="text-amber-600 hover:text-amber-800 text-sm"
+                      className="brew-session-recipe-link"
                     >
                       View Recipe
                     </button>
@@ -283,18 +255,20 @@ const ViewBrewSession = () => {
             )}
 
             {/* Session dates */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Timeline</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-600">Brew Date:</p>
-                  <p className="font-medium">
+            <div className="brew-session-section">
+              <h3 className="section-title">Timeline</h3>
+              <div className="brew-session-timeline">
+                <div className="brew-session-timeline-item">
+                  <p className="brew-session-timeline-label">Brew Date:</p>
+                  <p className="brew-session-timeline-date">
                     {new Date(session.brew_date).toLocaleDateString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Fermentation Start:</p>
-                  <p className="font-medium">
+                <div className="brew-session-timeline-item">
+                  <p className="brew-session-timeline-label">
+                    Fermentation Start:
+                  </p>
+                  <p className="brew-session-timeline-date">
                     {session.fermentation_start_date
                       ? new Date(
                           session.fermentation_start_date
@@ -302,9 +276,11 @@ const ViewBrewSession = () => {
                       : "Not started"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Fermentation End:</p>
-                  <p className="font-medium">
+                <div className="brew-session-timeline-item">
+                  <p className="brew-session-timeline-label">
+                    Fermentation End:
+                  </p>
+                  <p className="brew-session-timeline-date">
                     {session.fermentation_end_date
                       ? new Date(
                           session.fermentation_end_date
@@ -312,9 +288,9 @@ const ViewBrewSession = () => {
                       : "Not completed"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Packaging Date:</p>
-                  <p className="font-medium">
+                <div className="brew-session-timeline-item">
+                  <p className="brew-session-timeline-label">Packaging Date:</p>
+                  <p className="brew-session-timeline-date">
                     {session.packaging_date
                       ? new Date(session.packaging_date).toLocaleDateString()
                       : "Not packaged"}
@@ -324,53 +300,53 @@ const ViewBrewSession = () => {
             </div>
 
             {/* Brew stats */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Brew Metrics</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-600 text-sm">Original Gravity</p>
-                  <p className="text-xl font-medium">
+            <div className="brew-session-section">
+              <h3 className="section-title">Brew Metrics</h3>
+              <div className="brew-session-metrics">
+                <div className="brew-session-metric">
+                  <p className="brew-session-metric-label">Original Gravity</p>
+                  <p className="brew-session-metric-value">
                     {session.actual_og ? session.actual_og.toFixed(3) : "-"}
                   </p>
                   {recipe && recipe.estimated_og && (
-                    <p className="text-xs text-gray-500">
+                    <p className="brew-session-metric-est">
                       Est: {recipe.estimated_og.toFixed(3)}
                     </p>
                   )}
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-600 text-sm">Final Gravity</p>
-                  <p className="text-xl font-medium">
+                <div className="brew-session-metric">
+                  <p className="brew-session-metric-label">Final Gravity</p>
+                  <p className="brew-session-metric-value">
                     {session.actual_fg ? session.actual_fg.toFixed(3) : "-"}
                   </p>
                   {recipe && recipe.estimated_fg && (
-                    <p className="text-xs text-gray-500">
+                    <p className="brew-session-metric-est">
                       Est: {recipe.estimated_fg.toFixed(3)}
                     </p>
                   )}
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-600 text-sm">ABV</p>
-                  <p className="text-xl font-medium">
+                <div className="brew-session-metric">
+                  <p className="brew-session-metric-label">ABV</p>
+                  <p className="brew-session-metric-value">
                     {session.actual_abv
                       ? `${session.actual_abv.toFixed(1)}%`
                       : "-"}
                   </p>
                   {recipe && recipe.estimated_abv && (
-                    <p className="text-xs text-gray-500">
+                    <p className="brew-session-metric-est">
                       Est: {recipe.estimated_abv.toFixed(1)}%
                     </p>
                   )}
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-600 text-sm">Efficiency</p>
-                  <p className="text-xl font-medium">
+                <div className="brew-session-metric">
+                  <p className="brew-session-metric-label">Efficiency</p>
+                  <p className="brew-session-metric-value">
                     {session.actual_efficiency
                       ? `${session.actual_efficiency.toFixed(1)}%`
                       : "-"}
                   </p>
                   {recipe && recipe.efficiency && (
-                    <p className="text-xs text-gray-500">
+                    <p className="brew-session-metric-est">
                       Target: {recipe.efficiency.toFixed(1)}%
                     </p>
                   )}
@@ -379,22 +355,26 @@ const ViewBrewSession = () => {
             </div>
 
             {/* Brew day measurements */}
-            <div>
-              <h3 className="text-lg font-medium mb-2">Brew Day Notes</h3>
+            <div className="brew-session-section">
+              <h3 className="section-title">Brew Day Notes</h3>
               {session.mash_temp && (
-                <div className="mb-2">
-                  <span className="text-gray-600">Mash Temperature:</span>{" "}
-                  <span className="font-medium">{session.mash_temp}°F</span>
+                <div className="brewing-data">
+                  <div className="brewing-data-item">
+                    <span className="brewing-data-label">
+                      Mash Temperature:
+                    </span>
+                    <span className="brewing-data-value">
+                      {session.mash_temp}°F
+                    </span>
+                  </div>
                 </div>
               )}
               {session.notes ? (
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="brew-session-notes">
                   <p>{session.notes}</p>
                 </div>
               ) : (
-                <p className="text-gray-500 italic">
-                  No brew day notes recorded.
-                </p>
+                <p className="empty-message">No brew day notes recorded.</p>
               )}
             </div>
           </div>
@@ -420,34 +400,30 @@ const ViewBrewSession = () => {
 
         {activeTab === "notes" && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Notes & Analysis</h2>
+            <h2 className="brew-session-section-title">Notes & Analysis</h2>
 
             {/* Tasting notes */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Tasting Notes</h3>
+            <div className="brew-session-section">
+              <h3 className="section-title">Tasting Notes</h3>
               {session.tasting_notes ? (
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="brew-session-notes">
                   <p>{session.tasting_notes}</p>
                 </div>
               ) : (
-                <p className="text-gray-500 italic">
-                  No tasting notes recorded yet.
-                </p>
+                <p className="empty-message">No tasting notes recorded yet.</p>
               )}
             </div>
 
             {/* Batch rating */}
             {session.batch_rating && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">Batch Rating</h3>
-                <div className="flex items-center">
+              <div className="brew-session-section">
+                <h3 className="section-title">Batch Rating</h3>
+                <div className="rating-stars">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <svg
                       key={star}
-                      className={`w-6 h-6 ${
-                        star <= session.batch_rating
-                          ? "text-yellow-500"
-                          : "text-gray-300"
+                      className={`rating-star ${
+                        star <= session.batch_rating ? "filled" : ""
                       }`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -455,7 +431,7 @@ const ViewBrewSession = () => {
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
-                  <span className="ml-2 text-gray-700">
+                  <span className="rating-text">
                     {session.batch_rating} out of 5
                   </span>
                 </div>
@@ -464,11 +440,9 @@ const ViewBrewSession = () => {
 
             {/* Attenuation analysis */}
             {session.actual_og && session.actual_fg && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">
-                  Attenuation Analysis
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="brew-session-section">
+                <h3 className="section-title">Attenuation Analysis</h3>
+                <div className="fermentation-comparison">
                   {(() => {
                     const actualAttenuation =
                       ((session.actual_og - session.actual_fg) /
@@ -484,22 +458,26 @@ const ViewBrewSession = () => {
 
                     return (
                       <div>
-                        <p className="mb-1">
-                          <span className="font-medium">
+                        <div className="fermentation-stat-row">
+                          <span className="fermentation-stat-label">
                             Actual Attenuation:
-                          </span>{" "}
-                          {actualAttenuation.toFixed(1)}%
-                        </p>
+                          </span>
+                          <span className="fermentation-stat-value">
+                            {actualAttenuation.toFixed(1)}%
+                          </span>
+                        </div>
                         {estimatedAttenuation !== null && (
-                          <p className="mb-1">
-                            <span className="font-medium">
+                          <div className="fermentation-stat-row">
+                            <span className="fermentation-stat-label">
                               Estimated Attenuation:
-                            </span>{" "}
-                            {estimatedAttenuation.toFixed(1)}%
-                          </p>
+                            </span>
+                            <span className="fermentation-stat-value">
+                              {estimatedAttenuation.toFixed(1)}%
+                            </span>
+                          </div>
                         )}
                         {estimatedAttenuation !== null && (
-                          <p className="mt-2 text-sm">
+                          <p className="fermentation-analysis">
                             {actualAttenuation > estimatedAttenuation + 5
                               ? "Your yeast performed better than expected with higher attenuation."
                               : actualAttenuation < estimatedAttenuation - 5
