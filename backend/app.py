@@ -3,11 +3,13 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect
 import os
+from pathlib import Path
 import config
 from routes.auth import auth_bp
 from routes.recipes import recipes_bp
 from routes.ingredients import ingredients_bp
 from routes.brew_sessions import brew_sessions_bp
+from models.mongo_models import Ingredient
 
 
 def create_app(config_class=None):
@@ -38,6 +40,15 @@ def create_app(config_class=None):
             200,
         )
 
+    if Ingredient.objects.count() == 0:
+        print("No ingredients found in database. Running seed operation...")
+        from seed_ingredients import seed_ingredients
+
+        json_file_path = Path(__file__).parent / "data" / "brewtracker.ingredients.json"
+        mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/brewtracker")
+        seed_ingredients(mongo_uri, json_file_path)
+    else:
+        print("Ingredients already exist in the database. Skipping seed operation.")
     return app
 
 
