@@ -360,10 +360,35 @@ class MongoDBService:
             ):
                 return None, "Access denied"
 
-            # Create new recipe object as a copy of the original
+            # Find the root recipe (the one without a parent)
+            root_recipe = original_recipe
+            if original_recipe.parent_recipe_id:
+                root_recipe = Recipe.objects(
+                    id=original_recipe.parent_recipe_id
+                ).first()
+                if not root_recipe:
+                    return None, "Root recipe not found"
+
+            # Find the highest version number among all variants of the root recipe
+            highest_version = (
+                Recipe.objects(parent_recipe_id=root_recipe.id)
+                .order_by("-version")
+                .first()
+            )
+
+            # Calculate new version number based on root recipe variants
+            new_version = (highest_version.version + 1) if highest_version else 2
+
+            # Create new recipe object as a copy of the original (not the root)
             new_recipe = Recipe()
             new_recipe.user_id = ObjectId(user_id)
-            new_recipe.name = f"{original_recipe.name} (v{original_recipe.version + 1})"
+            # Use root recipe name for consistency in naming
+            base_name = root_recipe.name.split(" (v")[
+                0
+            ]  # Remove any existing version suffix
+            new_recipe.name = f"{base_name} (v{new_version})"
+
+            # Copy fields from the recipe being cloned
             new_recipe.style = original_recipe.style
             new_recipe.batch_size = original_recipe.batch_size
             new_recipe.description = original_recipe.description
@@ -372,18 +397,18 @@ class MongoDBService:
             new_recipe.efficiency = original_recipe.efficiency
             new_recipe.notes = original_recipe.notes
 
-            # Set version info
-            new_recipe.parent_recipe_id = original_recipe.id
-            new_recipe.version = original_recipe.version + 1
+            # Set version info with new calculated version
+            new_recipe.parent_recipe_id = root_recipe.id  # Always link to root recipe
+            new_recipe.version = new_version
 
-            # Set estimated values
+            # Copy metrics from the recipe being cloned
             new_recipe.estimated_og = original_recipe.estimated_og
             new_recipe.estimated_fg = original_recipe.estimated_fg
             new_recipe.estimated_abv = original_recipe.estimated_abv
             new_recipe.estimated_ibu = original_recipe.estimated_ibu
             new_recipe.estimated_srm = original_recipe.estimated_srm
 
-            # Copy ingredients
+            # Copy ingredients from the recipe being cloned
             for ing in original_recipe.ingredients:
                 new_ing = RecipeIngredient()
                 new_ing.ingredient_id = ing.ingredient_id
@@ -397,7 +422,6 @@ class MongoDBService:
                 new_ing.color = ing.color
                 new_ing.alpha_acid = ing.alpha_acid
                 new_ing.attenuation = ing.attenuation
-
                 new_recipe.ingredients.append(new_ing)
 
             # Set creation timestamps
