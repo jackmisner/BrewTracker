@@ -49,6 +49,26 @@ const FermentationTracker = ({
       );
       if (statsResponse.data) {
         setStats(statsResponse.data);
+      } else {
+        setStats({
+          gravity: {
+            initial: null,
+            current: null,
+            drop: null,
+            attenuation: null,
+          },
+          temperature: {
+            min: null,
+            max: null,
+            avg: null,
+          },
+          ph: {
+            min: null,
+            max: null,
+            avg: null,
+            data: [],
+          },
+        });
       }
     } catch (err) {
       console.error("Error fetching fermentation data:", err);
