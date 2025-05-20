@@ -23,6 +23,7 @@ homebrew-tracker/
 ├── backend/
 │   ├── app.py
 │   ├── config.py
+│   ├── data/ // Seed data for Ingredients
 │   ├── models/ // Database models
 │   │   ├── __init__.py
 │   │   └── mongo_models.py // MongoDB models for users, recipes, ingredients, and brew sessions
@@ -32,6 +33,7 @@ homebrew-tracker/
 │   │   ├── recipes.py
 │   │   ├── ingredients.py
 │   │   └── brew_sessions.py
+│   ├── seed_ingredients.py // Script that gets called on first run if database has no ingredients in it to add the ingredients data to DB
 │   ├── services/
 │   │   ├── __init__.py
 │   │   └── mongodb_service.py // Provides methods for interacting with MongoDB
@@ -151,8 +153,9 @@ FLASK_ENV="development"
 ```bash
 cd backend
 flask db upgrade
-flask seed run  # If you have seed data
 ```
+
+Note: When you first start the application, it will automatically check if ingredient data exists in the database. If none is found, it will seed the database with the initial ingredient data from the data/brewtracker.ingredients.json file. You don't need to run any additional commands for this.
 
 ## 🏃‍♂️ Running the Application
 
