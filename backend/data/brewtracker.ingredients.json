@@ -1,0 +1,2106 @@
+[{
+  "_id": {
+    "$oid": "68263551a6be603e11b3151c"
+  },
+  "name": "Acidulated Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 27,
+  "color": 3.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3151d"
+  },
+  "name": "Aromatic Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 33,
+  "color": 38
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3151e"
+  },
+  "name": "Beechwood Smoked Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 35,
+  "color": 2.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3151f"
+  },
+  "name": "Blackprinz Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 25,
+  "color": 500
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31520"
+  },
+  "name": "Bohemian Pilsner",
+  "type": "grain",
+  "description": "",
+  "potential": 38,
+  "color": 2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31521"
+  },
+  "name": "Caramel Malt - 10L",
+  "type": "grain",
+  "description": "",
+  "potential": 35.4,
+  "color": 10
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31522"
+  },
+  "name": "Caramel Malt - 120L",
+  "type": "grain",
+  "description": "",
+  "potential": 34.5,
+  "color": 120
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31523"
+  },
+  "name": "Caramel Malt - 20L",
+  "type": "grain",
+  "description": "",
+  "potential": 35,
+  "color": 20
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31524"
+  },
+  "name": "Caramel Malt - 40L",
+  "type": "grain",
+  "description": "",
+  "potential": 35.4,
+  "color": 40
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31525"
+  },
+  "name": "Caramel Malt - 60L",
+  "type": "grain",
+  "description": "",
+  "potential": 35.4,
+  "color": 60
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31526"
+  },
+  "name": "Caramel Malt - 80L",
+  "type": "grain",
+  "description": "",
+  "potential": 35,
+  "color": 80
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31527"
+  },
+  "name": "Caramel Rye",
+  "type": "grain",
+  "description": "",
+  "potential": 32,
+  "color": 60
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31528"
+  },
+  "name": "Caramunich",
+  "type": "grain",
+  "description": "",
+  "potential": 33.5,
+  "color": 35
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31529"
+  },
+  "name": "CaraWheat",
+  "type": "grain",
+  "description": "",
+  "potential": 31,
+  "color": 45
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152a"
+  },
+  "name": "Cherrywood Smoked Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152b"
+  },
+  "name": "Chocolate Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 25,
+  "color": 350
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152c"
+  },
+  "name": "Dark Chocolate Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 33,
+  "color": 450
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152d"
+  },
+  "name": "Flaked Barley",
+  "type": "grain",
+  "description": "",
+  "potential": 32.2,
+  "color": 1.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152e"
+  },
+  "name": "Flaked Corn",
+  "type": "grain",
+  "description": "",
+  "potential": 34.5,
+  "color": 1
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3152f"
+  },
+  "name": "Flaked Oats",
+  "type": "grain",
+  "description": "",
+  "potential": 32.2,
+  "color": 2.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31530"
+  },
+  "name": "Flaked Rice",
+  "type": "grain",
+  "description": "",
+  "potential": 32.2,
+  "color": 1
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31531"
+  },
+  "name": "Flaked Rye",
+  "type": "grain",
+  "description": "",
+  "potential": 32.7,
+  "color": 3
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31532"
+  },
+  "name": "Flaked Wheat",
+  "type": "grain",
+  "description": "",
+  "potential": 32.2,
+  "color": 2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31533"
+  },
+  "name": "Golden Naked Oats",
+  "type": "grain",
+  "description": "",
+  "potential": 27,
+  "color": 7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31534"
+  },
+  "name": "Golden Promise",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 3
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31535"
+  },
+  "name": "Honey Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 25
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31536"
+  },
+  "name": "Malted Oats",
+  "type": "grain",
+  "description": "",
+  "potential": 28,
+  "color": 2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31537"
+  },
+  "name": "Malted Rye",
+  "type": "grain",
+  "description": "",
+  "potential": 40.2,
+  "color": 3
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31538"
+  },
+  "name": "Malted Spelt",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31539"
+  },
+  "name": "Medium Crystal",
+  "type": "grain",
+  "description": "",
+  "potential": 33,
+  "color": 65
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153a"
+  },
+  "name": "Midnight Wheat Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 25,
+  "color": 550
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153b"
+  },
+  "name": "Munich Dark",
+  "type": "grain",
+  "description": "",
+  "potential": 37.1,
+  "color": 12
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153c"
+  },
+  "name": "Munich Light",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 8
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153d"
+  },
+  "name": "Oak Smoked Wheat Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 38,
+  "color": 2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153e"
+  },
+  "name": "Pale Chocolate Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 32.7,
+  "color": 220
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3153f"
+  },
+  "name": "Red Wheat",
+  "type": "grain",
+  "description": "",
+  "potential": 38,
+  "color": 2.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31540"
+  },
+  "name": "Roasted Barley",
+  "type": "grain",
+  "description": "",
+  "potential": 33.1,
+  "color": 300
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31541"
+  },
+  "name": "Special B",
+  "type": "grain",
+  "description": "",
+  "potential": 34,
+  "color": 115
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31542"
+  },
+  "name": "Vienna Malt",
+  "type": "grain",
+  "description": "",
+  "potential": 35,
+  "color": 4
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31543"
+  },
+  "name": "White Wheat",
+  "type": "grain",
+  "description": "",
+  "potential": 40,
+  "color": 3
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31544"
+  },
+  "name": "Amarillo",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.6
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31545"
+  },
+  "name": "Azacca",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 15
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31546"
+  },
+  "name": "Cascade",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31547"
+  },
+  "name": "Centennial",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 10
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31548"
+  },
+  "name": "Challenger",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31549"
+  },
+  "name": "Chinook",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 13
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154a"
+  },
+  "name": "Citra",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 11
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154b"
+  },
+  "name": "Columbus",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 15
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154c"
+  },
+  "name": "East Kent Goldings",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154d"
+  },
+  "name": "El Dorado",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 15.7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154e"
+  },
+  "name": "Fuggles",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 4.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3154f"
+  },
+  "name": "Galaxy",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 14.25
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31550"
+  },
+  "name": "Hallertau Mittelfruh",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 3.75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31551"
+  },
+  "name": "Huell Melon",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 7.2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31552"
+  },
+  "name": "Kohatu",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 6.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31553"
+  },
+  "name": "Lemondrop",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 6
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31554"
+  },
+  "name": "Magnum",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 15
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31555"
+  },
+  "name": "Mandarina Bavaria",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31556"
+  },
+  "name": "Mosaic",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 12.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31557"
+  },
+  "name": "Motueka",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31558"
+  },
+  "name": "Nectaron",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.1
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31559"
+  },
+  "name": "Nelson Sauvin",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 12.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155a"
+  },
+  "name": "Nugget",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 14
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155b"
+  },
+  "name": "Pacifica",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155c"
+  },
+  "name": "Perle",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.2
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155d"
+  },
+  "name": "Rakau",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 10.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155e"
+  },
+  "name": "Riwaka",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 5.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3155f"
+  },
+  "name": "Saaz",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 3.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31560"
+  },
+  "name": "Simcoe",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 12.7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31561"
+  },
+  "name": "Sorachi Ace",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 11.1
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31562"
+  },
+  "name": "Spalt",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 4.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31563"
+  },
+  "name": "Sterling",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 8.7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31564"
+  },
+  "name": "Styrian Goldings",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 5.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31565"
+  },
+  "name": "Tettnanger",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 4.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31566"
+  },
+  "name": "Wai-iti",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 3
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31567"
+  },
+  "name": "Waimea",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 17.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31568"
+  },
+  "name": "Warrior",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 16
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31569"
+  },
+  "name": "Willamette",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 4.5
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156a"
+  },
+  "name": "Zappa",
+  "type": "hop",
+  "description": "",
+  "alpha_acid": 7
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156b"
+  },
+  "name": "S-33",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 70,
+  "manufacturer": "Fermentis",
+  "code": "S-33",
+  "min_temperature": 64.4,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156c"
+  },
+  "name": "US-05",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 81,
+  "manufacturer": "Fermentis",
+  "code": "US-05",
+  "min_temperature": 54,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156d"
+  },
+  "name": "BE-134",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 90,
+  "manufacturer": "Fermentis",
+  "code": "BE-134",
+  "min_temperature": 64,
+  "max_temperature": 82
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156e"
+  },
+  "name": "S-04",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Fermentis",
+  "code": "S-04",
+  "alcohol_tolerance": 9.75,
+  "min_temperature": 54,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3156f"
+  },
+  "name": "L-97",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 81,
+  "manufacturer": "Fermentis",
+  "code": "L-97",
+  "alcohol_tolerance": 10.4,
+  "min_temperature": 54,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31570"
+  },
+  "name": "BE-256",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Fermentis",
+  "code": "BE-256",
+  "min_temperature": 64.4,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31571"
+  },
+  "name": "T-58",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Fermentis",
+  "code": "T-58",
+  "min_temperature": 53.6,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31572"
+  },
+  "name": "WB-06",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 86,
+  "manufacturer": "Fermentis",
+  "code": "WB-06",
+  "alcohol_tolerance": 10.5,
+  "min_temperature": 54,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31573"
+  },
+  "name": "S-23",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 82,
+  "manufacturer": "Fermentis",
+  "code": "S-23",
+  "alcohol_tolerance": 10.5,
+  "min_temperature": 48,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31574"
+  },
+  "name": "W34/70",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 83,
+  "manufacturer": "Fermentis",
+  "code": "W34/70",
+  "alcohol_tolerance": 10.5,
+  "min_temperature": 48,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31575"
+  },
+  "name": "S-189",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 84,
+  "manufacturer": "Fermentis",
+  "code": "S-189",
+  "alcohol_tolerance": 10.5,
+  "min_temperature": 48,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31576"
+  },
+  "name": "Belle Saison",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 90,
+  "manufacturer": "Lallemand",
+  "code": "Belle Saison",
+  "min_temperature": 59,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31577"
+  },
+  "name": "Diamond Lager",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Lallemand",
+  "code": "Diamond Lager",
+  "min_temperature": 50,
+  "max_temperature": 59
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31578"
+  },
+  "name": "Farmhouse Hybrid Saison",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 82,
+  "manufacturer": "Lallemand",
+  "code": "Farmhouse Hybrid Saison",
+  "min_temperature": 71.6,
+  "max_temperature": 86
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31579"
+  },
+  "name": "NovaLager",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 81,
+  "manufacturer": "Lallemand",
+  "code": "NovaLager",
+  "min_temperature": 50,
+  "max_temperature": 68
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157a"
+  },
+  "name": "CBC-1",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 65,
+  "manufacturer": "Lallemand",
+  "code": "CBC-1",
+  "min_temperature": 59,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157b"
+  },
+  "name": "Koln",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Lallemand",
+  "code": "Koln",
+  "min_temperature": 59,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157c"
+  },
+  "name": "London ESB",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 65,
+  "manufacturer": "Lallemand",
+  "code": "London ESB",
+  "min_temperature": 65,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157d"
+  },
+  "name": "Nottingham",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Lallemand",
+  "code": "Nottingham",
+  "min_temperature": 50,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157e"
+  },
+  "name": "Voss Kveik",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Lallemand",
+  "code": "Voss Kveik",
+  "min_temperature": 77,
+  "max_temperature": 104
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3157f"
+  },
+  "name": "Belgian Wit",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 70,
+  "manufacturer": "Lallemand",
+  "code": "Belgian Wit",
+  "min_temperature": 63,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31580"
+  },
+  "name": "WildBrew Philly Sour",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 85,
+  "manufacturer": "Lallemand",
+  "code": "WildBrew Philly Sour",
+  "min_temperature": 68,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31581"
+  },
+  "name": "All the Bretts",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 48,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-218",
+  "alcohol_tolerance": 11,
+  "min_temperature": 68,
+  "max_temperature": 85
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31582"
+  },
+  "name": "Bananza",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-400",
+  "min_temperature": 64,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31583"
+  },
+  "name": "Bayern Lager",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-114",
+  "alcohol_tolerance": 9,
+  "min_temperature": 51,
+  "max_temperature": 62
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31584"
+  },
+  "name": "Belgian Ale A",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 79,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-024",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31585"
+  },
+  "name": "Belgian Ale O",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 77,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-046",
+  "alcohol_tolerance": 12,
+  "min_temperature": 66,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31586"
+  },
+  "name": "Belgian Ale R",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 78,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-020",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31587"
+  },
+  "name": "Belgian Ale W",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 76,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-028",
+  "alcohol_tolerance": 11,
+  "min_temperature": 64,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31588"
+  },
+  "name": "Belgian Saison I",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 78,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-027",
+  "alcohol_tolerance": 12,
+  "min_temperature": 70,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31589"
+  },
+  "name": "Brett Blend #1 Where Da Funk?",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 83,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-210",
+  "alcohol_tolerance": 11,
+  "min_temperature": 68,
+  "max_temperature": 80
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158a"
+  },
+  "name": "Brett Blend #2 Bit O' Funk",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 48,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-211",
+  "alcohol_tolerance": 11,
+  "min_temperature": 68,
+  "max_temperature": 80
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158b"
+  },
+  "name": "Brett Blend #3 Bring On Da Funk",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 48,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-212",
+  "alcohol_tolerance": 11,
+  "min_temperature": 68,
+  "max_temperature": 80
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158c"
+  },
+  "name": "British Ale I",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-006",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158d"
+  },
+  "name": "British Ale V",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-011",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 74
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158e"
+  },
+  "name": "British Ale VIII",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 69,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-016",
+  "alcohol_tolerance": 9,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3158f"
+  },
+  "name": "CL-50",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-041",
+  "alcohol_tolerance": 10,
+  "min_temperature": 60,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31590"
+  },
+  "name": "Cosmic Punch",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-402",
+  "min_temperature": 64,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31591"
+  },
+  "name": "French Saison",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 85,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-026",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31592"
+  },
+  "name": "German Bock",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-111",
+  "alcohol_tolerance": 10,
+  "min_temperature": 48,
+  "max_temperature": 55
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31593"
+  },
+  "name": "German Lager I",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-106",
+  "alcohol_tolerance": 9,
+  "min_temperature": 45,
+  "max_temperature": 68
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31594"
+  },
+  "name": "Gulo Ale",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 87.5,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-501",
+  "min_temperature": 68,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31595"
+  },
+  "name": "Hefeweizen Ale I",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-021",
+  "alcohol_tolerance": 10,
+  "min_temperature": 65,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31596"
+  },
+  "name": "Helio Gazer",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-405",
+  "min_temperature": 64,
+  "max_temperature": 74
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31597"
+  },
+  "name": "Hornindal Kveik",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 79,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-091",
+  "alcohol_tolerance": 12,
+  "min_temperature": 70,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31598"
+  },
+  "name": "HotHead Ale",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-057",
+  "alcohol_tolerance": 11,
+  "min_temperature": 62,
+  "max_temperature": 98
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b31599"
+  },
+  "name": "Irish Ale",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 72,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-005",
+  "alcohol_tolerance": 12,
+  "min_temperature": 62,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159a"
+  },
+  "name": "Jovaru Lithuanian Farmhouse",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 85,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-033",
+  "min_temperature": 70,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159b"
+  },
+  "name": "Kolsch II",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-044",
+  "alcohol_tolerance": 10,
+  "min_temperature": 65,
+  "max_temperature": 69
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159c"
+  },
+  "name": "London Ale",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 72,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-003",
+  "alcohol_tolerance": 11,
+  "min_temperature": 66,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159d"
+  },
+  "name": "Lunar Crush Lager",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74.5,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-403",
+  "min_temperature": 50,
+  "max_temperature": 65
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159e"
+  },
+  "name": "Lutra Kveik",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 78,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-071",
+  "min_temperature": 68,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b3159f"
+  },
+  "name": "Mexican Lager",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-113",
+  "alcohol_tolerance": 9,
+  "min_temperature": 50,
+  "max_temperature": 55
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a0"
+  },
+  "name": "Oktoberfest",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-107",
+  "alcohol_tolerance": 9,
+  "min_temperature": 46,
+  "max_temperature": 58
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a1"
+  },
+  "name": "Saisonstein’s Monster",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-500",
+  "min_temperature": 65,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a2"
+  },
+  "name": "Scottish Ale",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-015",
+  "alcohol_tolerance": 10,
+  "min_temperature": 65,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a3"
+  },
+  "name": "Star Party",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 76.5,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-404",
+  "min_temperature": 60,
+  "max_temperature": 73
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a4"
+  },
+  "name": "Sundew",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 79,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-401",
+  "min_temperature": 64,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a5"
+  },
+  "name": "Tropical IPA",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 92.5,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-200",
+  "alcohol_tolerance": 10,
+  "min_temperature": 75,
+  "max_temperature": 85
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a6"
+  },
+  "name": "Voss Kveik",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 79,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-061",
+  "alcohol_tolerance": 12,
+  "min_temperature": 68,
+  "max_temperature": 98
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a7"
+  },
+  "name": "West Coast Ale I",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 77,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-004",
+  "alcohol_tolerance": 11,
+  "min_temperature": 60,
+  "max_temperature": 73
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a8"
+  },
+  "name": "West Coast Ale II",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-009",
+  "alcohol_tolerance": 10,
+  "min_temperature": 60,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315a9"
+  },
+  "name": "Wit",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Omega Yeast",
+  "code": "OYL-030",
+  "alcohol_tolerance": 11,
+  "min_temperature": 62,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315aa"
+  },
+  "name": "American Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "1056",
+  "alcohol_tolerance": 10,
+  "min_temperature": 60,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ab"
+  },
+  "name": "American Ale II ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Wyeast",
+  "code": "1272",
+  "alcohol_tolerance": 10,
+  "min_temperature": 60,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ac"
+  },
+  "name": "Bavarian Lager  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "2206",
+  "alcohol_tolerance": 9,
+  "min_temperature": 46,
+  "max_temperature": 58
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ad"
+  },
+  "name": "Belgian Abby Ale II",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "1762",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ae"
+  },
+  "name": "Belgian Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "1214",
+  "alcohol_tolerance": 12,
+  "min_temperature": 68,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315af"
+  },
+  "name": "Belgian Ardennes  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Wyeast",
+  "code": "3522",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 85
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b0"
+  },
+  "name": "Belgian Lambic Blend ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "3278",
+  "alcohol_tolerance": 12,
+  "min_temperature": 63,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b1"
+  },
+  "name": "Belgian Saison  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 78,
+  "manufacturer": "Wyeast",
+  "code": "3724",
+  "alcohol_tolerance": 12,
+  "min_temperature": 70,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b2"
+  },
+  "name": "Belgian Strong Ale ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 76,
+  "manufacturer": "Wyeast",
+  "code": "1388",
+  "alcohol_tolerance": 12,
+  "min_temperature": 64,
+  "max_temperature": 80
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b3"
+  },
+  "name": "Belgian Witbier  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Wyeast",
+  "code": "3944",
+  "alcohol_tolerance": 12,
+  "min_temperature": 62,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b4"
+  },
+  "name": "Bohemian Lager  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "2124",
+  "alcohol_tolerance": 9,
+  "min_temperature": 48,
+  "max_temperature": 58
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b5"
+  },
+  "name": "British Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Wyeast",
+  "code": "1098",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b6"
+  },
+  "name": "British Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74.5,
+  "manufacturer": "Wyeast",
+  "code": "1335",
+  "alcohol_tolerance": 10,
+  "min_temperature": 63,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b7"
+  },
+  "name": "California Lager  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 69,
+  "manufacturer": "Wyeast",
+  "code": "2112",
+  "alcohol_tolerance": 9,
+  "min_temperature": 58,
+  "max_temperature": 68
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b8"
+  },
+  "name": "Czech Pils  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 72,
+  "manufacturer": "Wyeast",
+  "code": "2278",
+  "alcohol_tolerance": 9,
+  "min_temperature": 50,
+  "max_temperature": 58
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315b9"
+  },
+  "name": "Denny's Favorite 50 ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "1450",
+  "alcohol_tolerance": 10,
+  "min_temperature": 60,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ba"
+  },
+  "name": "English Special Bitter ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 70,
+  "manufacturer": "Wyeast",
+  "code": "1768",
+  "alcohol_tolerance": 9,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315bb"
+  },
+  "name": "Farmhouse Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 76,
+  "manufacturer": "Wyeast",
+  "code": "3726",
+  "alcohol_tolerance": 12,
+  "min_temperature": 70,
+  "max_temperature": 95
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315bc"
+  },
+  "name": "French Saison  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Wyeast",
+  "code": "3711",
+  "alcohol_tolerance": 12,
+  "min_temperature": 65,
+  "max_temperature": 77
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315bd"
+  },
+  "name": "German Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "1007",
+  "alcohol_tolerance": 11,
+  "min_temperature": 55,
+  "max_temperature": 68
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315be"
+  },
+  "name": "Irish Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Wyeast",
+  "code": "1084",
+  "alcohol_tolerance": 10,
+  "min_temperature": 62,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315bf"
+  },
+  "name": "Kölsch   ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "2565",
+  "alcohol_tolerance": 10,
+  "min_temperature": 56,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c0"
+  },
+  "name": "London Ale III ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Wyeast",
+  "code": "1318",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 74
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c1"
+  },
+  "name": "London ESB Ale ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 69,
+  "manufacturer": "Wyeast",
+  "code": "1968",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c2"
+  },
+  "name": "Munich Lager  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 72,
+  "manufacturer": "Wyeast",
+  "code": "2308",
+  "alcohol_tolerance": 9,
+  "min_temperature": 48,
+  "max_temperature": 56
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c3"
+  },
+  "name": "Northwest Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 69,
+  "manufacturer": "Wyeast",
+  "code": "1332",
+  "alcohol_tolerance": 10,
+  "min_temperature": 65,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c4"
+  },
+  "name": "Octoberfest Lager Blend ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "2633",
+  "alcohol_tolerance": 9,
+  "min_temperature": 48,
+  "max_temperature": 58
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c5"
+  },
+  "name": "Pilsen Lager  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 73,
+  "manufacturer": "Wyeast",
+  "code": "2007",
+  "alcohol_tolerance": 9,
+  "min_temperature": 48,
+  "max_temperature": 56
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c6"
+  },
+  "name": "Pilsner Urquell H ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 74,
+  "manufacturer": "Wyeast",
+  "code": "2001",
+  "min_temperature": 48,
+  "max_temperature": 56
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c7"
+  },
+  "name": "Roeselare Ale Blend ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 80,
+  "manufacturer": "Wyeast",
+  "code": "3763",
+  "alcohol_tolerance": 11,
+  "min_temperature": 65,
+  "max_temperature": 85
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c8"
+  },
+  "name": "Scottish Ale  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 71,
+  "manufacturer": "Wyeast",
+  "code": "1728",
+  "alcohol_tolerance": 12,
+  "min_temperature": 55,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315c9"
+  },
+  "name": "Thames Valley Ale ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 77,
+  "manufacturer": "Wyeast",
+  "code": "1275",
+  "alcohol_tolerance": 10,
+  "min_temperature": 62,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315ca"
+  },
+  "name": "Trappist High Gravity ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 76,
+  "manufacturer": "Wyeast",
+  "code": "3787",
+  "alcohol_tolerance": 12,
+  "min_temperature": 64,
+  "max_temperature": 78
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315cb"
+  },
+  "name": "Weihenstephan Weizen  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 75,
+  "manufacturer": "Wyeast",
+  "code": "3068",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 75
+},
+{
+  "_id": {
+    "$oid": "68263551a6be603e11b315cc"
+  },
+  "name": "West Yorkshire  ",
+  "type": "yeast",
+  "description": "",
+  "attenuation": 69,
+  "manufacturer": "Wyeast",
+  "code": "1469",
+  "alcohol_tolerance": 9,
+  "min_temperature": 64,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "682897381b4534aba15e2c4a"
+  },
+  "name": "Maris Otter",
+  "type": "grain",
+  "description": "",
+  "potential": 37,
+  "color": 3
+}]
