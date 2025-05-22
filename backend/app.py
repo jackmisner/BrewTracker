@@ -23,7 +23,14 @@ def create_app(config_class=None):
     # Initialize extensions
     connect(host=app.config["MONGO_URI"])
     JWTManager(app)
-    CORS(app)
+    CORS(
+        app,
+        origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+        supports_credentials=True,
+    )
+    print("CORS enabled for all domains")
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -55,4 +62,4 @@ def create_app(config_class=None):
 # Run the application
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=True, host="localhost", port=5000)
