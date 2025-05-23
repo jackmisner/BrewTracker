@@ -148,14 +148,25 @@ FLASK_ENV="development"
 
 ### 📦 Database Setup
 
-1. Initialize the database:
+No explicit database setup commands are needed for MongoDB.
+When you first start the application:
+
+1. MongoDB will automatically create the database and collections as needed
+2. The application will check if ingredient data exists
+3. If no ingredients are found, it will automatically seed the database with initial ingredient data from `backend/data/brewtracker.ingredients.json`
+
+To manually verify your MongoDB setup:
 
 ```bash
-cd backend
-flask db upgrade
-```
+# Start the MongoDB shell
+mongosh
 
-Note: When you first start the application, it will automatically check if ingredient data exists in the database. If none is found, it will seed the database with the initial ingredient data from the data/brewtracker.ingredients.json file. You don't need to run any additional commands for this.
+# Switch to your database
+use brewtracker
+
+# Verify collections
+show collections
+```
 
 ## 🏃‍♂️ Running the Application
 
