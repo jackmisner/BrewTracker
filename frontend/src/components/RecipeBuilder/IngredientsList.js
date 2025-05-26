@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 
 function IngredientsList({ ingredients, onRemove, isEditing }) {
-  // console.log("ingredients:", ingredients);
   // Custom sorting function
   const sortIngredients = (ingredients) => {
     // Define the type order

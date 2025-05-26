@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function GrainInput({ grains, onAdd, onCalculate }) {
+function GrainInput({ grains, onAdd, disabled = false }) {
   const [grainForm, setGrainForm] = useState({
     ingredient_id: "",
     color: "",
@@ -38,16 +38,21 @@ function GrainInput({ grains, onAdd, onCalculate }) {
       return;
     }
 
-    // Just call onAdd without awaiting or calling onCalculate
-    onAdd(grainForm);
+    try {
+      // Call onAdd - metrics calculation is handled automatically by the service layer
+      await onAdd(grainForm);
 
-    // Reset form
-    setGrainForm({
-      ingredient_id: "",
-      color: "",
-      amount: "",
-      unit: "lb",
-    });
+      // Reset form on successful add
+      setGrainForm({
+        ingredient_id: "",
+        color: "",
+        amount: "",
+        unit: "lb",
+      });
+    } catch (error) {
+      // Error handling is managed by the service layer and displayed by the parent component
+      console.error("Failed to add grain:", error);
+    }
   };
 
   return (
@@ -65,8 +70,11 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               onChange={handleChange}
               step="0.1"
               min="0"
+              max="100"
               placeholder="Amount"
               className="grain-amount-input"
+              disabled={disabled}
+              required
             />
             <select
               id="grain-unit"
@@ -74,6 +82,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               value={grainForm.unit}
               onChange={handleChange}
               className="grain-unit-select"
+              disabled={disabled}
             >
               <option value="lb">lb</option>
               <option value="oz">oz</option>
@@ -81,6 +90,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               <option value="g">g</option>
             </select>
           </div>
+
           <div className="grain-selector">
             <select
               id="grain-select"
@@ -88,6 +98,8 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               value={grainForm.ingredient_id}
               onChange={handleChange}
               className="grain-select-control"
+              disabled={disabled}
+              required
             >
               <option value="">Select Grains</option>
               {grains.map((grain) => (
@@ -97,6 +109,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               ))}
             </select>
           </div>
+
           <div className="grain-lovibond-container">
             <input
               type="number"
@@ -109,6 +122,7 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               max="550"
               placeholder="Colour"
               className="grain-color-input"
+              disabled={disabled}
             />
             <span className="grain-color-unit">°L</span>
           </div>
@@ -119,11 +133,21 @@ function GrainInput({ grains, onAdd, onCalculate }) {
               type="button"
               onClick={handleSubmit}
               className="grain-add-button btn-primary"
+              disabled={
+                disabled || !grainForm.ingredient_id || !grainForm.amount
+              }
             >
-              Add
+              {disabled ? "Adding..." : "Add"}
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Help text */}
+      <div className="ingredient-help">
+        <small className="help-text">
+          💡 Base malts (Pale, Pilsner) should make up 60-80% of your grain bill
+        </small>
       </div>
     </div>
   );
