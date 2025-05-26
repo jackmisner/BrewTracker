@@ -3,18 +3,22 @@
  * This provides a clean interface for importing services throughout the application
  */
 
-import IngredientService from "./IngredientService";
-import RecipeService from "./RecipeService";
-import MetricService from "./MetricService";
+import ingredientServiceInstance from "./IngredientService";
+import recipeServiceInstance from "./RecipeService";
+import metricServiceInstance from "./MetricService";
 
 // Export individual services
-export { IngredientService, RecipeService, MetricService };
+export {
+  ingredientServiceInstance,
+  recipeServiceInstance,
+  metricServiceInstance,
+};
 
 // Export as grouped services object for convenience
 export const Services = {
-  ingredient: IngredientService,
-  recipe: RecipeService,
-  metrics: MetricService,
+  ingredient: ingredientServiceInstance,
+  recipe: recipeServiceInstance,
+  metrics: metricServiceInstance,
 };
 
 // Export service utilities
@@ -23,8 +27,8 @@ export const ServiceUtils = {
    * Clear all service caches
    */
   clearAllCaches() {
-    IngredientService.clearCache();
-    MetricService.clearCache();
+    ingredientServiceInstance.clearCache();
+    metricServiceInstance.clearCache();
     console.log("All service caches cleared");
   },
 
@@ -41,7 +45,7 @@ export const ServiceUtils = {
 
     try {
       // Test ingredient service
-      await IngredientService.fetchIngredients();
+      await ingredientServiceInstance.fetchIngredients();
     } catch (error) {
       health.ingredient = false;
       health.ingredientError = error.message;

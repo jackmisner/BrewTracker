@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import ApiService from "../../services/api";
-import { RecipeService } from "../../services/RecipeService";
+import RecipeService from "../../services/RecipeService";
 import "../../styles/BrewSessions.css";
 
 const CreateBrewSession = () => {

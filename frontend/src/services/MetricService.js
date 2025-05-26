@@ -321,4 +321,5 @@ class MetricService {
 }
 
 // Export as singleton
-export default MetricService();
+const metricServiceInstance = new MetricService();
+export default metricServiceInstance;

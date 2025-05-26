@@ -262,4 +262,5 @@ class IngredientService {
 }
 
 // Export as singleton
-export default IngredientService();
+const ingredientServiceInstance = new IngredientService();
+export default ingredientServiceInstance;

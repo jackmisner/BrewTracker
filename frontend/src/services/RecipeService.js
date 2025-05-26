@@ -336,4 +336,5 @@ class RecipeService {
 }
 
 // Export as singleton
-export default RecipeService();
+const recipeServiceInstance = new RecipeService();
+export default recipeServiceInstance;
