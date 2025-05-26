@@ -43,17 +43,31 @@ homebrew-tracker/
 │   │   ├── brewing_calculation_core.py  # Core brewing calculation formulae
 │   │   ├── recipe_orm_calculator.py     # Calculations for database models
 │   │   └── recipe_api_calculator.py     # Calculations for API preview requests
-│   ├── requirements.txt
+│   ├── requirements.txt // Backend requirements
 │   └── .env // Environment variables for setting database locations
 ├── frontend/
 │   ├── public/
+│   │   ├── index.html
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── BrewSessions/ // Components used for Brew Sessions ("Brewing" a recipe and tracking fermentation stats)
+│   │   │   ├── Header/ // Website header component with navigation buttons
+│   │   │   ├── RecipeBuilder/ // Components used for creating recipes
+│   │   │   ├── RecipeCard.js
+│   │   │   ├── RecipeCardContainer.js
+│   │   │   └── RecipeActions.js
 │   │   ├── hooks/ // Custom ReactJS hook implementations
 │   │   ├── images/
 │   │   ├── pages/
+│   │   │   ├── AllRecipes.js
+│   │   │   ├── Dashboard.js
+│   │   │   ├── RecipeBuilder.js
+│   │   │   └── ViewRecipe.js
 │   │   ├── services/
 |   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
+│   │   │   ├── index.js // Central export for all business logic services, provides a clean interface for importing services throughout the application
+│   │   │   ├── IngredientService.js // Higher-level abstraction specifically for ingredient-related operations
+│   │   │   ├── MetricService.js // Higher-level abstraction specifically for metric-calculation operations
 |   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
 │   │   ├── styles/ // CSS for various frontend components
 │   │   ├── utils/
@@ -61,7 +75,7 @@ homebrew-tracker/
 │   │   ├── App.js
 │   │   └── index.js
 │   ├── tests/ // Frontend tests
-│   ├── package.json
+│   ├── package.json // Frontend requirements
 │   └── .env // Environment variable for linking frontend to backend
 └── README.md // The document you are currently reading!
 ```
