@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function HopInput({ hops, onAdd, onCalculate }) {
+function HopInput({ hops, onAdd, disabled = false }) {
   const [hopForm, setHopForm] = useState({
     ingredient_id: "",
     amount: "",
@@ -28,26 +28,65 @@ function HopInput({ hops, onAdd, onCalculate }) {
       }
     }
 
+    // If use changed to dry hop, set time unit to days
+    if (name === "use" && value === "dry-hop") {
+      updatedForm.time_unit = "days";
+      updatedForm.time = updatedForm.time || "7"; // Default to 7 days
+    } else if (name === "use" && value === "boil") {
+      updatedForm.time_unit = "minutes";
+      if (updatedForm.time === "7") updatedForm.time = ""; // Clear days default
+    }
+
     setHopForm(updatedForm);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!hopForm.ingredient_id || !hopForm.amount) {
       alert("Please fill in all required fields.");
       return;
     }
-    onAdd(hopForm);
 
-    setHopForm({
-      ingredient_id: "",
-      amount: "",
-      alpha_acid: "",
-      unit: "oz",
-      use: "boil",
-      time: "",
-      time_unit: "minutes",
-    });
+    // Validate hop-specific requirements
+    if (
+      hopForm.use === "boil" &&
+      (!hopForm.time || parseInt(hopForm.time) < 0)
+    ) {
+      alert("Boil time is required for boil additions.");
+      return;
+    }
+
+    try {
+      await onAdd(hopForm);
+
+      // Reset form on successful add
+      setHopForm({
+        ingredient_id: "",
+        amount: "",
+        alpha_acid: "",
+        unit: "oz",
+        use: "boil",
+        time: "",
+        time_unit: "minutes",
+      });
+    } catch (error) {
+      console.error("Failed to add hop:", error);
+    }
+  };
+
+  // Get placeholder text for time input based on use
+  const getTimePlaceholder = () => {
+    switch (hopForm.use) {
+      case "boil":
+        return "60";
+      case "whirlpool":
+        return "20";
+      case "dry-hop":
+        return "7";
+      default:
+        return "0";
+    }
   };
 
   return (
@@ -65,8 +104,11 @@ function HopInput({ hops, onAdd, onCalculate }) {
               onChange={handleChange}
               step="0.1"
               min="0"
+              max="10"
               placeholder="Amount"
               className="hop-amount-input"
+              disabled={disabled}
+              required
             />
             <select
               id="hop-unit"
@@ -74,11 +116,13 @@ function HopInput({ hops, onAdd, onCalculate }) {
               value={hopForm.unit}
               onChange={handleChange}
               className="hop-unit-select"
+              disabled={disabled}
             >
               <option value="oz">oz</option>
               <option value="g">g</option>
             </select>
           </div>
+
           <div className="hop-selector">
             <select
               id="hop-select"
@@ -86,6 +130,8 @@ function HopInput({ hops, onAdd, onCalculate }) {
               value={hopForm.ingredient_id}
               onChange={handleChange}
               className="hop-select-control"
+              disabled={disabled}
+              required
             >
               <option value="">Select Hop</option>
               {hops.map((ingredient) => (
@@ -98,6 +144,7 @@ function HopInput({ hops, onAdd, onCalculate }) {
               ))}
             </select>
           </div>
+
           <div className="hop-alpha-container">
             <input
               type="number"
@@ -107,8 +154,10 @@ function HopInput({ hops, onAdd, onCalculate }) {
               onChange={handleChange}
               step="0.1"
               min="0"
+              max="25"
               placeholder="Alpha Acid"
               className="hop-alpha-input"
+              disabled={disabled}
             />
             <span className="hop-alpha-unit">%AA</span>
           </div>
@@ -120,10 +169,11 @@ function HopInput({ hops, onAdd, onCalculate }) {
               name="time"
               value={hopForm.time}
               onChange={handleChange}
-              step="0.1"
+              step="1"
               min="0"
-              placeholder="Time"
+              placeholder={getTimePlaceholder()}
               className="hop-time-input"
+              disabled={disabled}
             />
             <select
               id="hop-time-unit"
@@ -131,8 +181,9 @@ function HopInput({ hops, onAdd, onCalculate }) {
               value={hopForm.time_unit}
               onChange={handleChange}
               className="hop-time-unit-select"
+              disabled={disabled}
             >
-              <option value="minutes">minutes</option>
+              <option value="minutes">min</option>
               <option value="days">days</option>
             </select>
             <select
@@ -141,6 +192,7 @@ function HopInput({ hops, onAdd, onCalculate }) {
               value={hopForm.use}
               onChange={handleChange}
               className="hop-use-select"
+              disabled={disabled}
             >
               <option value="boil">Boil</option>
               <option value="whirlpool">Whirlpool</option>
@@ -154,11 +206,20 @@ function HopInput({ hops, onAdd, onCalculate }) {
               type="button"
               onClick={handleSubmit}
               className="hop-add-button btn-primary"
+              disabled={disabled || !hopForm.ingredient_id || !hopForm.amount}
             >
-              Add
+              {disabled ? "Adding..." : "Add"}
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Help text */}
+      <div className="ingredient-help">
+        <small className="help-text">
+          💡 Boil hops add bitterness, aroma hops (whirlpool/dry hop) add flavor
+          and aroma
+        </small>
       </div>
     </div>
   );

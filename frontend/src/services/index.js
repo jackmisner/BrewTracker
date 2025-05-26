@@ -29,7 +29,6 @@ export const ServiceUtils = {
   clearAllCaches() {
     ingredientServiceInstance.clearCache();
     metricServiceInstance.clearCache();
-    console.log("All service caches cleared");
   },
 
   /**

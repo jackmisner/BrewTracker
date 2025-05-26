@@ -7,6 +7,8 @@ function RecipeDetails({
   onCancel,
   isEditing,
   saving,
+  canSave,
+  hasUnsavedChanges,
 }) {
   if (!recipe) {
     return <div>Loading recipe details...</div>;
@@ -19,187 +21,194 @@ function RecipeDetails({
       type === "checkbox"
         ? checked
         : type === "number"
-        ? parseFloat(value)
+        ? parseFloat(value) || ""
         : value;
 
-    // Just pass the field name and new value, not the entire recipe object
+    // Call onChange with field name and new value
     onChange(name, newValue);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(e);
   };
 
   return (
     <div className="recipe-details card">
-      {isEditing ? (
-        // Edit Form
-        <>
-          <h2 className="card-title">Edit Recipe Details</h2>
-          <form onSubmit={onSubmit}>
-            <div className="form-group">
-              <label htmlFor="name">Recipe Name *</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={recipe.name}
-                onChange={handleChange}
-                className="form-control"
-                required
-              />
-            </div>
+      <h2 className="card-title">
+        {isEditing ? "Recipe Details" : "New Recipe Details"}
+        {hasUnsavedChanges && (
+          <span className="unsaved-indicator" title="Unsaved changes">
+            *
+          </span>
+        )}
+      </h2>
 
-            <div className="form-group">
-              <label htmlFor="style">Style</label>
-              <input
-                type="text"
-                id="style"
-                name="style"
-                value={recipe.style || ""}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="name">Recipe Name *</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={recipe.name}
+            onChange={handleChange}
+            className="form-control"
+            required
+            placeholder="Enter recipe name"
+            disabled={saving}
+          />
+        </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="batch_size">Batch Size (gallons) *</label>
-                <input
-                  type="number"
-                  id="batch_size"
-                  name="batch_size"
-                  value={recipe.batch_size}
-                  onChange={handleChange}
-                  className="form-control"
-                  min="0.5"
-                  step="0.5"
-                  required
-                />
-              </div>
+        <div className="form-group">
+          <label htmlFor="style">Beer Style</label>
+          <input
+            type="text"
+            id="style"
+            name="style"
+            value={recipe.style || ""}
+            onChange={handleChange}
+            className="form-control"
+            placeholder="e.g., American IPA, Stout, Wheat Beer"
+            disabled={saving}
+          />
+        </div>
 
-              <div className="form-group">
-                <label htmlFor="boil_time">Boil Time (minutes)</label>
-                <input
-                  type="number"
-                  id="boil_time"
-                  name="boil_time"
-                  value={recipe.boil_time || ""}
-                  onChange={handleChange}
-                  className="form-control"
-                  min="0"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="efficiency">Efficiency (%)</label>
-                <input
-                  type="number"
-                  id="efficiency"
-                  name="efficiency"
-                  value={recipe.efficiency || ""}
-                  onChange={handleChange}
-                  className="form-control"
-                  min="0"
-                  max="100"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                name="description"
-                value={recipe.description || ""}
-                onChange={handleChange}
-                className="form-control"
-                rows="3"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="notes">Brewing Notes</label>
-              <textarea
-                id="notes"
-                name="notes"
-                value={recipe.notes || ""}
-                onChange={handleChange}
-                className="form-control"
-                rows="3"
-              />
-            </div>
-
-            <div className="form-check mb-4">
-              <input
-                type="checkbox"
-                id="is_public"
-                name="is_public"
-                checked={recipe.is_public || false}
-                onChange={handleChange}
-                className="form-check-input"
-              />
-              <label className="form-check-label" htmlFor="is_public">
-                Make Recipe Public
-              </label>
-            </div>
-
-            <div className="form-buttons">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Recipe"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onCancel}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </>
-      ) : (
-        // Display View
-        <>
-          <h2 className="card-title">{recipe.name}</h2>
-          <div className="recipe-info">
-            {recipe.style && (
-              <p>
-                <strong>Style:</strong> {recipe.style}
-              </p>
-            )}
-            <p>
-              <strong>Batch Size:</strong> {recipe.batch_size} gallons
-            </p>
-            {recipe.boil_time && (
-              <p>
-                <strong>Boil Time:</strong> {recipe.boil_time} minutes
-              </p>
-            )}
-            {recipe.efficiency && (
-              <p>
-                <strong>Efficiency:</strong> {recipe.efficiency}%
-              </p>
-            )}
-            {recipe.description && (
-              <div className="mt-3">
-                <strong>Description:</strong>
-                <p>{recipe.description}</p>
-              </div>
-            )}
-            {recipe.notes && (
-              <div className="mt-3">
-                <strong>Brewing Notes:</strong>
-                <p>{recipe.notes}</p>
-              </div>
-            )}
-            <p>
-              <strong>Public Recipe:</strong> {recipe.is_public ? "Yes" : "No"}
-            </p>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="batch_size">Batch Size (gallons) *</label>
+            <input
+              type="number"
+              id="batch_size"
+              name="batch_size"
+              value={recipe.batch_size}
+              onChange={handleChange}
+              className="form-control"
+              min="0.5"
+              max="100"
+              step="0.5"
+              required
+              disabled={saving}
+            />
           </div>
-        </>
-      )}
+
+          <div className="form-group">
+            <label htmlFor="boil_time">Boil Time (minutes)</label>
+            <input
+              type="number"
+              id="boil_time"
+              name="boil_time"
+              value={recipe.boil_time || ""}
+              onChange={handleChange}
+              className="form-control"
+              min="15"
+              max="180"
+              step="15"
+              placeholder="60"
+              disabled={saving}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="efficiency">Mash Efficiency (%)</label>
+            <input
+              type="number"
+              id="efficiency"
+              name="efficiency"
+              value={recipe.efficiency || ""}
+              onChange={handleChange}
+              className="form-control"
+              min="50"
+              max="95"
+              step="5"
+              placeholder="75"
+              disabled={saving}
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            value={recipe.description || ""}
+            onChange={handleChange}
+            className="form-control form-textarea"
+            rows="3"
+            placeholder="Describe your recipe, inspiration, or tasting notes"
+            disabled={saving}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="notes">Brewing Notes</label>
+          <textarea
+            id="notes"
+            name="notes"
+            value={recipe.notes || ""}
+            onChange={handleChange}
+            className="form-control form-textarea"
+            rows="3"
+            placeholder="Special instructions, tips, or modifications"
+            disabled={saving}
+          />
+        </div>
+
+        <div className="form-check">
+          <input
+            type="checkbox"
+            id="is_public"
+            name="is_public"
+            checked={recipe.is_public || false}
+            onChange={handleChange}
+            className="form-check-input"
+            disabled={saving}
+          />
+          <label className="form-check-label" htmlFor="is_public">
+            Make Recipe Public
+            <small className="form-help-text">
+              Other users will be able to view and clone this recipe
+            </small>
+          </label>
+        </div>
+
+        <div className="form-actions">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className={`btn btn-primary ${!canSave ? "btn-disabled" : ""}`}
+            disabled={!canSave || saving}
+            title={!canSave ? "Add at least one ingredient to save" : ""}
+          >
+            {saving ? (
+              <>
+                <span className="button-spinner"></span>
+                Saving...
+              </>
+            ) : (
+              `${isEditing ? "Update" : "Save"} Recipe`
+            )}
+          </button>
+        </div>
+
+        {/* Recipe validation info */}
+        {!canSave && (
+          <div className="validation-info">
+            <small className="validation-message">
+              💡 Add at least one grain and yeast to save your recipe
+            </small>
+          </div>
+        )}
+      </form>
     </div>
   );
 }
