@@ -230,6 +230,7 @@ Visit `http://localhost:3000` to access the application.
   - React
   - React Router
   - Axios
+  - Fuse.js for fuzzy searching
 
 - Backend:
   - Flask
