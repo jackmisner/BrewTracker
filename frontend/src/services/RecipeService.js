@@ -284,11 +284,7 @@ class RecipeService {
    */
   getRecipeDisplayName(recipe) {
     if (!recipe) return "Unknown Recipe";
-
     let displayName = recipe.name;
-    if (recipe.version && recipe.version > 1) {
-      displayName += ` (v${recipe.version})`;
-    }
 
     return displayName;
   }
