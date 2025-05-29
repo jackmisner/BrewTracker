@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import ApiService from "../services/api";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+  getSrmColour,
+} from "../utils/formatUtils";
+import "../styles/Dashboard.css";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [recentRecipes, setRecentRecipes] = useState([]);
   const [recentSessions, setRecentSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dashboardStats, setDashboardStats] = useState({
+    totalRecipes: 0,
+    activeFerments: 0,
+    completedBatches: 0,
+    avgRating: 0,
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -16,7 +31,6 @@ function Dashboard() {
         const sessionsResponse = await ApiService.brewSessions.getAll();
 
         // Get recent items (last 5)
-        // Sort by created_at for recipes and brew_date for sessions
         const sortedRecipes = recipesResponse.data.recipes
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .slice(0, 5);
@@ -25,8 +39,32 @@ function Dashboard() {
           .sort((a, b) => new Date(b.brew_date) - new Date(a.brew_date))
           .slice(0, 5);
 
+        // Calculate dashboard stats
+        const totalRecipes = recipesResponse.data.recipes.length;
+        const activeFerments = sessionsResponse.data.brew_sessions.filter(
+          (s) => s.status === "fermenting"
+        ).length;
+        const completedBatches = sessionsResponse.data.brew_sessions.filter(
+          (s) => s.status === "completed"
+        ).length;
+
+        const ratedSessions = sessionsResponse.data.brew_sessions.filter(
+          (s) => s.batch_rating && s.batch_rating > 0
+        );
+        const avgRating =
+          ratedSessions.length > 0
+            ? ratedSessions.reduce((sum, s) => sum + s.batch_rating, 0) /
+              ratedSessions.length
+            : 0;
+
         setRecentRecipes(sortedRecipes);
         setRecentSessions(sortedSessions);
+        setDashboardStats({
+          totalRecipes,
+          activeFerments,
+          completedBatches,
+          avgRating: avgRating.toFixed(1),
+        });
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data");
@@ -38,111 +76,299 @@ function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  const getStatusColor = (status) => {
+    const colors = {
+      planned: "#3b82f6",
+      "in-progress": "#f59e0b",
+      fermenting: "#8b5cf6",
+      conditioning: "#10b981",
+      completed: "#059669",
+      archived: "#6b7280",
+    };
+    return colors[status] || "#6b7280";
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return <div className="dashboard-loading">Loading dashboard...</div>;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
-        {error}
-      </div>
-    );
+    return <div className="dashboard-error">{error}</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="dashboard-container">
+      {/* Header */}
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">🍺 Brewing Dashboard</h1>
+        <p className="dashboard-subtitle">
+          Welcome back! Here's what's brewing in your brewery.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Recipes Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Recent Recipes</h2>
-            <Link
-              to="/recipes/new"
-              className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+      {/* Quick Stats */}
+      <div className="dashboard-stats">
+        <div className="stat-card">
+          <div className="stat-value">{dashboardStats.totalRecipes}</div>
+          <div className="stat-label">Total Recipes</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-value ferments">
+            {dashboardStats.activeFerments}
+          </div>
+          <div className="stat-label">Active Ferments</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-value completed">
+            {dashboardStats.completedBatches}
+          </div>
+          <div className="stat-label">Completed Batches</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-value rating">
+            {dashboardStats.avgRating > 0
+              ? `${dashboardStats.avgRating}★`
+              : "N/A"}
+          </div>
+          <div className="stat-label">Avg Rating</div>
+        </div>
+      </div>
+
+      <div className="dashboard-content">
+        {/* Recent Recipes */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Recent Recipes</h2>
+            <button
+              onClick={() => navigate("/recipes/new")}
+              className="primary-button"
             >
-              New Recipe
-            </Link>
+              + New Recipe
+            </button>
           </div>
 
-          {recentRecipes.length > 0 ? (
-            <ul className="divide-y divide-gray-200">
-              {recentRecipes.map((recipe) => (
-                <li key={recipe.recipe_id} className="py-3">
-                  <Link
-                    to={`/recipes/${recipe.recipe_id}`}
-                    className="flex justify-between hover:bg-amber-50 p-2 rounded"
-                  >
-                    <div>
-                      <p className="font-medium">{recipe.name}</p>
-                      <p className="text-sm text-gray-600">{recipe.style}</p>
+          <div className="cards-container">
+            {recentRecipes.length > 0 ? (
+              recentRecipes.map((recipe) => (
+                <div key={recipe.recipe_id} className="recipe-card">
+                  <div className="recipe-card-header">
+                    <div className="recipe-info">
+                      <h3 className="recipe-name">{recipe.name}</h3>
+                      <p className="recipe-style">{recipe.style}</p>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(recipe.created_at).toLocaleDateString()}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">
-              No recipes yet. Create your first recipe!
-            </p>
-          )}
+                    <div
+                      className="color-swatch"
+                      style={{
+                        backgroundColor: getSrmColour(recipe.estimated_srm),
+                      }}
+                      title={`SRM: ${formatSrm(recipe.estimated_srm)}`}
+                    ></div>
+                  </div>
 
-          <div className="mt-4 text-right">
-            <Link to="/recipes" className="text-amber-600 hover:text-amber-800">
+                  {/* Metrics */}
+                  <div className="recipe-metrics">
+                    <div className="metric">
+                      <div className="metric-value">
+                        {formatGravity(recipe.estimated_og)}
+                      </div>
+                      <div className="metric-label">OG</div>
+                    </div>
+                    <div className="metric">
+                      <div className="metric-value">
+                        {formatAbv(recipe.estimated_abv)}
+                      </div>
+                      <div className="metric-label">ABV</div>
+                    </div>
+                    <div className="metric">
+                      <div className="metric-value">
+                        {formatIbu(recipe.estimated_ibu)}
+                      </div>
+                      <div className="metric-label">IBU</div>
+                    </div>
+                    <div className="metric">
+                      <div className="metric-value">
+                        {formatSrm(recipe.estimated_srm)}
+                      </div>
+                      <div className="metric-label">SRM</div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="card-actions">
+                    <button
+                      onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
+                      className="action-button view"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate(`/recipes/${recipe.recipe_id}/edit`)
+                      }
+                      className="action-button edit"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/brew-sessions/new?recipeId=${recipe.recipe_id}`
+                        )
+                      }
+                      className="action-button brew"
+                    >
+                      Brew
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <p>No recipes yet. Create your first recipe!</p>
+                <button
+                  onClick={() => navigate("/recipes/new")}
+                  className="primary-button"
+                >
+                  Create Recipe
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="section-footer">
+            <Link to="/recipes" className="view-all-link">
               View all recipes →
             </Link>
           </div>
         </div>
 
-        {/* Recent Brew Sessions Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Recent Brew Sessions</h2>
-            <Link
-              to="/brew-sessions/new"
-              className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+        {/* Recent Brew Sessions */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Recent Brew Sessions</h2>
+            <button
+              onClick={() => navigate("/brew-sessions/new")}
+              className="primary-button"
             >
-              New Session
-            </Link>
+              + New Session
+            </button>
           </div>
 
-          {recentSessions.length > 0 ? (
-            <ul className="divide-y divide-gray-200">
-              {recentSessions.map((session) => (
-                <li key={session.session_id} className="py-3">
-                  <Link
-                    to={`/brew-sessions/${session.session_id}`}
-                    className="flex justify-between hover:bg-amber-50 p-2 rounded"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {session.name || `Brew #${session.session_id}`}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Status: {session.status}
+          <div className="cards-container">
+            {recentSessions.length > 0 ? (
+              recentSessions.map((session) => (
+                <div key={session.session_id} className="session-card">
+                  <div className="session-card-header">
+                    <div className="session-info">
+                      <h3 className="session-name">
+                        {session.name ||
+                          `Session #${session.session_id.substring(0, 6)}`}
+                      </h3>
+                      <p className="session-date">
+                        {formatDate(session.brew_date)}
                       </p>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(session.brew_date).toLocaleDateString()}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No brew sessions recorded yet.</p>
-          )}
+                    <span
+                      className="status-badge"
+                      style={{
+                        backgroundColor: `${getStatusColor(session.status)}20`,
+                        color: getStatusColor(session.status),
+                      }}
+                    >
+                      {session.status.replace("-", " ")}
+                    </span>
+                  </div>
 
-          <div className="mt-4 text-right">
-            <Link
-              to="/brew-sessions"
-              className="text-amber-600 hover:text-amber-800"
-            >
+                  {/* Session Metrics */}
+                  <div className="session-metrics">
+                    <div className="metric">
+                      <div className="metric-value">
+                        {session.actual_og
+                          ? formatGravity(session.actual_og)
+                          : "TBD"}
+                      </div>
+                      <div className="metric-label">OG</div>
+                    </div>
+                    <div className="metric">
+                      <div className="metric-value">
+                        {session.actual_fg
+                          ? formatGravity(session.actual_fg)
+                          : "TBD"}
+                      </div>
+                      <div className="metric-label">FG</div>
+                    </div>
+                    <div className="metric">
+                      <div className="metric-value">
+                        {session.actual_abv
+                          ? formatAbv(session.actual_abv)
+                          : "TBD"}
+                      </div>
+                      <div className="metric-label">ABV</div>
+                    </div>
+                  </div>
+
+                  {/* Rating for completed sessions */}
+                  {session.batch_rating && (
+                    <div className="session-rating">
+                      <span className="rating-label">Rating:</span>
+                      <div className="stars">
+                        {[...Array(5)].map((_, i) => (
+                          <span
+                            key={i}
+                            className={`star ${
+                              i < session.batch_rating ? "filled" : ""
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="card-actions">
+                    <button
+                      onClick={() =>
+                        navigate(`/brew-sessions/${session.session_id}`)
+                      }
+                      className="action-button view"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate(`/brew-sessions/${session.session_id}/edit`)
+                      }
+                      className="action-button edit"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <p>No brew sessions recorded yet.</p>
+                <button
+                  onClick={() => navigate("/brew-sessions/new")}
+                  className="primary-button"
+                >
+                  Start Brewing
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="section-footer">
+            <Link to="/brew-sessions" className="view-all-link">
               View all sessions →
             </Link>
           </div>
