@@ -46,16 +46,21 @@ class IngredientService {
       grain: [],
       hop: [],
       yeast: [],
-      adjunct: [],
+      other: [], // Changed from 'adjunct' to 'other'
     };
 
     ingredients.forEach((ingredient) => {
-      if (grouped[ingredient.type]) {
-        grouped[ingredient.type].push(ingredient);
+      //  Map old 'adjunct' type to 'other' for backward compatibility
+      const ingredientType =
+        ingredient.type === "adjunct" ? "other" : ingredient.type;
+
+      if (grouped[ingredientType]) {
+        grouped[ingredientType].push(ingredient);
       } else {
         console.warn(
-          `Ingredient type ${ingredient.type} not recognized. Skipping...`
+          `Ingredient type ${ingredient.type} not recognized. Adding to 'other'...`
         );
+        grouped.other.push(ingredient);
       }
     });
 
@@ -119,6 +124,14 @@ class IngredientService {
   sortIngredients(ingredients) {
     const typeOrder = { grain: 1, hop: 2, yeast: 3, adjunct: 4 };
     const hopUseOrder = { boil: 1, whirlpool: 2, "dry hop": 3 };
+    const grainTypeOrder = {
+      base_malt: 1,
+      adjunct_grain: 2,
+      specialty_malt: 3,
+      caramel_crystal: 4,
+      roasted: 5,
+      smoked: 6,
+    };
 
     return [...ingredients].sort((a, b) => {
       const typeA = a.type || "";
@@ -126,13 +139,24 @@ class IngredientService {
       const orderA = typeOrder[typeA] || 999;
       const orderB = typeOrder[typeB] || 999;
 
-      // Sort by type first
+      // Sort by ingredient type first
       if (orderA !== orderB) {
         return orderA - orderB;
       }
 
       // Type-specific sorting
       if (typeA === "grain") {
+        // Sort grains by grain_type first, then by name
+        const grainTypeA = (a.grain_type || "").toLowerCase();
+        const grainTypeB = (b.grain_type || "").toLowerCase();
+        const grainOrderA = grainTypeOrder[grainTypeA] || 999;
+        const grainOrderB = grainTypeOrder[grainTypeB] || 999;
+
+        if (grainOrderA !== grainOrderB) {
+          return grainOrderA - grainOrderB;
+        }
+
+        // Within same grain type, sort by name
         return a.name.localeCompare(b.name);
       } else if (typeA === "hop") {
         const useA = (a.use || "").toLowerCase();
@@ -197,18 +221,23 @@ class IngredientService {
    * Format ingredients for API submission
    */
   formatIngredientsForApi(ingredients) {
+    if (!ingredients || !Array.isArray(ingredients)) {
+      return [];
+    }
+
     return ingredients.map((ing) => ({
       ingredient_id: ing.ingredient_id,
-      name: ing.name,
-      type: ing.type,
-      amount: parseFloat(ing.amount),
-      unit: ing.unit,
+      name: ing.name || "",
+      type: ing.type || "",
+      amount: parseFloat(ing.amount) || 0,
+      unit: ing.unit || "",
       use: ing.use || "",
       time: parseInt(ing.time) || 0,
-      potential: ing.potential,
-      color: ing.color,
-      alpha_acid: ing.alpha_acid,
-      attenuation: ing.attenuation,
+      potential: ing.potential || null,
+      color: ing.color || null,
+      grain_type: ing.grain_type || null,
+      alpha_acid: ing.alpha_acid || null,
+      attenuation: ing.attenuation || null,
     }));
   }
 
@@ -232,6 +261,7 @@ class IngredientService {
     if (type === "grain") {
       if (ingredient.potential) metadata.potential = ingredient.potential;
       if (ingredient.color) metadata.color = ingredient.color;
+      if (ingredient.grain_type) metadata.grain_type = ingredient.grain_type;
     } else if (type === "hop") {
       if (ingredient.alpha_acid) metadata.alpha_acid = ingredient.alpha_acid;
     } else if (type === "yeast") {

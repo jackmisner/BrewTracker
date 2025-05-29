@@ -105,6 +105,7 @@ class MetricService {
       time: parseInt(ing.time) || 0,
       potential: ing.potential || null,
       color: ing.color || null,
+      grain_type: ing.grain_type || null,
       alpha_acid: ing.alpha_acid || null,
       attenuation: ing.attenuation || null,
     }));
