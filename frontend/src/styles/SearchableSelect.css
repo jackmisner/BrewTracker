@@ -1,0 +1,325 @@
+/* SearchableSelect.css - Styles for the searchable select component with Fuse.js */
+
+.searchable-select {
+  position: relative;
+  width: 100%;
+}
+
+.searchable-select-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchable-select-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchable-select-input:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.searchable-select-input:disabled {
+  background-color: #f3f4f6; /* gray-100 */
+  color: #6b7280; /* gray-500 */
+  cursor: not-allowed;
+}
+
+.searchable-select-clear {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6b7280; /* gray-500 */
+  cursor: pointer;
+  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.searchable-select-clear:hover {
+  background-color: #f3f4f6; /* gray-100 */
+  color: #374151; /* gray-700 */
+}
+
+.searchable-select-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280; /* gray-500 */
+  pointer-events: none;
+  transition: transform 0.2s;
+}
+
+.searchable-select.open .searchable-select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-top: none;
+  border-radius: 0 0 0.25rem 0.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-height: 200px;
+  overflow-y: auto;
+  animation: dropdown-appear 0.15s ease-out;
+}
+
+@keyframes dropdown-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchable-select-option {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6; /* gray-100 */
+  transition: background-color 0.15s;
+}
+
+.searchable-select-option:last-child {
+  border-bottom: none;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option.highlighted {
+  background-color: #fffbeb; /* amber-50 */
+}
+
+.searchable-select-option.highlighted {
+  background-color: #fef3c7; /* amber-100 */
+}
+
+.option-name {
+  font-weight: 500;
+  color: #111827; /* gray-900 */
+  margin-bottom: 0.125rem;
+  line-height: 1.3;
+}
+
+.option-description {
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.125rem;
+  line-height: 1.3;
+}
+
+.option-manufacturer {
+  font-size: 0.75rem;
+  color: #9ca3af; /* gray-400 */
+  font-style: italic;
+}
+
+/* Fuse.js search highlighting */
+.search-highlight,
+mark.search-highlight {
+  background-color: #fef3c7; /* amber-100 */
+  color: #92400e; /* amber-800 */
+  font-weight: 600;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+  margin: 0 0.0625rem;
+  border: none;
+}
+
+/* Development score display */
+.option-score {
+  font-size: 0.6875rem;
+  color: #9ca3af; /* gray-400 */
+  margin-top: 0.25rem;
+  font-family: monospace;
+  padding: 0.125rem 0.25rem;
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 0.125rem;
+  display: inline-block;
+}
+
+.searchable-select-no-results {
+  padding: 0.75rem;
+  text-align: center;
+  color: #6b7280; /* gray-500 */
+  font-style: italic;
+  border-bottom: 1px solid #f3f4f6; /* gray-100 */
+}
+
+/* Enhanced no results message */
+.searchable-select-no-results::before {
+  content: "🔍 ";
+  margin-right: 0.5rem;
+}
+
+/* Scrollbar styling for dropdown */
+.searchable-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-track {
+  background: #f3f4f6; /* gray-100 */
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* gray-300 */
+  border-radius: 3px;
+}
+
+.searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
+}
+
+/* Focus styles for accessibility */
+.searchable-select-option:focus {
+  outline: 2px solid #d97706; /* amber-600 */
+  outline-offset: -2px;
+}
+
+/* Loading state (if needed) */
+.searchable-select-loading {
+  padding: 0.75rem;
+  text-align: center;
+  color: #6b7280; /* gray-500 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.searchable-select-loading::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #d97706;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Better text selection within highlighted matches */
+.search-highlight::selection {
+  background-color: #d97706; /* amber-600 */
+  color: white;
+}
+
+/* Improved option layout for complex content */
+.searchable-select-option {
+  position: relative;
+}
+
+.searchable-select-option .option-name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.searchable-select-option .option-description {
+  word-break: break-word;
+  max-height: 2.6em; /* Limit to ~2 lines */
+  overflow: hidden;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .searchable-select-dropdown {
+    max-height: 150px;
+  }
+  
+  .searchable-select-option {
+    padding: 0.625rem;
+  }
+  
+  .option-name {
+    font-size: 0.875rem;
+  }
+  
+  .option-description {
+    font-size: 0.8125rem;
+  }
+  
+  .search-highlight {
+    padding: 0.0625rem 0.125rem;
+    margin: 0 0.03125rem;
+  }
+}
+
+/* Animation for highlighting effect */
+@keyframes highlight-pulse {
+  0% { 
+    background-color: #fef3c7; /* amber-100 */
+    transform: scale(1);
+  }
+  50% { 
+    background-color: #fcd34d; /* amber-300 */
+    transform: scale(1.05);
+  }
+  100% { 
+    background-color: #fef3c7; /* amber-100 */
+    transform: scale(1);
+  }
+}
+
+.search-highlight {
+  animation: highlight-pulse 0.3s ease-in-out;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .search-highlight {
+    background-color: #000000;
+    color: #ffffff;
+    font-weight: 700;
+  }
+  
+  .searchable-select-option.highlighted {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-appear,
+  .highlight-pulse,
+  .spin {
+    animation: none;
+  }
+  
+  .searchable-select-arrow {
+    transition: none;
+  }
+}

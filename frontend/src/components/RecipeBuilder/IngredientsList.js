@@ -1,76 +1,11 @@
 import React, { useMemo } from "react";
+import { Services } from "../../services";
 
 function IngredientsList({ ingredients, onRemove, isEditing }) {
-  // Custom sorting function
-  const sortIngredients = (ingredients) => {
-    // Define the type order
-    const typeOrder = {
-      grain: 1,
-      hop: 2,
-      yeast: 3,
-      adjunct: 4,
-    };
-
-    // Define the use order for hops
-    const hopUseOrder = {
-      boil: 1,
-      whirlpool: 2,
-      "dry hop": 3,
-    };
-
-    // Create a copy of the ingredients array to avoid mutating the original
-    return [...ingredients].sort((a, b) => {
-      // First, sort by ingredient type according to the specified order
-      const typeA = a.type || "";
-      const typeB = b.type || "";
-
-      // Get the order values, defaulting to a high number for unknown types
-      const orderA = typeOrder[typeA] || 999;
-      const orderB = typeOrder[typeB] || 999;
-
-      // If types are different, sort by type order
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-
-      // If types are the same, apply specific sorting logic for each type
-      if (typeA === "grain") {
-        // Group identical grains together
-        if (a.name !== b.name) {
-          return a.name.localeCompare(b.name);
-        }
-        return 0;
-      } else if (typeA === "hop") {
-        // Sort hops by use type (boil, whirlpool, dry hop)
-        const useA = (a.use || "").toLowerCase();
-        const useB = (b.use || "").toLowerCase();
-
-        const useOrderA = hopUseOrder[useA] || 999;
-        const useOrderB = hopUseOrder[useB] || 999;
-
-        if (useOrderA !== useOrderB) {
-          return useOrderA - useOrderB;
-        }
-
-        // For same use type, sort by time (higher first)
-        const timeA = parseFloat(a.time) || 0;
-        const timeB = parseFloat(b.time) || 0;
-
-        return timeB - timeA; // Higher time first
-      } else if (typeA === "yeast") {
-        // Just sort yeast alphabetically if needed
-        return a.name.localeCompare(b.name);
-      }
-
-      // Default case - sort by ID to maintain stable order
-      return a.id - b.id;
-    });
-  };
-
-  // Sort the ingredients using useMemo to only recalculate when ingredients change
+  // Sort ingredients using the centralized service method
   const sortedIngredients = useMemo(() => {
     if (!ingredients || ingredients.length === 0) return [];
-    return sortIngredients(ingredients);
+    return Services.ingredient.sortIngredients(ingredients);
   }, [ingredients]);
 
   if (!ingredients || ingredients.length === 0) {
@@ -81,6 +16,24 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       </div>
     );
   }
+  const mapGrainType = (type) => {
+    switch (type) {
+      case "base_malt":
+        return "Base Malt";
+      case "specialty_malt":
+        return "Specialty Malt";
+      case "adjunct_grain":
+        return "Adjunct";
+      case "caramel_crystal":
+        return "Caramel/Crystal";
+      case "roasted":
+        return "Roasted";
+      case "smoked":
+        return "Smoked";
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1);
+    }
+  };
 
   return (
     <div className="card">
@@ -91,6 +44,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
           <thead>
             <tr>
               {isEditing && <th>Type</th>}
+              {isEditing && <th>Grain Type</th>}
               <th>Ingredient</th>
               <th>Amount</th>
               <th>Use</th>
@@ -108,6 +62,9 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
                 {isEditing && (
                   <td className="ingredient-type">{ingredient.type}</td>
                 )}
+                <td className="ingredient-subtype">
+                  {mapGrainType(ingredient.grain_type)}
+                </td>
                 <td className="ingredient-name">{ingredient.name}</td>
                 <td>
                   {ingredient.amount} {ingredient.unit}

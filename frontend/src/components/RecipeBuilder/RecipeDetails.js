@@ -69,7 +69,7 @@ function RecipeDetails({
             value={recipe.style || ""}
             onChange={handleChange}
             className="form-control"
-            placeholder="e.g., American IPA, Stout, Wheat Beer"
+            placeholder="e.g. American IPA, Stout, Wheat Beer"
             disabled={saving}
           />
         </div>
@@ -120,7 +120,7 @@ function RecipeDetails({
               className="form-control"
               min="50"
               max="95"
-              step="5"
+              step="1"
               placeholder="75"
               disabled={saving}
             />
@@ -136,7 +136,7 @@ function RecipeDetails({
             onChange={handleChange}
             className="form-control form-textarea"
             rows="3"
-            placeholder="Describe your recipe, inspiration, or tasting notes"
+            placeholder="Describe your recipe, inspiration, or other relevant details"
             disabled={saving}
           />
         </div>
@@ -167,9 +167,13 @@ function RecipeDetails({
           />
           <label className="form-check-label" htmlFor="is_public">
             Make Recipe Public
-            <small className="form-help-text">
-              Other users will be able to view and clone this recipe
-            </small>
+            {recipe.is_public && (
+              <div>
+                <small className="form-help-text">
+                  Other users will be able to view and clone this recipe
+                </small>
+              </div>
+            )}
           </label>
         </div>
 

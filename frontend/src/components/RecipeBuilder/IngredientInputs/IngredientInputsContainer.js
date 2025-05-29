@@ -1,7 +1,7 @@
-import GrainInput from "./GrainInput";
+import FermentableInput from "./FermentableInput";
 import HopInput from "./HopInput";
 import YeastInput from "./YeastInput";
-import AdjunctInput from "./AdjunctInput";
+import OtherInput from "./OtherInput";
 
 function IngredientInputsContainer({
   ingredients,
@@ -11,7 +11,7 @@ function IngredientInputsContainer({
   return (
     <div className="ingredient-inputs-container">
       <div className="grid-col-2-3">
-        <GrainInput
+        <FermentableInput
           grains={ingredients.grain}
           onAdd={(data) => addIngredient("grain", data)}
           disabled={disabled}
@@ -30,9 +30,9 @@ function IngredientInputsContainer({
         disabled={disabled}
       />
 
-      <AdjunctInput
-        adjuncts={ingredients.adjunct}
-        onAdd={(data) => addIngredient("adjunct", data)}
+      <OtherInput
+        others={ingredients.other || ingredients.adjunct || []}
+        onAdd={(data) => addIngredient("other", data)}
         disabled={disabled}
       />
     </div>

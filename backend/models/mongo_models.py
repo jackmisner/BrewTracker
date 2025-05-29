@@ -43,16 +43,19 @@ class User(Document):
         }
 
 
-# Ingredient model
 class Ingredient(Document):
     name = StringField(required=True, max_length=100)
-    type = StringField(required=True, max_length=50)  # grain, hop, yeast, adjunct, etc.
+    type = StringField(required=True, max_length=50)  # grain, hop, yeast, other, etc.
     description = StringField()
 
     # Type-specific properties
     # For grains
     potential = FloatField()  # Potential gravity points per pound per gallon
     color = FloatField()  # Color in Lovibond
+    # NEW FIELD: Add grain type categorisation
+    grain_type = StringField(
+        max_length=50
+    )  # base_malt, roasted, caramel_crystal, smoked, adjunct_grain
 
     # For hops
     alpha_acid = FloatField()  # Alpha acid percentage
@@ -65,7 +68,7 @@ class Ingredient(Document):
     min_temperature = FloatField()  # Minimum fermentation temperature
     max_temperature = FloatField()  # Maximum fermentation temperature
 
-    meta = {"collection": "ingredients", "indexes": ["name", "type"]}
+    meta = {"collection": "ingredients", "indexes": ["name", "type", "grain_type"]}
 
     def to_dict(self):
         return {
@@ -75,6 +78,7 @@ class Ingredient(Document):
             "description": self.description,
             "potential": self.potential,
             "color": self.color,
+            "grain_type": self.grain_type,  # Add to serialization
             "alpha_acid": self.alpha_acid,
             "attenuation": self.attenuation,
             "manufacturer": self.manufacturer,

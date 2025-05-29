@@ -202,6 +202,7 @@ class RecipeService {
         time: parseInt(ing.time) || 0,
         potential: ing.potential,
         color: ing.color,
+        grain_type: ing.grain_type,
         alpha_acid: ing.alpha_acid,
         attenuation: ing.attenuation,
       }));
