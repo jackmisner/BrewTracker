@@ -1,4 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import SearchableSelect from "../../SearchableSelect";
+import "../../../styles/SearchableSelect.css";
 
 function HopInput({ hops, onAdd, disabled = false }) {
   const [hopForm, setHopForm] = useState({
@@ -9,56 +11,163 @@ function HopInput({ hops, onAdd, disabled = false }) {
     use: "boil",
     time: "",
     time_unit: "minutes",
+    selectedIngredient: null,
   });
+
+  const [errors, setErrors] = useState({});
+
+  // Custom Fuse.js options for hops - fuzzy matching for varieties
+  const hopFuseOptions = {
+    threshold: 0.4, // More forgiving for hop varieties
+    keys: [
+      { name: "name", weight: 1.0 },
+      { name: "description", weight: 0.5 },
+      { name: "origin", weight: 0.3 },
+    ],
+    includeMatches: true,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+    useExtendedSearch: true, // Allow OR searches like "cascade | centennial"
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     // Create updated form data
-    const updatedForm = {
+    let updatedForm = {
       ...hopForm,
       [name]: value,
     };
 
-    // If the ingredient_id changed, look up the alpha_acid value
-    if (name === "ingredient_id" && value) {
-      const selectedHop = hops.find((hop) => hop.ingredient_id === value);
-      if (selectedHop && selectedHop.alpha_acid) {
-        updatedForm.alpha_acid = selectedHop.alpha_acid;
+    // If use changed, adjust time defaults and units
+    if (name === "use") {
+      if (value === "dry-hop") {
+        updatedForm.time_unit = "days";
+        updatedForm.time = updatedForm.time || "7"; // Default to 7 days
+      } else if (value === "boil") {
+        updatedForm.time_unit = "minutes";
+        if (updatedForm.time === "7") updatedForm.time = ""; // Clear days default
+      } else if (value === "whirlpool") {
+        updatedForm.time_unit = "minutes";
+        updatedForm.time = updatedForm.time || "20"; // Default to 20 minutes
       }
     }
 
-    // If use changed to dry hop, set time unit to days
-    if (name === "use" && value === "dry-hop") {
-      updatedForm.time_unit = "days";
-      updatedForm.time = updatedForm.time || "7"; // Default to 7 days
-    } else if (name === "use" && value === "boil") {
-      updatedForm.time_unit = "minutes";
-      if (updatedForm.time === "7") updatedForm.time = ""; // Clear days default
+    setHopForm(updatedForm);
+
+    // Clear related errors when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }));
+    }
+  };
+
+  const handleHopSelect = (selectedHop) => {
+    if (selectedHop) {
+      setHopForm((prev) => ({
+        ...prev,
+        ingredient_id: selectedHop.ingredient_id,
+        alpha_acid: selectedHop.alpha_acid || "",
+        selectedIngredient: selectedHop,
+      }));
+
+      // Clear ingredient selection error
+      if (errors.ingredient_id) {
+        setErrors((prev) => ({
+          ...prev,
+          ingredient_id: null,
+        }));
+      }
+    } else {
+      // Clear selection
+      setHopForm((prev) => ({
+        ...prev,
+        ingredient_id: "",
+        alpha_acid: "",
+        selectedIngredient: null,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!hopForm.ingredient_id) {
+      newErrors.ingredient_id = "Please select a hop variety";
     }
 
-    setHopForm(updatedForm);
+    if (!hopForm.amount || parseFloat(hopForm.amount) <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    }
+
+    if (parseFloat(hopForm.amount) > 10) {
+      newErrors.amount = "Amount seems unusually high for hops";
+    }
+
+    if (!hopForm.alpha_acid || parseFloat(hopForm.alpha_acid) <= 0) {
+      newErrors.alpha_acid = "Alpha acid percentage is required";
+    }
+
+    if (parseFloat(hopForm.alpha_acid) > 25) {
+      newErrors.alpha_acid = "Alpha acid percentage seems unusually high";
+    }
+
+    // Validate time based on use
+    if (
+      hopForm.use === "boil" &&
+      (!hopForm.time || parseInt(hopForm.time) < 0)
+    ) {
+      newErrors.time = "Boil time is required for boil additions";
+    }
+
+    if (
+      hopForm.use === "dry-hop" &&
+      (!hopForm.time || parseInt(hopForm.time) <= 0)
+    ) {
+      newErrors.time = "Dry hop time must be greater than 0";
+    }
+
+    if (
+      hopForm.time &&
+      parseInt(hopForm.time) > 120 &&
+      hopForm.time_unit === "minutes"
+    ) {
+      newErrors.time = "Boil time over 120 minutes is unusual";
+    }
+
+    if (
+      hopForm.time &&
+      parseInt(hopForm.time) > 21 &&
+      hopForm.time_unit === "days"
+    ) {
+      newErrors.time = "Dry hop time over 21 days is unusual";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!hopForm.ingredient_id || !hopForm.amount) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    // Validate hop-specific requirements
-    if (
-      hopForm.use === "boil" &&
-      (!hopForm.time || parseInt(hopForm.time) < 0)
-    ) {
-      alert("Boil time is required for boil additions.");
+    if (!validateForm()) {
       return;
     }
 
     try {
-      await onAdd(hopForm);
+      const formData = {
+        ingredient_id: hopForm.ingredient_id,
+        amount: hopForm.amount,
+        unit: hopForm.unit,
+        alpha_acid: hopForm.alpha_acid,
+        use: hopForm.use,
+        time: hopForm.time,
+        time_unit: hopForm.time_unit,
+      };
+
+      await onAdd(formData);
 
       // Reset form on successful add
       setHopForm({
@@ -69,9 +178,13 @@ function HopInput({ hops, onAdd, disabled = false }) {
         use: "boil",
         time: "",
         time_unit: "minutes",
+        selectedIngredient: null,
       });
+
+      setErrors({});
     } catch (error) {
       console.error("Failed to add hop:", error);
+      setErrors({ submit: "Failed to add hop. Please try again." });
     }
   };
 
@@ -89,12 +202,27 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
   };
 
+  // Get usage description
+  const getUsageDescription = () => {
+    switch (hopForm.use) {
+      case "boil":
+        return "Adds bitterness. Longer boil = more bitter.";
+      case "whirlpool":
+        return "Adds flavor and aroma with some bitterness.";
+      case "dry-hop":
+        return "Adds aroma and flavor with no bitterness.";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="card mt-6">
       <h3 className="card-title">Hops</h3>
 
-      <div className="hop-form">
+      <form onSubmit={handleSubmit} className="hop-form">
         <div className="hop-inputs">
+          {/* Amount Input */}
           <div className="hop-amount-container">
             <input
               type="number"
@@ -106,7 +234,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               min="0"
               max="10"
               placeholder="Amount"
-              className="hop-amount-input"
+              className={`hop-amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
             />
@@ -121,47 +249,56 @@ function HopInput({ hops, onAdd, disabled = false }) {
               <option value="oz">oz</option>
               <option value="g">g</option>
             </select>
+            {errors.amount && (
+              <div className="error-message">{errors.amount}</div>
+            )}
           </div>
 
+          {/* Hop Selector */}
           <div className="hop-selector">
-            <select
-              id="hop-select"
-              name="ingredient_id"
-              value={hopForm.ingredient_id}
-              onChange={handleChange}
-              className="hop-select-control"
+            <SearchableSelect
+              options={hops}
+              onSelect={handleHopSelect}
+              placeholder="Search hops (try: cascade, citrus, american)..."
+              searchKey="name"
+              displayKey="name"
+              valueKey="ingredient_id"
               disabled={disabled}
-              required
-            >
-              <option value="">Select Hop</option>
-              {hops.map((ingredient) => (
-                <option
-                  key={ingredient.ingredient_id}
-                  value={ingredient.ingredient_id}
-                >
-                  {ingredient.name}
-                </option>
-              ))}
-            </select>
+              className={`hop-select-control ${
+                errors.ingredient_id ? "error" : ""
+              }`}
+              fuseOptions={hopFuseOptions}
+              maxResults={15}
+              minQueryLength={1}
+            />
+            {errors.ingredient_id && (
+              <div className="error-message">{errors.ingredient_id}</div>
+            )}
           </div>
 
+          {/* Alpha Acid Input */}
           <div className="hop-alpha-container">
             <input
               type="number"
-              id="alpha-acid"
+              id="hop-alpha-acid"
               name="alpha_acid"
               value={hopForm.alpha_acid}
               onChange={handleChange}
               step="0.1"
               min="0"
               max="25"
-              placeholder="Alpha Acid"
-              className="hop-alpha-input"
+              placeholder="Alpha"
+              className={`hop-alpha-input ${errors.alpha_acid ? "error" : ""}`}
               disabled={disabled}
+              required
             />
             <span className="hop-alpha-unit">%AA</span>
+            {errors.alpha_acid && (
+              <div className="error-message">{errors.alpha_acid}</div>
+            )}
           </div>
 
+          {/* Time and Usage Controls */}
           <div className="hop-time-container">
             <input
               type="number"
@@ -172,7 +309,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               step="1"
               min="0"
               placeholder={getTimePlaceholder()}
-              className="hop-time-input"
+              className={`hop-time-input ${errors.time ? "error" : ""}`}
               disabled={disabled}
             />
             <select
@@ -198,13 +335,14 @@ function HopInput({ hops, onAdd, disabled = false }) {
               <option value="whirlpool">Whirlpool</option>
               <option value="dry-hop">Dry Hop</option>
             </select>
+            {errors.time && <div className="error-message">{errors.time}</div>}
           </div>
 
+          {/* Add Button */}
           <div className="hop-button-container">
             <button
               id="add-hop-btn"
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               className="hop-add-button btn-primary"
               disabled={disabled || !hopForm.ingredient_id || !hopForm.amount}
             >
@@ -212,13 +350,42 @@ function HopInput({ hops, onAdd, disabled = false }) {
             </button>
           </div>
         </div>
-      </div>
+
+        {/* Usage Description */}
+        {hopForm.use && (
+          <div className="hop-usage-description">
+            <small>{getUsageDescription()}</small>
+          </div>
+        )}
+
+        {/* Display selected ingredient info */}
+        {hopForm.selectedIngredient && (
+          <div className="selected-ingredient-info">
+            <strong>{hopForm.selectedIngredient.name}</strong>
+            {hopForm.selectedIngredient.origin && (
+              <span className="hop-origin-badge">
+                {hopForm.selectedIngredient.origin}
+              </span>
+            )}
+            {hopForm.selectedIngredient.description && (
+              <p className="ingredient-description">
+                {hopForm.selectedIngredient.description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Submit Error */}
+        {errors.submit && (
+          <div className="error-message submit-error">{errors.submit}</div>
+        )}
+      </form>
 
       {/* Help text */}
       <div className="ingredient-help">
         <small className="help-text">
           💡 Boil hops add bitterness, aroma hops (whirlpool/dry hop) add flavor
-          and aroma
+          and aroma. Try advanced search: "cascade | centennial" or "citrus"
         </small>
       </div>
     </div>

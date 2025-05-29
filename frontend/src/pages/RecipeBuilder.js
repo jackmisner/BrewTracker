@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useRecipeBuilder } from "../hooks/useRecipeBuilder";
 import "../styles/RecipeBuilder.css";
@@ -13,7 +13,7 @@ function RecipeBuilder() {
   const { recipeId } = useParams();
   const navigate = useNavigate();
 
-  // Single unified hook replaces all the complex state management
+  // Use custom hook to manage recipe builder state and logic
   const {
     // Core data
     recipe,
@@ -54,8 +54,8 @@ function RecipeBuilder() {
     navigate("/recipes");
   };
 
-  // Handle beforeunload event to warn about unsaved changes
-  React.useEffect(() => {
+  // Handle beforeUnload event to warn about unsaved changes
+  useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
@@ -174,27 +174,7 @@ function RecipeBuilder() {
       {/* Ingredients Section */}
       <div className="ingredients-section">
         <div className="ingredients-header">
-          <h2 className="section-title">
-            Ingredients
-            {ingredients.length > 0 && (
-              <span className="ingredient-count">({ingredients.length})</span>
-            )}
-          </h2>
-
-          {/* Quick stats */}
-          {ingredients.length > 0 && (
-            <div className="ingredient-stats">
-              <span className="stat">
-                Grains: {ingredients.filter((i) => i.type === "grain").length}
-              </span>
-              <span className="stat">
-                Hops: {ingredients.filter((i) => i.type === "hop").length}
-              </span>
-              <span className="stat">
-                Yeast: {ingredients.filter((i) => i.type === "yeast").length}
-              </span>
-            </div>
-          )}
+          <h2 className="section-title">Ingredients</h2>
         </div>
 
         {/* Ingredients List */}
@@ -244,31 +224,6 @@ function RecipeBuilder() {
                   `${isEditing ? "Update" : "Save"} Recipe`
                 )}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Recipe Stats Summary */}
-      {!loading && ingredients.length > 0 && (
-        <div className="recipe-summary">
-          <h3 className="summary-title">Recipe Summary</h3>
-          <div className="summary-grid">
-            <div className="summary-item">
-              <span className="summary-label">Total Ingredients:</span>
-              <span className="summary-value">{ingredients.length}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Estimated OG:</span>
-              <span className="summary-value">{metrics.og.toFixed(3)}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Estimated ABV:</span>
-              <span className="summary-value">{metrics.abv.toFixed(1)}%</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Estimated IBU:</span>
-              <span className="summary-value">{Math.round(metrics.ibu)}</span>
             </div>
           </div>
         </div>
