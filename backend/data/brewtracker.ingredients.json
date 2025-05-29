@@ -6,7 +6,8 @@
   "type": "grain",
   "description": "",
   "potential": 27,
-  "color": 3.5
+  "color": 3.5,
+  "grain_type": "specialty_malt"
 },
 {
   "_id": {
@@ -16,7 +17,8 @@
   "type": "grain",
   "description": "",
   "potential": 33,
-  "color": 38
+  "color": 38,
+  "grain_type": "specialty_malt"
 },
 {
   "_id": {
@@ -26,7 +28,8 @@
   "type": "grain",
   "description": "",
   "potential": 35,
-  "color": 2.5
+  "color": 2.5,
+  "grain_type": "smoked"
 },
 {
   "_id": {
@@ -36,7 +39,8 @@
   "type": "grain",
   "description": "",
   "potential": 25,
-  "color": 500
+  "color": 500,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -46,7 +50,8 @@
   "type": "grain",
   "description": "",
   "potential": 38,
-  "color": 2
+  "color": 2,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -56,7 +61,8 @@
   "type": "grain",
   "description": "",
   "potential": 35.4,
-  "color": 10
+  "color": 10,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -66,7 +72,8 @@
   "type": "grain",
   "description": "",
   "potential": 34.5,
-  "color": 120
+  "color": 120,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -76,7 +83,8 @@
   "type": "grain",
   "description": "",
   "potential": 35,
-  "color": 20
+  "color": 20,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -86,7 +94,8 @@
   "type": "grain",
   "description": "",
   "potential": 35.4,
-  "color": 40
+  "color": 40,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -96,7 +105,8 @@
   "type": "grain",
   "description": "",
   "potential": 35.4,
-  "color": 60
+  "color": 60,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -106,7 +116,8 @@
   "type": "grain",
   "description": "",
   "potential": 35,
-  "color": 80
+  "color": 80,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -116,7 +127,8 @@
   "type": "grain",
   "description": "",
   "potential": 32,
-  "color": 60
+  "color": 60,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -126,7 +138,8 @@
   "type": "grain",
   "description": "",
   "potential": 33.5,
-  "color": 35
+  "color": 35,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -136,7 +149,8 @@
   "type": "grain",
   "description": "",
   "potential": 31,
-  "color": 45
+  "color": 45,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -146,7 +160,8 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 5
+  "color": 5,
+  "grain_type": "smoked"
 },
 {
   "_id": {
@@ -156,7 +171,8 @@
   "type": "grain",
   "description": "",
   "potential": 25,
-  "color": 350
+  "color": 350,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -166,7 +182,8 @@
   "type": "grain",
   "description": "",
   "potential": 33,
-  "color": 450
+  "color": 450,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -176,7 +193,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.2,
-  "color": 1.5
+  "color": 1.5,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -186,7 +204,8 @@
   "type": "grain",
   "description": "",
   "potential": 34.5,
-  "color": 1
+  "color": 1,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -196,7 +215,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.2,
-  "color": 2.5
+  "color": 2.5,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -206,7 +226,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.2,
-  "color": 1
+  "color": 1,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -216,7 +237,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.7,
-  "color": 3
+  "color": 3,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -226,7 +248,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.2,
-  "color": 2
+  "color": 2,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -236,7 +259,8 @@
   "type": "grain",
   "description": "",
   "potential": 27,
-  "color": 7
+  "color": 7,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -246,7 +270,8 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 3
+  "color": 3,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -256,7 +281,8 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 25
+  "color": 25,
+  "grain_type": "specialty_malt"
 },
 {
   "_id": {
@@ -266,7 +292,8 @@
   "type": "grain",
   "description": "",
   "potential": 28,
-  "color": 2
+  "color": 2,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -276,7 +303,8 @@
   "type": "grain",
   "description": "",
   "potential": 40.2,
-  "color": 3
+  "color": 3,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -286,7 +314,8 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 2
+  "color": 2,
+  "grain_type": "adjunct_grain"
 },
 {
   "_id": {
@@ -296,7 +325,8 @@
   "type": "grain",
   "description": "",
   "potential": 33,
-  "color": 65
+  "color": 65,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -306,7 +336,8 @@
   "type": "grain",
   "description": "",
   "potential": 25,
-  "color": 550
+  "color": 550,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -316,7 +347,8 @@
   "type": "grain",
   "description": "",
   "potential": 37.1,
-  "color": 12
+  "color": 12,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -326,7 +358,8 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 8
+  "color": 8,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -336,7 +369,8 @@
   "type": "grain",
   "description": "",
   "potential": 38,
-  "color": 2
+  "color": 2,
+  "grain_type": "smoked"
 },
 {
   "_id": {
@@ -346,7 +380,8 @@
   "type": "grain",
   "description": "",
   "potential": 32.7,
-  "color": 220
+  "color": 220,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -356,7 +391,8 @@
   "type": "grain",
   "description": "",
   "potential": 38,
-  "color": 2.5
+  "color": 2.5,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -366,7 +402,8 @@
   "type": "grain",
   "description": "",
   "potential": 33.1,
-  "color": 300
+  "color": 300,
+  "grain_type": "roasted"
 },
 {
   "_id": {
@@ -376,7 +413,8 @@
   "type": "grain",
   "description": "",
   "potential": 34,
-  "color": 115
+  "color": 115,
+  "grain_type": "caramel_crystal"
 },
 {
   "_id": {
@@ -386,7 +424,8 @@
   "type": "grain",
   "description": "",
   "potential": 35,
-  "color": 4
+  "color": 4,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -396,7 +435,8 @@
   "type": "grain",
   "description": "",
   "potential": 40,
-  "color": 3
+  "color": 3,
+  "grain_type": "base_malt"
 },
 {
   "_id": {
@@ -2102,5 +2142,6 @@
   "type": "grain",
   "description": "",
   "potential": 37,
-  "color": 3
+  "color": 3,
+  "grain_type": "base_malt"
 }]
