@@ -17,6 +17,8 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     );
   }
   const mapGrainType = (type) => {
+    console.log("type:", type);
+    if (!type) return "Unknown";
     switch (type) {
       case "base_malt":
         return "Base Malt";

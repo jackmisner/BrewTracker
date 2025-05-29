@@ -111,6 +111,7 @@ class RecipeIngredient(EmbeddedDocument):
             "ingredient_id": str(self.ingredient_id),
             "name": self.name,
             "type": self.type,
+            "grain_type": self.grain_type,
             "amount": self.amount,
             "unit": self.unit,
             "use": self.use,
