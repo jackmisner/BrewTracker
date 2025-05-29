@@ -414,6 +414,7 @@ class MongoDBService:
                 new_ing.ingredient_id = ing.ingredient_id
                 new_ing.name = ing.name
                 new_ing.type = ing.type
+                new_ing.grain_type = ing.grain_type
                 new_ing.amount = ing.amount
                 new_ing.unit = ing.unit
                 new_ing.use = ing.use

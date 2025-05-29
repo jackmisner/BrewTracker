@@ -94,6 +94,7 @@ class RecipeIngredient(EmbeddedDocument):
     ingredient_id = ObjectIdField(required=True)
     name = StringField(required=True)  # Denormalized from Ingredient
     type = StringField(required=True)  # Denormalized from Ingredient
+    grain_type = StringField(max_length=50)  # Denormalized from Ingredient
     amount = FloatField(required=True)
     unit = StringField(required=True, max_length=20)  # oz, lb, g, kg, etc.
     use = StringField(max_length=50)  # mash, boil, dry hop, etc.
@@ -110,6 +111,7 @@ class RecipeIngredient(EmbeddedDocument):
             "ingredient_id": str(self.ingredient_id),
             "name": self.name,
             "type": self.type,
+            "grain_type": self.grain_type,
             "amount": self.amount,
             "unit": self.unit,
             "use": self.use,

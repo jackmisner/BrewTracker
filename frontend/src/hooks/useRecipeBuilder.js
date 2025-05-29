@@ -29,7 +29,7 @@ export function useRecipeBuilder(recipeId) {
       grain: [],
       hop: [],
       yeast: [],
-      adjunct: [],
+      other: [],
     },
     metrics: {
       og: 1.0,

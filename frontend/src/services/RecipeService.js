@@ -146,11 +146,11 @@ class RecipeService {
       errors.push("At least one ingredient is required");
     }
 
-    // Check for at least one grain (base malt)
-    const grains = ingredients.filter((ing) => ing.type === "grain");
-    if (grains.length === 0) {
-      errors.push("At least one grain/malt is required");
-    }
+    // Check for at least one grain (base malt)                           TODO: could add more specific grain validation
+    // const grains = ingredients.filter((ing) => ing.type === "grain");
+    // if (grains.length === 0) {
+    //   errors.push("At least one grain/malt is required");
+    // }
 
     // Check for yeast
     const yeasts = ingredients.filter((ing) => ing.type === "yeast");
@@ -284,11 +284,7 @@ class RecipeService {
    */
   getRecipeDisplayName(recipe) {
     if (!recipe) return "Unknown Recipe";
-
     let displayName = recipe.name;
-    if (recipe.version && recipe.version > 1) {
-      displayName += ` (v${recipe.version})`;
-    }
 
     return displayName;
   }

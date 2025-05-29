@@ -17,6 +17,8 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     );
   }
   const mapGrainType = (type) => {
+    console.log("type:", type);
+    if (!type) return "Unknown";
     switch (type) {
       case "base_malt":
         return "Base Malt";
@@ -43,7 +45,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
         <table className="ingredients-table">
           <thead>
             <tr>
-              {isEditing && <th>Type</th>}
+              {isEditing && <th>Ingredient Type</th>}
               {isEditing && <th>Grain Type</th>}
               <th>Ingredient</th>
               <th>Amount</th>
@@ -63,7 +65,9 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
                   <td className="ingredient-type">{ingredient.type}</td>
                 )}
                 <td className="ingredient-subtype">
-                  {mapGrainType(ingredient.grain_type)}
+                  {ingredient.type === "grain"
+                    ? mapGrainType(ingredient.grain_type)
+                    : ""}
                 </td>
                 <td className="ingredient-name">{ingredient.name}</td>
                 <td>
