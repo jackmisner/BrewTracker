@@ -104,9 +104,9 @@ function Dashboard() {
     <div className="dashboard-container">
       {/* Header */}
       <div className="dashboard-header">
-        <h1 className="dashboard-title">🍺 Brewing Dashboard</h1>
+        <h1 className="dashboard-title"> Brewing Dashboard</h1>
         <p className="dashboard-subtitle">
-          Welcome back! Here's what's brewing in your brewery.
+          Welcome back! Here's what you've got brewing.
         </p>
       </div>
 
