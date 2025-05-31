@@ -37,8 +37,15 @@ def seed_ingredients(mongo_uri, json_file_path):
         created_count = 0
         for ingredient_data in ingredients_data:
             try:
-                # Create ingredient object
-                ingredient = Ingredient(**ingredient_data)
+                # Remove MongoDB-specific fields that shouldn't be passed to constructor
+                clean_data = (
+                    ingredient_data.copy()
+                )  # Make a copy to avoid modifying original
+                clean_data.pop("_id", None)  # Remove _id field if it exists
+                clean_data.pop("__v", None)  # Remove version field if it exists
+
+                # Create ingredient object with cleaned data
+                ingredient = Ingredient(**clean_data)
                 ingredient.save()
                 created_count += 1
             except Exception as e:
