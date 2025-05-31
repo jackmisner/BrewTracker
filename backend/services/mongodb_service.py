@@ -287,9 +287,9 @@ class MongoDBService:
             ingredients_data = recipe_data.pop("ingredients", None)
 
             # Log data for debugging
-            print(f"Updating recipe {recipe_id}")
-            print(f"Recipe data: {recipe_data}")
-            print(f"Ingredients data: {ingredients_data}")
+            # print(f"Updating recipe {recipe_id}")
+            # print(f"Recipe data: {recipe_data}")
+            # print(f"Ingredients data: {ingredients_data}")
 
             # Update recipe fields
             for key, value in recipe_data.items():
@@ -593,7 +593,7 @@ class MongoDBService:
     @staticmethod
     def create_brew_session(session_data):
         """Create a new brew session"""
-        print(f"Creating brew session with data: {session_data}")
+        # print(f"Creating brew session with data: {session_data}")
         try:
             # Set default values
             session_data["brew_date"] = datetime.now(UTC)
@@ -625,7 +625,7 @@ class MongoDBService:
             # Save the updated session
             brew_session.save()
 
-            return brew_session
+            return brew_session, "Brew session updated successfully"  # ← Add message
         except Exception as e:
             print(f"Database error updating brew session: {e}")
             return None, str(e)
