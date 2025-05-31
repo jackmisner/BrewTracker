@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from models.mongo_models import User
 
 auth_bp = Blueprint("auth", __name__)
@@ -32,7 +32,7 @@ def login():
 
     if user and user.check_password(data.get("password")):
         # Update last login
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(UTC)
         user.save()
 
         # Create access token
