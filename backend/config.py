@@ -12,6 +12,9 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_TOKEN_LOCATION = ["headers"]
 
+    # MongoDB connection options
+    MONGODB_SETTINGS = {"host": MONGO_URI, "uuidRepresentation": "standard"}
+
 
 class TestConfig(Config):
     TESTING = True
@@ -19,3 +22,6 @@ class TestConfig(Config):
         "TEST_MONGO_URI", "mongodb://localhost:27017/brewtracker_test"
     )
     JWT_SECRET_KEY = "test-jwt-secret-key"
+
+    # Override MongoDB settings for testing
+    MONGODB_SETTINGS = {"host": MONGO_URI, "uuidRepresentation": "standard"}

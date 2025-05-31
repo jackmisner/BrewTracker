@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from bson import ObjectId
 from pymongo.errors import PyMongoError
 from models.mongo_models import (
@@ -262,7 +262,7 @@ class MongoDBService:
                 recipe.ingredients.append(recipe_ingredient)
 
             # Set creation timestamps
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             recipe.created_at = now
             recipe.updated_at = now
 
@@ -334,7 +334,7 @@ class MongoDBService:
                     recipe.ingredients.append(recipe_ingredient)
 
             # Update timestamp
-            recipe.updated_at = datetime.utcnow()
+            recipe.updated_at = datetime.now(UTC)
 
             # Save the recipe
             recipe.save()
@@ -426,7 +426,7 @@ class MongoDBService:
                 new_recipe.ingredients.append(new_ing)
 
             # Set creation timestamps
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             new_recipe.created_at = now
             new_recipe.updated_at = now
 
@@ -596,7 +596,7 @@ class MongoDBService:
         print(f"Creating brew session with data: {session_data}")
         try:
             # Set default values
-            session_data["brew_date"] = datetime.utcnow()
+            session_data["brew_date"] = datetime.now(UTC)
             session_data["status"] = "in_progress"
 
             # Create the brew session
@@ -645,7 +645,7 @@ class MongoDBService:
 
             # Set default entry date if not provided
             if "entry_date" not in entry_data:
-                entry_data["entry_date"] = datetime.utcnow()
+                entry_data["entry_date"] = datetime.now(UTC)
 
             fermentation_entry = FermentationEntry(**entry_data)
 

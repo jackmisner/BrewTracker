@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from mongoengine import connect
+from mongoengine import connect, disconnect
+from mongoengine.connection import get_connection, ConnectionFailure
 import os
 from pathlib import Path
 import config
@@ -20,8 +21,17 @@ def create_app(config_class=None):
     else:
         app.config.from_object(config.Config)
 
-    # Initialize extensions
-    connect(host=app.config["MONGO_URI"])
+    # Initialize MongoDB connection
+    try:
+        # Check if connection already exists
+        get_connection()
+        print("MongoDB connection already exists, using existing connection")
+    except ConnectionFailure:
+        # No connection exists, create new one
+        print("Creating new MongoDB connection")
+        connect(host=app.config["MONGO_URI"], uuidRepresentation="standard")
+
+    # Initialize other extensions
     JWTManager(app)
     CORS(
         app,
@@ -47,15 +57,27 @@ def create_app(config_class=None):
             200,
         )
 
-    if Ingredient.objects.count() == 0:
-        print("No ingredients found in database. Running seed operation...")
-        from seed_ingredients import seed_ingredients
+    # Only seed ingredients if not in testing and if no ingredients exist
+    if not app.config.get("TESTING", False):
+        try:
+            if Ingredient.objects.count() == 0:
+                print("No ingredients found in database. Running seed operation...")
+                from seed_ingredients import seed_ingredients
 
-        json_file_path = Path(__file__).parent / "data" / "brewtracker.ingredients.json"
-        mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/brewtracker")
-        seed_ingredients(mongo_uri, json_file_path)
-    else:
-        print("Ingredients already exist in the database. Skipping seed operation.")
+                json_file_path = (
+                    Path(__file__).parent / "data" / "brewtracker.ingredients.json"
+                )
+                mongo_uri = os.environ.get(
+                    "MONGO_URI", "mongodb://localhost:27017/brewtracker"
+                )
+                seed_ingredients(mongo_uri, json_file_path)
+            else:
+                print(
+                    "Ingredients already exist in the database. Skipping seed operation."
+                )
+        except Exception as e:
+            print(f"Warning: Could not check/seed ingredients: {e}")
+
     return app
 
 

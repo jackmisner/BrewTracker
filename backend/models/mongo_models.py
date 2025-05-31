@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, ListField
 from mongoengine import (
     StringField,
@@ -14,7 +14,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def initialize_db(mongo_uri):
-    connect(host=mongo_uri)
+    """Initialize database connection only if not already connected"""
+    from mongoengine.connection import get_connection, ConnectionFailure
+
+    try:
+        # Check if connection already exists
+        get_connection()
+        print("Database connection already exists, using existing connection")
+    except ConnectionFailure:
+        # No connection exists, create new one
+        print(f"Connecting to MongoDB: {mongo_uri}")
+        connect(host=mongo_uri, uuidRepresentation="standard")
 
 
 # User model
@@ -22,7 +32,7 @@ class User(Document):
     username = StringField(required=True, unique=True, max_length=80)
     email = StringField(required=True, unique=True, max_length=120)
     password_hash = StringField(required=True)
-    created_at = DateTimeField(default=datetime.utcnow)
+    created_at = DateTimeField(default=lambda: datetime.now(UTC))
     last_login = DateTimeField()
 
     meta = {"collection": "users", "indexes": ["username", "email"]}
@@ -131,8 +141,8 @@ class Recipe(Document):
     batch_size = FloatField(required=True)  # in gallons/liters
     description = StringField()
     is_public = BooleanField(default=False)
-    created_at = DateTimeField(default=datetime.utcnow)
-    updated_at = DateTimeField(default=datetime.utcnow)
+    created_at = DateTimeField(default=lambda: datetime.now(UTC))
+    updated_at = DateTimeField(default=lambda: datetime.now(UTC))
     version = IntField(default=1)
     parent_recipe_id = ObjectIdField()
 
@@ -194,7 +204,7 @@ class Recipe(Document):
 class FermentationEntry(EmbeddedDocument):
     """Embedded document for tracking fermentation data points"""
 
-    entry_date = DateTimeField(required=True, default=datetime.utcnow)
+    entry_date = DateTimeField(required=True, default=lambda: datetime.now(UTC))
     temperature = FloatField()  # in degrees F/C
     gravity = FloatField()  # specific gravity (e.g., 1.010)
     ph = FloatField()  # pH value
@@ -214,7 +224,7 @@ class FermentationEntry(EmbeddedDocument):
 class BrewSession(Document):
     recipe_id = ObjectIdField(required=True)
     user_id = ObjectIdField(required=True)
-    brew_date = DateField(default=datetime.utcnow().date)
+    brew_date = DateField(default=lambda: datetime.now(UTC).date())
     name = StringField(max_length=100)
     status = StringField(required=True, default="planned", max_length=20)
     # status options: planned, in-progress, fermenting, conditioning, completed, archived
