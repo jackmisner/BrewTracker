@@ -30,9 +30,9 @@ homebrew-tracker/
 │   ├── routes/ // Backend routes for handling incoming HTTP requests
 │   │   ├── __init__.py
 │   │   ├── auth.py
-│   │   ├── recipes.py
+│   │   ├── brew_sessions.py
 │   │   ├── ingredients.py
-│   │   └── brew_sessions.py
+│   │   └── recipes.py
 │   ├── seed_ingredients.py // Script that gets called on first run if database has no ingredients in it to add the ingredients data to DB
 │   ├── services/
 │   │   ├── __init__.py
@@ -61,11 +61,15 @@ homebrew-tracker/
 │   │   ├── pages/
 │   │   │   ├── AllRecipes.js
 │   │   │   ├── Dashboard.js
+│   │   │   ├── Login.js
 │   │   │   ├── RecipeBuilder.js
+│   │   │   ├── Register.js
 │   │   │   └── ViewRecipe.js
 │   │   ├── services/
 |   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
 │   │   │   ├── index.js // Central export for all business logic services, provides a clean interface for importing services throughout the application
+│   │   │   ├── BrewSessionService.js // Higher-level abstraction specifically for brewing-session-related operations
+│   │   │   ├── CacheManager.js // Higher-level abstraction specifically for cache-management operations
 │   │   │   ├── IngredientService.js // Higher-level abstraction specifically for ingredient-related operations
 │   │   │   ├── MetricService.js // Higher-level abstraction specifically for metric-calculation operations
 |   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
