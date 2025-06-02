@@ -55,6 +55,42 @@ def get_recipe(recipe_id):
     return jsonify(recipe.to_dict()), 200
 
 
+@recipes_bp.route("/<recipe_id>/brew-sessions", methods=["GET"])
+@jwt_required()
+def get_recipe_brew_sessions(recipe_id):
+    """Get all brew sessions for a specific recipe"""
+    user_id = get_jwt_identity()
+
+    try:
+        # First verify the recipe exists and user has access
+        recipe = Recipe.objects(id=recipe_id).first()
+        if not recipe:
+            return jsonify({"error": "Recipe not found"}), 404
+
+        if str(recipe.user_id) != user_id and not recipe.is_public:
+            return jsonify({"error": "Access denied"}), 403
+
+        # Get brew sessions for this recipe
+        sessions = MongoDBService.get_recipe_brew_sessions(recipe_id)
+
+        # Filter sessions to only include user's own sessions
+        user_sessions = [
+            session for session in sessions if str(session.user_id) == user_id
+        ]
+
+        # Convert to dict format
+        sessions_data = [session.to_dict() for session in user_sessions]
+
+        return (
+            jsonify({"brew_sessions": sessions_data, "total": len(sessions_data)}),
+            200,
+        )
+
+    except Exception as e:
+        print(f"Error fetching recipe brew sessions: {e}")
+        return jsonify({"error": "Failed to fetch brew sessions"}), 500
+
+
 @recipes_bp.route("", methods=["POST"])
 @jwt_required()
 def create_recipe():

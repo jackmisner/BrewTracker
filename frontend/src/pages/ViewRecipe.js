@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import ApiService from "../services/api";
+import RecipeService from "../services/RecipeService";
+import BrewSessionService from "../services/BrewSessionService";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import RecipeVersionHistory from "../components/RecipeBuilder/RecipeVersionHistory";
 import RecipeActions from "../components/RecipeActions";
@@ -13,23 +14,58 @@ const ViewRecipe = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ingredients, setIngredients] = useState([]);
+  const [brewSessions, setBrewSessions] = useState([]);
+  const [brewingSummary, setBrewingSummary] = useState(null);
+  const [brewingStats, setBrewingStats] = useState(null);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         setLoading(true);
-        const response = await ApiService.recipes.getById(recipeId);
-        setRecipe(response.data);
-        setIngredients(response.data.ingredients || []);
+        const recipeData = await RecipeService.fetchRecipe(recipeId);
+        setRecipe(recipeData);
+        setIngredients(recipeData.ingredients || []);
       } catch (err) {
         console.error("Error fetching recipe:", err);
-        setError("Failed to load recipe");
+        setError(err.message || "Failed to load recipe");
       } finally {
         setLoading(false);
       }
     };
 
     fetchRecipe();
+  }, [recipeId]);
+
+  useEffect(() => {
+    const fetchBrewData = async () => {
+      try {
+        setSessionsLoading(true);
+
+        // Fetch sessions, summary, and stats in parallel
+        const [sessions, summary, stats] = await Promise.all([
+          BrewSessionService.getBrewSessionsForRecipe(recipeId),
+          BrewSessionService.getBrewSessionSummary(recipeId),
+          BrewSessionService.getBrewingStats(recipeId),
+        ]);
+
+        setBrewSessions(sessions);
+        setBrewingSummary(summary);
+        setBrewingStats(stats);
+      } catch (err) {
+        console.error("Error fetching brew data:", err);
+        // Don't set error state for sessions - just log it
+        setBrewSessions([]);
+        setBrewingSummary(null);
+        setBrewingStats(null);
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
+    if (recipeId) {
+      fetchBrewData();
+    }
   }, [recipeId]);
 
   if (loading) {
@@ -116,6 +152,203 @@ const ViewRecipe = () => {
                 srm: recipe.estimated_srm,
               }}
             />
+          </div>
+
+          {/* Enhanced Brew Sessions Section */}
+          <div className="recipe-section">
+            <div className="section-header">
+              <div className="section-title-container">
+                <h2 className="section-title">Brew Sessions</h2>
+                {brewingSummary && brewingSummary.total > 0 && (
+                  <div className="brewing-summary">
+                    <span className="summary-stat">
+                      {brewingSummary.total} total
+                    </span>
+                    {brewingSummary.active > 0 && (
+                      <span className="summary-stat active">
+                        {brewingSummary.active} active
+                      </span>
+                    )}
+                    {brewingSummary.completed > 0 && (
+                      <span className="summary-stat completed">
+                        {brewingSummary.completed} completed
+                      </span>
+                    )}
+                    {brewingSummary.averageRating && (
+                      <span className="summary-stat rating">
+                        {brewingSummary.averageRating.toFixed(1)}★ avg
+                      </span>
+                    )}
+                    {brewingSummary.successRate && (
+                      <span className="summary-stat success">
+                        {brewingSummary.successRate.toFixed(0)}% success
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() =>
+                  navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`)
+                }
+                className="btn btn-primary"
+                style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}
+              >
+                + New Session
+              </button>
+            </div>
+
+            {sessionsLoading ? (
+              <p>Loading brew sessions...</p>
+            ) : brewSessions.length === 0 ? (
+              <div className="empty-state">
+                <p>No brew sessions recorded for this recipe yet.</p>
+                <button
+                  onClick={() =>
+                    navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`)
+                  }
+                  className="btn btn-primary"
+                >
+                  Start Your First Brew Session
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Brewing Statistics Overview */}
+                {brewingStats && (
+                  <div className="brewing-stats-overview">
+                    <h3 className="stats-title">Brewing Performance</h3>
+                    <div className="stats-grid">
+                      <div className="stat-item">
+                        <span className="stat-label">Avg OG:</span>
+                        <span className="stat-value">
+                          {brewingStats.averageOG
+                            ? brewingStats.averageOG.toFixed(3)
+                            : "-"}
+                        </span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Avg ABV:</span>
+                        <span className="stat-value">
+                          {brewingStats.averageABV
+                            ? `${brewingStats.averageABV.toFixed(1)}%`
+                            : "-"}
+                        </span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Avg Efficiency:</span>
+                        <span className="stat-value">
+                          {brewingStats.averageEfficiency
+                            ? `${brewingStats.averageEfficiency.toFixed(1)}%`
+                            : "-"}
+                        </span>
+                      </div>
+                      {brewingStats.consistency && (
+                        <div className="stat-item">
+                          <span className="stat-label">Consistency:</span>
+                          <span className="stat-value">
+                            {brewingStats.consistency.abv < 0.5
+                              ? "High"
+                              : brewingStats.consistency.abv < 1.0
+                              ? "Medium"
+                              : "Low"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sessions List */}
+                <div className="brew-sessions-list">
+                  {brewSessions.map((session) => (
+                    <div key={session.session_id} className="brew-session-item">
+                      <div className="session-info">
+                        <div className="session-header">
+                          <h4 className="session-name">
+                            {session.displayName}
+                          </h4>
+                          <span
+                            className="session-status-badge"
+                            style={{
+                              backgroundColor: `${session.statusColor}20`,
+                              color: session.statusColor,
+                            }}
+                          >
+                            {session.formattedStatus}
+                          </span>
+                        </div>
+
+                        <div className="session-details">
+                          <span className="session-date">
+                            Brewed:{" "}
+                            {session.brew_date
+                              ? session.brew_date.toLocaleDateString()
+                              : "Unknown"}
+                          </span>
+
+                          {session.duration && (
+                            <span className="session-duration">
+                              Duration: {session.duration} days
+                            </span>
+                          )}
+
+                          <div className="session-metrics">
+                            {session.actual_og && (
+                              <span className="metric">
+                                OG: {session.actual_og.toFixed(3)}
+                              </span>
+                            )}
+                            {session.actual_fg && (
+                              <span className="metric">
+                                FG: {session.actual_fg.toFixed(3)}
+                              </span>
+                            )}
+                            {session.actual_abv && (
+                              <span className="metric">
+                                ABV: {session.actual_abv.toFixed(1)}%
+                              </span>
+                            )}
+                            {session.actual_efficiency && (
+                              <span className="metric">
+                                Eff: {session.actual_efficiency.toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
+
+                          {session.batch_rating && (
+                            <div className="session-rating">
+                              <span>Rating: </span>
+                              {[...Array(5)].map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={`star ${
+                                    i < session.batch_rating ? "filled" : ""
+                                  }`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="session-actions">
+                        <button
+                          onClick={() =>
+                            navigate(`/brew-sessions/${session.session_id}`)
+                          }
+                          className="btn btn-secondary"
+                        >
+                          View Session
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="recipe-section">

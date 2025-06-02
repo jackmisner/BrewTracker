@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import ApiService from "../../services/api";
+import BrewSessionService from "../../services/BrewSessionService";
+import RecipeService from "../../services/RecipeService";
+import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
 import "../../styles/BrewSessions.css";
 
@@ -19,30 +21,44 @@ const ViewBrewSession = () => {
     const fetchSessionData = async () => {
       try {
         setLoading(true);
+        setError("");
 
-        // Fetch the brew session
-        const sessionResponse = await ApiService.brewSessions.getById(
+        // Fetch the brew session using BrewSessionService
+        const sessionData = await BrewSessionService.fetchBrewSession(
           sessionId
         );
-        setSession(sessionResponse.data);
+        setSession(sessionData);
 
-        // Fetch the related recipe
-        if (sessionResponse.data.recipe_id) {
-          const recipeResponse = await ApiService.recipes.getById(
-            sessionResponse.data.recipe_id
-          );
-          setRecipe(recipeResponse.data);
+        // Fetch the related recipe if it exists
+        if (sessionData.recipe_id) {
+          try {
+            const recipeData = await RecipeService.fetchRecipe(
+              sessionData.recipe_id
+            );
+            setRecipe(recipeData);
+          } catch (recipeErr) {
+            console.warn("Could not fetch associated recipe:", recipeErr);
+            setRecipe(null);
+          }
         }
       } catch (err) {
         console.error("Error fetching brew session:", err);
-        setError("Failed to load brew session data");
+        setError(err.message || "Failed to load brew session data");
+
+        // If session doesn't exist, navigate back after a short delay
+        if (
+          err.message?.includes("not found") ||
+          err.response?.status === 404
+        ) {
+          setTimeout(() => navigate("/brew-sessions"), 2000);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchSessionData();
-  }, [sessionId]);
+  }, [sessionId, navigate]);
 
   const updateSessionStatus = async (newStatus) => {
     if (
@@ -52,6 +68,7 @@ const ViewBrewSession = () => {
     ) {
       try {
         setIsUpdating(true);
+        setError("");
 
         // If moving to fermenting, set fermentation start date
         let additionalData = {};
@@ -76,15 +93,24 @@ const ViewBrewSession = () => {
             .split("T")[0];
         }
 
-        const response = await ApiService.brewSessions.update(sessionId, {
-          status: newStatus,
-          ...additionalData,
-        });
+        const updatedSession = await BrewSessionService.updateBrewSession(
+          sessionId,
+          {
+            status: newStatus,
+            ...additionalData,
+          }
+        );
 
-        setSession(response.data);
+        setSession(updatedSession);
+
+        // Invalidate caches to update all related components
+        invalidateBrewSessionCaches.onUpdated({
+          session_id: sessionId,
+          recipe_id: updatedSession.recipe_id,
+        });
       } catch (err) {
         console.error("Error updating brew session status:", err);
-        alert("Failed to update brew session status");
+        setError(err.message || "Failed to update brew session status");
       } finally {
         setIsUpdating(false);
       }
@@ -98,11 +124,23 @@ const ViewBrewSession = () => {
       )
     ) {
       try {
-        await ApiService.brewSessions.delete(sessionId);
+        setError("");
+
+        // Store session data before deletion for cache invalidation
+        const sessionDataForCache = {
+          session_id: sessionId,
+          recipe_id: session.recipe_id,
+        };
+
+        await BrewSessionService.deleteBrewSession(sessionId);
+
+        // Invalidate caches to update all related components
+        invalidateBrewSessionCaches.onDeleted(sessionDataForCache);
+
         navigate("/brew-sessions");
       } catch (err) {
         console.error("Error deleting brew session:", err);
-        alert("Failed to delete brew session");
+        setError(err.message || "Failed to delete brew session");
       }
     }
   };
@@ -111,8 +149,17 @@ const ViewBrewSession = () => {
     return <div className="loading-message">Loading brew session...</div>;
   }
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
+  if (error && !session) {
+    return (
+      <div className="error-message">
+        {error}
+        {error.includes("not found") && (
+          <p style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
+            Redirecting to brew sessions list...
+          </p>
+        )}
+      </div>
+    );
   }
 
   if (!session) {
@@ -147,20 +194,42 @@ const ViewBrewSession = () => {
 
   return (
     <div className="container">
+      {error && (
+        <div className="error-message" style={{ marginBottom: "1rem" }}>
+          {error}
+          <button
+            onClick={() => setError("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              marginLeft: "10px",
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="brew-sessions-header">
         <h1 className="brew-session-title">
-          {session.name || `Brew Session #${sessionId.substring(0, 6)}`}
+          {session.displayName ||
+            session.name ||
+            `Brew Session #${sessionId.substring(0, 6)}`}
         </h1>
         <div className="brew-session-actions">
           <button
             onClick={() => navigate(`/brew-sessions/${sessionId}/edit`)}
             className="brew-session-action-button brew-session-edit-button"
+            disabled={isUpdating}
           >
             Edit Session
           </button>
           <button
             onClick={handleDelete}
             className="brew-session-action-button brew-session-delete-button"
+            disabled={isUpdating}
           >
             Delete Session
           </button>
@@ -172,7 +241,8 @@ const ViewBrewSession = () => {
         <div className="brew-session-status-container">
           <span className="brew-session-status-label">Status: </span>
           <span className={getStatusBadgeClass(session.status)}>
-            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            {session.formattedStatus ||
+              session.status.charAt(0).toUpperCase() + session.status.slice(1)}
           </span>
         </div>
 
@@ -186,7 +256,9 @@ const ViewBrewSession = () => {
                 disabled={isUpdating}
                 className={`status-button status-${status}`}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {isUpdating
+                  ? "Updating..."
+                  : status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
             ))}
           </div>
@@ -261,7 +333,9 @@ const ViewBrewSession = () => {
                 <div className="brew-session-timeline-item">
                   <p className="brew-session-timeline-label">Brew Date:</p>
                   <p className="brew-session-timeline-date">
-                    {new Date(session.brew_date).toLocaleDateString()}
+                    {session.brew_date
+                      ? new Date(session.brew_date).toLocaleDateString()
+                      : "Not set"}
                   </p>
                 </div>
                 <div className="brew-session-timeline-item">
@@ -393,7 +467,14 @@ const ViewBrewSession = () => {
               actual_fg: session.actual_fg,
             }}
             onUpdateSession={(updatedData) => {
-              setSession({ ...session, ...updatedData });
+              const updatedSession = { ...session, ...updatedData };
+              setSession(updatedSession);
+
+              // Invalidate caches when fermentation data is updated
+              invalidateBrewSessionCaches.onUpdated({
+                session_id: sessionId,
+                recipe_id: updatedSession.recipe_id,
+              });
             }}
           />
         )}

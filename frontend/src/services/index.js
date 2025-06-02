@@ -6,12 +6,14 @@
 import ingredientServiceInstance from "./IngredientService";
 import recipeServiceInstance from "./RecipeService";
 import metricServiceInstance from "./MetricService";
+import brewSessionServiceInstance from "./BrewSessionService";
 
 // Export individual services
 export {
   ingredientServiceInstance,
   recipeServiceInstance,
   metricServiceInstance,
+  brewSessionServiceInstance,
 };
 
 // Export as grouped services object for convenience
@@ -19,6 +21,7 @@ export const Services = {
   ingredient: ingredientServiceInstance,
   recipe: recipeServiceInstance,
   metrics: metricServiceInstance,
+  brewSession: brewSessionServiceInstance,
 };
 
 // Export service utilities
@@ -29,6 +32,7 @@ export const ServiceUtils = {
   clearAllCaches() {
     ingredientServiceInstance.clearCache();
     metricServiceInstance.clearCache();
+    brewSessionServiceInstance.clearCache();
   },
 
   /**
@@ -39,6 +43,7 @@ export const ServiceUtils = {
       ingredient: true,
       recipe: true,
       metrics: true,
+      brewSession: true,
       timestamp: new Date().toISOString(),
     };
 
@@ -48,6 +53,14 @@ export const ServiceUtils = {
     } catch (error) {
       health.ingredient = false;
       health.ingredientError = error.message;
+    }
+
+    try {
+      // Test brew session service
+      await brewSessionServiceInstance.fetchBrewSessions(1, 1);
+    } catch (error) {
+      health.brewSession = false;
+      health.brewSessionError = error.message;
     }
 
     return health;

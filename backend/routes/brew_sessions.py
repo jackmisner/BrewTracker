@@ -86,13 +86,30 @@ def update_brew_session(session_id):
     if str(session.user_id) != user_id:
         return jsonify({"error": "Access denied"}), 403
 
-    # Update session
-    updated_session, message = MongoDBService.update_brew_session(session_id, data)
+    try:
+        # Update session
+        updated_session, message = MongoDBService.update_brew_session(session_id, data)
 
-    if updated_session:
-        return jsonify(updated_session.to_dict()), 200
-    else:
-        return jsonify({"error": message}), 400
+        if updated_session:
+            # Try to serialize the session data
+            try:
+                session_dict = updated_session.to_dict()
+                return jsonify(session_dict), 200
+            except Exception as serialization_error:
+                print(f"Serialization error: {serialization_error}")
+                import traceback
+
+                traceback.print_exc()
+                return jsonify({"error": "Failed to serialize session data"}), 500
+        else:
+            return jsonify({"error": message}), 400
+
+    except Exception as e:
+        print(f"Update endpoint error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error during update"}), 500
 
 
 @brew_sessions_bp.route("/<session_id>", methods=["DELETE"])
