@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import ApiService from "../../services/api";
+import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
+import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import "../../styles/BrewSessions.css";
 
 const CreateBrewSession = () => {
@@ -11,6 +12,7 @@ const CreateBrewSession = () => {
   const recipeId = queryParams.get("recipeId");
 
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [recipe, setRecipe] = useState(null);
   const [formData, setFormData] = useState({
@@ -59,19 +61,32 @@ const CreateBrewSession = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      // console.log("Creating brew session with data:", formData);
-      const response = await ApiService.brewSessions.create(formData);
+      setCreating(true);
+      setError("");
+
+      // Create the brew session using the service
+      const newSession = await BrewSessionService.createBrewSession(formData);
+
+      // Invalidate caches to update all related components
+      invalidateBrewSessionCaches.onCreated({
+        session_id: newSession.session_id,
+        recipe_id: newSession.recipe_id,
+      });
 
       // Navigate to the newly created brew session
-      navigate(`/brew-sessions/${response.data.session_id}`);
+      navigate(`/brew-sessions/${newSession.session_id}`);
     } catch (err) {
       console.error("Error creating brew session:", err);
       setError(
-        `Failed to create brew session: ${
-          err.response?.data?.error || err.message || "Unknown error"
-        }`
+        err.message ||
+          `Failed to create brew session: ${
+            err.response?.data?.error || "Unknown error"
+          }`
       );
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -79,7 +94,7 @@ const CreateBrewSession = () => {
     return <div className="loading-message">Loading...</div>;
   }
 
-  if (error) {
+  if (error && !recipe && recipeId) {
     return <div className="error-message">{error}</div>;
   }
 
@@ -94,6 +109,24 @@ const CreateBrewSession = () => {
   return (
     <div className="container">
       <h1 className="page-title">Start New Brew Session</h1>
+
+      {error && (
+        <div className="error-message" style={{ marginBottom: "1rem" }}>
+          {error}
+          <button
+            onClick={() => setError("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              marginLeft: "10px",
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {recipe && (
         <div className="recipe-preview">
@@ -137,6 +170,7 @@ const CreateBrewSession = () => {
             onChange={handleChange}
             className="brew-session-form-control"
             required
+            disabled={creating}
           />
         </div>
 
@@ -152,6 +186,7 @@ const CreateBrewSession = () => {
             onChange={handleChange}
             className="brew-session-form-control"
             required
+            disabled={creating}
           />
         </div>
 
@@ -166,6 +201,7 @@ const CreateBrewSession = () => {
             onChange={handleChange}
             className="brew-session-form-control"
             required
+            disabled={creating}
           >
             <option value="planned">Planned</option>
             <option value="in-progress">In Progress</option>
@@ -187,6 +223,7 @@ const CreateBrewSession = () => {
             onChange={handleChange}
             rows="4"
             className="brew-session-form-control brew-session-form-textarea"
+            disabled={creating}
           ></textarea>
         </div>
 
@@ -195,14 +232,16 @@ const CreateBrewSession = () => {
             type="button"
             onClick={() => navigate(-1)}
             className="brew-session-form-button brew-session-cancel-button"
+            disabled={creating}
           >
             Cancel
           </button>
           <button
             type="submit"
             className="brew-session-form-button brew-session-submit-button"
+            disabled={creating}
           >
-            Start Brew Session
+            {creating ? "Creating..." : "Start Brew Session"}
           </button>
         </div>
       </form>

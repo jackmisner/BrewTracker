@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import ApiService from "../../services/api";
+import BrewSessionService from "../../services/BrewSessionService";
+import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import "../../styles/BrewSessions.css";
 
 const EditBrewSession = () => {
@@ -31,15 +32,18 @@ const EditBrewSession = () => {
     const fetchSession = async () => {
       try {
         setLoading(true);
-        const response = await ApiService.brewSessions.getById(sessionId);
-        setSession(response.data);
+        setError("");
 
-        // Populate form with session data
-        const sessionData = response.data;
+        const sessionData = await BrewSessionService.fetchBrewSession(
+          sessionId
+        );
+        setSession(sessionData);
 
         // Helper function to safely format date or return empty string for form display
         const formatDateForForm = (dateString) => {
-          return dateString ? dateString.split("T")[0] : "";
+          if (!dateString) return "";
+          const date = new Date(dateString);
+          return date.toISOString().split("T")[0];
         };
 
         setFormData({
@@ -51,7 +55,6 @@ const EditBrewSession = () => {
           actual_fg: sessionData.actual_fg || "",
           actual_abv: sessionData.actual_abv || "",
           actual_efficiency: sessionData.actual_efficiency || "",
-          // Only set fermentation_start_date if it exists, otherwise leave empty for form
           fermentation_start_date: formatDateForForm(
             sessionData.fermentation_start_date
           ),
@@ -64,14 +67,22 @@ const EditBrewSession = () => {
         });
       } catch (err) {
         console.error("Error fetching brew session:", err);
-        setError("Failed to load brew session data");
+        setError(err.message || "Failed to load brew session data");
+
+        // If session doesn't exist, navigate back after a short delay
+        if (
+          err.message?.includes("not found") ||
+          err.response?.status === 404
+        ) {
+          setTimeout(() => navigate("/brew-sessions"), 2000);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchSession();
-  }, [sessionId]);
+  }, [sessionId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,6 +97,7 @@ const EditBrewSession = () => {
 
     try {
       setSubmitting(true);
+      setError("");
 
       // Prepare data for submission
       const data = { ...formData };
@@ -120,19 +132,30 @@ const EditBrewSession = () => {
         }
       });
 
-      // Submit update
-      console.log("update data:", data);
-      await ApiService.brewSessions.update(sessionId, data);
+      // Submit update using BrewSessionService
+      const updatedSession = await BrewSessionService.updateBrewSession(
+        sessionId,
+        data
+      );
+      setSession(updatedSession);
+
+      // Invalidate caches to update all related components
+      invalidateBrewSessionCaches.onUpdated({
+        session_id: sessionId,
+        recipe_id: updatedSession.recipe_id,
+      });
 
       // Navigate back to session view
       navigate(`/brew-sessions/${sessionId}`);
     } catch (err) {
       console.error("Error updating brew session:", err);
       setError(
-        `Failed to update brew session: ${
-          err.response?.data?.error || err.message || "Unknown error"
-        }`
+        err.message ||
+          `Failed to update brew session: ${
+            err.response?.data?.error || "Unknown error"
+          }`
       );
+    } finally {
       setSubmitting(false);
     }
   };
@@ -141,8 +164,17 @@ const EditBrewSession = () => {
     return <div className="loading-message">Loading brew session...</div>;
   }
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
+  if (error && !session) {
+    return (
+      <div className="error-message">
+        {error}
+        {error.includes("not found") && (
+          <p style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
+            Redirecting to brew sessions list...
+          </p>
+        )}
+      </div>
+    );
   }
 
   if (!session) {
@@ -152,6 +184,24 @@ const EditBrewSession = () => {
   return (
     <div className="container">
       <h1 className="page-title">Edit Brew Session</h1>
+
+      {error && (
+        <div className="error-message" style={{ marginBottom: "1rem" }}>
+          {error}
+          <button
+            onClick={() => setError("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              marginLeft: "10px",
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="brew-session-form">
         <div className="brew-session-grid">
@@ -170,6 +220,7 @@ const EditBrewSession = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="brew-session-form-control"
+                disabled={submitting}
               />
             </div>
 
@@ -184,6 +235,7 @@ const EditBrewSession = () => {
                 onChange={handleChange}
                 className="brew-session-form-control"
                 required
+                disabled={submitting}
               >
                 <option value="planned">Planned</option>
                 <option value="in-progress">In Progress</option>
@@ -205,6 +257,7 @@ const EditBrewSession = () => {
                 value={formData.brew_date}
                 onChange={handleChange}
                 className="brew-session-form-control"
+                disabled={submitting}
               />
             </div>
 
@@ -220,6 +273,7 @@ const EditBrewSession = () => {
                 value={formData.mash_temp}
                 onChange={handleChange}
                 className="brew-session-form-control"
+                disabled={submitting}
               />
             </div>
           </div>
@@ -241,6 +295,7 @@ const EditBrewSession = () => {
                   value={formData.actual_og}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
               <div>
@@ -255,6 +310,7 @@ const EditBrewSession = () => {
                   value={formData.actual_fg}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
             </div>
@@ -272,6 +328,7 @@ const EditBrewSession = () => {
                   value={formData.actual_abv}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
               <div>
@@ -289,6 +346,7 @@ const EditBrewSession = () => {
                   value={formData.actual_efficiency}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
             </div>
@@ -308,6 +366,7 @@ const EditBrewSession = () => {
                   value={formData.fermentation_start_date}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
               <div className="brew-session-form-group">
@@ -324,6 +383,7 @@ const EditBrewSession = () => {
                   value={formData.fermentation_end_date}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
               <div className="brew-session-form-group">
@@ -340,6 +400,7 @@ const EditBrewSession = () => {
                   value={formData.packaging_date}
                   onChange={handleChange}
                   className="brew-session-form-control"
+                  disabled={submitting}
                 />
               </div>
             </div>
@@ -361,6 +422,7 @@ const EditBrewSession = () => {
               value={formData.tasting_notes}
               onChange={handleChange}
               className="brew-session-form-control brew-session-form-textarea"
+              disabled={submitting}
             ></textarea>
           </div>
 
@@ -374,6 +436,7 @@ const EditBrewSession = () => {
               value={formData.batch_rating}
               onChange={handleChange}
               className="brew-session-form-control"
+              disabled={submitting}
             >
               <option value="">Select Rating</option>
               <option value="1">1 - Poor</option>
@@ -390,6 +453,7 @@ const EditBrewSession = () => {
             type="button"
             onClick={() => navigate(`/brew-sessions/${sessionId}`)}
             className="brew-session-form-button brew-session-cancel-button"
+            disabled={submitting}
           >
             Cancel
           </button>
