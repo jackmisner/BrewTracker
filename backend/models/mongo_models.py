@@ -263,7 +263,9 @@ class BrewSession(Document):
             "session_id": str(self.id),
             "recipe_id": str(self.recipe_id),
             "user_id": str(self.user_id),
-            "brew_date": self.brew_date.isoformat() if self.brew_date else None,
+            "brew_date": (
+                self.brew_date.strftime("%Y-%m-%d") if self.brew_date else None
+            ),
             "name": self.name,
             "status": self.status,
             "mash_temp": self.mash_temp,
@@ -272,17 +274,19 @@ class BrewSession(Document):
             "actual_abv": self.actual_abv,
             "actual_efficiency": self.actual_efficiency,
             "fermentation_start_date": (
-                self.fermentation_start_date.isoformat()
+                self.fermentation_start_date.strftime("%Y-%m-%d")
                 if self.fermentation_start_date
                 else None
             ),
             "fermentation_end_date": (
-                self.fermentation_end_date.isoformat()
+                self.fermentation_end_date.strftime("%Y-%m-%d")
                 if self.fermentation_end_date
                 else None
             ),
             "packaging_date": (
-                self.packaging_date.isoformat() if self.packaging_date else None
+                self.packaging_date.strftime("%Y-%m-%d")
+                if self.packaging_date
+                else None
             ),
             "fermentation_data": [entry.to_dict() for entry in self.fermentation_data],
             "notes": self.notes,

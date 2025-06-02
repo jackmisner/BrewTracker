@@ -60,6 +60,7 @@ const CreateBrewSession = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // console.log("Creating brew session with data:", formData);
       const response = await ApiService.brewSessions.create(formData);
 
       // Navigate to the newly created brew session

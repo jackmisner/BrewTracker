@@ -36,26 +36,29 @@ const EditBrewSession = () => {
 
         // Populate form with session data
         const sessionData = response.data;
+
+        // Helper function to safely format date or return empty string for form display
+        const formatDateForForm = (dateString) => {
+          return dateString ? dateString.split("T")[0] : "";
+        };
+
         setFormData({
           name: sessionData.name || "",
           status: sessionData.status || "planned",
-          brew_date: sessionData.brew_date
-            ? sessionData.brew_date.split("T")[0]
-            : "",
+          brew_date: formatDateForForm(sessionData.brew_date),
           mash_temp: sessionData.mash_temp || "",
           actual_og: sessionData.actual_og || "",
           actual_fg: sessionData.actual_fg || "",
           actual_abv: sessionData.actual_abv || "",
           actual_efficiency: sessionData.actual_efficiency || "",
-          fermentation_start_date: sessionData.fermentation_start_date
-            ? sessionData.fermentation_start_date.split("T")[0]
-            : "",
-          fermentation_end_date: sessionData.fermentation_end_date
-            ? sessionData.fermentation_end_date.split("T")[0]
-            : "",
-          packaging_date: sessionData.packaging_date
-            ? sessionData.packaging_date.split("T")[0]
-            : "",
+          // Only set fermentation_start_date if it exists, otherwise leave empty for form
+          fermentation_start_date: formatDateForForm(
+            sessionData.fermentation_start_date
+          ),
+          fermentation_end_date: formatDateForForm(
+            sessionData.fermentation_end_date
+          ),
+          packaging_date: formatDateForForm(sessionData.packaging_date),
           tasting_notes: sessionData.tasting_notes || "",
           batch_rating: sessionData.batch_rating || "",
         });
@@ -104,7 +107,21 @@ const EditBrewSession = () => {
         }
       });
 
+      // Handle date fields - remove empty strings to avoid validation errors
+      const dateFields = [
+        "brew_date",
+        "fermentation_start_date",
+        "fermentation_end_date",
+        "packaging_date",
+      ];
+      dateFields.forEach((field) => {
+        if (!data[field] || data[field] === "") {
+          delete data[field]; // Remove empty date fields
+        }
+      });
+
       // Submit update
+      console.log("update data:", data);
       await ApiService.brewSessions.update(sessionId, data);
 
       // Navigate back to session view

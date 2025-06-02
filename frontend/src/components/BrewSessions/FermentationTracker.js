@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -33,7 +33,8 @@ const FermentationTracker = ({
   const [initialOGSet, setInitialOGSet] = useState(false);
 
   // Fetch fermentation data
-  const fetchFermentationData = async () => {
+
+  const fetchFermentationData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -72,15 +73,15 @@ const FermentationTracker = ({
       }
     } catch (err) {
       console.error("Error fetching fermentation data:", err);
-      setError("Failed to load fermentation data");
+      setError("No fermentation data found for this session.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     fetchFermentationData();
-  }, [sessionId]);
+  }, [sessionId, fetchFermentationData]);
 
   // Set initial OG reading if session has actual_og but no fermentation data
   useEffect(() => {

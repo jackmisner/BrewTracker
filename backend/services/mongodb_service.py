@@ -597,7 +597,7 @@ class MongoDBService:
         try:
             # Set default values
             session_data["brew_date"] = datetime.now(UTC)
-            session_data["status"] = "in_progress"
+            session_data["status"] = session_data.get("status", "in_progress")
 
             # Create the brew session
             brew_session = BrewSession(**session_data)
@@ -625,9 +625,16 @@ class MongoDBService:
             # Save the updated session
             brew_session.save()
 
-            return brew_session, "Brew session updated successfully"  # ← Add message
+            # Reload the session from database to ensure all data is fresh
+            brew_session.reload()
+
+            return brew_session, "Brew session updated successfully"
+
         except Exception as e:
             print(f"Database error updating brew session: {e}")
+            import traceback
+
+            traceback.print_exc()  # This will help debug the actual error
             return None, str(e)
 
     ###########################################################
