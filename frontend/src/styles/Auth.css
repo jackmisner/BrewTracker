@@ -1,0 +1,325 @@
+/* Auth container - matches the app's card-based layout */
+.auth-container {
+  max-width: 28rem; /* 448px - slightly wider than md for better form spacing */
+  margin: 0 auto;
+  margin-top: 2.5rem;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  min-height: fit-content;
+}
+
+/* Background wrapper to match dashboard */
+.auth-wrapper {
+  background-color: #f9fafb;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Auth page titles */
+.auth-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #92400e; /* amber-800 - matches recipe titles */
+}
+
+.auth-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 2rem;
+  margin-top: -0.5rem;
+}
+
+/* Form styling */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Form groups */
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-form-group:last-of-type {
+  margin-bottom: 0.5rem;
+}
+
+/* Labels */
+.auth-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+  margin-bottom: 0.5rem;
+}
+
+/* Input fields - matches SearchableSelect styling */
+.auth-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  background-color: white;
+  color: #758191;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.auth-input:disabled {
+  background-color: #f3f4f6; /* gray-100 */
+  color: #6b7280; /* gray-500 */
+  cursor: not-allowed;
+}
+
+.auth-input::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Submit button - matches primary buttons throughout app */
+.auth-submit-button {
+  width: 100%;
+  background-color: #d97706; /* amber-600 */
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  margin-top: 0.5rem;
+}
+
+.auth-submit-button:hover:not(:disabled) {
+  background-color: #b45309; /* amber-700 */
+}
+
+.auth-submit-button:active {
+  transform: translateY(1px);
+}
+
+.auth-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #9ca3af; /* gray-400 */
+}
+
+/* Loading state */
+.auth-submit-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.auth-submit-button.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: auth-spin 1s linear infinite;
+}
+
+@keyframes auth-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Error messages - matches dashboard error styling */
+.auth-error {
+  background-color: #fef2f2; /* red-50 */
+  border: 1px solid #fecaca; /* red-200 */
+  color: #dc2626; /* red-600 */
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-error::before {
+  content: "⚠️";
+  flex-shrink: 0;
+}
+
+/* Success messages */
+.auth-success {
+  background-color: #f0fdf4; /* green-50 */
+  border: 1px solid #bbf7d0; /* green-200 */
+  color: #059669; /* green-600 */
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-success::before {
+  content: "✅";
+  flex-shrink: 0;
+}
+
+/* Navigation links between login/register */
+.auth-nav {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.auth-nav-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-nav-link {
+  color: #d97706; /* amber-600 */
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.auth-nav-link:hover {
+  color: #b45309; /* amber-700 */
+  text-decoration: underline;
+}
+
+/* Password requirements (if needed) */
+.auth-requirements {
+  background-color: #fffbeb; /* amber-50 */
+  border: 1px solid #fcd34d; /* amber-300 */
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.auth-requirements-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #92400e; /* amber-800 */
+  margin-bottom: 0.5rem;
+}
+
+.auth-requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #b45309; /* amber-700 */
+}
+
+.auth-requirements-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.auth-requirements-list li:last-child {
+  margin-bottom: 0;
+}
+
+.auth-requirements-list li::before {
+  content: "•";
+  color: #fbbf24; /* amber-400 */
+  font-weight: bold;
+}
+
+/* Form validation states */
+.auth-input.valid {
+  border-color: #10b981; /* emerald-500 */
+}
+
+.auth-input.invalid {
+  border-color: #ef4444; /* red-500 */
+}
+
+.auth-input.valid:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.auth-input.invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Field validation messages */
+.auth-field-error {
+  color: #dc2626; /* red-600 */
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.auth-field-error::before {
+  content: "⚠";
+  font-size: 0.75rem;
+}
+
+.auth-field-success {
+  color: #059669; /* green-600 */
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.auth-field-success::before {
+  content: "✓";
+  font-size: 0.75rem;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .auth-wrapper {
+    padding: 0.5rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  
+  .auth-container {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+  
+  .auth-title {
+    font-size: 1.75rem;
+  }
+  
+  .auth-form {
+    gap: 1.25rem;
+  }
+}
+
