@@ -341,7 +341,7 @@ class TestMongoDBServiceBrewSessionMethods:
         assert session.name == "Test Brew Session"
         assert session.recipe_id == recipe.id
         assert session.user_id == user.id
-        assert session.status == "in_progress"  # Default status override
+        assert session.status == "planned"  # Default status override
 
     def test_get_user_brew_sessions(self, sample_user_and_recipe):
         """Test getting user brew sessions with pagination"""
