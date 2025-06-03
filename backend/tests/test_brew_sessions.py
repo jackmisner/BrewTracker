@@ -69,7 +69,7 @@ class TestBrewSessionEndpoints:
         assert response.status_code == 201
         assert response.json["name"] == "First Brew of Test IPA"
         assert response.json["recipe_id"] == str(sample_recipe.id)
-        assert response.json["status"] == "in_progress"  # Default status
+        assert response.json["status"] == "planned"  # Default status
         assert response.json["notes"] == "First attempt at this recipe"
 
         # Verify session was saved to database
