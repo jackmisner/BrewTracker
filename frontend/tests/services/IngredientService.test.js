@@ -6,11 +6,23 @@ jest.mock("../../src/services/api");
 
 describe("IngredientService", () => {
   let ingredientService;
+  let consoleWarnSpy;
+  let consoleErrorSpy;
 
   beforeEach(() => {
     ingredientService = IngredientService;
     ingredientService.clearCache();
     jest.clearAllMocks();
+
+    // Mock console.warn and console.error
+    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console mocks
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   describe("groupIngredientsByType", () => {
