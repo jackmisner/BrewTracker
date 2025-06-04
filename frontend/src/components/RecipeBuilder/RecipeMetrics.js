@@ -114,7 +114,7 @@ function RecipeMetrics({
       </div>
 
       <div className={balanceMeterContainerClass}>
-        <div className="balance-labels">
+        <div data-testid="balance-description" className="balance-labels">
           <span>Malty</span>
           <span>Balanced</span>
           <span>Hoppy</span>
