@@ -85,6 +85,11 @@ function Register({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!e.target.checkValidity()) {
+      e.target.reportValidity();
+      return;
+    }
+
     setError("");
 
     // Validate all fields
@@ -133,10 +138,14 @@ function Register({ onLogin }) {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <h2 className="auth-title">Create Account</h2>
-        <p className="auth-subtitle">Join the brewing community</p>
+    <div data-testid="auth-wrapper" className="auth-wrapper">
+      <div data-testid="auth-container" className="auth-container">
+        <h2 data-testid="auth-title" className="auth-title">
+          Create Account
+        </h2>
+        <p data-testid="auth-subtitle" className="auth-subtitle">
+          Join the brewing community
+        </p>
 
         {error && <div className="auth-error">{error}</div>}
 
@@ -156,7 +165,9 @@ function Register({ onLogin }) {
               required
             />
             {fieldErrors.username && (
-              <div className="auth-field-error">{fieldErrors.username}</div>
+              <div data-testid="auth-field-error" className="auth-field-error">
+                {fieldErrors.username}
+              </div>
             )}
           </div>
 
