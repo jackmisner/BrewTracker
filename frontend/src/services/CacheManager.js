@@ -51,7 +51,10 @@ class CacheManager {
    * Invalidate caches when a brew session is created
    */
   onBrewSessionCreated(sessionData) {
-    console.log("Cache invalidation: Brew session created", sessionData);
+    if (!sessionData || !sessionData.session_id) {
+      console.warn("Invalid session data for creation:", sessionData);
+      return;
+    }
 
     // Clear recipe-specific caches
     if (sessionData.recipe_id) {
@@ -66,19 +69,21 @@ class CacheManager {
    * Invalidate caches when a brew session is updated
    */
   onBrewSessionUpdated(sessionData) {
-    console.log("Cache invalidation: Brew session updated", sessionData);
+    if (!sessionData) {
+      console.warn("Invalid session data for creation:", sessionData);
+      return;
+    }
 
-    // Clear recipe-specific caches
+    // Clear recipe cache if recipe_id exists
     if (sessionData.recipe_id) {
       BrewSessionService.clearRecipeCache(sessionData.recipe_id);
     }
 
-    // Clear session-specific caches
+    // Clear session cache if session_id exists
     if (sessionData.session_id) {
       BrewSessionService.clearSessionCache(sessionData.session_id);
     }
 
-    // Emit event for components to react
     this.emit("brew-session-updated", sessionData);
   }
 
