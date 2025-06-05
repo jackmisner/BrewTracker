@@ -20,6 +20,10 @@ function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!e.target.checkValidity()) {
+      e.target.reportValidity();
+      return;
+    }
     setError("");
     setLoading(true);
 
@@ -37,14 +41,22 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to your brewing account</p>
+    <div data-testid="auth-wrapper" className="auth-wrapper">
+      <div data-testid="auth-container" className="auth-container">
+        <h2 data-testid="auth-title" className="auth-title">
+          Welcome Back
+        </h2>
+        <p data-testid="auth-subtitle" className="auth-subtitle">
+          Sign in to your brewing account
+        </p>
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form
+          onSubmit={handleSubmit}
+          data-testid="auth-form"
+          className="auth-form"
+        >
           <div className="auth-form-group">
             <label className="auth-label" htmlFor="username">
               Username

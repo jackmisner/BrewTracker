@@ -113,26 +113,34 @@ function Dashboard() {
       {/* Quick Stats */}
       <div className="dashboard-stats">
         <div className="stat-card">
-          <div className="stat-value">{dashboardStats.totalRecipes}</div>
+          <div data-testid="stat-card-total-recipes" className="stat-value">
+            {dashboardStats.totalRecipes}
+          </div>
           <div className="stat-label">Total Recipes</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-value ferments">
+          <div
+            data-testid="stat-card-active-ferments"
+            className="stat-value ferments"
+          >
             {dashboardStats.activeFerments}
           </div>
           <div className="stat-label">Active Ferments</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-value completed">
+          <div
+            data-testid="stat-card-completed-batches"
+            className="stat-value completed"
+          >
             {dashboardStats.completedBatches}
           </div>
           <div className="stat-label">Completed Batches</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-value rating">
+          <div data-testid="stat-card-avg-rating" className="stat-value rating">
             {dashboardStats.avgRating > 0
               ? `${dashboardStats.avgRating}★`
               : "N/A"}
