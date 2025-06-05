@@ -6,7 +6,6 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.9.0",
     "fuse.js": "^7.1.0",
     "jest": "^27.5.1",
@@ -63,6 +62,7 @@
   },
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
+    "@testing-library/user-event": "^14.6.1",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^26.1.0"
   }
