@@ -26,13 +26,19 @@ export const Services = {
 
 // Export service utilities
 export const ServiceUtils = {
-  /**
-   * Clear all service caches
-   */
   clearAllCaches() {
-    ingredientServiceInstance.clearCache();
-    metricServiceInstance.clearCache();
-    brewSessionServiceInstance.clearCache();
+    // Safely call clearCache on each service
+    const services = [
+      ingredientServiceInstance,
+      metricServiceInstance,
+      brewSessionServiceInstance,
+    ];
+
+    services.forEach((service) => {
+      if (service && typeof service.clearCache === "function") {
+        service.clearCache();
+      }
+    });
   },
 
   /**
