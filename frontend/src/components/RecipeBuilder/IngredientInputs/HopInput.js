@@ -43,13 +43,13 @@ function HopInput({ hops, onAdd, disabled = false }) {
     if (name === "use") {
       if (value === "dry-hop") {
         updatedForm.time_unit = "days";
-        updatedForm.time = updatedForm.time || "7"; // Default to 7 days
+        updatedForm.time = updatedForm.time || "3"; // Default to 3 days
       } else if (value === "boil") {
         updatedForm.time_unit = "minutes";
-        if (updatedForm.time === "7") updatedForm.time = ""; // Clear days default
+        if (updatedForm.time === "3") updatedForm.time = ""; // Clear days default
       } else if (value === "whirlpool") {
         updatedForm.time_unit = "minutes";
-        updatedForm.time = updatedForm.time || "20"; // Default to 20 minutes
+        updatedForm.time = updatedForm.time || "15"; // Default to 15 minutes
       }
     }
 
@@ -195,9 +195,9 @@ function HopInput({ hops, onAdd, disabled = false }) {
       case "boil":
         return "60";
       case "whirlpool":
-        return "20";
+        return "15";
       case "dry-hop":
-        return "7";
+        return "3";
       default:
         return "0";
     }
@@ -337,7 +337,11 @@ function HopInput({ hops, onAdd, disabled = false }) {
               <option value="whirlpool">Whirlpool</option>
               <option value="dry-hop">Dry Hop</option>
             </select>
-            {errors.time && <div className="error-message">{errors.time}</div>}
+            {errors.time && (
+              <div data-testid="time-error-message" className="error-message">
+                {errors.time}
+              </div>
+            )}
           </div>
 
           {/* Add Button */}
@@ -346,7 +350,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               id="add-hop-btn"
               type="submit"
               className="hop-add-button btn-primary"
-              disabled={disabled || !hopForm.ingredient_id || !hopForm.amount}
+              disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}
             </button>
