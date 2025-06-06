@@ -13,7 +13,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
   });
 
   const [errors, setErrors] = useState({});
-
+  const [resetTrigger, setResetTrigger] = useState(0);
   // Custom Fuse.js options for other ingredients - flexible matching
   const otherFuseOptions = {
     threshold: 0.5, // More lenient since "other" ingredients vary widely
@@ -135,6 +135,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
       });
 
       setErrors({});
+      setResetTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to add other ingredient:", error);
       setErrors({ submit: "Failed to add ingredient. Please try again." });
@@ -285,6 +286,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
               fuseOptions={otherFuseOptions}
               maxResults={15}
               minQueryLength={1}
+              resetTrigger={resetTrigger}
             />
             {errors.ingredient_id && (
               <div className="error-message">{errors.ingredient_id}</div>

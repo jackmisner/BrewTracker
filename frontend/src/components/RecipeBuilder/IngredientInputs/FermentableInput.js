@@ -12,6 +12,8 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
   });
 
   const [errors, setErrors] = useState({});
+  // Add reset trigger state to control SearchableSelect reset
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   // Custom Fuse.js options for fermentables - more strict matching
   const fermentableFuseOptions = {
@@ -123,6 +125,9 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
       });
 
       setErrors({});
+
+      // Trigger SearchableSelect reset by incrementing the trigger
+      setResetTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to add fermentable:", error);
       setErrors({ submit: "Failed to add fermentable. Please try again." });
@@ -197,12 +202,9 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               <option value="kg">kg</option>
               <option value="g">g</option>
             </select>
-            {errors.amount && (
-              <div className="error-message">{errors.amount}</div>
-            )}
           </div>
 
-          {/* Fermentable Selector */}
+          {/* Fermentable Selector with reset trigger */}
           <div className="fermentable-selector">
             <SearchableSelect
               options={grains}
@@ -216,12 +218,10 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
                 errors.ingredient_id ? "error" : ""
               }`}
               fuseOptions={fermentableFuseOptions}
-              maxResults={15}
+              maxResults={100}
               minQueryLength={1}
+              resetTrigger={resetTrigger}
             />
-            {errors.ingredient_id && (
-              <div className="error-message">{errors.ingredient_id}</div>
-            )}
           </div>
 
           {/* Color Input with Preview */}
@@ -245,9 +245,6 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               <span className="fermentable-color-unit">°L</span>
               {getColorPreview()}
             </div>
-            {errors.color && (
-              <div className="error-message">{errors.color}</div>
-            )}
           </div>
 
           {/* Add Button */}
@@ -291,6 +288,15 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
         {errors.submit && (
           <div className="error-message submit-error">{errors.submit}</div>
         )}
+        <div className="validation-errors" role="alert">
+          {errors.amount && (
+            <div className="error-message">{errors.amount}</div>
+          )}
+          {errors.ingredient && (
+            <div className="error-message">{errors.ingredient}</div>
+          )}
+          {errors.color && <div className="error-message">{errors.color}</div>}
+        </div>
       </form>
 
       {/* Help text */}

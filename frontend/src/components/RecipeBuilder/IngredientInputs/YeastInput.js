@@ -11,7 +11,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
   });
 
   const [errors, setErrors] = useState({});
-
+  const [resetTrigger, setResetTrigger] = useState(0);
   // Custom Fuse.js options for yeast - precise matching since strain matters
   const yeastFuseOptions = {
     threshold: 0.2, // Very strict matching for yeast strains
@@ -131,6 +131,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
       });
 
       setErrors({});
+      setResetTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to add yeast:", error);
       setErrors({ submit: "Failed to add yeast. Please try again." });
@@ -223,6 +224,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               fuseOptions={yeastFuseOptions}
               maxResults={12}
               minQueryLength={2}
+              resetTrigger={resetTrigger}
             />
             {errors.ingredient_id && (
               <div className="error-message">{errors.ingredient_id}</div>

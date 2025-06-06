@@ -15,7 +15,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
   });
 
   const [errors, setErrors] = useState({});
-
+  const [resetTrigger, setResetTrigger] = useState(0);
   // Custom Fuse.js options for hops - fuzzy matching for varieties
   const hopFuseOptions = {
     threshold: 0.4, // More forgiving for hop varieties
@@ -182,6 +182,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
       });
 
       setErrors({});
+      setResetTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to add hop:", error);
       setErrors({ submit: "Failed to add hop. Please try again." });
@@ -270,6 +271,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               fuseOptions={hopFuseOptions}
               maxResults={15}
               minQueryLength={1}
+              resetTrigger={resetTrigger}
             />
             {errors.ingredient_id && (
               <div className="error-message">{errors.ingredient_id}</div>
