@@ -1,0 +1,506 @@
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom";
+import RecipeDetails from "../../src/components/RecipeBuilder/RecipeDetails";
+
+describe("RecipeDetails", () => {
+  const mockOnChange = jest.fn();
+  const mockOnSubmit = jest.fn();
+  const mockOnCancel = jest.fn();
+
+  const defaultRecipe = {
+    name: "Test Recipe",
+    style: "IPA",
+    batch_size: 5,
+    boil_time: 60,
+    efficiency: 75,
+    description: "Test description",
+    notes: "Test notes",
+    is_public: false,
+  };
+
+  const defaultProps = {
+    recipe: defaultRecipe,
+    onChange: mockOnChange,
+    onSubmit: mockOnSubmit,
+    onCancel: mockOnCancel,
+    isEditing: false,
+    saving: false,
+    canSave: true,
+    hasUnsavedChanges: false,
+  };
+
+  beforeEach(() => {
+    mockOnChange.mockClear();
+    mockOnSubmit.mockClear();
+    mockOnCancel.mockClear();
+  });
+
+  describe("Loading state", () => {
+    it("renders loading message when recipe is null", () => {
+      render(<RecipeDetails {...defaultProps} recipe={null} />);
+
+      expect(screen.getByText("Loading recipe details...")).toBeInTheDocument();
+    });
+
+    it("renders loading message when recipe is undefined", () => {
+      render(<RecipeDetails {...defaultProps} recipe={undefined} />);
+
+      expect(screen.getByText("Loading recipe details...")).toBeInTheDocument();
+    });
+  });
+
+  describe("Title rendering", () => {
+    it('shows "Recipe Details" when editing', () => {
+      render(<RecipeDetails {...defaultProps} isEditing={true} />);
+
+      expect(screen.getByText("Recipe Details")).toBeInTheDocument();
+    });
+
+    it('shows "New Recipe Details" when not editing', () => {
+      render(<RecipeDetails {...defaultProps} isEditing={false} />);
+
+      expect(screen.getByText("New Recipe Details")).toBeInTheDocument();
+    });
+
+    it("shows unsaved changes indicator when hasUnsavedChanges is true", () => {
+      render(<RecipeDetails {...defaultProps} hasUnsavedChanges={true} />);
+
+      expect(screen.getByTitle("Unsaved changes")).toBeInTheDocument();
+      expect(screen.getByText("*")).toBeInTheDocument();
+    });
+
+    it("hides unsaved changes indicator when hasUnsavedChanges is false", () => {
+      render(<RecipeDetails {...defaultProps} hasUnsavedChanges={false} />);
+
+      expect(screen.queryByTitle("Unsaved changes")).not.toBeInTheDocument();
+      expect(screen.queryByText("*")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Form field rendering", () => {
+    it("renders all form fields with correct values", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      expect(screen.getByDisplayValue("Test Recipe")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("IPA")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("5")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("60")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("75")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Test description")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Test notes")).toBeInTheDocument();
+    });
+
+    it("handles empty/null values correctly", () => {
+      const emptyRecipe = {
+        name: "Test Recipe",
+        style: null,
+        batch_size: 5,
+        boil_time: null,
+        efficiency: null,
+        description: null,
+        notes: null,
+        is_public: false,
+      };
+
+      render(<RecipeDetails {...defaultProps} recipe={emptyRecipe} />);
+
+      expect(screen.getByDisplayValue("Test Recipe")).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: /beer style/i })).toHaveValue(
+        ""
+      );
+      expect(
+        screen.getByRole("spinbutton", { name: /boil time/i })
+      ).toHaveValue(null);
+      expect(
+        screen.getByRole("spinbutton", { name: /mash efficiency/i })
+      ).toHaveValue(null);
+      expect(screen.getByRole("textbox", { name: /description/i })).toHaveValue(
+        ""
+      );
+      expect(
+        screen.getByRole("textbox", { name: /brewing notes/i })
+      ).toHaveValue("");
+    });
+
+    it("sets checkbox correctly", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const checkbox = screen.getByRole("checkbox", {
+        name: /make recipe public/i,
+      });
+      expect(checkbox).not.toBeChecked();
+    });
+
+    it("sets checkbox when recipe is public", () => {
+      const publicRecipe = { ...defaultRecipe, is_public: true };
+      render(<RecipeDetails {...defaultProps} recipe={publicRecipe} />);
+
+      const checkbox = screen.getByRole("checkbox", {
+        name: /make recipe public/i,
+      });
+      expect(checkbox).toBeChecked();
+    });
+  });
+
+  describe("Form interactions", () => {
+    it("calls onChange when text input changes", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const nameInput = screen.getByRole("textbox", { name: /recipe name/i });
+      fireEvent.change(nameInput, {
+        target: { name: "name", value: "New Recipe Name", type: "text" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("name", "New Recipe Name");
+    });
+
+    it("calls onChange when number input changes", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const batchSizeInput = screen.getByRole("spinbutton", {
+        name: /batch size/i,
+      });
+      fireEvent.change(batchSizeInput, {
+        target: { name: "batch_size", value: "10", type: "number" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("batch_size", 10);
+    });
+
+    it("calls onChange when textarea changes", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const descriptionInput = screen.getByRole("textbox", {
+        name: /description/i,
+      });
+      fireEvent.change(descriptionInput, {
+        target: { name: "description", value: "New description" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith(
+        "description",
+        "New description"
+      );
+    });
+
+    it("calls onChange when checkbox changes", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const checkbox = screen.getByRole("checkbox", {
+        name: /make recipe public/i,
+      });
+      fireEvent.click(checkbox);
+
+      expect(mockOnChange).toHaveBeenCalledWith("is_public", true);
+    });
+
+    it("handles empty number input correctly", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const batchSizeInput = screen.getByRole("spinbutton", {
+        name: /batch size/i,
+      });
+      fireEvent.change(batchSizeInput, {
+        target: { name: "batch_size", value: "", type: "number" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("batch_size", "");
+    });
+
+    it("handles invalid number input correctly", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const efficiencyInput = screen.getByRole("spinbutton", {
+        name: /mash efficiency/i,
+      });
+      fireEvent.change(efficiencyInput, {
+        target: { name: "efficiency", value: "abc", type: "number" },
+      });
+
+      // parseFloat('abc') returns NaN, which should be converted to ''
+      expect(mockOnChange).toHaveBeenCalledWith("efficiency", "");
+    });
+
+    it("calls onChange with correct string values for text inputs", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const styleInput = screen.getByRole("textbox", { name: /beer style/i });
+      fireEvent.change(styleInput, {
+        target: { name: "style", value: "American Pale Ale", type: "text" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("style", "American Pale Ale");
+    });
+
+    it("calls onChange with correct numeric values for number inputs", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const boilTimeInput = screen.getByRole("spinbutton", {
+        name: /boil time/i,
+      });
+      fireEvent.change(boilTimeInput, {
+        target: { name: "boil_time", value: "90", type: "number" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("boil_time", 90);
+    });
+
+    it("handles decimal number input correctly", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const batchSizeInput = screen.getByRole("spinbutton", {
+        name: /batch size/i,
+      });
+      fireEvent.change(batchSizeInput, {
+        target: { name: "batch_size", value: "5.5", type: "number" },
+      });
+
+      expect(mockOnChange).toHaveBeenCalledWith("batch_size", 5.5);
+    });
+  });
+
+  describe("Form submission", () => {
+    it("calls onSubmit when form is submitted via button click", async () => {
+      const user = userEvent.setup();
+      render(<RecipeDetails {...defaultProps} />);
+
+      const submitButton = screen.getByRole("button", { name: /save recipe/i });
+      await user.click(submitButton);
+
+      expect(mockOnSubmit).toHaveBeenCalled();
+    });
+
+    it("calls onSubmit when form is submitted via Enter key", () => {
+      const { container } = render(<RecipeDetails {...defaultProps} />);
+
+      const form = container.querySelector("form");
+      fireEvent.submit(form);
+
+      expect(mockOnSubmit).toHaveBeenCalled();
+    });
+
+    it("form submission event has preventDefault method", async () => {
+      const user = userEvent.setup();
+      render(<RecipeDetails {...defaultProps} />);
+
+      const submitButton = screen.getByRole("button", { name: /save recipe/i });
+      await user.click(submitButton);
+
+      // Verify onSubmit was called with an event that has preventDefault
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          preventDefault: expect.any(Function),
+        })
+      );
+    });
+  });
+
+  describe("Button states", () => {
+    it('shows "Save Recipe" button when not editing', () => {
+      render(<RecipeDetails {...defaultProps} isEditing={false} />);
+
+      expect(
+        screen.getByRole("button", { name: /save recipe/i })
+      ).toBeInTheDocument();
+    });
+
+    it('shows "Update Recipe" button when editing', () => {
+      render(<RecipeDetails {...defaultProps} isEditing={true} />);
+
+      expect(
+        screen.getByRole("button", { name: /update recipe/i })
+      ).toBeInTheDocument();
+    });
+
+    it("disables submit button when canSave is false", () => {
+      render(<RecipeDetails {...defaultProps} canSave={false} />);
+
+      const submitButton = screen.getByRole("button", { name: /save recipe/i });
+      expect(submitButton).toBeDisabled();
+      expect(submitButton).toHaveClass("btn-disabled");
+    });
+
+    it("shows tooltip when canSave is false", () => {
+      render(<RecipeDetails {...defaultProps} canSave={false} />);
+
+      const submitButton = screen.getByRole("button", { name: /save recipe/i });
+      expect(submitButton).toHaveAttribute(
+        "title",
+        "Add at least one ingredient to save"
+      );
+    });
+
+    it("enables submit button when canSave is true", () => {
+      render(<RecipeDetails {...defaultProps} canSave={true} />);
+
+      const submitButton = screen.getByRole("button", { name: /save recipe/i });
+      expect(submitButton).not.toBeDisabled();
+      expect(submitButton).not.toHaveClass("btn-disabled");
+    });
+
+    it("calls onCancel when cancel button is clicked", async () => {
+      const user = userEvent.setup();
+      render(<RecipeDetails {...defaultProps} />);
+
+      const cancelButton = screen.getByRole("button", { name: /cancel/i });
+      await user.click(cancelButton);
+
+      expect(mockOnCancel).toHaveBeenCalled();
+    });
+  });
+
+  describe("Saving state", () => {
+    it("shows saving state on submit button", () => {
+      render(<RecipeDetails {...defaultProps} saving={true} />);
+
+      expect(screen.getByText("Saving...")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /saving.../i })).toBeDisabled();
+    });
+
+    it("disables all inputs when saving", () => {
+      render(<RecipeDetails {...defaultProps} saving={true} />);
+
+      expect(
+        screen.getByRole("textbox", { name: /recipe name/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("textbox", { name: /beer style/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("spinbutton", { name: /batch size/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("spinbutton", { name: /boil time/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("spinbutton", { name: /mash efficiency/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("textbox", { name: /description/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("textbox", { name: /brewing notes/i })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("checkbox", { name: /make recipe public/i })
+      ).toBeDisabled();
+      expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
+    });
+
+    it("shows spinner when saving", () => {
+      render(<RecipeDetails {...defaultProps} saving={true} />);
+
+      expect(document.querySelector(".button-spinner")).toBeInTheDocument();
+    });
+  });
+
+  describe("Validation messages", () => {
+    it("shows validation message when canSave is false", () => {
+      render(<RecipeDetails {...defaultProps} canSave={false} />);
+
+      expect(
+        screen.getByText(
+          "💡 Add at least one grain and yeast to save your recipe"
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("hides validation message when canSave is true", () => {
+      render(<RecipeDetails {...defaultProps} canSave={true} />);
+
+      expect(
+        screen.queryByText(
+          "💡 Add at least one grain and yeast to save your recipe"
+        )
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Public recipe help text", () => {
+    it("shows help text when recipe is public", () => {
+      const publicRecipe = { ...defaultRecipe, is_public: true };
+      render(<RecipeDetails {...defaultProps} recipe={publicRecipe} />);
+
+      expect(
+        screen.getByText(
+          "Other users will be able to view and clone this recipe"
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("hides help text when recipe is not public", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      expect(
+        screen.queryByText(
+          "Other users will be able to view and clone this recipe"
+        )
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Input validation attributes", () => {
+    it("sets correct input attributes for required fields", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const nameInput = screen.getByRole("textbox", { name: /recipe name/i });
+      const batchSizeInput = screen.getByRole("spinbutton", {
+        name: /batch size/i,
+      });
+
+      expect(nameInput).toBeRequired();
+      expect(batchSizeInput).toBeRequired();
+    });
+
+    it("sets correct min/max/step attributes for number inputs", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      const batchSizeInput = screen.getByRole("spinbutton", {
+        name: /batch size/i,
+      });
+      const boilTimeInput = screen.getByRole("spinbutton", {
+        name: /boil time/i,
+      });
+      const efficiencyInput = screen.getByRole("spinbutton", {
+        name: /mash efficiency/i,
+      });
+
+      expect(batchSizeInput).toHaveAttribute("min", "0.5");
+      expect(batchSizeInput).toHaveAttribute("max", "100");
+      expect(batchSizeInput).toHaveAttribute("step", "0.5");
+
+      expect(boilTimeInput).toHaveAttribute("min", "15");
+      expect(boilTimeInput).toHaveAttribute("max", "180");
+      expect(boilTimeInput).toHaveAttribute("step", "15");
+
+      expect(efficiencyInput).toHaveAttribute("min", "50");
+      expect(efficiencyInput).toHaveAttribute("max", "95");
+      expect(efficiencyInput).toHaveAttribute("step", "1");
+    });
+
+    it("sets correct placeholder text", () => {
+      render(<RecipeDetails {...defaultProps} />);
+
+      expect(
+        screen.getByPlaceholderText("Enter recipe name")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("e.g. American IPA, Stout, Wheat Beer")
+      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("60")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("75")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(
+          "Describe your recipe, inspiration, or other relevant details"
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(
+          "Special instructions, tips, or modifications"
+        )
+      ).toBeInTheDocument();
+    });
+  });
+});
