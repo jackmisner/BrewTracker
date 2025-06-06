@@ -236,9 +236,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
             <button
               type="submit"
               className="yeast-add-button btn-primary"
-              disabled={
-                disabled || !yeastForm.ingredient_id || !yeastForm.amount
-              }
+              disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}
             </button>
