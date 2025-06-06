@@ -2,6 +2,7 @@ import FermentableInput from "./FermentableInput";
 import HopInput from "./HopInput";
 import YeastInput from "./YeastInput";
 import OtherInput from "./OtherInput";
+import React from "react";
 
 function IngredientInputsContainer({
   ingredients,

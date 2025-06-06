@@ -544,7 +544,7 @@
   "name": "Galaxy",
   "type": "hop",
   "description": "",
-  "alpha_acid": 14.25
+  "alpha_acid": 14.2
 },
 {
   "_id": {
@@ -553,7 +553,7 @@
   "name": "Hallertau Mittelfruh",
   "type": "hop",
   "description": "",
-  "alpha_acid": 3.75
+  "alpha_acid": 3.7
 },
 {
   "_id": {

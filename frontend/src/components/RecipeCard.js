@@ -3,7 +3,7 @@ import RecipeActions from "./RecipeActions";
 import ApiService from "../services/api";
 import BrewSessionService from "../services/BrewSessionService";
 import CacheManager from "../services/CacheManager";
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import "../styles/RecipeCard.css";
 
@@ -156,6 +156,7 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
               <span className="error-text">{sessionError}</span>
               <button
                 onClick={() => refreshBrewingData(true)}
+                data-testid="refresh-button"
                 className="recipe-card-button refresh-button"
               >
                 Refresh

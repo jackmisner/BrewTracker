@@ -12,8 +12,10 @@ const SearchableSelect = ({
   valueKey = "ingredient_id",
   disabled = false,
   className = "",
-  maxResults = 10,
+  maxResults = 100,
   minQueryLength = 1,
+  // New prop to control the component from outside
+  resetTrigger = null,
   // Fuse.js specific options
   fuseOptions = {},
 }) => {
@@ -25,6 +27,16 @@ const SearchableSelect = ({
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const optionRefs = useRef([]);
+
+  // Reset component when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger !== null) {
+      setQuery("");
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+      setSearchResults([]);
+    }
+  }, [resetTrigger]);
 
   // Create Fuse instance with optimized options
   const fuse = useMemo(() => {
@@ -51,7 +63,7 @@ const SearchableSelect = ({
       minMatchCharLength: 1,
 
       // Result configuration
-      includeScore: true,
+      includeScore: false,
       includeMatches: true, // For highlighting matched text
 
       // Performance
@@ -64,6 +76,15 @@ const SearchableSelect = ({
 
     return new Fuse(options, defaultFuseOptions);
   }, [options, searchKey, fuseOptions]);
+
+  // Sort options alphabetically for when no query is present
+  const sortedOptions = useMemo(() => {
+    return [...options].sort((a, b) => {
+      const nameA = (a[displayKey] || "").toLowerCase();
+      const nameB = (b[displayKey] || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  }, [options, displayKey]);
 
   // Search with Fuse.js
   useEffect(() => {
@@ -80,8 +101,8 @@ const SearchableSelect = ({
       setSearchResults(processedResults);
       setHighlightedIndex(0);
     } else if (query.length === 0) {
-      // Show all options when no query
-      const allResults = options.slice(0, maxResults).map((item) => ({
+      // Show ALL options when no query, sorted alphabetically
+      const allResults = sortedOptions.map((item) => ({
         item,
         score: 0,
         matches: [],
@@ -92,7 +113,7 @@ const SearchableSelect = ({
       setSearchResults([]);
       setHighlightedIndex(-1);
     }
-  }, [query, fuse, maxResults, minQueryLength, options]);
+  }, [query, fuse, maxResults, minQueryLength, sortedOptions]);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -192,9 +213,7 @@ const SearchableSelect = ({
 
   // Handle input focus
   const handleFocus = () => {
-    if (searchResults.length > 0 || query.length === 0) {
-      setIsOpen(true);
-    }
+    setIsOpen(true);
   };
 
   // Clear selection
@@ -211,30 +230,28 @@ const SearchableSelect = ({
     inputRef.current?.focus();
   };
 
-  // Highlight matched text in search results
+  // Improved highlight function that respects word boundaries
   const highlightMatches = (text, matches = []) => {
     if (!matches.length || !query) return text;
 
-    // Find matches for the display key
-    const textMatches = matches.find((match) => match.key === displayKey);
-    if (!textMatches || !textMatches.indices.length) return text;
+    // Simple approach: highlight the exact search query if it appears
+    const searchTerms = query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
 
     let highlightedText = text;
-    let offset = 0;
 
-    // Sort indices by start position
-    const sortedIndices = textMatches.indices.sort((a, b) => a[0] - b[0]);
-
-    sortedIndices.forEach(([start, end]) => {
-      const beforeMatch = highlightedText.slice(0, start + offset);
-      const match = highlightedText.slice(start + offset, end + 1 + offset);
-      const afterMatch = highlightedText.slice(end + 1 + offset);
-
-      const highlightedMatch = `<mark class="search-highlight">${match}</mark>`;
-      highlightedText = beforeMatch + highlightedMatch + afterMatch;
-
-      // Adjust offset for next iteration
-      offset += highlightedMatch.length - match.length;
+    searchTerms.forEach((term) => {
+      // Create a regex that matches the term with word boundaries or at the start of words
+      const regex = new RegExp(
+        `(\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+        "gi"
+      );
+      highlightedText = highlightedText.replace(
+        regex,
+        '<mark class="search-highlight">$1</mark>'
+      );
     });
 
     return highlightedText;
@@ -312,14 +329,6 @@ const SearchableSelect = ({
                     ({highlightMatches(option.manufacturer, matches)})
                   </div>
                 )}
-
-                {/* Show search score in development */}
-                {process.env.NODE_ENV === "development" &&
-                  result.score !== undefined && (
-                    <div className="option-score">
-                      Score: {(result.score * 100).toFixed(1)}%
-                    </div>
-                  )}
               </div>
             );
           })}
