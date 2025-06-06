@@ -329,9 +329,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
             <button
               type="submit"
               className="other-add-button btn-primary"
-              disabled={
-                disabled || !otherForm.ingredient_id || !otherForm.amount
-              }
+              disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}
             </button>
@@ -366,11 +364,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
             {/* Usage description */}
             <div className="usage-description">
               <small>
-                <strong>Usage:</strong>{" "}
-                {
-                  getUsageOptions().find((opt) => opt.value === otherForm.use)
-                    ?.description
-                }
+                <strong>Usage:</strong> Added during the boil
               </small>
             </div>
           </div>
