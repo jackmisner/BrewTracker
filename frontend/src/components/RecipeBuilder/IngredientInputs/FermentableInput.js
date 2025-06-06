@@ -253,11 +253,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               id="add-fermentable-btn"
               type="submit"
               className="fermentable-add-button btn-primary"
-              disabled={
-                disabled ||
-                !fermentableForm.ingredient_id ||
-                !fermentableForm.amount
-              }
+              disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}
             </button>
@@ -292,8 +288,8 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
           {errors.amount && (
             <div className="error-message">{errors.amount}</div>
           )}
-          {errors.ingredient && (
-            <div className="error-message">{errors.ingredient}</div>
+          {errors.ingredient_id && (
+            <div className="error-message">{errors.ingredient_id}</div>
           )}
           {errors.color && <div className="error-message">{errors.color}</div>}
         </div>
