@@ -15,10 +15,14 @@ describe("CacheManager", () => {
   let cacheManager;
   let consoleLogSpy;
   let consoleErrorSpy;
+  const originalConsoleWarn = console.warn;
+  const originalConsoleError = console.error;
 
   beforeEach(() => {
     cacheManager = CacheManager;
     // Clear any existing event listeners
+    console.warn = jest.fn();
+    console.error = jest.fn();
     cacheManager.eventListeners.clear();
     jest.clearAllMocks();
 
@@ -29,6 +33,8 @@ describe("CacheManager", () => {
 
   afterEach(() => {
     // Restore console mocks
+    console.warn = originalConsoleWarn;
+    console.error = originalConsoleError;
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });

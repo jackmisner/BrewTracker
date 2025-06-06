@@ -19,6 +19,8 @@ const renderWithRouter = (component) => {
 };
 
 describe("RecipeActions", () => {
+  const originalConsoleError = console.error;
+
   const mockRecipe = {
     recipe_id: "test-recipe-123",
     name: "Test IPA",
@@ -33,11 +35,15 @@ describe("RecipeActions", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    console.error = jest.fn();
     // Reset API mocks
     ApiService.recipes = {
       clone: jest.fn(),
       delete: jest.fn(),
     };
+  });
+  afterEach(() => {
+    console.error = originalConsoleError;
   });
 
   test("renders all action buttons in full mode", () => {
