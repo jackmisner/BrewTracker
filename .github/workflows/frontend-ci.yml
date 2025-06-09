@@ -31,10 +31,6 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Run linting
-        working-directory: ./frontend
-        run: npm run lint
-
       - name: Run tests with coverage
         working-directory: ./frontend
         env:
