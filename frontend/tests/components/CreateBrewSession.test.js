@@ -1,11 +1,10 @@
 import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
-import { useNavigate, useLocation } from "react-router";
 import CreateBrewSession from "../../src/components/BrewSessions/CreateBrewSession";
 import BrewSessionService from "../../src/services/BrewSessionService";
 import RecipeService from "../../src/services/RecipeService";
 import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
-import { renderWithProviders, mockData, scenarios } from "../testUtils";
+import { renderWithProviders, mockData } from "../testUtils";
 
 // Mock the CSS import
 jest.mock("../../src/styles/BrewSessions.css", () => ({}));
