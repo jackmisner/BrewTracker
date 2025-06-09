@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import RecipeService from "../services/RecipeService";
 import BrewSessionService from "../services/BrewSessionService";
@@ -25,7 +25,7 @@ const ViewRecipe = () => {
         setLoading(true);
         const recipeData = await RecipeService.fetchRecipe(recipeId);
         setRecipe(recipeData);
-        setIngredients(recipeData.ingredients || []);
+        setIngredients(recipeData?.ingredients || []);
       } catch (err) {
         console.error("Error fetching recipe:", err);
         setError(err.message || "Failed to load recipe");
