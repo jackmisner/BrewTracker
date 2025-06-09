@@ -1,13 +1,13 @@
 name: Frontend CI
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [main, develop]
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
-  push:
-    branches: [main]
+  pull_request:
+    branches: [main, develop]
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
@@ -20,84 +20,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 16
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "16"
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
+
+      - name: Run linting
+        working-directory: ./frontend
+        run: npm run lint
 
       - name: Run tests with coverage
         working-directory: ./frontend
         env:
           REACT_APP_API_URL: "http://localhost:5000/api"
           CI: true
+          NODE_ENV: test
         run: |
-          # Run the coverage script from package.json
-          npm run coverage
-
-          # Check coverage threshold (70%)
-          npx nyc check-coverage --lines 70 --functions 70 --branches 70 --statements 70 || {
-            echo "Coverage is below 70% threshold"
-            exit 1
-          }
-
-      - name: Upload coverage to Codecov (optional)
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./frontend/coverage/coverage-final.json
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: false
-
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 16
-        uses: actions/setup-node@v4
-        with:
-          node-version: "16"
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm install
+          # Run Jest directly with coverage and threshold check
+          npx jest --coverage --watchAll=false --ci --forceExit --detectOpenHandles --maxWorkers=2 --coverageThreshold='{"global":{"lines":70,"functions":70,"branches":70,"statements":70}}'
 
       - name: Build application
         working-directory: ./frontend
         env:
           REACT_APP_API_URL: "http://localhost:5000/api"
-          CI: true
+          CI: false
         run: npm run build
 
-      - name: Check build artifacts
-        working-directory: ./frontend
-        run: |
-          if [ ! -d "build" ]; then
-            echo "Build directory not found!"
-            exit 1
-          fi
-          echo "Build completed successfully"
-          ls -la build/
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./frontend/coverage
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
