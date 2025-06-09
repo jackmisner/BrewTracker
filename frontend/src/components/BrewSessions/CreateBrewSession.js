@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
@@ -95,7 +95,11 @@ const CreateBrewSession = () => {
   }
 
   if (error && !recipe && recipeId) {
-    return <div className="error-message">{error}</div>;
+    return (
+      <div role="alert" className="error-message">
+        {error}
+      </div>
+    );
   }
 
   if (!recipeId) {
@@ -111,7 +115,11 @@ const CreateBrewSession = () => {
       <h1 className="page-title">Start New Brew Session</h1>
 
       {error && (
-        <div className="error-message" style={{ marginBottom: "1rem" }}>
+        <div
+          role="alert"
+          className="error-message"
+          style={{ marginBottom: "1rem" }}
+        >
           {error}
           <button
             onClick={() => setError("")}
@@ -129,7 +137,7 @@ const CreateBrewSession = () => {
       )}
 
       {recipe && (
-        <div className="recipe-preview">
+        <div data-testid="recipe-preview" className="recipe-preview">
           <h2>{recipe.name}</h2>
           {recipe.style && <p>{recipe.style}</p>}
           <div className="recipe-preview-metrics">
