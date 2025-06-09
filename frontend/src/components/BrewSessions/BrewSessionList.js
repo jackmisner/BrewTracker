@@ -154,7 +154,11 @@ const BrewSessionList = () => {
           {/* Pagination controls */}
           {paginationInfo.pages > 1 && (
             <div className="brew-sessions-pagination">
-              <div className="pagination-info">
+              <div
+                className="pagination-info"
+                role="status"
+                aria-label="pagination results"
+              >
                 Showing{" "}
                 <span className="font-medium">
                   {(paginationInfo.page - 1) * paginationInfo.per_page + 1}

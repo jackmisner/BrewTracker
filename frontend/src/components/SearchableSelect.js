@@ -277,6 +277,7 @@ const SearchableSelect = ({
         {query && !disabled && (
           <button
             type="button"
+            data-testid="clear-button"
             onClick={handleClear}
             className="searchable-select-clear"
             title="Clear selection"

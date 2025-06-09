@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -86,6 +86,7 @@ const FermentationTracker = ({
   // Set initial OG reading if session has actual_og but no fermentation data
   useEffect(() => {
     if (
+      !loading && // Only trigger after loading is complete - FIXES RACE CONDITION
       !initialOGSet &&
       fermentationData.length === 0 &&
       sessionData.actual_og &&
@@ -98,7 +99,7 @@ const FermentationTracker = ({
       setShowForm(true);
       setInitialOGSet(true);
     }
-  }, [fermentationData, sessionData, initialOGSet]);
+  }, [fermentationData, sessionData, initialOGSet, loading]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

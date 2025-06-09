@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ApiService from "../services/api";
 import RecipeCardContainer from "../components/RecipeCardContainer";
 
