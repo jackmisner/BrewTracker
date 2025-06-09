@@ -111,24 +111,6 @@ jest.mock("../src/components/Header/Layout", () => {
   };
 });
 
-// Mock localStorage
-const mockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-
-Object.defineProperty(window, "localStorage", {
-  value: mockLocalStorage,
-});
-
-// Mock window events
-const mockDispatchEvent = jest.fn();
-Object.defineProperty(window, "dispatchEvent", {
-  value: mockDispatchEvent,
-});
-
 // Custom render function for App component (App already includes Router)
 function renderApp(ui = <App />, options = {}) {
   const queryClient = new QueryClient({
@@ -150,12 +132,15 @@ function renderApp(ui = <App />, options = {}) {
 describe("App", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLocalStorage.getItem.mockReturnValue(null);
+    // Use the global mock from setupTests.js
+    global.mockLocalStorage.clear();
+    global.mockLocalStorage._setStore({});
   });
 
   describe("Initial Loading and Authentication", () => {
     it("shows loading state initially when token exists", () => {
-      mockLocalStorage.getItem.mockReturnValue("mock-token");
+      // Use the global mock instead of local mock
+      global.mockLocalStorage.getItem.mockReturnValue("mock-token");
       ApiService.auth.getProfile.mockReturnValue(new Promise(() => {})); // Never resolves
 
       renderApp();
@@ -164,7 +149,8 @@ describe("App", () => {
     });
 
     it("does not show loading state when no token exists", async () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+      // No need to mock - global mock returns null by default
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -172,13 +158,12 @@ describe("App", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      // Should redirect to login since no user
       expect(screen.getByTestId("login-page")).toBeInTheDocument();
     });
 
     it("fetches user profile when token exists and sets user", async () => {
       const mockUser = { username: "testuser", email: "test@example.com" };
-      mockLocalStorage.getItem.mockReturnValue("existing-token");
+      global.mockLocalStorage.getItem.mockReturnValue("existing-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -198,10 +183,9 @@ describe("App", () => {
     });
 
     it("removes invalid token and shows login when profile fetch fails", async () => {
-      mockLocalStorage.getItem.mockReturnValue("invalid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("invalid-token");
       ApiService.auth.getProfile.mockRejectedValue(new Error("Token expired"));
 
-      // Mock console.error to suppress expected error output
       const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
       renderApp();
@@ -211,11 +195,12 @@ describe("App", () => {
       });
 
       await waitFor(() => {
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
+        expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith(
+          "token"
+        );
         expect(screen.getByTestId("login-page")).toBeInTheDocument();
       });
 
-      // Restore console.error
       consoleSpy.mockRestore();
     });
   });
@@ -223,7 +208,7 @@ describe("App", () => {
   describe("Authentication Flow", () => {
     it("handles successful login", async () => {
       const user = userEvent.setup();
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -231,16 +216,15 @@ describe("App", () => {
         expect(screen.getByTestId("login-page")).toBeInTheDocument();
       });
 
-      // Simulate login
       const loginButton = screen.getByTestId("mock-login-button");
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        expect(global.mockLocalStorage.setItem).toHaveBeenCalledWith(
           "token",
           "mock-token"
         );
-        expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect(global.mockDispatchEvent).toHaveBeenCalledWith(
           expect.objectContaining({ type: "authChange" })
         );
       });
@@ -256,7 +240,7 @@ describe("App", () => {
     it("handles logout", async () => {
       const user = userEvent.setup();
       const mockUser = { username: "testuser" };
-      mockLocalStorage.getItem.mockReturnValue("existing-token");
+      global.mockLocalStorage.getItem.mockReturnValue("existing-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -273,8 +257,10 @@ describe("App", () => {
       await user.click(logoutButton);
 
       await waitFor(() => {
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
-        expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith(
+          "token"
+        );
+        expect(global.mockDispatchEvent).toHaveBeenCalledWith(
           expect.objectContaining({ type: "authChange" })
         );
       });
@@ -288,7 +274,7 @@ describe("App", () => {
 
   describe("Route Protection", () => {
     it("redirects unauthenticated users to login from protected routes", async () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       // For route testing, we need to mock location or navigate programmatically
       // Since we can't control initial route directly, this test will verify
@@ -302,7 +288,7 @@ describe("App", () => {
 
     it("allows authenticated users to access protected routes", async () => {
       const mockUser = { username: "testuser" };
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -320,7 +306,7 @@ describe("App", () => {
 
     it("redirects authenticated users away from auth pages", async () => {
       const mockUser = { username: "testuser" };
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -339,7 +325,7 @@ describe("App", () => {
 
   describe("Error Handling", () => {
     it("handles network error during profile fetch", async () => {
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockRejectedValue(new Error("Network Error"));
 
       // Mock console.error to avoid noise in test output
@@ -356,7 +342,9 @@ describe("App", () => {
           "Failed to get user profile:",
           expect.any(Error)
         );
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
+        expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith(
+          "token"
+        );
         expect(screen.getByTestId("login-page")).toBeInTheDocument();
       });
 
@@ -364,7 +352,7 @@ describe("App", () => {
     });
 
     it("handles API response without user data", async () => {
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockResolvedValue({ data: {} });
 
       renderApp();
@@ -381,7 +369,7 @@ describe("App", () => {
   describe("Layout Integration", () => {
     it("passes user and onLogout to Layout", async () => {
       const mockUser = { username: "testuser", email: "test@example.com" };
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -401,7 +389,7 @@ describe("App", () => {
     });
 
     it("passes null user to Layout when not authenticated", async () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -414,14 +402,14 @@ describe("App", () => {
 
   describe("Token Management", () => {
     it("checks localStorage for token on mount", async () => {
-      mockLocalStorage.getItem.mockReturnValue("existing-token");
+      global.mockLocalStorage.getItem.mockReturnValue("existing-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: { username: "testuser" } },
       });
 
       renderApp();
 
-      expect(mockLocalStorage.getItem).toHaveBeenCalledWith("token");
+      expect(global.mockLocalStorage.getItem).toHaveBeenCalledWith("token");
 
       await waitFor(() => {
         expect(ApiService.auth.getProfile).toHaveBeenCalled();
@@ -429,7 +417,7 @@ describe("App", () => {
     });
 
     it("does not call getProfile when no token exists", async () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -442,7 +430,7 @@ describe("App", () => {
 
     it("stores token on successful login", async () => {
       const user = userEvent.setup();
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -454,7 +442,7 @@ describe("App", () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        expect(global.mockLocalStorage.setItem).toHaveBeenCalledWith(
           "token",
           "mock-token"
         );
@@ -464,7 +452,7 @@ describe("App", () => {
     it("removes token on logout", async () => {
       const user = userEvent.setup();
       const mockUser = { username: "testuser" };
-      mockLocalStorage.getItem.mockReturnValue("existing-token");
+      global.mockLocalStorage.getItem.mockReturnValue("existing-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -479,7 +467,9 @@ describe("App", () => {
       await user.click(logoutButton);
 
       await waitFor(() => {
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
+        expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith(
+          "token"
+        );
       });
     });
   });
@@ -487,7 +477,7 @@ describe("App", () => {
   describe("Auth Events", () => {
     it("dispatches authChange event on login", async () => {
       const user = userEvent.setup();
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -499,7 +489,7 @@ describe("App", () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect(global.mockDispatchEvent).toHaveBeenCalledWith(
           expect.objectContaining({
             type: "authChange",
           })
@@ -510,7 +500,7 @@ describe("App", () => {
     it("dispatches authChange event on logout", async () => {
       const user = userEvent.setup();
       const mockUser = { username: "testuser" };
-      mockLocalStorage.getItem.mockReturnValue("existing-token");
+      global.mockLocalStorage.getItem.mockReturnValue("existing-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: mockUser },
       });
@@ -525,7 +515,7 @@ describe("App", () => {
       await user.click(logoutButton);
 
       await waitFor(() => {
-        expect(mockDispatchEvent).toHaveBeenCalledWith(
+        expect(global.mockDispatchEvent).toHaveBeenCalledWith(
           expect.objectContaining({
             type: "authChange",
           })
@@ -536,7 +526,7 @@ describe("App", () => {
 
   describe("Edge Cases", () => {
     it("handles empty token string", async () => {
-      mockLocalStorage.getItem.mockReturnValue("");
+      global.mockLocalStorage.getItem.mockReturnValue("");
 
       renderApp();
 
@@ -548,7 +538,7 @@ describe("App", () => {
     });
 
     it("handles malformed user data from API", async () => {
-      mockLocalStorage.getItem.mockReturnValue("valid-token");
+      global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockResolvedValue({
         data: { user: null },
       });
@@ -568,12 +558,12 @@ describe("App", () => {
 
       // Note: Token is NOT removed because the API call succeeded (no error),
       // it just returned null user data
-      expect(mockLocalStorage.removeItem).not.toHaveBeenCalled();
+      expect(global.mockLocalStorage.removeItem).not.toHaveBeenCalled();
     });
 
     it("handles multiple rapid auth state changes", async () => {
       const user = userEvent.setup();
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
@@ -598,17 +588,19 @@ describe("App", () => {
 
       // Should handle state changes properly
       await waitFor(() => {
-        expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        expect(global.mockLocalStorage.setItem).toHaveBeenCalledWith(
           "token",
           "mock-token"
         );
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
+        expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith(
+          "token"
+        );
       });
     });
 
     it("handles user data updates correctly", async () => {
       const user = userEvent.setup();
-      mockLocalStorage.getItem.mockReturnValue(null);
+      global.mockLocalStorage.getItem.mockReturnValue(null);
 
       renderApp();
 
