@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import RecipeCard from "./RecipeCard";
 
 const RecipeCardContainer = ({ recipes: initialRecipes, refreshTrigger }) => {
