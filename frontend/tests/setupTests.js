@@ -46,32 +46,69 @@ global.URL.revokeObjectURL = jest.fn();
 global.requestAnimationFrame = (callback) => setTimeout(callback, 0);
 global.cancelAnimationFrame = (id) => clearTimeout(id);
 
-// Mock localStorage with more complete implementation
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  length: 0,
-  key: jest.fn(),
+// Create a functional localStorage mock that actually stores/retrieves values
+const createLocalStorageMock = () => {
+  let store = {};
+
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value?.toString() || "";
+    }),
+    removeItem: jest.fn((key) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: jest.fn((index) => {
+      const keys = Object.keys(store);
+      return keys[index] || null;
+    }),
+    // Helper for tests to access the store
+    _getStore: () => store,
+    _setStore: (newStore) => {
+      store = newStore;
+    },
+  };
 };
+
+// Create the mock and make it global so tests can access it
+global.mockLocalStorage = createLocalStorageMock();
+
 Object.defineProperty(window, "localStorage", {
-  value: localStorageMock,
+  value: global.mockLocalStorage,
+  writable: true,
 });
 
-// Mock sessionStorage
+// Mock sessionStorage with the same structure
 Object.defineProperty(window, "sessionStorage", {
-  value: localStorageMock,
+  value: createLocalStorageMock(),
+  writable: true,
 });
+
+// Mock window.dispatchEvent for auth events
+const mockDispatchEvent = jest.fn();
+Object.defineProperty(window, "dispatchEvent", {
+  value: mockDispatchEvent,
+  writable: true,
+});
+global.mockDispatchEvent = mockDispatchEvent;
 
 // Mock fetch for any components that use it directly
 global.fetch = jest.fn();
 
 // Setup for testing library cleanup
-
 afterEach(() => {
   cleanup();
+  // Clear all mock calls but preserve mock implementations
   jest.clearAllMocks();
+  // Reset localStorage store
+  global.mockLocalStorage.clear();
+  global.mockLocalStorage._setStore({});
 });
 
 // Custom matchers for testing

@@ -1,0 +1,57 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run tests with coverage
+        working-directory: ./frontend
+        env:
+          REACT_APP_API_URL: "http://localhost:5000/api"
+          CI: true
+          NODE_ENV: test
+        run: |
+          # Run Jest directly with coverage and threshold check
+          npx jest --coverage --watchAll=false --ci --forceExit --detectOpenHandles --maxWorkers=2 --coverageThreshold='{"global":{"lines":70,"functions":70,"branches":70,"statements":70}}'
+
+      - name: Build application
+        working-directory: ./frontend
+        env:
+          REACT_APP_API_URL: "http://localhost:5000/api"
+          CI: false
+        run: npm run build
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./frontend/coverage
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false

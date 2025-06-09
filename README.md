@@ -86,7 +86,7 @@ homebrew-tracker/
 
 ## 📋 Requirements
 
-- Node.js (v16+)
+- Node.js (v22+)
 - Python (v3.13+)
 - MongoDB (v7.0+)
 
@@ -98,7 +98,7 @@ homebrew-tracker/
 
 ```bash
 brew install nvm
-nvm install 16
+nvm install 22
 ```
 
 2. Install Python 3.13:
