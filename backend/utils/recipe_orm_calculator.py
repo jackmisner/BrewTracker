@@ -7,6 +7,7 @@ from utils.brewing_calculation_core import (
     calc_ibu_core,
     calc_srm_core,
 )
+from utils.unit_conversions import UnitConverter
 
 
 # Formating functions for various attributes
@@ -99,35 +100,13 @@ def plato_to_specific_gravity(plato):
 
 
 def fahrenheit_to_celsius(temp_f):
-    return (temp_f - 32) * 5 / 9
+    """Convert Fahrenheit to Celsius - now uses UnitConverter"""
+    return UnitConverter.fahrenheit_to_celsius(temp_f)
 
 
 def celsius_to_fahrenheit(temp_c):
-    return (temp_c * 9 / 5) + 32
-
-
-def convert_to_pounds(amount, unit):
-    """Convert various weight units to pounds"""
-    if unit == "oz":
-        return amount / 16.0
-    elif unit == "g":
-        return amount / 453.592
-    elif unit == "kg":
-        return amount * 2.20462
-    elif unit == "lb":
-        return amount
-    return amount  # Default to assuming pounds if unit not recognized
-
-
-def convert_to_ounces(amount, unit):
-    """Convert weight to ounces"""
-    if unit == "g":
-        return amount / 28.3495
-    elif unit == "kg":
-        return amount * 35.274
-    elif unit == "lb":
-        return amount * 16.0
-    return amount  # Default to ounces
+    """Convert Celsius to Fahrenheit - now uses UnitConverter"""
+    return UnitConverter.celsius_to_fahrenheit(temp_c)
 
 
 def calculate_og(recipe):

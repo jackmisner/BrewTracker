@@ -15,9 +15,12 @@ def get_recipes():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
 
-    result = MongoDBService.get_user_recipes(user_id, page, per_page)
+    # Use unit-aware method
+    result = MongoDBService.get_user_recipes_with_units(user_id, page, per_page)
 
-    recipes = [recipe.to_dict() for recipe in result["items"]]
+    # Since get_user_recipes_with_units now returns dictionaries directly,
+    # we don't need to call to_dict() on them
+    recipes = result["items"]
 
     return (
         jsonify(
@@ -42,53 +45,20 @@ def get_recipes():
 @recipes_bp.route("/<recipe_id>", methods=["GET"])
 @jwt_required()
 def get_recipe(recipe_id):
-    recipe = Recipe.objects(id=recipe_id).first()
+    user_id = get_jwt_identity()
 
-    if not recipe:
+    # Use unit-aware method
+    recipe_data = MongoDBService.get_recipe_for_user(recipe_id, user_id)
+
+    if not recipe_data:
         return jsonify({"error": "Recipe not found"}), 404
 
     # Check if user has access to this recipe
-    user_id = get_jwt_identity()
+    recipe = Recipe.objects(id=recipe_id).first()
     if str(recipe.user_id) != user_id and not recipe.is_public:
         return jsonify({"error": "Access denied"}), 403
 
-    return jsonify(recipe.to_dict()), 200
-
-
-@recipes_bp.route("/<recipe_id>/brew-sessions", methods=["GET"])
-@jwt_required()
-def get_recipe_brew_sessions(recipe_id):
-    """Get all brew sessions for a specific recipe"""
-    user_id = get_jwt_identity()
-
-    try:
-        # First verify the recipe exists and user has access
-        recipe = Recipe.objects(id=recipe_id).first()
-        if not recipe:
-            return jsonify({"error": "Recipe not found"}), 404
-
-        if str(recipe.user_id) != user_id and not recipe.is_public:
-            return jsonify({"error": "Access denied"}), 403
-
-        # Get brew sessions for this recipe
-        sessions = MongoDBService.get_recipe_brew_sessions(recipe_id)
-
-        # Filter sessions to only include user's own sessions
-        user_sessions = [
-            session for session in sessions if str(session.user_id) == user_id
-        ]
-
-        # Convert to dict format
-        sessions_data = [session.to_dict() for session in user_sessions]
-
-        return (
-            jsonify({"brew_sessions": sessions_data, "total": len(sessions_data)}),
-            200,
-        )
-
-    except Exception as e:
-        print(f"Error fetching recipe brew sessions: {e}")
-        return jsonify({"error": "Failed to fetch brew sessions"}), 500
+    return jsonify(recipe_data), 200
 
 
 @recipes_bp.route("", methods=["POST"])
@@ -100,11 +70,13 @@ def create_recipe():
     # Add user_id to the recipe data
     data["user_id"] = ObjectId(user_id)
 
-    # Create recipe
-    recipe = MongoDBService.create_recipe(data)
+    # Create recipe with unit awareness
+    recipe = MongoDBService.create_recipe(data, user_id)
 
     if recipe:
-        return jsonify(recipe.to_dict()), 201
+        # Return recipe converted to user's preferred units
+        recipe_data = MongoDBService.get_recipe_for_user(str(recipe.id), user_id)
+        return jsonify(recipe_data), 201
     else:
         return jsonify({"error": "Failed to create recipe"}), 400
 
@@ -149,6 +121,42 @@ def delete_recipe(recipe_id):
     recipe.delete()
 
     return jsonify({"message": "Recipe deleted successfully"}), 200
+
+
+@recipes_bp.route("/<recipe_id>/brew-sessions", methods=["GET"])
+@jwt_required()
+def get_recipe_brew_sessions(recipe_id):
+    """Get all brew sessions for a specific recipe"""
+    user_id = get_jwt_identity()
+
+    try:
+        # First verify the recipe exists and user has access
+        recipe = Recipe.objects(id=recipe_id).first()
+        if not recipe:
+            return jsonify({"error": "Recipe not found"}), 404
+
+        if str(recipe.user_id) != user_id and not recipe.is_public:
+            return jsonify({"error": "Access denied"}), 403
+
+        # Get brew sessions for this recipe
+        sessions = MongoDBService.get_recipe_brew_sessions(recipe_id)
+
+        # Filter sessions to only include user's own sessions
+        user_sessions = [
+            session for session in sessions if str(session.user_id) == user_id
+        ]
+
+        # Convert to dict format
+        sessions_data = [session.to_dict() for session in user_sessions]
+
+        return (
+            jsonify({"brew_sessions": sessions_data, "total": len(sessions_data)}),
+            200,
+        )
+
+    except Exception as e:
+        print(f"Error fetching recipe brew sessions: {e}")
+        return jsonify({"error": "Failed to fetch brew sessions"}), 500
 
 
 @recipes_bp.route("/<recipe_id>/metrics", methods=["GET"])

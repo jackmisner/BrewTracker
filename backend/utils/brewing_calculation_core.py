@@ -1,28 +1,15 @@
 # Core calculation functions used by helpers.py and recipe_calculations.py
+from utils.unit_conversions import UnitConverter
 
 
 def convert_to_pounds(amount, unit):
-    """Convert various weight units to pounds"""
-    if unit == "oz":
-        return amount / 16.0
-    elif unit == "g":
-        return amount / 453.592
-    elif unit == "kg":
-        return amount * 2.20462
-    elif unit == "lb":
-        return amount
-    return amount  # Default to assuming pounds if unit not recognized
+    """Convert various weight units to pounds - now uses UnitConverter"""
+    return UnitConverter.convert_to_pounds(amount, unit)
 
 
 def convert_to_ounces(amount, unit):
-    """Convert weight to ounces"""
-    if unit == "g":
-        return amount / 28.3495
-    elif unit == "kg":
-        return amount * 35.274
-    elif unit == "lb":
-        return amount * 16.0
-    return amount  # Default to ounces
+    """Convert weight to ounces - now uses UnitConverter"""
+    return UnitConverter.convert_to_ounces(amount, unit)
 
 
 # Core calculation functions that work with normalized inputs

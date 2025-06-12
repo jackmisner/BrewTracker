@@ -62,6 +62,52 @@ class MongoDBService:
     ###########################################################
 
     @staticmethod
+    def get_recipe_for_user(recipe_id, user_id):
+        """Get recipe converted to user's preferred units"""
+        try:
+            recipe = Recipe.objects(id=recipe_id).first()
+            if not recipe:
+                return None
+
+            user = User.objects(id=user_id).first()
+            if not user:
+                return recipe.to_dict()
+
+            # Convert recipe to user's preferred units
+            recipe_dict = recipe.to_dict()
+            return user.convert_recipe_to_preferred_units(recipe_dict)
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return None
+
+    @staticmethod
+    def get_user_recipes_with_units(user_id, page=1, per_page=10):
+        """Get user recipes with unit conversion"""
+        try:
+            user = User.objects(id=user_id).first()
+            if not user:
+                return MongoDBService.get_user_recipes(user_id, page, per_page)
+
+            # Get recipes normally
+            result = MongoDBService.get_user_recipes(user_id, page, per_page)
+
+            # Convert each recipe to user's preferred units
+            converted_recipes = []
+            for recipe in result["items"]:
+                recipe_dict = recipe.to_dict()
+                converted_dict = user.convert_recipe_to_preferred_units(recipe_dict)
+                # Just append the converted dictionary, don't create a type object
+                converted_recipes.append(converted_dict)
+
+            result["items"] = converted_recipes
+            return result
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return MongoDBService.get_user_recipes(user_id, page, per_page)
+
+    @staticmethod
     def get_user_recipes(user_id, page=1, per_page=10):
         """Get all recipes for a user with pagination"""
         try:
@@ -247,11 +293,27 @@ class MongoDBService:
             return []
 
     @staticmethod
-    def create_recipe(recipe_data):
-        """Create a new recipe with embedded ingredients"""
+    def create_recipe(recipe_data, user_id=None):
+        """Create a new recipe with unit conversion support"""
         try:
+            # Get user for unit preferences
+            user = None
+            if user_id:
+                user = User.objects(id=user_id).first()
+
             # Extract ingredients data if provided
             ingredients_data = recipe_data.pop("ingredients", [])
+
+            # Convert recipe data to storage format (keep user's preferred units)
+            if user and user.get_preferred_units() == "metric":
+                # Store metric batch sizes in liters
+                if "batch_size" in recipe_data and "batch_size_unit" not in recipe_data:
+                    # Assume gallons if no unit specified
+                    from utils.unit_conversions import UnitConverter
+
+                    recipe_data["batch_size"] = UnitConverter.convert_volume(
+                        recipe_data["batch_size"], "gal", "l"
+                    )
 
             # Create recipe object
             recipe = Recipe(**recipe_data)

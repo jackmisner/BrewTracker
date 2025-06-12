@@ -91,6 +91,48 @@ class User(Document):
 
         self.save()
 
+    def get_preferred_units(self):
+        """Get user's preferred unit system"""
+        if self.settings and hasattr(self.settings, "preferred_units"):
+            return self.settings.preferred_units
+        return "imperial"  # Default
+
+    def get_unit_preferences(self):
+        """Get detailed unit preferences for the user"""
+        from utils.unit_conversions import UnitConverter
+
+        return UnitConverter.get_preferred_units(self.get_preferred_units())
+
+    def convert_recipe_to_preferred_units(self, recipe_data):
+        """Convert recipe data to user's preferred units"""
+        from utils.unit_conversions import UnitConverter
+
+        if not recipe_data:
+            return recipe_data
+
+        converted = recipe_data.copy()
+        target_system = self.get_preferred_units()
+
+        # Convert batch size
+        if "batch_size" in converted:
+            # Assume batch size is in gallons, convert if user prefers metric
+            if target_system == "metric":
+                converted["batch_size"] = UnitConverter.convert_volume(
+                    converted["batch_size"], "gal", "l"
+                )
+                converted["batch_size_unit"] = "l"
+            else:
+                converted["batch_size_unit"] = "gal"
+
+        # Convert ingredients
+        if "ingredients" in converted and isinstance(converted["ingredients"], list):
+            converted["ingredients"] = [
+                UnitConverter.normalize_ingredient_data(ing, target_system)
+                for ing in converted["ingredients"]
+            ]
+
+        return converted
+
     def to_dict(self):
         return {
             "user_id": str(self.id),
@@ -311,8 +353,34 @@ class BrewSession(Document):
         "indexes": ["user_id", "recipe_id", "brew_date", "status"],
     }
 
+    # Store temperature unit preference
+    temperature_unit = StringField(choices=["F", "C"], default="F")
+
+    def convert_temperatures_to_unit(self, target_unit):
+        """Convert all temperature fields to target unit"""
+        from utils.unit_conversions import UnitConverter
+
+        if self.temperature_unit == target_unit:
+            return self  # No conversion needed
+
+        # Convert mash temperature
+        if self.mash_temp:
+            self.mash_temp = UnitConverter.convert_temperature(
+                self.mash_temp, self.temperature_unit, target_unit
+            )
+
+        # Convert fermentation data temperatures
+        for entry in self.fermentation_data:
+            if entry.temperature:
+                entry.temperature = UnitConverter.convert_temperature(
+                    entry.temperature, self.temperature_unit, target_unit
+                )
+
+        self.temperature_unit = target_unit
+        return self
+
     def to_dict(self):
-        return {
+        base_dict = {
             "session_id": str(self.id),
             "recipe_id": str(self.recipe_id),
             "user_id": str(self.user_id),
@@ -346,4 +414,8 @@ class BrewSession(Document):
             "tasting_notes": self.tasting_notes,
             "batch_rating": self.batch_rating,
             "photos_url": self.photos_url,
+            # Add temperature unit info
+            "temperature_unit": self.temperature_unit,
         }
+
+        return base_dict

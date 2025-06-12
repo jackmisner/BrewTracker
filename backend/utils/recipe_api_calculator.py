@@ -7,6 +7,7 @@ from utils.brewing_calculation_core import (
     calc_ibu_core,
     calc_srm_core,
 )
+from utils.unit_conversions import UnitConverter
 
 
 def calculate_og_preview(recipe_data):
@@ -91,11 +92,23 @@ def calculate_srm_preview(recipe_data):
 
 
 def calculate_all_metrics_preview(recipe_data):
-    """Calculate all metrics for a recipe preview"""
+    """Calculate all metrics for a recipe preview with enhanced unit awareness"""
+    # Normalize batch size to gallons for calculation consistency
+    batch_size = float(recipe_data.get("batch_size", 5))
+    batch_size_unit = recipe_data.get("batch_size_unit", "gal")
+
+    # Convert batch size to gallons if needed
+    if batch_size_unit != "gal":
+        batch_size = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
+
+    # Create normalized recipe data for calculations
+    normalized_recipe = recipe_data.copy()
+    normalized_recipe["batch_size"] = batch_size
+
     return {
-        "og": calculate_og_preview(recipe_data),
-        "fg": calculate_fg_preview(recipe_data),
-        "abv": calculate_abv_preview(recipe_data),
-        "ibu": calculate_ibu_preview(recipe_data),
-        "srm": calculate_srm_preview(recipe_data),
+        "og": calculate_og_preview(normalized_recipe),
+        "fg": calculate_fg_preview(normalized_recipe),
+        "abv": calculate_abv_preview(normalized_recipe),
+        "ibu": calculate_ibu_preview(normalized_recipe),
+        "srm": calculate_srm_preview(normalized_recipe),
     }

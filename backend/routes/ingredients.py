@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
-from models.mongo_models import Ingredient
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models.mongo_models import Ingredient, User
 from services.mongodb_service import MongoDBService
 
 ingredients_bp = Blueprint("ingredients", __name__)
@@ -9,6 +9,8 @@ ingredients_bp = Blueprint("ingredients", __name__)
 @ingredients_bp.route("", methods=["GET"])
 @jwt_required()
 def get_ingredients():
+    user_id = get_jwt_identity()
+
     # Optional query parameters
     type_filter = request.args.get("type")
     search = request.args.get("search")
@@ -22,7 +24,44 @@ def get_ingredients():
 
     ingredients = Ingredient.objects(**query)
 
-    return jsonify([ingredient.to_dict() for ingredient in ingredients]), 200
+    # Get user's unit preferences
+    user = User.objects(id=user_id).first()
+    unit_system = user.get_preferred_units() if user else "imperial"
+
+    from utils.unit_conversions import UnitConverter
+
+    unit_preferences = UnitConverter.get_preferred_units(unit_system)
+
+    # Add default units to ingredient data
+    ingredients_with_units = []
+    for ingredient in ingredients:
+        ing_dict = ingredient.to_dict()
+
+        # Add suggested units based on ingredient type and user preferences
+        if ingredient.type == "grain":
+            ing_dict["suggested_unit"] = unit_preferences["weight_large"]
+        elif ingredient.type == "hop":
+            ing_dict["suggested_unit"] = unit_preferences["weight_small"]
+        elif ingredient.type == "yeast":
+            if unit_system == "metric":
+                ing_dict["suggested_unit"] = "g"
+            else:
+                ing_dict["suggested_unit"] = "pkg"  # Packages are universal
+        else:  # other/adjunct
+            ing_dict["suggested_unit"] = unit_preferences["weight_small"]
+
+        ingredients_with_units.append(ing_dict)
+
+    return (
+        jsonify(
+            {
+                "ingredients": ingredients_with_units,
+                "unit_system": unit_system,
+                "unit_preferences": unit_preferences,
+            }
+        ),
+        200,
+    )
 
 
 @ingredients_bp.route("/<ingredient_id>", methods=["GET"])
