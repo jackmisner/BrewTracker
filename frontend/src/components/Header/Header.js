@@ -21,6 +21,9 @@ function Header({ user, onLogout }) {
               <Link to="/brew-sessions" className="nav-link">
                 Brew Sessions
               </Link>
+              <Link to="/settings" className="nav-link">
+                Settings
+              </Link>
               <button onClick={onLogout} className="nav-link">
                 Logout
               </button>

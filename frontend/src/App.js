@@ -14,6 +14,7 @@ import BrewSessionList from "./components/BrewSessions/BrewSessionList";
 import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
+import UserSettings from "./pages/UserSettings";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -92,6 +93,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <UserSettings />
               </ProtectedRoute>
             }
           />

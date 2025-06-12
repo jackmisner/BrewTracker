@@ -47,6 +47,17 @@ const ApiService = {
     getProfile: () => api.get("/auth/profile"),
   },
 
+  // User settings endpoints
+  user: {
+    getSettings: () => api.get("/user/settings"),
+    updateSettings: (settingsData) => api.put("/user/settings", settingsData),
+    updateProfile: (profileData) => api.put("/user/profile", profileData),
+    changePassword: (passwordData) =>
+      api.post("/user/change-password", passwordData),
+    deleteAccount: (confirmationData) =>
+      api.post("/user/delete-account", confirmationData),
+  },
+
   // Recipe endpoints
   recipes: {
     getAll: (page = 1, perPage = 10) =>
