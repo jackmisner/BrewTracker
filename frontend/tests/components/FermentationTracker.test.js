@@ -112,6 +112,7 @@ const defaultProps = {
 describe("FermentationTracker", () => {
   // Mock console.error to suppress noise in test output
   const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
 
   /*
    * Note: FermentationTracker has auto-form behavior that shows the form automatically
@@ -122,6 +123,7 @@ describe("FermentationTracker", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     console.error = jest.fn();
+    console.warn = jest.fn();
     mockConfirm.mockReturnValue(true);
 
     // Default successful API responses
@@ -144,6 +146,7 @@ describe("FermentationTracker", () => {
 
   afterEach(() => {
     console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   describe("Loading State", () => {
@@ -164,7 +167,7 @@ describe("FermentationTracker", () => {
   });
 
   describe("Error Handling", () => {
-    it("should show error message when data fetch fails", async () => {
+    it("should show generic error message when data fetch fails", async () => {
       ApiService.brewSessions.getFermentationData.mockRejectedValue(
         new Error("Failed to fetch data")
       );
@@ -173,7 +176,70 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("No fermentation data found for this session.")
+          screen.getByText(
+            "Failed to load fermentation data. Please try again."
+          )
+        ).toBeInTheDocument();
+      });
+
+      expect(console.error).toHaveBeenCalledWith(
+        "Error fetching fermentation data:",
+        expect.any(Error)
+      );
+    });
+
+    it("should show specific error message for 404 errors", async () => {
+      const notFoundError = new Error("Not found");
+      notFoundError.response = { status: 404 };
+      ApiService.brewSessions.getFermentationData.mockRejectedValue(
+        notFoundError
+      );
+
+      renderWithProviders(<FermentationTracker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Brew session not found.")).toBeInTheDocument();
+      });
+
+      expect(console.error).toHaveBeenCalledWith(
+        "Error fetching fermentation data:",
+        expect.any(Error)
+      );
+    });
+
+    it("should show access denied for 403 errors", async () => {
+      const accessDeniedError = new Error("Access denied");
+      accessDeniedError.response = { status: 403 };
+      ApiService.brewSessions.getFermentationData.mockRejectedValue(
+        accessDeniedError
+      );
+
+      renderWithProviders(<FermentationTracker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Access denied to fermentation data.")
+        ).toBeInTheDocument();
+      });
+
+      expect(console.error).toHaveBeenCalledWith(
+        "Error fetching fermentation data:",
+        expect.any(Error)
+      );
+    });
+
+    it("should show backend error message when available", async () => {
+      const backendError = new Error("Backend error");
+      backendError.response = { data: { error: "Database connection failed" } };
+      ApiService.brewSessions.getFermentationData.mockRejectedValue(
+        backendError
+      );
+
+      renderWithProviders(<FermentationTracker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Database connection failed")
         ).toBeInTheDocument();
       });
 
@@ -244,6 +310,26 @@ describe("FermentationTracker", () => {
         "Error deleting fermentation entry:",
         expect.any(Error)
       );
+    });
+
+    it("should gracefully handle stats fetch errors", async () => {
+      ApiService.brewSessions.getFermentationStats.mockRejectedValue(
+        new Error("Stats error")
+      );
+
+      renderWithProviders(<FermentationTracker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Fermentation Tracking")).toBeInTheDocument();
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        "Error fetching fermentation stats:",
+        expect.any(Error)
+      );
+
+      // Should still show other content
+      expect(screen.getByText("Add Entry")).toBeInTheDocument();
     });
   });
 
@@ -368,6 +454,35 @@ describe("FermentationTracker", () => {
       await waitFor(() => {
         expect(
           screen.getByText("No fermentation data recorded yet.")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'Use the "Add Entry" button above to start tracking your fermentation progress.'
+          )
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show error state message when there's an error but still allow adding data", async () => {
+      ApiService.brewSessions.getFermentationData.mockRejectedValue(
+        new Error("Network error")
+      );
+
+      renderWithProviders(<FermentationTracker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "Failed to load fermentation data. Please try again."
+          )
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("Unable to load existing fermentation data.")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            "You can still add new fermentation readings using the form above."
+          )
         ).toBeInTheDocument();
       });
     });
