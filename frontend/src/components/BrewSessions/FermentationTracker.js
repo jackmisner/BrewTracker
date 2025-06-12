@@ -37,20 +37,44 @@ const FermentationTracker = ({
   const fetchFermentationData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(""); // Clear any existing errors
 
       // Fetch fermentation data entries
       const response = await ApiService.brewSessions.getFermentationData(
         sessionId
       );
-      setFermentationData(response.data);
+      setFermentationData(response.data || []);
 
       // Fetch fermentation statistics
-      const statsResponse = await ApiService.brewSessions.getFermentationStats(
-        sessionId
-      );
-      if (statsResponse.data) {
-        setStats(statsResponse.data);
-      } else {
+      try {
+        const statsResponse =
+          await ApiService.brewSessions.getFermentationStats(sessionId);
+        if (statsResponse.data) {
+          setStats(statsResponse.data);
+        } else {
+          setStats({
+            gravity: {
+              initial: null,
+              current: null,
+              drop: null,
+              attenuation: null,
+            },
+            temperature: {
+              min: null,
+              max: null,
+              avg: null,
+            },
+            ph: {
+              min: null,
+              max: null,
+              avg: null,
+              data: [],
+            },
+          });
+        }
+      } catch (statsErr) {
+        console.warn("Error fetching fermentation stats:", statsErr);
+        // Don't set error for stats failure, just use default empty stats
         setStats({
           gravity: {
             initial: null,
@@ -58,22 +82,29 @@ const FermentationTracker = ({
             drop: null,
             attenuation: null,
           },
-          temperature: {
-            min: null,
-            max: null,
-            avg: null,
-          },
-          ph: {
-            min: null,
-            max: null,
-            avg: null,
-            data: [],
-          },
+          temperature: { min: null, max: null, avg: null },
+          ph: { min: null, max: null, avg: null, data: [] },
         });
       }
     } catch (err) {
       console.error("Error fetching fermentation data:", err);
-      setError("No fermentation data found for this session.");
+
+      // Handle different types of errors more gracefully
+      if (err.response?.status === 404) {
+        setError("Brew session not found.");
+      } else if (err.response?.status === 403) {
+        setError("Access denied to fermentation data.");
+      } else if (err.response?.data?.error) {
+        // If the backend returns a specific error message, use it
+        setError(err.response.data.error);
+      } else {
+        // Generic error for network issues, etc.
+        setError("Failed to load fermentation data. Please try again.");
+      }
+
+      // Set empty data on error
+      setFermentationData([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -266,6 +297,7 @@ const FermentationTracker = ({
         </button>
       </div>
 
+      {/* Only show error if there's an actual error, not just no data */}
       {error && <div className="error-message">{error}</div>}
 
       {/* Form for adding new fermentation data */}
@@ -352,9 +384,20 @@ const FermentationTracker = ({
 
       {loading ? (
         <div className="loading-message">Loading fermentation data...</div>
+      ) : error ? (
+        // If there's an error, show error state but still allow adding data
+        <div className="brew-session-section">
+          <h3 className="section-title">Fermentation Data Log</h3>
+          <div className="empty-message">
+            <p>Unable to load existing fermentation data.</p>
+            <p>
+              You can still add new fermentation readings using the form above.
+            </p>
+          </div>
+        </div>
       ) : (
         <>
-          {/* Fermentation stats summary */}
+          {/* Fermentation stats summary - only show if we have stats */}
           {stats && (
             <div className="fermentation-stats">
               <div className="fermentation-stat-card">
@@ -533,7 +576,7 @@ const FermentationTracker = ({
             </div>
           )}
 
-          {/* Chart visualization */}
+          {/* Chart visualization - only show if we have data */}
           {chartData.length > 0 && (
             <div className="brew-session-section">
               <h3 className="section-title">Fermentation Progress</h3>
@@ -583,9 +626,13 @@ const FermentationTracker = ({
           <div className="brew-session-section">
             <h3 className="section-title">Fermentation Data Log</h3>
             {fermentationData.length === 0 ? (
-              <p className="empty-message">
-                No fermentation data recorded yet.
-              </p>
+              <div className="empty-message">
+                <p>No fermentation data recorded yet.</p>
+                <p>
+                  Use the "Add Entry" button above to start tracking your
+                  fermentation progress.
+                </p>
+              </div>
             ) : (
               <div className="fermentation-table-responsive">
                 <table className="fermentation-table">

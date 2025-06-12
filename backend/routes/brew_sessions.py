@@ -148,10 +148,17 @@ def get_fermentation_data(session_id):
     # Get fermentation data
     data, message = MongoDBService.get_fermentation_data(session_id)
 
+    # Always return 200 if session exists and user has access
+    # data will be an empty list if no fermentation data exists
     if data is not None:
         return jsonify(data), 200
     else:
-        return jsonify({"error": message}), 404
+        # Only return 404 if there's a real error (like session not found)
+        # For other errors, return 500
+        if "not found" in message.lower():
+            return jsonify({"error": message}), 404
+        else:
+            return jsonify({"error": message}), 500
 
 
 @brew_sessions_bp.route("/<session_id>/fermentation", methods=["POST"])

@@ -345,9 +345,10 @@ describe("ViewBrewSession", () => {
         'Are you sure you want to update the status to "conditioning"?'
       );
 
-      // Check service was called with correct data
+      // Check service was called with correct data including session name
       await waitFor(() => {
         expect(BrewSessionService.updateBrewSession).toHaveBeenCalledWith("1", {
+          name: "Test Session", // This is now included to fix validation
           status: "conditioning",
           fermentation_end_date: "2024-06-15",
         });

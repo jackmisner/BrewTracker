@@ -96,6 +96,7 @@ const ViewBrewSession = () => {
         const updatedSession = await BrewSessionService.updateBrewSession(
           sessionId,
           {
+            name: session.name, // Include the existing name to avoid validation error
             status: newStatus,
             ...additionalData,
           }

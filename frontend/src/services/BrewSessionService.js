@@ -368,11 +368,23 @@ class BrewSessionService {
       errors.push("Recipe is required");
     }
 
-    if (!sessionData.name || sessionData.name.trim().length === 0) {
-      errors.push("Session name is required");
+    // For creation, always require name
+    // For updates, only require name if the name field is present and empty
+    if (isCreate) {
+      if (!sessionData.name || sessionData.name.trim().length === 0) {
+        errors.push("Session name is required");
+      }
+    } else {
+      // For updates, only validate name if it's being explicitly set
+      if (
+        sessionData.hasOwnProperty("name") &&
+        (!sessionData.name || sessionData.name.trim().length === 0)
+      ) {
+        errors.push("Session name is required");
+      }
     }
 
-    if (!sessionData.status) {
+    if (isCreate && !sessionData.status) {
       errors.push("Session status is required");
     }
 

@@ -580,7 +580,38 @@ describe("BrewSessionService", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    test("catches validation errors", () => {
+    test("validates status-only update without name", () => {
+      const statusOnlyUpdate = {
+        status: "completed",
+        fermentation_end_date: "2024-06-15",
+        // No name field - this should be valid for updates
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        statusOnlyUpdate,
+        false
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    test("allows update with name present and valid", () => {
+      const validUpdateWithName = {
+        name: "Updated Session Name",
+        status: "completed",
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        validUpdateWithName,
+        false
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    test("catches validation errors for creation", () => {
       const invalidData = {
         name: "",
         // Missing recipe_id for creation
@@ -610,6 +641,37 @@ describe("BrewSessionService", () => {
       expect(result.errors).toContain("Rating must be between 1 and 5");
     });
 
+    test("catches validation errors for update when name is explicitly empty", () => {
+      const invalidUpdateData = {
+        name: "", // Explicitly setting empty name should fail
+        status: "completed",
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        invalidUpdateData,
+        false
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Session name is required");
+    });
+
+    test("allows update without name field present", () => {
+      const validUpdateData = {
+        status: "completed",
+        actual_og: 1.055,
+        // No name field at all - should be valid
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        validUpdateData,
+        false
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
     test("validates gravity relationship", () => {
       const invalidData = {
         name: "Test",
@@ -628,6 +690,54 @@ describe("BrewSessionService", () => {
       expect(result.errors).toContain(
         "Final gravity must be less than original gravity"
       );
+    });
+
+    test("validates creation with missing name", () => {
+      const invalidCreationData = {
+        // Missing name
+        recipe_id: "recipe-1",
+        status: "planned",
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        invalidCreationData,
+        true
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Session name is required");
+    });
+
+    test("validates creation with empty name", () => {
+      const invalidCreationData = {
+        name: "",
+        recipe_id: "recipe-1",
+        status: "planned",
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        invalidCreationData,
+        true
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Session name is required");
+    });
+
+    test("validates creation with whitespace-only name", () => {
+      const invalidCreationData = {
+        name: "   ",
+        recipe_id: "recipe-1",
+        status: "planned",
+      };
+
+      const result = brewSessionService.validateBrewSessionData(
+        invalidCreationData,
+        true
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Session name is required");
     });
   });
 

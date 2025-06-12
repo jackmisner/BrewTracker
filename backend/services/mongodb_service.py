@@ -674,8 +674,14 @@ class MongoDBService:
             if not session:
                 return None, "Brew session not found"
 
-            # Return sorted by entry_date
-            entries = sorted(session.fermentation_data, key=lambda x: x.entry_date)
+            # Return sorted by entry_date - this will be an empty list if no data exists
+            entries = (
+                sorted(session.fermentation_data, key=lambda x: x.entry_date)
+                if session.fermentation_data
+                else []
+            )
+
+            # Always return the list (empty or with data) and success message
             return [
                 entry.to_dict() for entry in entries
             ], "Fermentation data retrieved successfully"
