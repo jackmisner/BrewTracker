@@ -166,7 +166,9 @@ describe("CreateBrewSession", () => {
 
       await waitFor(() => {
         const brewDateInput = screen.getByLabelText("Brew Date");
-        expect(brewDateInput.value).toBe("2025-06-09"); // Based on current date
+        expect(brewDateInput.value).toBe(
+          new Date().toISOString().split("T")[0]
+        );
       });
     });
 
@@ -285,7 +287,7 @@ describe("CreateBrewSession", () => {
           expect.objectContaining({
             recipe_id: "123",
             name: "My Brew Session",
-            brew_date: "2025-06-09",
+            brew_date: new Date().toISOString().split("T")[0],
             status: "planned",
             notes: "",
           })
