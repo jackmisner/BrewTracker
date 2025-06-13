@@ -36,6 +36,7 @@ export const UnitProvider = ({ children }) => {
 
   // Update unit system and persist to backend
   const updateUnitSystem = async (newSystem) => {
+    const previousSystem = unitSystem; // Store the previous value
     try {
       setUnitSystem(newSystem);
 
@@ -46,8 +47,8 @@ export const UnitProvider = ({ children }) => {
     } catch (err) {
       console.error("Failed to update unit system:", err);
       setError("Failed to save unit preference");
-      // Revert on error
-      setUnitSystem(unitSystem);
+      // Revert on error using the stored previous value
+      setUnitSystem(previousSystem);
     }
   };
 

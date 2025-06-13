@@ -31,6 +31,16 @@ const convertUnit = (value, fromUnit, toUnit) => {
   } else if (fromUnit === "oz" && toUnit === "lb") {
     convertedValue = numValue / 16;
   }
+  // Missing conversions - ADD THESE
+  else if (fromUnit === "g" && toUnit === "lb") {
+    convertedValue = numValue / 453.592;
+  } else if (fromUnit === "lb" && toUnit === "g") {
+    convertedValue = numValue * 453.592;
+  } else if (fromUnit === "kg" && toUnit === "oz") {
+    convertedValue = numValue * 35.274;
+  } else if (fromUnit === "oz" && toUnit === "kg") {
+    convertedValue = numValue / 35.274;
+  }
 
   // Volume conversions
   else if (fromUnit === "gal" && toUnit === "l") {
@@ -41,6 +51,12 @@ const convertUnit = (value, fromUnit, toUnit) => {
     convertedValue = numValue / 1000;
   } else if (fromUnit === "l" && toUnit === "ml") {
     convertedValue = numValue * 1000;
+  }
+  // Missing conversions - ADD THESE
+  else if (fromUnit === "ml" && toUnit === "gal") {
+    convertedValue = numValue / 3785.41;
+  } else if (fromUnit === "gal" && toUnit === "ml") {
+    convertedValue = numValue * 3785.41;
   }
 
   // Temperature conversions
@@ -67,15 +83,15 @@ const getAppropriateUnit = (unitSystem, measurementType, amount = 0) => {
   switch (measurementType) {
     case "weight":
       if (unitSystem === "metric") {
-        return amount > 1000 ? "kg" : "g";
+        return amount >= 1000 ? "kg" : "g";
       } else {
-        return amount > 16 ? "lb" : "oz";
+        return amount >= 16 ? "lb" : "oz";
       }
     case "hop_weight":
       return unitSystem === "metric" ? "g" : "oz";
     case "volume":
       if (unitSystem === "metric") {
-        return amount > 1000 ? "l" : "ml";
+        return amount >= 1000 ? "l" : "ml";
       } else {
         return "gal";
       }
@@ -137,19 +153,61 @@ export function formatSrm(srm) {
 export function formatWeight(amount, unit, unitSystem = "imperial") {
   if (!amount && amount !== 0) return "-";
 
-  const targetUnit = getAppropriateUnit(unitSystem, "weight", amount);
-  const converted = convertUnit(amount, unit, targetUnit);
+  // Only convert if we're crossing unit systems
+  const metricWeight = ["g", "kg"];
+  const imperialWeight = ["oz", "lb"];
 
-  return formatValueStandalone(converted.value, converted.unit, "weight");
+  const needsConversion =
+    (metricWeight.includes(unit) && unitSystem === "imperial") ||
+    (imperialWeight.includes(unit) && unitSystem === "metric");
+
+  if (needsConversion) {
+    const targetUnit = getAppropriateUnit(unitSystem, "weight", amount);
+    const converted = convertUnit(amount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "weight");
+  } else {
+    // Stay in the same unit system, only convert to larger units if amount is large
+    let targetUnit = unit;
+    if (unit === "g" && amount >= 1000) {
+      targetUnit = "kg";
+    } else if (unit === "oz" && amount >= 16) {
+      targetUnit = "lb";
+    }
+
+    const converted = convertUnit(amount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "weight");
+  }
 }
 
 export function formatVolume(amount, unit, unitSystem = "imperial") {
   if (!amount && amount !== 0) return "-";
 
-  const targetUnit = getAppropriateUnit(unitSystem, "volume", amount);
-  const converted = convertUnit(amount, unit, targetUnit);
+  // Only convert if we're crossing unit systems
+  const metricVolume = ["ml", "l"];
+  const imperialVolume = ["gal", "floz", "cup", "pint", "quart"];
 
-  return formatValueStandalone(converted.value, converted.unit, "volume");
+  const needsConversion =
+    (metricVolume.includes(unit) && unitSystem === "imperial") ||
+    (imperialVolume.includes(unit) && unitSystem === "metric");
+
+  if (needsConversion) {
+    const targetUnit = getAppropriateUnit(unitSystem, "volume", amount);
+    const converted = convertUnit(amount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "volume");
+  } else {
+    // Stay in the same unit system, only convert to larger units if amount is large
+    let targetUnit = unit;
+    if (unit === "ml" && amount >= 1000) {
+      targetUnit = "l";
+    } else if (unit === "l" && amount === 0) {
+      // Special case: 0 liters should be displayed as 0 ml
+      targetUnit = "ml";
+    }
+    // Note: We don't auto-convert oz/cup/pint/quart to gal as those are different use cases
+
+    const converted = convertUnit(amount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "volume");
+  }
 }
 
 export function formatTemperature(temp, unit, unitSystem = "imperial") {
@@ -250,15 +308,37 @@ export function formatIngredientAmountWithContext(
   return formatValueStandalone(numAmount, unit, measurementType);
 }
 
-// Helper function to determine if unit conversion makes sense
+// Helper function to determine if unit conversion makes sense - FIXED
 function shouldConvertUnit(amount, fromUnit, toUnit) {
   // Don't convert if same unit
   if (fromUnit === toUnit) return false;
 
-  // Don't convert small amounts to larger units
-  if (fromUnit === "g" && toUnit === "kg" && amount < 100) return false;
-  if (fromUnit === "oz" && toUnit === "lb" && amount < 8) return false;
-  if (fromUnit === "ml" && toUnit === "l" && amount < 250) return false;
+  // Allow conversions between different unit systems
+  const metricWeight = ["g", "kg"];
+  const imperialWeight = ["oz", "lb"];
+  const metricVolume = ["ml", "l"];
+  const imperialVolume = ["gal", "floz", "cup", "pint", "quart"];
+
+  // Always convert between different unit systems
+  if (
+    (metricWeight.includes(fromUnit) && imperialWeight.includes(toUnit)) ||
+    (imperialWeight.includes(fromUnit) && metricWeight.includes(toUnit)) ||
+    (metricVolume.includes(fromUnit) && imperialVolume.includes(toUnit)) ||
+    (imperialVolume.includes(fromUnit) && metricVolume.includes(toUnit))
+  ) {
+    return true;
+  }
+
+  // Within same unit system, only convert small units to larger ones when it makes sense
+  // Don't convert small amounts to larger units within the same system
+  if (fromUnit === "g" && toUnit === "kg" && amount < 1000) return false;
+  if (fromUnit === "oz" && toUnit === "lb" && amount < 16) return false;
+  if (fromUnit === "ml" && toUnit === "l" && amount < 1000) return false;
+
+  // NEVER convert larger units to smaller ones within same system
+  if (fromUnit === "kg" && toUnit === "g") return false;
+  if (fromUnit === "lb" && toUnit === "oz") return false;
+  if (fromUnit === "l" && toUnit === "ml") return false;
 
   return true;
 }

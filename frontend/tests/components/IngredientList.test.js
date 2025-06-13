@@ -24,6 +24,20 @@ jest.mock("../../src/services/UserSettingsService", () => ({
   updateSettings: jest.fn().mockResolvedValue({}),
 }));
 
+// Suppress console errors and warnings during tests
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+beforeAll(() => {
+  console.error = jest.fn();
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+});
+
 // Helper function to render with UnitProvider
 const renderWithUnitProvider = (component) => {
   return render(<UnitProvider>{component}</UnitProvider>);
