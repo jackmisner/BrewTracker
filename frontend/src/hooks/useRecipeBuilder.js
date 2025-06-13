@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "../services";
+import { useUnits } from "../contexts/UnitContext";
 
 /**
  * Unified hook for recipe builder functionality
@@ -10,6 +11,7 @@ import { Services } from "../services";
 export function useRecipeBuilder(recipeId) {
   const navigate = useNavigate();
   const originalRecipeRef = useRef(null);
+  const { unitSystem } = useUnits();
 
   // Consolidated state
   const [state, setState] = useState({
@@ -17,7 +19,8 @@ export function useRecipeBuilder(recipeId) {
     recipe: {
       name: "",
       style: "",
-      batch_size: 5,
+      batch_size: unitSystem === "metric" ? 19 : 5, // Use 19L for metric, 5 gal for imperial
+      batch_size_unit: unitSystem === "metric" ? "l" : "gal", // Add unit field
       description: "",
       boil_time: 60,
       efficiency: 75,
@@ -68,7 +71,6 @@ export function useRecipeBuilder(recipeId) {
         }));
 
         // Load available ingredients first
-
         const availableIngredients =
           await Services.ingredient.fetchIngredients();
 
@@ -76,12 +78,12 @@ export function useRecipeBuilder(recipeId) {
           return;
         }
 
-        // Initialize default values
-
+        // Initialize default values with unit awareness
         let recipe = {
           name: "",
           style: "",
-          batch_size: 5,
+          batch_size: unitSystem === "metric" ? 19 : 5, // Use 19L for metric, 5 gal for imperial
+          batch_size_unit: unitSystem === "metric" ? "l" : "gal", // Add unit field
           description: "",
           boil_time: 60,
           efficiency: 75,
@@ -106,6 +108,11 @@ export function useRecipeBuilder(recipeId) {
           }
 
           recipe = recipeData;
+          // Ensure batch_size_unit is set for existing recipes
+          if (!recipe.batch_size_unit) {
+            // Infer from batch size value - if it's around 19, it's probably metric
+            recipe.batch_size_unit = recipe.batch_size > 10 ? "l" : "gal";
+          }
           ingredients = recipeData.ingredients || [];
           originalRecipeRef.current = recipeData; // Store original for change detection
         } else {
@@ -183,7 +190,7 @@ export function useRecipeBuilder(recipeId) {
       effectMounted = false;
       Services.metrics.cancelCalculation("recipe-builder");
     };
-  }, [recipeId]);
+  }, [recipeId, unitSystem]); // Add unitSystem to dependencies
 
   // Update recipe field
   const updateRecipe = useCallback(
@@ -197,7 +204,12 @@ export function useRecipeBuilder(recipeId) {
       }));
 
       // Recalculate metrics if field affects calculations
-      const calculationFields = ["batch_size", "efficiency", "boil_time"];
+      const calculationFields = [
+        "batch_size",
+        "efficiency",
+        "boil_time",
+        "batch_size_unit",
+      ];
       if (calculationFields.includes(field)) {
         try {
           setState((prev) => ({ ...prev, calculatingMetrics: true }));

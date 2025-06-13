@@ -64,11 +64,9 @@ const ApiService = {
       api.get(`/recipes?page=${page}&per_page=${perPage}`),
     getById: (id) => api.get(`/recipes/${id}`),
     create: (recipeData) => {
-      // console.log("Sending recipe data to create:", recipeData);
       return api.post("/recipes", recipeData);
     },
     update: (id, recipeData) => {
-      // console.log("Sending recipe data to update:", recipeData);
       return api.put(`/recipes/${id}`, recipeData);
     },
     delete: (id) => api.delete(`/recipes/${id}`),
@@ -79,8 +77,17 @@ const ApiService = {
       api.post("/recipes/calculate-metrics-preview", recipeData),
     clone: (id) => api.post(`/recipes/${id}/clone`),
     getVersionHistory: (id) => api.get(`/recipes/${id}/versions`),
-    // NEW: Get brew sessions for a specific recipe
+
     getBrewSessions: (id) => api.get(`/recipes/${id}/brew-sessions`),
+    getPublic: (page = 1, perPage = 10, filters = {}) => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: perPage.toString(),
+        ...(filters.style && { style: filters.style }),
+        ...(filters.search && { search: filters.search }),
+      });
+      return api.get(`/recipes/public?${params}`);
+    },
   },
 
   // Ingredient endpoints

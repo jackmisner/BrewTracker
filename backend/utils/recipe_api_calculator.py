@@ -13,8 +13,14 @@ from utils.unit_conversions import UnitConverter
 def calculate_og_preview(recipe_data):
     """Calculate original gravity from recipe data"""
     batch_size = float(recipe_data.get("batch_size", 5))
+    batch_size_unit = recipe_data.get("batch_size_unit", "gal")
     efficiency = float(recipe_data.get("efficiency", 75))
     ingredients = recipe_data.get("ingredients", [])
+
+    # Determine unit system from batch size unit
+    unit_system = (
+        "metric" if batch_size_unit in ["l", "L", "liter", "liters"] else "imperial"
+    )
 
     total_points = 0.0
     for ing in ingredients:
@@ -24,7 +30,23 @@ def calculate_og_preview(recipe_data):
             )
             total_points += weight_lb * float(ing.get("potential", 0))
 
-    return calc_og_core(total_points, batch_size, efficiency)
+    # Convert batch size to appropriate unit for calculation
+    if unit_system == "metric":
+        # Ensure batch size is in liters
+        batch_size_liters = (
+            UnitConverter.convert_volume(batch_size, batch_size_unit, "l")
+            if batch_size_unit != "l"
+            else batch_size
+        )
+        return calc_og_core(total_points, batch_size_liters, efficiency, unit_system)
+    else:
+        # Ensure batch size is in gallons
+        batch_size_gallons = (
+            UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
+            if batch_size_unit != "gal"
+            else batch_size
+        )
+        return calc_og_core(total_points, batch_size_gallons, efficiency, unit_system)
 
 
 def calculate_fg_preview(recipe_data):
@@ -93,17 +115,13 @@ def calculate_srm_preview(recipe_data):
 
 def calculate_all_metrics_preview(recipe_data):
     """Calculate all metrics for a recipe preview with enhanced unit awareness"""
-    # Normalize batch size to gallons for calculation consistency
+    # Normalize batch size to appropriate units for calculation
     batch_size = float(recipe_data.get("batch_size", 5))
     batch_size_unit = recipe_data.get("batch_size_unit", "gal")
 
-    # Convert batch size to gallons if needed
-    if batch_size_unit != "gal":
-        batch_size = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
-
-    # Create normalized recipe data for calculations
+    # Pass through the batch_size_unit to preserve it
     normalized_recipe = recipe_data.copy()
-    normalized_recipe["batch_size"] = batch_size
+    # Don't convert batch size here - let individual calculations handle it
 
     return {
         "og": calculate_og_preview(normalized_recipe),

@@ -211,6 +211,55 @@ def get_unit_preferences():
     )
 
 
+@user_settings_bp.route("/preferences/units", methods=["PUT"])
+@jwt_required()
+def update_unit_preferences():
+    """Update user's unit preferences"""
+    user_id = get_jwt_identity()
+    user = User.objects(id=user_id).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    unit_system = data.get("unit_system")
+    custom_preferences = data.get("preferences", {})
+
+    if unit_system not in ["metric", "imperial"]:
+        return (
+            jsonify({"error": "Invalid unit system. Must be 'metric' or 'imperial'"}),
+            400,
+        )
+
+    try:
+        # Update unit system
+        if not user.settings:
+            user.settings = {}
+
+        user.settings.preferred_units = unit_system
+
+        # Update custom preferences if provided
+        if custom_preferences:
+            if not hasattr(user.settings, "unit_preferences"):
+                user.settings.unit_preferences = {}
+            user.settings.unit_preferences.update(custom_preferences)
+
+        user.save()
+
+        return (
+            jsonify(
+                {
+                    "message": "Unit preferences updated successfully",
+                    "unit_system": unit_system,
+                    "preferences": user.get_unit_preferences(),
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to update unit preferences: {str(e)}"}), 400
+
+
 @user_settings_bp.route("/preferences/convert", methods=["POST"])
 @jwt_required()
 def convert_units():

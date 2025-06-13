@@ -1,6 +1,11 @@
 # Core calculation functions used by helpers.py and recipe_calculations.py
 from utils.unit_conversions import UnitConverter
 
+# Add metric conversion constants at the top of the file
+METRIC_CONVERSION_FACTOR = (
+    8.3454  # Conversion factor from PPG to PKL (points per kg per liter)
+)
+
 
 def convert_to_pounds(amount, unit):
     """Convert various weight units to pounds - now uses UnitConverter"""
@@ -13,9 +18,27 @@ def convert_to_ounces(amount, unit):
 
 
 # Core calculation functions that work with normalized inputs
-def calc_og_core(grain_points, batch_size, efficiency):
-    """Core OG calculation with normalized inputs"""
-    og = 1.0 + (grain_points * (efficiency / 100.0)) / (batch_size * 1000.0)
+def calc_og_core(grain_points, batch_size, efficiency, unit_system="imperial"):
+    """Core OG calculation with normalized inputs
+
+    Args:
+        grain_points: Total gravity points from grains (in PPG format)
+        batch_size: Batch size in gallons (imperial) or liters (metric)
+        efficiency: Mash efficiency as percentage
+        unit_system: "imperial" or "metric"
+    """
+    if unit_system == "metric":
+        # For metric, grain_points are still in PPG format from ingredients
+        # We need to convert to metric equivalent
+        # PPG to PKL conversion: PKL = PPG * 8.3454
+        # Then use liters instead of gallons
+        # Note: The 1000.0 divisor remains the same for both systems
+        og = 1.0 + (grain_points * METRIC_CONVERSION_FACTOR * (efficiency / 100.0)) / (
+            batch_size * 1000.0
+        )
+    else:
+        # Original imperial calculation
+        og = 1.0 + (grain_points * (efficiency / 100.0)) / (batch_size * 1000.0)
     return round(og, 3)
 
 
