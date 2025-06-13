@@ -63,19 +63,14 @@ class MongoDBService:
 
     @staticmethod
     def get_recipe_for_user(recipe_id, user_id):
-        """Get recipe converted to user's preferred units"""
+        """Get recipe in its original units (no conversion)"""
         try:
             recipe = Recipe.objects(id=recipe_id).first()
             if not recipe:
                 return None
 
-            user = User.objects(id=user_id).first()
-            if not user:
-                return recipe.to_dict()
-
-            # Convert recipe to user's preferred units
-            recipe_dict = recipe.to_dict()
-            return user.convert_recipe_to_preferred_units(recipe_dict)
+            # Return recipe in its original units without conversion
+            return recipe.to_dict()
 
         except Exception as e:
             print(f"Database error: {e}")
@@ -83,24 +78,18 @@ class MongoDBService:
 
     @staticmethod
     def get_user_recipes_with_units(user_id, page=1, per_page=10):
-        """Get user recipes with unit conversion"""
+        """Get user recipes without unit conversion (display in original units)"""
         try:
-            user = User.objects(id=user_id).first()
-            if not user:
-                return MongoDBService.get_user_recipes(user_id, page, per_page)
-
-            # Get recipes normally
+            # Get recipes normally without unit conversion
             result = MongoDBService.get_user_recipes(user_id, page, per_page)
 
-            # Convert each recipe to user's preferred units
-            converted_recipes = []
+            # Convert to dict format but don't change units
+            recipes_data = []
             for recipe in result["items"]:
                 recipe_dict = recipe.to_dict()
-                converted_dict = user.convert_recipe_to_preferred_units(recipe_dict)
-                # Just append the converted dictionary, don't create a type object
-                converted_recipes.append(converted_dict)
+                recipes_data.append(recipe_dict)
 
-            result["items"] = converted_recipes
+            result["items"] = recipes_data
             return result
 
         except Exception as e:
@@ -293,10 +282,30 @@ class MongoDBService:
             return []
 
     @staticmethod
-    def create_recipe(recipe_data, user_id=None):
-        """Create a new recipe with unit conversion support"""
+    def get_default_batch_size_for_user(user_id):
+        """Get appropriate default batch size based on user's unit preference"""
         try:
-            # Get user for unit preferences
+            user = User.objects(id=user_id).first()
+            if not user:
+                return 5.0  # Default to imperial
+
+            unit_system = user.get_preferred_units()
+
+            # Use proper defaults for each unit system
+            if unit_system == "metric":
+                return 19.0  # 19 liters (standard metric batch size)
+            else:
+                return 5.0  # 5 gallons (standard imperial batch size)
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return 5.0
+
+    @staticmethod
+    def create_recipe(recipe_data, user_id=None):
+        """Create a new recipe without unit conversion"""
+        try:
+            # Get user for any needed preferences but don't convert units
             user = None
             if user_id:
                 user = User.objects(id=user_id).first()
@@ -304,16 +313,8 @@ class MongoDBService:
             # Extract ingredients data if provided
             ingredients_data = recipe_data.pop("ingredients", [])
 
-            # Convert recipe data to storage format (keep user's preferred units)
-            if user and user.get_preferred_units() == "metric":
-                # Store metric batch sizes in liters
-                if "batch_size" in recipe_data and "batch_size_unit" not in recipe_data:
-                    # Assume gallons if no unit specified
-                    from utils.unit_conversions import UnitConverter
-
-                    recipe_data["batch_size"] = UnitConverter.convert_volume(
-                        recipe_data["batch_size"], "gal", "l"
-                    )
+            # Don't convert batch size - store as provided by the frontend
+            # The frontend should already be sending the right units based on user preference
 
             # Create recipe object
             recipe = Recipe(**recipe_data)
