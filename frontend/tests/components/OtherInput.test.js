@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OtherInput from "../../src/components/RecipeBuilder/IngredientInputs/OtherInput";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
 jest.mock("../../src/components/SearchableSelect", () => {
@@ -66,6 +67,21 @@ jest.mock("../../src/components/SearchableSelect", () => {
   };
 });
 
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
+
 describe("OtherInput", () => {
   const mockOthers = [
     {
@@ -107,10 +123,10 @@ describe("OtherInput", () => {
   });
 
   test("renders other input form", () => {
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     expect(screen.getByText("Other Ingredients")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Amount")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("0.5")).toBeInTheDocument(); // Amount placeholder for oz
     expect(screen.getByDisplayValue("oz")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Boil")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Time (min)")).toBeInTheDocument();
@@ -119,7 +135,7 @@ describe("OtherInput", () => {
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     // Select an ingredient but don't enter amount
     const searchableSelect = screen
@@ -140,10 +156,10 @@ describe("OtherInput", () => {
 
   test("shows validation error for missing ingredient selection", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     // Enter amount but don't select ingredient
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5"); // Updated to match component
     await user.type(amountInput, "1");
 
     // Try to submit
@@ -159,9 +175,9 @@ describe("OtherInput", () => {
 
   test("shows validation error for excessive oz amount", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "20");
 
     const searchableSelect = screen
@@ -181,9 +197,9 @@ describe("OtherInput", () => {
 
   test("shows validation error for excessive lb amount", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "8");
 
     const unitSelect = screen.getByDisplayValue("oz");
@@ -206,9 +222,9 @@ describe("OtherInput", () => {
 
   test("shows validation error for excessive g amount", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "600");
 
     const unitSelect = screen.getByDisplayValue("oz");
@@ -231,9 +247,9 @@ describe("OtherInput", () => {
 
   test("shows validation error for excessive spice amounts", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "15");
 
     const unitSelect = screen.getByDisplayValue("oz");
@@ -258,10 +274,10 @@ describe("OtherInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -291,10 +307,10 @@ describe("OtherInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form without time
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "0.5");
 
     const unitSelect = screen.getByDisplayValue("oz");
@@ -322,7 +338,7 @@ describe("OtherInput", () => {
 
   test("displays selected ingredient information and category", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -345,7 +361,7 @@ describe("OtherInput", () => {
 
   test("shows ingredient category for clarifying agent", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -359,7 +375,7 @@ describe("OtherInput", () => {
 
   test("shows ingredient category for fermentable sugar", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -373,7 +389,7 @@ describe("OtherInput", () => {
 
   test("shows amount guidance for different ingredient categories", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     // Yeast nutrient
     const searchableSelect = screen
@@ -393,7 +409,9 @@ describe("OtherInput", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Irish Moss: 1 tsp/5 gal, Whirlfloc: 1 tablet/5 gal")
+        screen.getByText(
+          "Irish Moss: 1 tsp per 5 gallons, Whirlfloc: 1 tablet per 5 gallons"
+        )
       ).toBeInTheDocument();
     });
 
@@ -410,7 +428,7 @@ describe("OtherInput", () => {
 
   test("changes use selection", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const useSelect = screen.getByDisplayValue("Boil");
     await user.selectOptions(useSelect, "fermentation");
@@ -420,7 +438,7 @@ describe("OtherInput", () => {
 
   test("shows usage description", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -438,7 +456,7 @@ describe("OtherInput", () => {
 
   test("changes unit selection", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     const unitSelect = screen.getByDisplayValue("oz");
     await user.selectOptions(unitSelect, "tsp");
@@ -450,10 +468,10 @@ describe("OtherInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -477,7 +495,7 @@ describe("OtherInput", () => {
 
   test("clears errors when user starts typing", async () => {
     const user = userEvent.setup();
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
@@ -490,7 +508,7 @@ describe("OtherInput", () => {
     });
 
     // Start typing in amount field
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "1");
 
     await waitFor(() => {
@@ -504,10 +522,10 @@ describe("OtherInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
-    render(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("0.5");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -533,9 +551,9 @@ describe("OtherInput", () => {
   });
 
   test("disables form when disabled prop is true", () => {
-    render(<OtherInput {...defaultProps} disabled={true} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} disabled={true} />);
 
-    expect(screen.getByPlaceholderText("Amount")).toBeDisabled();
+    expect(screen.getByPlaceholderText("0.5")).toBeDisabled();
     expect(screen.getByDisplayValue("oz")).toBeDisabled();
     expect(screen.getByDisplayValue("Boil")).toBeDisabled();
     expect(screen.getByPlaceholderText("Time (min)")).toBeDisabled();
@@ -543,7 +561,7 @@ describe("OtherInput", () => {
   });
 
   test("shows help text", () => {
-    render(<OtherInput {...defaultProps} />);
+    renderWithUnitProvider(<OtherInput {...defaultProps} />);
 
     expect(
       screen.getByText(/For yeast nutrients, clarifying agents/)

@@ -1,6 +1,22 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import RecipeMetrics from "../../src/components/RecipeBuilder/RecipeMetrics";
+import { UnitProvider } from "../../src/contexts/UnitContext";
+
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
 
 describe("RecipeMetrics", () => {
   const defaultProps = {
@@ -18,7 +34,7 @@ describe("RecipeMetrics", () => {
   };
 
   test("renders metrics correctly", () => {
-    render(<RecipeMetrics {...defaultProps} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     expect(screen.getByText("1.048")).toBeInTheDocument();
     expect(screen.getByText("1.012")).toBeInTheDocument();
@@ -28,20 +44,22 @@ describe("RecipeMetrics", () => {
   });
 
   test("displays calculating indicator when calculating", () => {
-    render(<RecipeMetrics {...defaultProps} calculating={true} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} calculating={true} />
+    );
 
     expect(screen.getByText("Calculating...")).toBeInTheDocument();
   });
 
   test("shows balance description", () => {
-    render(<RecipeMetrics {...defaultProps} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     // Should show "Balanced" for the given metrics
     expect(screen.getByText("Balanced")).toBeInTheDocument();
   });
 
   test("displays color swatch with correct color", () => {
-    render(<RecipeMetrics {...defaultProps} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     const colorSwatch = screen.getByTitle("SRM 8.5");
     expect(colorSwatch).toHaveStyle({ backgroundColor: "#E58500" });
@@ -50,19 +68,25 @@ describe("RecipeMetrics", () => {
   test("renders recipe scaling section when onScale provided", () => {
     const mockOnScale = jest.fn();
 
-    render(<RecipeMetrics {...defaultProps} onScale={mockOnScale} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} onScale={mockOnScale} />
+    );
 
     expect(screen.getByText("Recipe Scaling")).toBeInTheDocument();
     expect(screen.getByText("(Current: 5 gal)")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("New batch size")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("New batch size (gal)")
+    ).toBeInTheDocument();
   });
 
   test("handles recipe scaling", () => {
     const mockOnScale = jest.fn();
 
-    render(<RecipeMetrics {...defaultProps} onScale={mockOnScale} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} onScale={mockOnScale} />
+    );
 
-    const input = screen.getByPlaceholderText("New batch size");
+    const input = screen.getByPlaceholderText("New batch size (gal)");
     const scaleButton = screen.getByText("Scale");
 
     fireEvent.change(input, { target: { value: "10" } });
@@ -74,7 +98,9 @@ describe("RecipeMetrics", () => {
   test("disables scale button when no value entered", () => {
     const mockOnScale = jest.fn();
 
-    render(<RecipeMetrics {...defaultProps} onScale={mockOnScale} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} onScale={mockOnScale} />
+    );
 
     const scaleButton = screen.getByText("Scale");
     expect(scaleButton).toBeDisabled();
@@ -83,7 +109,7 @@ describe("RecipeMetrics", () => {
   test("disables scale button when calculating", () => {
     const mockOnScale = jest.fn();
 
-    render(
+    renderWithUnitProvider(
       <RecipeMetrics
         {...defaultProps}
         onScale={mockOnScale}
@@ -91,7 +117,7 @@ describe("RecipeMetrics", () => {
       />
     );
 
-    const input = screen.getByPlaceholderText("New batch size");
+    const input = screen.getByPlaceholderText("New batch size (gal)");
     const scaleButton = screen.getByText("Scaling...");
 
     fireEvent.change(input, { target: { value: "10" } });
@@ -100,7 +126,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("shows recipe analysis section", () => {
-    render(<RecipeMetrics {...defaultProps} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     expect(screen.getByText("Recipe Analysis")).toBeInTheDocument();
     expect(screen.getByText(/Standard/)).toBeInTheDocument(); // Use regex for partial match
@@ -109,14 +135,14 @@ describe("RecipeMetrics", () => {
   });
 
   test("calculates and displays attenuation", () => {
-    render(<RecipeMetrics {...defaultProps} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     // With OG 1.048 and FG 1.012, attenuation should be 75%
     expect(screen.getByText("75.0%")).toBeInTheDocument();
   });
 
   test("renders in card view mode", () => {
-    render(<RecipeMetrics {...defaultProps} cardView={true} />);
+    renderWithUnitProvider(<RecipeMetrics {...defaultProps} cardView={true} />);
 
     // In card view, should not show scaling or analysis sections
     expect(screen.queryByText("Recipe Scaling")).not.toBeInTheDocument();
@@ -135,7 +161,9 @@ describe("RecipeMetrics", () => {
       srm: 0,
     };
 
-    render(<RecipeMetrics {...defaultProps} metrics={zeroMetrics} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} metrics={zeroMetrics} />
+    );
 
     // Use getAllByText for multiple occurrences
     expect(screen.getAllByText("1.000")).toHaveLength(2);
@@ -153,7 +181,7 @@ describe("RecipeMetrics", () => {
       srm: 5,
     };
 
-    const { rerender } = render(
+    const { rerender } = renderWithUnitProvider(
       <RecipeMetrics {...defaultProps} metrics={hoppyMetrics} />
     );
 
@@ -170,7 +198,11 @@ describe("RecipeMetrics", () => {
       srm: 20,
     };
 
-    rerender(<RecipeMetrics {...defaultProps} metrics={maltyMetrics} />);
+    rerender(
+      <UnitProvider>
+        <RecipeMetrics {...defaultProps} metrics={maltyMetrics} />
+      </UnitProvider>
+    );
     expect(screen.getByTestId("balance-description")).toHaveTextContent(
       "Malty"
     );
@@ -179,14 +211,39 @@ describe("RecipeMetrics", () => {
   test("clears scale input after successful scaling", () => {
     const mockOnScale = jest.fn();
 
-    render(<RecipeMetrics {...defaultProps} onScale={mockOnScale} />);
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} onScale={mockOnScale} />
+    );
 
-    const input = screen.getByPlaceholderText("New batch size");
+    const input = screen.getByPlaceholderText("New batch size (gal)");
     const scaleButton = screen.getByText("Scale");
 
     fireEvent.change(input, { target: { value: "10" } });
     fireEvent.click(scaleButton);
 
     expect(input.value).toBe("");
+  });
+
+  test("shows batch size analysis for different sizes", () => {
+    const smallBatchProps = {
+      ...defaultProps,
+      recipe: { batch_size: 1 }, // 1 gallon = small batch
+    };
+
+    renderWithUnitProvider(<RecipeMetrics {...smallBatchProps} />);
+
+    expect(screen.getByText(/Small batch/)).toBeInTheDocument();
+  });
+
+  test("displays typical batch size examples", () => {
+    const mockOnScale = jest.fn();
+
+    renderWithUnitProvider(
+      <RecipeMetrics {...defaultProps} onScale={mockOnScale} />
+    );
+
+    expect(
+      screen.getByText(/Typical: 5 gal, 6 gal, 10 gal/)
+    ).toBeInTheDocument();
   });
 });

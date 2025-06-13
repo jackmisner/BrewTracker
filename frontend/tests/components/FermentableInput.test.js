@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FermentableInput from "../../src/components/RecipeBuilder/IngredientInputs/FermentableInput";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
 jest.mock("../../src/components/SearchableSelect", () => {
@@ -61,6 +62,21 @@ jest.mock("../../src/components/SearchableSelect", () => {
   };
 });
 
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
+
 describe("FermentableInput", () => {
   const mockGrains = [
     {
@@ -100,10 +116,10 @@ describe("FermentableInput", () => {
   });
 
   test("renders fermentable input form", () => {
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     expect(screen.getByText("Fermentables")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Amount")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("1")).toBeInTheDocument(); // Correct placeholder for lb
     expect(screen.getByDisplayValue("lb")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Color")).toBeInTheDocument();
     expect(screen.getByText("Add")).toBeInTheDocument();
@@ -111,7 +127,7 @@ describe("FermentableInput", () => {
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     // Select an ingredient but don't enter amount
     const searchableSelect = screen
@@ -132,10 +148,10 @@ describe("FermentableInput", () => {
 
   test("shows validation error for missing ingredient selection", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     // Enter amount but don't select ingredient
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     // Try to submit
@@ -149,11 +165,11 @@ describe("FermentableInput", () => {
     });
   });
 
-  test("shows validation error for excessive amount", async () => {
+  test("shows validation error for excessive amount in imperial", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "150");
 
     const searchableSelect = screen
@@ -166,21 +182,21 @@ describe("FermentableInput", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Amount seems unusually high")
+        screen.getByText("More than 100 pounds seems unusually high")
       ).toBeInTheDocument();
     });
   });
 
   test("shows validation error for invalid color", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect, "pale malt");
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const colorInput = screen.getByPlaceholderText("Color");
@@ -200,10 +216,12 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<FermentableInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const searchableSelect = screen
@@ -233,10 +251,12 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<FermentableInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const searchableSelect = screen
@@ -264,7 +284,7 @@ describe("FermentableInput", () => {
 
   test("displays selected ingredient information", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -273,12 +293,13 @@ describe("FermentableInput", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Pale Malt")).toBeInTheDocument();
+      expect(screen.getByText("base malt")).toBeInTheDocument();
     });
   });
 
   test("auto-fills color when ingredient is selected", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -293,7 +314,7 @@ describe("FermentableInput", () => {
 
   test("shows color preview swatch", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const colorInput = screen.getByPlaceholderText("Color");
     await user.type(colorInput, "20");
@@ -307,25 +328,27 @@ describe("FermentableInput", () => {
 
   test("changes unit selection", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const unitSelect = screen.getByDisplayValue("lb");
-    await user.selectOptions(unitSelect, "kg");
+    await user.selectOptions(unitSelect, "oz");
 
-    expect(screen.getByDisplayValue("kg")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("oz")).toBeInTheDocument();
   });
 
   test("disables form when disabled prop is true", () => {
-    render(<FermentableInput {...defaultProps} disabled={true} />);
+    renderWithUnitProvider(
+      <FermentableInput {...defaultProps} disabled={true} />
+    );
 
-    expect(screen.getByPlaceholderText("Amount")).toBeDisabled();
+    expect(screen.getByPlaceholderText("1")).toBeDisabled();
     expect(screen.getByDisplayValue("lb")).toBeDisabled();
     expect(screen.getByPlaceholderText("Color")).toBeDisabled();
     expect(screen.getByText("Adding...")).toBeDisabled();
   });
 
   test("button is enabled when component is not disabled", () => {
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     const addButton = screen.getByText("Add");
     expect(addButton).not.toBeDisabled();
@@ -333,10 +356,10 @@ describe("FermentableInput", () => {
 
   test("button is enabled when required fields are filled", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     // Fill required fields
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const searchableSelect = screen
@@ -352,7 +375,7 @@ describe("FermentableInput", () => {
 
   test("clears errors when user starts typing", async () => {
     const user = userEvent.setup();
-    render(<FermentableInput {...defaultProps} />);
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
@@ -365,7 +388,7 @@ describe("FermentableInput", () => {
     });
 
     // Start typing in amount field
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "5");
 
     await waitFor(() => {
@@ -379,10 +402,12 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
-    render(<FermentableInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const searchableSelect = screen
@@ -407,11 +432,11 @@ describe("FermentableInput", () => {
     );
   });
 
-  test("shows help text", () => {
-    render(<FermentableInput {...defaultProps} />);
+  test("shows help text with unit-specific guidance", () => {
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
     expect(
-      screen.getByText(/Base malts.*should make up 60-80%/)
+      screen.getByText(/Base malts.*4-12 lb.*Specialty malts.*4-32 oz/)
     ).toBeInTheDocument();
   });
 
@@ -419,10 +444,12 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<FermentableInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
+    );
 
     // Fill required fields only
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "8");
 
     const searchableSelect = screen
@@ -441,6 +468,49 @@ describe("FermentableInput", () => {
         unit: "lb",
         color: 2, // Auto-filled from ingredient
       });
+    });
+  });
+
+  test("updates placeholder based on unit selection", async () => {
+    const user = userEvent.setup();
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
+
+    // Default should be lb placeholder
+    expect(screen.getByPlaceholderText("1")).toBeInTheDocument();
+
+    // Change to oz
+    const unitSelect = screen.getByDisplayValue("lb");
+    await user.selectOptions(unitSelect, "oz");
+
+    // Should update to oz placeholder
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("16")).toBeInTheDocument();
+    });
+  });
+
+  test("shows unit-specific validation limits", async () => {
+    const user = userEvent.setup();
+    renderWithUnitProvider(<FermentableInput {...defaultProps} />);
+
+    // Change to oz and test oz limits
+    const unitSelect = screen.getByDisplayValue("lb");
+    await user.selectOptions(unitSelect, "oz");
+
+    const amountInput = screen.getByPlaceholderText("16");
+    await user.type(amountInput, "2000"); // Over 1600 oz limit
+
+    const searchableSelect = screen
+      .getByTestId("searchable-select")
+      .querySelector("input");
+    await user.type(searchableSelect, "pale malt");
+
+    const addButton = screen.getByText("Add");
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("More than 100 pounds seems unusually high")
+      ).toBeInTheDocument();
     });
   });
 });

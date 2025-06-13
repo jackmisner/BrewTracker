@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import IngredientsList from "../../src/components/RecipeBuilder/IngredientsList";
 import { Services } from "../../src/services/index";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock the Services module
 jest.mock("../../src/services/index", () => ({
@@ -12,6 +13,21 @@ jest.mock("../../src/services/index", () => ({
     },
   },
 }));
+
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
 
 describe("IngredientsList", () => {
   const mockOnRemove = jest.fn();
@@ -23,18 +39,18 @@ describe("IngredientsList", () => {
       grain_type: "base_malt",
       name: "Pale Malt",
       amount: 10,
-      unit: "lbs",
-      use: "Mash",
+      unit: "lb",
+      use: "mash",
       time: 60,
       time_unit: "min",
     },
     {
       id: 2,
-      type: "hops",
+      type: "hop", // Changed from "hops" to "hop" to match expected format
       name: "Cascade",
       amount: 1,
       unit: "oz",
-      use: "Boil",
+      use: "boil",
       time: 15,
       time_unit: "min",
     },
@@ -44,8 +60,8 @@ describe("IngredientsList", () => {
       grain_type: "caramel_crystal",
       name: "Crystal 40L",
       amount: 2,
-      unit: "lbs",
-      use: "Mash",
+      unit: "lb",
+      use: "mash",
       time: null,
       time_unit: null,
     },
@@ -59,7 +75,7 @@ describe("IngredientsList", () => {
 
   describe("Empty state", () => {
     it("renders empty state when no ingredients provided", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={[]}
           onRemove={mockOnRemove}
@@ -72,7 +88,7 @@ describe("IngredientsList", () => {
     });
 
     it("renders empty state when ingredients is null", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={null}
           onRemove={mockOnRemove}
@@ -84,7 +100,7 @@ describe("IngredientsList", () => {
     });
 
     it("renders empty state when ingredients is undefined", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={undefined}
           onRemove={mockOnRemove}
@@ -98,7 +114,7 @@ describe("IngredientsList", () => {
 
   describe("Ingredients display", () => {
     it("renders ingredients table with data", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -113,7 +129,7 @@ describe("IngredientsList", () => {
     });
 
     it("calls Services.ingredient.sortIngredients with ingredients", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -127,7 +143,7 @@ describe("IngredientsList", () => {
     });
 
     it("displays ingredient amounts and units correctly", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -135,13 +151,13 @@ describe("IngredientsList", () => {
         />
       );
 
-      expect(screen.getByText("10 lbs")).toBeInTheDocument();
+      expect(screen.getByText("10 lb")).toBeInTheDocument();
       expect(screen.getByText("1 oz")).toBeInTheDocument();
-      expect(screen.getByText("2 lbs")).toBeInTheDocument();
+      expect(screen.getByText("2 lb")).toBeInTheDocument();
     });
 
     it("displays use information correctly", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -149,12 +165,14 @@ describe("IngredientsList", () => {
         />
       );
 
-      expect(screen.getAllByText("Mash")).toHaveLength(2);
-      expect(screen.getByText("Boil")).toBeInTheDocument();
+      // "Mash" appears in table rows (2 times) AND in process summary (1 time) = 3 total
+      expect(screen.getAllByText("Mash")).toHaveLength(3);
+      // "Boil" appears in table row (1 time) AND in process summary (1 time) = 2 total
+      expect(screen.getAllByText("Boil")).toHaveLength(2);
     });
 
     it("displays time information correctly", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -171,7 +189,7 @@ describe("IngredientsList", () => {
       const ingredientWithoutUse = [{ ...sampleIngredients[0], use: null }];
       Services.ingredient.sortIngredients.mockReturnValue(ingredientWithoutUse);
 
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={ingredientWithoutUse}
           onRemove={mockOnRemove}
@@ -181,11 +199,35 @@ describe("IngredientsList", () => {
 
       expect(screen.getByText("-")).toBeInTheDocument();
     });
+
+    it("displays unit system badge", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("🇺🇸 Imperial")).toBeInTheDocument();
+    });
+
+    it("displays ingredient count", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("(3)")).toBeInTheDocument();
+    });
   });
 
   describe("Grain type mapping", () => {
-    it("maps grain types correctly", () => {
-      render(
+    it("maps grain types correctly in ingredient name section", () => {
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -208,7 +250,7 @@ describe("IngredientsList", () => {
         unknownGrainIngredient
       );
 
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={unknownGrainIngredient}
           onRemove={mockOnRemove}
@@ -228,7 +270,7 @@ describe("IngredientsList", () => {
       ];
       Services.ingredient.sortIngredients.mockReturnValue(nullGrainIngredient);
 
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={nullGrainIngredient}
           onRemove={mockOnRemove}
@@ -236,32 +278,16 @@ describe("IngredientsList", () => {
         />
       );
 
-      expect(screen.getByText("Unknown")).toBeInTheDocument();
-    });
-
-    it("shows empty string for non-grain ingredients", () => {
-      const hopsIngredient = [sampleIngredients[1]]; // Cascade hops
-      Services.ingredient.sortIngredients.mockReturnValue(hopsIngredient);
-
-      render(
-        <IngredientsList
-          ingredients={hopsIngredient}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
-      );
-
-      // The grain type column should be empty for non-grain ingredients
-      const rows = screen.getAllByRole("row");
-      const dataRow = rows[1]; // Skip header row
-      const grainTypeCell = dataRow.cells[0];
-      expect(grainTypeCell).toHaveTextContent("");
+      // When grain_type is null, no subtype div is rendered, so we just check the ingredient name is there
+      expect(screen.getByText("Pale Malt")).toBeInTheDocument();
+      // No "Unknown" text should be displayed
+      expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
     });
   });
 
   describe("Editing mode", () => {
     it("shows additional columns when editing", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -269,13 +295,13 @@ describe("IngredientsList", () => {
         />
       );
 
-      expect(screen.getByText("Ingredient Type")).toBeInTheDocument();
-      expect(screen.getByText("Grain Type")).toBeInTheDocument();
+      expect(screen.getByText("Type")).toBeInTheDocument();
+      expect(screen.getByText("Details")).toBeInTheDocument();
       expect(screen.getByText("Actions")).toBeInTheDocument();
     });
 
     it("shows ingredient types when editing", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -284,11 +310,11 @@ describe("IngredientsList", () => {
       );
 
       expect(screen.getAllByText("grain")).toHaveLength(2);
-      expect(screen.getByText("hops")).toBeInTheDocument();
+      expect(screen.getByText("hop")).toBeInTheDocument();
     });
 
     it("shows remove buttons when editing", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -301,7 +327,7 @@ describe("IngredientsList", () => {
     });
 
     it("calls onRemove when remove button is clicked", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -316,7 +342,7 @@ describe("IngredientsList", () => {
     });
 
     it("hides additional columns when not editing", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -324,7 +350,7 @@ describe("IngredientsList", () => {
         />
       );
 
-      expect(screen.queryByText("Ingredient Type")).not.toBeInTheDocument();
+      expect(screen.queryByText("Type")).not.toBeInTheDocument();
       expect(screen.queryByText("Actions")).not.toBeInTheDocument();
       expect(screen.queryByText("Remove")).not.toBeInTheDocument();
     });
@@ -332,7 +358,7 @@ describe("IngredientsList", () => {
 
   describe("Table structure", () => {
     it("generates correct row IDs", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -346,7 +372,7 @@ describe("IngredientsList", () => {
     });
 
     it("applies correct CSS classes", () => {
-      render(
+      renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -365,9 +391,53 @@ describe("IngredientsList", () => {
     });
   });
 
+  describe("Summary section", () => {
+    it("displays ingredient summary statistics", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      // Check for summary stats
+      expect(screen.getByText("Grains:")).toBeInTheDocument();
+      expect(screen.getByText("Hops:")).toBeInTheDocument();
+      expect(screen.getByText("Yeast:")).toBeInTheDocument();
+      expect(screen.getByText("Other:")).toBeInTheDocument();
+    });
+
+    it("displays brewing process steps", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      // Look specifically in the process summary section for process steps
+      const processSummary = document.querySelector(".process-summary");
+      expect(processSummary).toBeInTheDocument();
+
+      // Check for process steps within the process summary
+      const mashStep = processSummary.querySelector(".process-step");
+      expect(mashStep).toHaveTextContent("Mash");
+
+      // Check that both Mash and Boil process steps exist
+      const processSteps = processSummary.querySelectorAll(".process-step");
+      const stepTexts = Array.from(processSteps).map(
+        (step) => step.textContent
+      );
+      expect(stepTexts).toContain("Mash");
+      expect(stepTexts).toContain("Boil");
+    });
+  });
+
   describe("useMemo optimization", () => {
     it("memoizes sorted ingredients correctly", () => {
-      const { rerender } = render(
+      const { rerender } = renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
@@ -379,11 +449,13 @@ describe("IngredientsList", () => {
 
       // Rerender with same ingredients
       rerender(
-        <IngredientsList
-          ingredients={sampleIngredients}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
+        <UnitProvider>
+          <IngredientsList
+            ingredients={sampleIngredients}
+            onRemove={mockOnRemove}
+            isEditing={false}
+          />
+        </UnitProvider>
       );
 
       // Should not call sortIngredients again due to memoization
@@ -395,15 +467,92 @@ describe("IngredientsList", () => {
         { id: 4, name: "New Ingredient", type: "yeast" },
       ];
       rerender(
+        <UnitProvider>
+          <IngredientsList
+            ingredients={newIngredients}
+            onRemove={mockOnRemove}
+            isEditing={false}
+          />
+        </UnitProvider>
+      );
+
+      // Should call sortIngredients again
+      expect(Services.ingredient.sortIngredients).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("Enhanced ingredient display", () => {
+    it("shows ingredient details for hops", () => {
+      const hopWithAlphaAcid = [
+        {
+          id: 2,
+          type: "hop",
+          name: "Cascade",
+          amount: 1,
+          unit: "oz",
+          use: "boil",
+          time: 15,
+          time_unit: "min",
+          alpha_acid: 5.5,
+        },
+      ];
+
+      Services.ingredient.sortIngredients.mockReturnValue(hopWithAlphaAcid);
+
+      renderWithUnitProvider(
         <IngredientsList
-          ingredients={newIngredients}
+          ingredients={hopWithAlphaAcid}
+          onRemove={mockOnRemove}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText("5.5%")).toBeInTheDocument();
+    });
+
+    it("shows ingredient details for grains", () => {
+      const grainWithColor = [
+        {
+          id: 1,
+          type: "grain",
+          grain_type: "base_malt",
+          name: "Pale Malt",
+          amount: 10,
+          unit: "lb",
+          use: "mash",
+          color: 2.5,
+        },
+      ];
+
+      Services.ingredient.sortIngredients.mockReturnValue(grainWithColor);
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={grainWithColor}
+          onRemove={mockOnRemove}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText("2.5°L")).toBeInTheDocument();
+    });
+
+    it("applies ingredient type specific CSS classes", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
           onRemove={mockOnRemove}
           isEditing={false}
         />
       );
 
-      // Should call sortIngredients again
-      expect(Services.ingredient.sortIngredients).toHaveBeenCalledTimes(2);
+      const rows = screen.getAllByRole("row");
+      const dataRows = rows.slice(1); // Skip header row
+
+      // Check that rows have appropriate classes
+      expect(dataRows[0]).toHaveClass("grain-row");
+      expect(dataRows[1]).toHaveClass("hop-row");
+      expect(dataRows[2]).toHaveClass("grain-row");
     });
   });
 });

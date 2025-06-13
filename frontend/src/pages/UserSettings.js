@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useUnits } from "../contexts/UnitContext";
 import UserSettingsService from "../services/UserSettingsService";
 import "../styles/UserSettings.css";
 
 const UserSettings = () => {
   const navigate = useNavigate();
+  const { unitSystem, updateUnitSystem, loading: unitsLoading } = useUnits();
+
   const [activeTab, setActiveTab] = useState("account");
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -137,7 +140,14 @@ const UserSettings = () => {
       setSaving(true);
       setError("");
 
+      // Update preferences using the settings service
       await UserSettingsService.updateSettings(preferencesForm);
+
+      // If units changed, update the global unit context
+      if (preferencesForm.preferred_units !== unitSystem) {
+        await updateUnitSystem(preferencesForm.preferred_units);
+      }
+
       setSuccessMessage("Preferences updated successfully");
     } catch (err) {
       setError(err.message || "Failed to update preferences");
@@ -182,6 +192,36 @@ const UserSettings = () => {
       navigate("/");
     } catch (err) {
       setError(err.message || "Failed to delete account");
+      setSaving(false);
+    }
+  };
+
+  // Handle unit system change with immediate feedback
+  const handleUnitSystemChange = async (newUnitSystem) => {
+    try {
+      setSaving(true);
+      setError("");
+
+      // Update form state
+      setPreferencesForm((prev) => ({
+        ...prev,
+        preferred_units: newUnitSystem,
+      }));
+
+      // Update global unit context
+      await updateUnitSystem(newUnitSystem);
+
+      setSuccessMessage(
+        `Units changed to ${newUnitSystem === "metric" ? "Metric" : "Imperial"}`
+      );
+    } catch (err) {
+      setError(err.message || "Failed to update unit system");
+      // Revert form state on error
+      setPreferencesForm((prev) => ({
+        ...prev,
+        preferred_units: unitSystem,
+      }));
+    } finally {
       setSaving(false);
     }
   };
@@ -337,13 +377,60 @@ const UserSettings = () => {
           {activeTab === "preferences" && (
             <div className="settings-section">
               <h2 className="section-title">Application Preferences</h2>
+
+              {/* Quick Unit Toggle */}
+              <div className="unit-toggle-section">
+                <h3 className="subsection-title">Unit System</h3>
+                <p className="section-description">
+                  Choose your preferred unit system. This affects all
+                  measurements throughout the app.
+                </p>
+
+                <div className="unit-toggle-container">
+                  <button
+                    type="button"
+                    onClick={() => handleUnitSystemChange("imperial")}
+                    className={`unit-toggle-button ${
+                      unitSystem === "imperial" ? "active" : ""
+                    }`}
+                    disabled={saving || unitsLoading}
+                  >
+                    <span className="unit-toggle-icon">🇺🇸</span>
+                    <div className="unit-toggle-content">
+                      <div className="unit-toggle-title">Imperial</div>
+                      <div className="unit-toggle-description">
+                        Gallons, °F, lb, oz
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUnitSystemChange("metric")}
+                    className={`unit-toggle-button ${
+                      unitSystem === "metric" ? "active" : ""
+                    }`}
+                    disabled={saving || unitsLoading}
+                  >
+                    <span className="unit-toggle-icon">🌍</span>
+                    <div className="unit-toggle-content">
+                      <div className="unit-toggle-title">Metric</div>
+                      <div className="unit-toggle-description">
+                        Liters, °C, kg, g
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <form
                 onSubmit={handlePreferencesSubmit}
                 className="settings-form"
               >
                 <div className="form-group">
                   <label htmlFor="default_batch_size" className="form-label">
-                    Default Batch Size (gallons)
+                    Default Batch Size (
+                    {unitSystem === "metric" ? "liters" : "gallons"})
                   </label>
                   <input
                     type="number"
@@ -361,27 +448,11 @@ const UserSettings = () => {
                     className="form-control"
                     disabled={saving}
                   />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="preferred_units" className="form-label">
-                    Preferred Units
-                  </label>
-                  <select
-                    id="preferred_units"
-                    value={preferencesForm.preferred_units}
-                    onChange={(e) =>
-                      setPreferencesForm({
-                        ...preferencesForm,
-                        preferred_units: e.target.value,
-                      })
-                    }
-                    className="form-control"
-                    disabled={saving}
-                  >
-                    <option value="imperial">Imperial (gallons, °F, oz)</option>
-                    <option value="metric">Metric (liters, °C, g)</option>
-                  </select>
+                  <small className="form-help-text">
+                    {unitSystem === "metric"
+                      ? "Typical homebrew batch: 19-23 liters"
+                      : "Typical homebrew batch: 5 gallons"}
+                  </small>
                 </div>
 
                 <div className="form-group">

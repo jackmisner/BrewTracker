@@ -1,13 +1,16 @@
 import React, { useState } from "react";
+import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import "../../../styles/SearchableSelect.css";
 
 function HopInput({ hops, onAdd, disabled = false }) {
+  const { unitSystem, getPreferredUnit } = useUnits();
+
   const [hopForm, setHopForm] = useState({
     ingredient_id: "",
     amount: "",
     alpha_acid: "",
-    unit: "oz",
+    unit: getPreferredUnit("hop_weight"), // Dynamic based on user preference
     use: "boil",
     time: "",
     time_unit: "minutes",
@@ -16,6 +19,22 @@ function HopInput({ hops, onAdd, disabled = false }) {
 
   const [errors, setErrors] = useState({});
   const [resetTrigger, setResetTrigger] = useState(0);
+
+  // Get available units based on unit system
+  const getAvailableUnits = () => {
+    if (unitSystem === "metric") {
+      return [
+        { value: "g", label: "g", description: "Grams" },
+        { value: "oz", label: "oz", description: "Ounces" }, // Keep oz as option for metric users
+      ];
+    } else {
+      return [
+        { value: "oz", label: "oz", description: "Ounces" },
+        { value: "g", label: "g", description: "Grams" }, // Keep g as option for imperial users
+      ];
+    }
+  };
+
   // Custom Fuse.js options for hops - fuzzy matching for varieties
   const hopFuseOptions = {
     threshold: 0.4, // More forgiving for hop varieties
@@ -102,8 +121,14 @@ function HopInput({ hops, onAdd, disabled = false }) {
       newErrors.amount = "Amount must be greater than 0";
     }
 
-    if (parseFloat(hopForm.amount) > 10) {
-      newErrors.amount = "Amount seems unusually high for hops";
+    // Unit-specific validation
+    const amount = parseFloat(hopForm.amount);
+    const unit = hopForm.unit;
+
+    if (unit === "oz" && amount > 10) {
+      newErrors.amount = "More than 10 oz seems unusually high for hops";
+    } else if (unit === "g" && amount > 300) {
+      newErrors.amount = "More than 300g seems unusually high for hops";
     }
 
     if (!hopForm.alpha_acid || parseFloat(hopForm.alpha_acid) <= 0) {
@@ -174,7 +199,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
         ingredient_id: "",
         amount: "",
         alpha_acid: "",
-        unit: "oz",
+        unit: getPreferredUnit("hop_weight"),
         use: "boil",
         time: "",
         time_unit: "minutes",
@@ -217,6 +242,18 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
   };
 
+  const getAmountPlaceholder = () => {
+    return hopForm.unit === "oz" ? "1.0" : "28";
+  };
+
+  const getAmountGuidance = () => {
+    if (unitSystem === "metric") {
+      return "Bittering hops: 14-56g, Aroma hops: 14-28g per 19L batch";
+    } else {
+      return "Bittering hops: 0.5-2.0 oz, Aroma hops: 0.5-1.0 oz per 5 gal batch";
+    }
+  };
+
   return (
     <div className="card mt-6">
       <h3 className="card-title">Hops</h3>
@@ -233,8 +270,8 @@ function HopInput({ hops, onAdd, disabled = false }) {
               onChange={handleChange}
               step="0.1"
               min="0"
-              max="10"
-              placeholder="Amount"
+              max={hopForm.unit === "oz" ? "10" : "300"}
+              placeholder={getAmountPlaceholder()}
               className={`hop-amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
@@ -247,8 +284,15 @@ function HopInput({ hops, onAdd, disabled = false }) {
               className="hop-unit-select"
               disabled={disabled}
             >
-              <option value="oz">oz</option>
-              <option value="g">g</option>
+              {getAvailableUnits().map((unit) => (
+                <option
+                  key={unit.value}
+                  value={unit.value}
+                  title={unit.description}
+                >
+                  {unit.label}
+                </option>
+              ))}
             </select>
             {errors.amount && (
               <div className="error-message">{errors.amount}</div>
@@ -387,11 +431,12 @@ function HopInput({ hops, onAdd, disabled = false }) {
         )}
       </form>
 
-      {/* Help text */}
+      {/* Help text with unit-specific guidance */}
       <div className="ingredient-help">
         <small className="help-text">
-          💡 Boil hops add bitterness, aroma hops (whirlpool/dry hop) add flavor
-          and aroma. Try advanced search: "cascade | centennial" or "citrus"
+          💡 {getAmountGuidance()}. Boil hops add bitterness, aroma hops
+          (whirlpool/dry hop) add flavor and aroma. Try advanced search:
+          "cascade | centennial" or "citrus"
         </small>
       </div>
     </div>

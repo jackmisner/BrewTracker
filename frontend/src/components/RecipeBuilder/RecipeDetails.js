@@ -1,4 +1,6 @@
 import React from "react";
+import { useUnits } from "../../contexts/UnitContext";
+import { Link } from "react-router";
 
 function RecipeDetails({
   recipe,
@@ -10,19 +12,42 @@ function RecipeDetails({
   canSave,
   hasUnsavedChanges,
 }) {
+  const {
+    unitSystem,
+    convertForDisplay,
+    convertForStorage,
+    formatValue,
+    getUnitSystemLabel,
+    getUnitSystemIcon,
+    getTypicalBatchSizes,
+  } = useUnits();
+
   if (!recipe) {
     return <div>Loading recipe details...</div>;
   }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    // Handle different input types
-    const newValue =
-      type === "checkbox"
-        ? checked
-        : type === "number"
-        ? parseFloat(value) || ""
-        : value;
+
+    let newValue;
+    if (type === "checkbox") {
+      newValue = checked;
+    } else if (type === "number") {
+      newValue = parseFloat(value) || "";
+    } else {
+      newValue = value;
+    }
+
+    // Handle unit-specific conversions for batch size
+    if (name === "batch_size" && newValue) {
+      // Convert from display unit to storage unit (gallons)
+      const converted = convertForStorage(
+        newValue,
+        unitSystem === "metric" ? "l" : "gal",
+        "volume"
+      );
+      newValue = converted.value;
+    }
 
     // Call onChange with field name and new value
     onChange(name, newValue);
@@ -33,10 +58,62 @@ function RecipeDetails({
     onSubmit(e);
   };
 
+  // Convert batch size for display
+  const displayBatchSize = recipe.batch_size
+    ? convertForDisplay(recipe.batch_size, "gal", "volume")
+    : {
+        value: unitSystem === "metric" ? 19 : 5,
+        unit: unitSystem === "metric" ? "l" : "gal",
+      };
+
+  // Get unit-specific properties
+  const getBatchSizeProps = () => {
+    if (unitSystem === "metric") {
+      return {
+        unit: "liters",
+        abbrev: "L",
+        min: "1",
+        max: "380",
+        step: "1",
+        placeholder: "19",
+        typical: "Typical homebrew batch: 19-23 L",
+      };
+    } else {
+      return {
+        unit: "gallons",
+        abbrev: "gal",
+        min: "0.5",
+        max: "100",
+        step: "0.5",
+        placeholder: "5",
+        typical: "Typical homebrew batch: 5 gal",
+      };
+    }
+  };
+
+  const batchSizeProps = getBatchSizeProps();
+
+  // Get efficiency guidance based on common practices
+  const getEfficiencyGuidance = () => {
+    return "Typical efficiency: 70-80% for all-grain, 85-90% for extract";
+  };
+
+  // Get boil time guidance
+  const getBoilTimeGuidance = () => {
+    return "Standard boil: 60 min, Short boil: 30 min, Extended: 90-120 min";
+  };
+
+  // Get typical batch size examples
+  const getTypicalBatchExamples = () => {
+    const sizes = getTypicalBatchSizes();
+    return sizes.map((size) => size.label).join(", ");
+  };
+
   return (
     <div className="recipe-details card">
       <h2 className="card-title">
         {isEditing ? "Recipe Details" : "New Recipe Details"}
+
         {hasUnsavedChanges && (
           <span className="unsaved-indicator" title="Unsaved changes">
             *
@@ -59,7 +136,6 @@ function RecipeDetails({
             disabled={saving}
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="style">Beer Style</label>
           <input
@@ -73,23 +149,34 @@ function RecipeDetails({
             disabled={saving}
           />
         </div>
-
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="batch_size">Batch Size (gallons) *</label>
+            <label htmlFor="batch_size">
+              Batch Size ({batchSizeProps.unit}) *
+              <span className="unit-indicator">
+                Currently:{" "}
+                {formatValue(
+                  displayBatchSize.value,
+                  displayBatchSize.unit,
+                  "volume"
+                )}
+              </span>
+            </label>
             <input
               type="number"
               id="batch_size"
               name="batch_size"
-              value={recipe.batch_size}
+              value={displayBatchSize.value}
               onChange={handleChange}
               className="form-control"
-              min="0.5"
-              max="100"
-              step="0.5"
+              min={batchSizeProps.min}
+              max={batchSizeProps.max}
+              step={batchSizeProps.step}
               required
               disabled={saving}
+              placeholder={batchSizeProps.placeholder}
             />
+            <small className="form-help-text">{batchSizeProps.typical}</small>
           </div>
 
           <div className="form-group">
@@ -107,6 +194,7 @@ function RecipeDetails({
               placeholder="60"
               disabled={saving}
             />
+            <small className="form-help-text">{getBoilTimeGuidance()}</small>
           </div>
 
           <div className="form-group">
@@ -124,9 +212,9 @@ function RecipeDetails({
               placeholder="75"
               disabled={saving}
             />
+            <small className="form-help-text">{getEfficiencyGuidance()}</small>
           </div>
         </div>
-
         <div className="form-group">
           <label htmlFor="description">Description</label>
           <textarea
@@ -140,7 +228,6 @@ function RecipeDetails({
             disabled={saving}
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="notes">Brewing Notes</label>
           <textarea
@@ -154,7 +241,6 @@ function RecipeDetails({
             disabled={saving}
           />
         </div>
-
         <div className="form-check">
           <input
             type="checkbox"
@@ -176,7 +262,23 @@ function RecipeDetails({
             )}
           </label>
         </div>
-
+        {/* Enhanced Unit System Indicator */}
+        <div className="unit-system-indicator">
+          <div className="unit-system-info">
+            <span className="unit-system-icon">{getUnitSystemIcon()}</span>
+            <span className="unit-system-text">
+              Using {getUnitSystemLabel()} units
+            </span>
+            <span className="unit-system-details">
+              ({unitSystem === "metric" ? "L, °C, kg, g" : "gal, °F, lb, oz"})
+            </span>
+          </div>
+          <div className="unit-system-actions">
+            <Link to="/settings" className="unit-settings-link">
+              Change in Settings
+            </Link>
+          </div>
+        </div>
         <div className="form-actions">
           <button
             type="button"
@@ -203,7 +305,6 @@ function RecipeDetails({
             )}
           </button>
         </div>
-
         {/* Recipe validation info */}
         {!canSave && (
           <div className="validation-info">

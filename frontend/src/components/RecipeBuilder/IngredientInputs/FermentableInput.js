@@ -1,23 +1,40 @@
 import React, { useState } from "react";
+import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import "../../../styles/SearchableSelect.css";
 
 function FermentableInput({ grains, onAdd, disabled = false }) {
+  const { unitSystem, getPreferredUnit } = useUnits();
+
   const [fermentableForm, setFermentableForm] = useState({
     ingredient_id: "",
     color: "",
     amount: "",
-    unit: "lb",
+    unit: getPreferredUnit("weight"), // Dynamic based on user preference
     selectedIngredient: null,
   });
 
   const [errors, setErrors] = useState({});
-  // Add reset trigger state to control SearchableSelect reset
   const [resetTrigger, setResetTrigger] = useState(0);
+
+  // Get available units based on unit system
+  const getAvailableUnits = () => {
+    if (unitSystem === "metric") {
+      return [
+        { value: "kg", label: "kg", description: "Kilograms" },
+        { value: "g", label: "g", description: "Grams" },
+      ];
+    } else {
+      return [
+        { value: "lb", label: "lb", description: "Pounds" },
+        { value: "oz", label: "oz", description: "Ounces" },
+      ];
+    }
+  };
 
   // Custom Fuse.js options for fermentables - more strict matching
   const fermentableFuseOptions = {
-    threshold: 0.3, // Stricter matching for precise ingredient selection
+    threshold: 0.3,
     keys: [
       { name: "name", weight: 1.0 },
       { name: "description", weight: 0.4 },
@@ -82,8 +99,22 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
       newErrors.amount = "Amount must be greater than 0";
     }
 
-    if (parseFloat(fermentableForm.amount) > 100) {
-      newErrors.amount = "Amount seems unusually high";
+    // Unit-specific validation
+    const amount = parseFloat(fermentableForm.amount);
+    const unit = fermentableForm.unit;
+
+    if (unitSystem === "metric") {
+      if (unit === "kg" && amount > 50) {
+        newErrors.amount = "More than 50kg seems unusually high";
+      } else if (unit === "g" && amount > 50000) {
+        newErrors.amount = "More than 50kg seems unusually high";
+      }
+    } else {
+      if (unit === "lb" && amount > 100) {
+        newErrors.amount = "More than 100 pounds seems unusually high";
+      } else if (unit === "oz" && amount > 1600) {
+        newErrors.amount = "More than 100 pounds seems unusually high";
+      }
     }
 
     if (
@@ -120,13 +151,11 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
         ingredient_id: "",
         color: "",
         amount: "",
-        unit: "lb",
+        unit: getPreferredUnit("weight"),
         selectedIngredient: null,
       });
 
       setErrors({});
-
-      // Trigger SearchableSelect reset by incrementing the trigger
       setResetTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to add fermentable:", error);
@@ -165,6 +194,22 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     );
   };
 
+  const getAmountPlaceholder = () => {
+    if (unitSystem === "metric") {
+      return fermentableForm.unit === "kg" ? "1" : "1000";
+    } else {
+      return fermentableForm.unit === "lb" ? "1" : "16";
+    }
+  };
+
+  const getAmountGuidance = () => {
+    if (unitSystem === "metric") {
+      return "Base malts: 2-6 kg, Specialty malts: 100-500g";
+    } else {
+      return "Base malts: 4-12 lb, Specialty malts: 4-32 oz";
+    }
+  };
+
   return (
     <div className="card">
       <h3 className="card-title">Fermentables</h3>
@@ -181,8 +226,8 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               onChange={handleChange}
               step="0.1"
               min="0"
-              max="100"
-              placeholder="Amount"
+              max={unitSystem === "metric" ? "50000" : "1600"}
+              placeholder={getAmountPlaceholder()}
               className={`fermentable-amount-input ${
                 errors.amount ? "error" : ""
               }`}
@@ -197,10 +242,15 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               className="fermentable-unit-select"
               disabled={disabled}
             >
-              <option value="lb">lb</option>
-              <option value="oz">oz</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
+              {getAvailableUnits().map((unit) => (
+                <option
+                  key={unit.value}
+                  value={unit.value}
+                  title={unit.description}
+                >
+                  {unit.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -295,11 +345,11 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
         </div>
       </form>
 
-      {/* Help text */}
+      {/* Help text with unit-specific guidance */}
       <div className="ingredient-help">
         <small className="help-text">
-          💡 Base malts (Pale, Pilsner) should make up 60-80% of your grain
-          bill. Specialty malts add color, flavor, and character.
+          💡 {getAmountGuidance()}. Base malts (Pale, Pilsner) typically make up
+          60-80% of your grain bill.
         </small>
       </div>
     </div>
