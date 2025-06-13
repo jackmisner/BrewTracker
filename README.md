@@ -21,42 +21,47 @@ This repository contains two applications:
 ```
 homebrew-tracker/
 ├── backend/
-│   ├── app.py
-│   ├── config.py
-│   ├── data/ // Seed data for Ingredients
-│   ├── models/ // Database models
+│   ├── app.py                            # Main Flask application entry point
+│   ├── config.py                         # Configuration settings
+│   ├── data/                             # Seed data for Ingredients
+│   ├── models/                           # Database models
 │   │   ├── __init__.py
-│   │   └── mongo_models.py // MongoDB models for users, recipes, ingredients, and brew sessions
-│   ├── routes/ // Backend routes for handling incoming HTTP requests
+│   │   └── mongo_models.py               # MongoDB models for users, recipes, ingredients, and brew sessions
+│   ├── routes/                           # Backend routes for handling incoming HTTP requests
 │   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── brew_sessions.py
-│   │   ├── ingredients.py
-│   │   └── recipes.py
-│   ├── seed_ingredients.py // Script that gets called on first run if database has no ingredients in it to add the ingredients data to DB
-│   ├── services/
+│   │   ├── auth.py                       # Authentication routes
+│   │   ├── brew_sessions.py              # Brewing session management
+│   │   ├── ingredients.py                # Ingredient management
+│   │   ├── recipes.py                    # Recipe CRUD operations
+│   │   └── user_settings.py              # User Settings management
+│   ├── seed_ingredients.py               # Script that gets called on first run if database has no ingredients in it to add the ingredients data to DB
+│   ├── services/                         # Business logic layer
 │   │   ├── __init__.py
-│   │   └── mongodb_service.py // Provides methods for interacting with MongoDB
-│   ├── tests/ // Backend tests
-│   ├── utils/
+│   │   └── mongodb_service.py            # Provides methods for interacting with MongoDB
+│   ├── tests/                            # Backend tests
+│   ├── utils/                            # Utility functions
 │   │   ├── __init__.py
-│   │   ├── brewing_calculation_core.py  # Core brewing calculation formulae
-│   │   ├── recipe_orm_calculator.py     # Calculations for database models
-│   │   └── recipe_api_calculator.py     # Calculations for API preview requests
-│   ├── requirements.txt // Backend requirements
-│   └── .env // Environment variables for setting database locations
+│   │   ├── brewing_calculation_core.py   # Core brewing calculation formulae
+│   │   ├── recipe_orm_calculator.py      # Calculations for database models
+│   │   ├── recipe_api_calculator.py      # Calculations for API preview requests
+│   │   └── unit_conversions.py           # Core functions for converting between units (metric/imperial)
+│   ├── requirements.txt                  # Backend requirements
+│   └── .env                              # Environment variables for setting database locations
 ├── frontend/
 │   ├── public/
 │   │   ├── index.html
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── BrewSessions/ // Components used for Brew Sessions ("Brewing" a recipe and tracking fermentation stats)
-│   │   │   ├── Header/ // Website header component with navigation buttons
-│   │   │   ├── RecipeBuilder/ // Components used for creating recipes
+│   │   │   ├── BrewSessions/             # Components used for Brew Sessions ("Brewing" a recipe and tracking fermentation stats)
+│   │   │   ├── Header/                   # Website header component with navigation buttons
+│   │   │   ├── RecipeBuilder/            # Components used for creating recipes
 │   │   │   ├── RecipeCard.js
 │   │   │   ├── RecipeCardContainer.js
-│   │   │   └── RecipeActions.js
-│   │   ├── hooks/ // Custom ReactJS hook implementations
+│   │   │   ├── RecipeActions.js
+│   │   │   └── SearchableSelect.js       # Fuse.js based component for searching through ingredients (allows partial and "closest" matches)
+│   │   ├── contexts/
+│   │   │   └── UnitContext.js            # Custom wrapper for the entire app frontend to control which units are displayed based on user preferences (metric/imperial)
+│   │   ├── hooks/                        # Custom ReactJS hook implementations
 │   │   ├── images/
 │   │   ├── pages/
 │   │   │   ├── AllRecipes.js
@@ -64,24 +69,26 @@ homebrew-tracker/
 │   │   │   ├── Login.js
 │   │   │   ├── RecipeBuilder.js
 │   │   │   ├── Register.js
+│   │   │   ├── UserSettings.js
 │   │   │   └── ViewRecipe.js
 │   │   ├── services/
-|   |   |   └── api.js // Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
-│   │   │   ├── index.js // Central export for all business logic services, provides a clean interface for importing services throughout the application
-│   │   │   ├── BrewSessionService.js // Higher-level abstraction specifically for brewing-session-related operations
-│   │   │   ├── CacheManager.js // Higher-level abstraction specifically for cache-management operations
-│   │   │   ├── IngredientService.js // Higher-level abstraction specifically for ingredient-related operations
-│   │   │   ├── MetricService.js // Higher-level abstraction specifically for metric-calculation operations
-|   |   |   └── RecipeService.js // Higher-level abstraction specifically for recipe-related operations
-│   │   ├── styles/ // CSS for various frontend components
+|   |   |   └── api.js                    # Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
+│   │   │   ├── index.js                  # Central export for all business logic services, provides a clean interface for importing services throughout the application
+│   │   │   ├── BrewSessionService.js     # Higher-level abstraction specifically for brewing-session-related operations
+│   │   │   ├── CacheManager.js           # Higher-level abstraction specifically for cache-management operations
+│   │   │   ├── IngredientService.js      # Higher-level abstraction specifically for ingredient-related operations
+│   │   │   ├── MetricService.js          # Higher-level abstraction specifically for metric-calculation operations
+│   │   │   ├── RecipeService.js          # Higher-level abstraction specifically for recipe-related operations
+|   |   |   └── UserSettings.js           # Higher-level abstraction specifically for managing user settings and account management
+│   │   ├── styles/                       # CSS for various frontend components
 │   │   ├── utils/
-|   |   |   └── formatUtils.js // Utility functions for formatting units for displaying to the end user
+|   |   |   └── formatUtils.js            # Utility functions for formatting units for displaying to the end user
 │   │   ├── App.js
 │   │   └── index.js
-│   ├── tests/ // Frontend tests
-│   ├── package.json // Frontend requirements
-│   └── .env // Environment variable for linking frontend to backend
-└── README.md // The document you are currently reading!
+│   ├── tests/                            # Frontend tests
+│   ├── package.json                      # Frontend requirements
+│   └── .env                              # Environment variable for linking frontend to backend
+└── README.md                             # The document you are currently reading!
 ```
 
 ## 📋 Requirements
