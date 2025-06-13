@@ -18,6 +18,9 @@ function Header({ user, onLogout }) {
               <Link to="/recipes" className="nav-link">
                 Recipes
               </Link>
+              <Link to="/recipes/public" className="nav-link">
+                Public Recipes
+              </Link>
               <Link to="/brew-sessions" className="nav-link">
                 Brew Sessions
               </Link>
