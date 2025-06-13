@@ -35,8 +35,8 @@ class UserSettings(EmbeddedDocument):
     share_recipe_metrics = BooleanField(default=False)
     public_recipes_default = BooleanField(default=False)
 
-    # Application Preferences - Use unit-appropriate defaults
-    default_batch_size = FloatField()  # Will be set based on preferred_units
+    # Application Preferences
+    default_batch_size = FloatField(default=5.0)
     preferred_units = StringField(choices=["imperial", "metric"], default="imperial")
     timezone = StringField(default="UTC")
 
@@ -44,13 +44,12 @@ class UserSettings(EmbeddedDocument):
     email_notifications = BooleanField(default=True)
     brew_reminders = BooleanField(default=True)
 
-    def clean(self):
-        """Set appropriate default batch size based on unit preference"""
-        if self.default_batch_size is None:
-            if self.preferred_units == "metric":
-                self.default_batch_size = 19.0  # 19 liters
-            else:
-                self.default_batch_size = 5.0  # 5 gallons
+    def get_default_batch_size_for_units(self):
+        """Get appropriate default batch size for user's unit system"""
+        if self.preferred_units == "metric":
+            return 19.0  # 19L for metric users
+        else:
+            return 5.0  # 5 gallons for imperial users
 
     def to_dict(self):
         return {
@@ -97,19 +96,6 @@ class User(Document):
             if hasattr(self.settings, key):
                 setattr(self.settings, key, value)
 
-        # Ensure batch size is appropriate for unit system
-        if "preferred_units" in settings_data:
-            if (
-                settings_data["preferred_units"] == "metric"
-                and not self.settings.default_batch_size
-            ):
-                self.settings.default_batch_size = 19.0
-            elif (
-                settings_data["preferred_units"] == "imperial"
-                and not self.settings.default_batch_size
-            ):
-                self.settings.default_batch_size = 5.0
-
         self.save()
 
     def get_preferred_units(self):
@@ -118,20 +104,41 @@ class User(Document):
             return self.settings.preferred_units
         return "imperial"  # Default
 
-    def get_default_batch_size(self):
-        """Get user's default batch size in their preferred units"""
-        if self.settings and self.settings.default_batch_size:
-            return self.settings.default_batch_size
-
-        # Fallback to unit-appropriate defaults
-        unit_system = self.get_preferred_units()
-        return 19.0 if unit_system == "metric" else 5.0
-
     def get_unit_preferences(self):
         """Get detailed unit preferences for the user"""
         from utils.unit_conversions import UnitConverter
 
         return UnitConverter.get_preferred_units(self.get_preferred_units())
+
+    def convert_recipe_to_preferred_units(self, recipe_data):
+        """Convert recipe data to user's preferred units"""
+        from utils.unit_conversions import UnitConverter
+
+        if not recipe_data:
+            return recipe_data
+
+        converted = recipe_data.copy()
+        target_system = self.get_preferred_units()
+
+        # Convert batch size
+        if "batch_size" in converted:
+            # Assume batch size is in gallons, convert if user prefers metric
+            if target_system == "metric":
+                converted["batch_size"] = UnitConverter.convert_volume(
+                    converted["batch_size"], "gal", "l"
+                )
+                converted["batch_size_unit"] = "l"
+            else:
+                converted["batch_size_unit"] = "gal"
+
+        # Convert ingredients
+        if "ingredients" in converted and isinstance(converted["ingredients"], list):
+            converted["ingredients"] = [
+                UnitConverter.normalize_ingredient_data(ing, target_system)
+                for ing in converted["ingredients"]
+            ]
+
+        return converted
 
     def to_dict(self):
         return {
@@ -234,6 +241,10 @@ class Recipe(Document):
     name = StringField(required=True, max_length=100)
     style = StringField(max_length=50)
     batch_size = FloatField(required=True)  # in gallons/liters
+    batch_size_unit = StringField(default="gal", choices=["gal", "l"])  # NEW FIELD
+    unit_system = StringField(
+        choices=["imperial", "metric"], default="imperial"
+    )  # NEW FIELD for unit system
     description = StringField()
     is_public = BooleanField(default=False)
     created_at = DateTimeField(default=lambda: datetime.now(UTC))
@@ -267,6 +278,8 @@ class Recipe(Document):
             "name": self.name,
             "style": self.style,
             "batch_size": self.batch_size,
+            "batch_size_unit": self.batch_size_unit,
+            "unit_system": self.unit_system,
             "description": self.description,
             "is_public": self.is_public,
             "created_at": (

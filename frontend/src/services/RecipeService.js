@@ -172,6 +172,7 @@ class RecipeService {
       name: recipeData.name.trim(),
       style: recipeData.style?.trim() || "",
       batch_size: parseFloat(recipeData.batch_size),
+      batch_size_unit: recipeData.batch_size_unit || "gal", // Include batch size unit
       description: recipeData.description?.trim() || "",
       is_public: Boolean(recipeData.is_public),
       boil_time: recipeData.boil_time ? parseInt(recipeData.boil_time) : null,
@@ -223,6 +224,7 @@ class RecipeService {
       name: rawRecipe.name || "",
       style: rawRecipe.style || "",
       batch_size: parseFloat(rawRecipe.batch_size) || 5,
+      batch_size_unit: rawRecipe.batch_size_unit || "gal", // Process batch size unit
       description: rawRecipe.description || "",
       is_public: Boolean(rawRecipe.is_public),
       boil_time: rawRecipe.boil_time ? parseInt(rawRecipe.boil_time) : 60,
