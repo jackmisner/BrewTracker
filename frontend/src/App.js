@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { UnitProvider } from "./contexts/UnitContext";
 import ApiService from "./services/api";
 
 // Components
@@ -14,6 +15,7 @@ import BrewSessionList from "./components/BrewSessions/BrewSessionList";
 import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
+import UserSettings from "./pages/UserSettings";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -62,117 +64,128 @@ function App() {
   };
 
   return (
-    <Router>
-      <Layout user={user} onLogout={handleLogout}>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              user ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Login onLogin={handleLogin} />
-              )
-            }
-          />
+    <UnitProvider>
+      <Router>
+        <Layout user={user} onLogout={handleLogout}>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                user ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Login onLogin={handleLogin} />
+                )
+              }
+            />
 
-          <Route
-            path="/register"
-            element={
-              user ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Register onLogin={handleLogin} />
-              )
-            }
-          />
+            <Route
+              path="/register"
+              element={
+                user ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Register onLogin={handleLogin} />
+                )
+              }
+            />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Routes for recipes */}
-          <Route
-            path="/recipes"
-            element={
-              <ProtectedRoute>
-                <AllRecipes />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <UserSettings />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Routes for new recipe */}
-          <Route
-            path="/recipes/new"
-            element={
-              <ProtectedRoute>
-                <RecipeBuilder />
-              </ProtectedRoute>
-            }
-          />
-          {/* Routes for specific recipe */}
-          <Route
-            path="/recipes/:recipeId"
-            element={
-              <ProtectedRoute>
-                <ViewRecipe />
-              </ProtectedRoute>
-            }
-          />
-          {/* Routes for editing specific recipe */}
-          <Route
-            path="/recipes/:recipeId/edit"
-            element={
-              <ProtectedRoute>
-                <RecipeBuilder />
-              </ProtectedRoute>
-            }
-          />
+            {/* Routes for recipes */}
+            <Route
+              path="/recipes"
+              element={
+                <ProtectedRoute>
+                  <AllRecipes />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Routes for brew sessions */}
-          <Route
-            path="/brew-sessions"
-            element={
-              <ProtectedRoute>
-                <BrewSessionList />
-              </ProtectedRoute>
-            }
-          />
-          {/* Route for creating a new brew session */}
-          <Route
-            path="/brew-sessions/new"
-            element={
-              <ProtectedRoute>
-                <CreateBrewSession />
-              </ProtectedRoute>
-            }
-          />
-          {/* Route for viewing a specific brew session */}
-          <Route
-            path="/brew-sessions/:sessionId"
-            element={
-              <ProtectedRoute>
-                <ViewBrewSession />
-              </ProtectedRoute>
-            }
-          />
-          {/* Route for editing a specific brew session */}
-          <Route
-            path="/brew-sessions/:sessionId/edit"
-            element={
-              <ProtectedRoute>
-                <EditBrewSession />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Layout>
-    </Router>
+            {/* Routes for new recipe */}
+            <Route
+              path="/recipes/new"
+              element={
+                <ProtectedRoute>
+                  <RecipeBuilder />
+                </ProtectedRoute>
+              }
+            />
+            {/* Routes for specific recipe */}
+            <Route
+              path="/recipes/:recipeId"
+              element={
+                <ProtectedRoute>
+                  <ViewRecipe />
+                </ProtectedRoute>
+              }
+            />
+            {/* Routes for editing specific recipe */}
+            <Route
+              path="/recipes/:recipeId/edit"
+              element={
+                <ProtectedRoute>
+                  <RecipeBuilder />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Routes for brew sessions */}
+            <Route
+              path="/brew-sessions"
+              element={
+                <ProtectedRoute>
+                  <BrewSessionList />
+                </ProtectedRoute>
+              }
+            />
+            {/* Route for creating a new brew session */}
+            <Route
+              path="/brew-sessions/new"
+              element={
+                <ProtectedRoute>
+                  <CreateBrewSession />
+                </ProtectedRoute>
+              }
+            />
+            {/* Route for viewing a specific brew session */}
+            <Route
+              path="/brew-sessions/:sessionId"
+              element={
+                <ProtectedRoute>
+                  <ViewBrewSession />
+                </ProtectedRoute>
+              }
+            />
+            {/* Route for editing a specific brew session */}
+            <Route
+              path="/brew-sessions/:sessionId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditBrewSession />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Layout>
+      </Router>
+    </UnitProvider>
   );
 }
 

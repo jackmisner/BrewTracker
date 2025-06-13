@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HopInput from "../../src/components/RecipeBuilder/IngredientInputs/HopInput";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
 jest.mock("../../src/components/SearchableSelect", () => {
@@ -61,6 +62,21 @@ jest.mock("../../src/components/SearchableSelect", () => {
   };
 });
 
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
+
 describe("HopInput", () => {
   const mockHops = [
     {
@@ -98,10 +114,10 @@ describe("HopInput", () => {
   });
 
   test("renders hop input form", () => {
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     expect(screen.getByText("Hops")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Amount")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("1.0")).toBeInTheDocument(); // Updated placeholder for imperial
     expect(screen.getByDisplayValue("oz")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Alpha")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Boil")).toBeInTheDocument();
@@ -110,7 +126,7 @@ describe("HopInput", () => {
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Select an ingredient but don't enter amount
     const searchableSelect = screen
@@ -131,10 +147,10 @@ describe("HopInput", () => {
 
   test("shows validation error for missing ingredient selection", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Enter amount but don't select ingredient
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     // Try to submit
@@ -150,9 +166,9 @@ describe("HopInput", () => {
 
   test("shows validation error for missing alpha acid", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -174,11 +190,11 @@ describe("HopInput", () => {
     });
   });
 
-  test("shows validation error for excessive amount", async () => {
+  test("shows validation error for excessive amount in oz", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "15");
 
     const searchableSelect = screen
@@ -191,16 +207,46 @@ describe("HopInput", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Amount seems unusually high for hops")
+        screen.getByText("More than 10 oz seems unusually high for hops")
+      ).toBeInTheDocument();
+    });
+  });
+
+  test("shows validation error for excessive amount in grams", async () => {
+    const user = userEvent.setup();
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
+
+    const amountInput = screen.getByPlaceholderText("1.0");
+    await user.type(amountInput, "1");
+
+    // Change to grams
+    const unitSelect = screen.getByDisplayValue("oz");
+    await user.selectOptions(unitSelect, "g");
+
+    // Now enter excessive gram amount
+    await user.clear(amountInput);
+    await user.type(amountInput, "400");
+
+    const searchableSelect = screen
+      .getByTestId("searchable-select")
+      .querySelector("input");
+    await user.type(searchableSelect, "cascade");
+
+    const addButton = screen.getByText("Add");
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("More than 300g seems unusually high for hops")
       ).toBeInTheDocument();
     });
   });
 
   test("shows validation error for excessive alpha acid", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -224,9 +270,9 @@ describe("HopInput", () => {
 
   test("shows validation error for missing boil time", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -250,10 +296,10 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -283,7 +329,7 @@ describe("HopInput", () => {
 
   test("auto-fills alpha acid when ingredient is selected", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -298,7 +344,7 @@ describe("HopInput", () => {
 
   test("adjusts time defaults when use changes", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Change to whirlpool first
     const useSelect = screen.getByDisplayValue("Boil");
@@ -315,7 +361,7 @@ describe("HopInput", () => {
 
   test("shows usage description for different uses", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Default boil
     expect(
@@ -344,7 +390,7 @@ describe("HopInput", () => {
 
   test("displays selected ingredient information", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -362,7 +408,7 @@ describe("HopInput", () => {
 
   test("changes unit selection", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     const unitSelect = screen.getByDisplayValue("oz");
     await user.selectOptions(unitSelect, "g");
@@ -374,10 +420,10 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -408,7 +454,7 @@ describe("HopInput", () => {
 
   test("clears errors when user starts typing", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
@@ -421,7 +467,7 @@ describe("HopInput", () => {
     });
 
     // Start typing in amount field
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     await waitFor(() => {
@@ -435,10 +481,10 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
-    render(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -467,26 +513,28 @@ describe("HopInput", () => {
   });
 
   test("disables form when disabled prop is true", () => {
-    render(<HopInput {...defaultProps} disabled={true} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} disabled={true} />);
 
-    expect(screen.getByPlaceholderText("Amount")).toBeDisabled();
+    expect(screen.getByPlaceholderText("1.0")).toBeDisabled();
     expect(screen.getByDisplayValue("oz")).toBeDisabled();
     expect(screen.getByPlaceholderText("Alpha")).toBeDisabled();
     expect(screen.getByText("Adding...")).toBeDisabled();
   });
 
-  test("shows help text", () => {
-    render(<HopInput {...defaultProps} />);
+  test("shows help text with unit-specific guidance", () => {
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    expect(screen.getByText(/Boil hops add bitterness/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Bittering hops.*0.5-2.0 oz.*Aroma hops.*0.5-1.0 oz/)
+    ).toBeInTheDocument();
   });
 
   test("validates dry hop time", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
     // Fill required fields
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -522,9 +570,9 @@ describe("HopInput", () => {
 
   test("validates excessive boil time", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -547,9 +595,9 @@ describe("HopInput", () => {
 
   test("validates excessive dry hop time", async () => {
     const user = userEvent.setup();
-    render(<HopInput {...defaultProps} />);
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1.0");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -571,6 +619,23 @@ describe("HopInput", () => {
       expect(
         screen.getByText("Dry hop time over 21 days is unusual")
       ).toBeInTheDocument();
+    });
+  });
+
+  test("updates placeholder based on unit selection", async () => {
+    const user = userEvent.setup();
+    renderWithUnitProvider(<HopInput {...defaultProps} />);
+
+    // Default should be oz placeholder
+    expect(screen.getByPlaceholderText("1.0")).toBeInTheDocument();
+
+    // Change to g
+    const unitSelect = screen.getByDisplayValue("oz");
+    await user.selectOptions(unitSelect, "g");
+
+    // Should update to g placeholder
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("28")).toBeInTheDocument();
     });
   });
 });

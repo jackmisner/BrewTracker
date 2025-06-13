@@ -103,10 +103,14 @@ class TestIngredientEndpoints:
         response = client.get("/api/ingredients", headers=headers)
 
         assert response.status_code == 200
-        assert len(response.json) == 8
+        # The response now includes additional metadata
+        assert "ingredients" in response.json
+        assert "unit_system" in response.json
+        assert "unit_preferences" in response.json
+        assert len(response.json["ingredients"]) == 8
 
         # Check that we get the expected ingredients
-        ingredient_names = [ing["name"] for ing in response.json]
+        ingredient_names = [ing["name"] for ing in response.json["ingredients"]]
         assert "Pale Malt (2-row)" in ingredient_names
         assert "Cascade" in ingredient_names
         assert "US-05" in ingredient_names
@@ -120,29 +124,29 @@ class TestIngredientEndpoints:
         # Test grain filter
         response = client.get("/api/ingredients?type=grain", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 3
-        for ingredient in response.json:
+        assert len(response.json["ingredients"]) == 3
+        for ingredient in response.json["ingredients"]:
             assert ingredient["type"] == "grain"
 
         # Test hop filter
         response = client.get("/api/ingredients?type=hop", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 2
-        for ingredient in response.json:
+        assert len(response.json["ingredients"]) == 2
+        for ingredient in response.json["ingredients"]:
             assert ingredient["type"] == "hop"
 
         # Test yeast filter
         response = client.get("/api/ingredients?type=yeast", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 2
-        for ingredient in response.json:
+        assert len(response.json["ingredients"]) == 2
+        for ingredient in response.json["ingredients"]:
             assert ingredient["type"] == "yeast"
 
         # Test other filter
         response = client.get("/api/ingredients?type=other", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 1
-        assert response.json[0]["type"] == "other"
+        assert len(response.json["ingredients"]) == 1
+        assert response.json["ingredients"][0]["type"] == "other"
 
     def test_search_ingredients(self, client, authenticated_user, sample_ingredients):
         """Test searching ingredients by name"""
@@ -151,21 +155,23 @@ class TestIngredientEndpoints:
         # Search for "malt"
         response = client.get("/api/ingredients?search=malt", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) >= 2  # Should find Pale Malt and Chocolate Malt
+        assert (
+            len(response.json["ingredients"]) >= 2
+        )  # Should find Pale Malt and Chocolate Malt
 
-        for ingredient in response.json:
+        for ingredient in response.json["ingredients"]:
             assert "malt" in ingredient["name"].lower()
 
         # Search for "cascade"
         response = client.get("/api/ingredients?search=cascade", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 1
-        assert response.json[0]["name"] == "Cascade"
+        assert len(response.json["ingredients"]) == 1
+        assert response.json["ingredients"][0]["name"] == "Cascade"
 
         # Search with no results
         response = client.get("/api/ingredients?search=nonexistent", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 0
+        assert len(response.json["ingredients"]) == 0
 
     def test_get_ingredient_by_id(self, client, authenticated_user, sample_ingredients):
         """Test retrieving a specific ingredient by ID"""
@@ -450,6 +456,7 @@ class TestIngredientEndpoints:
 
     def test_combined_filters(self, client, authenticated_user, sample_ingredients):
         """Test using both type and search filters together"""
+
         user, headers = authenticated_user
 
         # Search for "malt" within grains only
@@ -459,13 +466,13 @@ class TestIngredientEndpoints:
         assert response.status_code == 200
 
         # Should find grain ingredients with "malt" in the name
-        for ingredient in response.json:
+        for ingredient in response.json["ingredients"]:
             assert ingredient["type"] == "grain"
             assert "malt" in ingredient["name"].lower()
 
         # Search for "05" within yeast only
         response = client.get("/api/ingredients?type=yeast&search=05", headers=headers)
         assert response.status_code == 200
-        assert len(response.json) == 1
-        assert response.json[0]["name"] == "US-05"
-        assert response.json[0]["type"] == "yeast"
+        assert len(response.json["ingredients"]) == 1
+        assert response.json["ingredients"][0]["name"] == "US-05"
+        assert response.json["ingredients"][0]["type"] == "yeast"

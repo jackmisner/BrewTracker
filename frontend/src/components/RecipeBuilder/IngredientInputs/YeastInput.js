@@ -1,17 +1,30 @@
 import React, { useState } from "react";
+import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import "../../../styles/SearchableSelect.css";
 
 function YeastInput({ yeasts, onAdd, disabled = false }) {
+  const { unitSystem, getPreferredUnit } = useUnits();
+
   const [yeastForm, setYeastForm] = useState({
     ingredient_id: "",
     amount: "",
-    unit: "pkg",
+    unit: getPreferredUnit("yeast") || "pkg", // Default to packages
     selectedIngredient: null,
   });
 
   const [errors, setErrors] = useState({});
   const [resetTrigger, setResetTrigger] = useState(0);
+
+  // Get available units (yeast units are fairly universal)
+  const getAvailableUnits = () => {
+    return [
+      { value: "pkg", label: "pkg", description: "Packages" },
+      { value: "g", label: "g", description: "Grams" },
+      { value: "ml", label: "ml", description: "Milliliters" },
+    ];
+  };
+
   // Custom Fuse.js options for yeast - precise matching since strain matters
   const yeastFuseOptions = {
     threshold: 0.2, // Very strict matching for yeast strains
@@ -126,7 +139,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
       setYeastForm({
         ingredient_id: "",
         amount: "",
-        unit: "pkg",
+        unit: getPreferredUnit("yeast") || "pkg",
         selectedIngredient: null,
       });
 
@@ -138,16 +151,39 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const getAmountGuidance = () => {
+  const getAmountPlaceholder = () => {
     switch (yeastForm.unit) {
       case "pkg":
-        return "Typically 1-2 packages for 5 gallons";
+        return "1";
       case "g":
-        return "Dry yeast: ~11g/pkg, Liquid: varies";
+        return "11";
+      case "ml":
+        return "125";
+      default:
+        return "1";
+    }
+  };
+
+  const getAmountGuidance = () => {
+    const batchSize = unitSystem === "metric" ? "19L" : "5 gal";
+
+    switch (yeastForm.unit) {
+      case "pkg":
+        return `Typically 1-2 packages per ${batchSize} batch`;
+      case "g":
+        return "Dry yeast: ~11g/pkg, Liquid: varies by strain";
       case "ml":
         return "Liquid yeast: ~35-125ml per vial/smack pack";
       default:
         return "";
+    }
+  };
+
+  const getBatchSizeGuidance = () => {
+    if (unitSystem === "metric") {
+      return "Most 19-23L batches need 1-2 packages";
+    } else {
+      return "Most 5-gallon batches need 1-2 packages";
     }
   };
 
@@ -161,7 +197,14 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
 
     if (yeast.min_temperature && yeast.max_temperature) {
-      info.push(`${yeast.min_temperature}-${yeast.max_temperature}°F`);
+      // Show temperature in user's preferred units
+      if (unitSystem === "metric") {
+        const minC = Math.round(((yeast.min_temperature - 32) * 5) / 9);
+        const maxC = Math.round(((yeast.max_temperature - 32) * 5) / 9);
+        info.push(`${minC}-${maxC}°C`);
+      } else {
+        info.push(`${yeast.min_temperature}-${yeast.max_temperature}°F`);
+      }
     }
 
     if (yeast.alcohol_tolerance) {
@@ -185,7 +228,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               value={yeastForm.amount}
               onChange={handleChange}
               className={`yeast-amount-input ${errors.amount ? "error" : ""}`}
-              placeholder="Amount"
+              placeholder={getAmountPlaceholder()}
               step="0.5"
               min="0.5"
               max="20"
@@ -199,9 +242,15 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               className="yeast-unit-select"
               disabled={disabled}
             >
-              <option value="pkg">pkg</option>
-              <option value="g">g</option>
-              <option value="ml">ml</option>
+              {getAvailableUnits().map((unit) => (
+                <option
+                  key={unit.value}
+                  value={unit.value}
+                  title={unit.description}
+                >
+                  {unit.label}
+                </option>
+              ))}
             </select>
             {errors.amount && (
               <div className="error-message">{errors.amount}</div>
@@ -285,12 +334,11 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
         )}
       </form>
 
-      {/* Help text */}
+      {/* Help text with unit-specific guidance */}
       <div className="ingredient-help">
         <small className="help-text">
-          💡 Most 5-gallon batches need 1-2 packages of dry yeast or 1
-          vial/smack pack of liquid yeast. Liquid yeast often provides more
-          complex flavors.
+          💡 {getBatchSizeGuidance()} of dry yeast or 1 vial/smack pack of
+          liquid yeast. Liquid yeast often provides more complex flavors.
         </small>
       </div>
     </div>

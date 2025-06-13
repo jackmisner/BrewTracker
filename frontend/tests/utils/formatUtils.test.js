@@ -8,6 +8,15 @@ import {
   getAbvDescription,
   getSrmDescription,
   getBalanceDescription,
+  formatWeight,
+  formatVolume,
+  formatTemperature,
+  formatBatchSize,
+  formatIngredientAmount,
+  formatIngredientAmountWithContext,
+  getUnitAbbreviation,
+  UnitConverter,
+  FrontendUnitConverter,
 } from "../../src/utils/formatUtils";
 
 describe("formatUtils", () => {
@@ -133,6 +142,180 @@ describe("formatUtils", () => {
       expect(getBalanceDescription(1.3)).toBe("Balanced (Hoppy)");
       expect(getBalanceDescription(1.8)).toBe("Hoppy");
       expect(getBalanceDescription(2.5)).toBe("Very Hoppy");
+    });
+  });
+
+  describe("formatWeight", () => {
+    test("formats weight in imperial system", () => {
+      expect(formatWeight(500, "g", "imperial")).toBe("1.1 lb");
+      expect(formatWeight(14, "oz", "imperial")).toBe("14 oz");
+      expect(formatWeight(2.5, "lb", "imperial")).toBe("2.5 lb");
+    });
+
+    test("formats weight in metric system", () => {
+      expect(formatWeight(500, "g", "metric")).toBe("500 g");
+      expect(formatWeight(1500, "g", "metric")).toBe("1.5 kg");
+      expect(formatWeight(2.5, "kg", "metric")).toBe("2.5 kg");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatWeight(null, "g", "metric")).toBe("-");
+      expect(formatWeight(undefined, "g", "metric")).toBe("-");
+      expect(formatWeight(0, "g", "metric")).toBe("0 g");
+    });
+  });
+
+  describe("formatVolume", () => {
+    test("formats volume in imperial system", () => {
+      expect(formatVolume(5, "gal", "imperial")).toBe("5 gal");
+      expect(formatVolume(500, "ml", "imperial")).toBe("0.13 gal");
+    });
+
+    test("formats volume in metric system", () => {
+      expect(formatVolume(500, "ml", "metric")).toBe("500 ml");
+      expect(formatVolume(1500, "ml", "metric")).toBe("1.5 l");
+      expect(formatVolume(5, "l", "metric")).toBe("5 l");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatVolume(null, "l", "metric")).toBe("-");
+      expect(formatVolume(undefined, "l", "metric")).toBe("-");
+      expect(formatVolume(0, "l", "metric")).toBe("0 ml");
+    });
+  });
+
+  describe("formatTemperature", () => {
+    test("formats temperature in imperial system", () => {
+      expect(formatTemperature(20, "c", "imperial")).toBe("68°F");
+      expect(formatTemperature(100, "f", "imperial")).toBe("100°F");
+    });
+
+    test("formats temperature in metric system", () => {
+      expect(formatTemperature(68, "f", "metric")).toBe("20°C");
+      expect(formatTemperature(25, "c", "metric")).toBe("25°C");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatTemperature(null, "c", "metric")).toBe("-");
+      expect(formatTemperature(undefined, "c", "metric")).toBe("-");
+      expect(formatTemperature(0, "c", "metric")).toBe("0°C");
+    });
+  });
+
+  describe("formatBatchSize", () => {
+    test("formats batch size in imperial system", () => {
+      expect(formatBatchSize(5, "gal", "imperial")).toBe("5.0 gal");
+      expect(formatBatchSize(20, "l", "imperial")).toBe("5.3 gal");
+    });
+
+    test("formats batch size in metric system", () => {
+      expect(formatBatchSize(5, "gal", "metric")).toBe("18.9 L");
+      expect(formatBatchSize(20, "l", "metric")).toBe("20.0 L");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatBatchSize(null, "gal", "imperial")).toBe("-");
+      expect(formatBatchSize(undefined, "gal", "imperial")).toBe("-");
+      expect(formatBatchSize(0, "gal", "imperial")).toBe("0.0 gal");
+    });
+  });
+
+  describe("formatIngredientAmount", () => {
+    test("formats ingredient amounts correctly", () => {
+      expect(formatIngredientAmount(500, "g", "grain", "metric")).toBe("500 g");
+      expect(formatIngredientAmount(2, "lb", "grain", "imperial")).toBe("2 lb");
+      expect(formatIngredientAmount(1, "pkg", "yeast", "metric")).toBe("1 pkg");
+      expect(formatIngredientAmount(2.5, "tsp", "spice", "imperial")).toBe(
+        "2.5 tsp"
+      );
+    });
+
+    test("handles edge cases", () => {
+      expect(formatIngredientAmount(null, "g", "grain", "metric")).toBe("-");
+      expect(formatIngredientAmount(undefined, "g", "grain", "metric")).toBe(
+        "-"
+      );
+      expect(formatIngredientAmount(0, "g", "grain", "metric")).toBe("0 g");
+    });
+  });
+
+  describe("getUnitAbbreviation", () => {
+    test("returns correct abbreviations", () => {
+      expect(getUnitAbbreviation("gram")).toBe("g");
+      expect(getUnitAbbreviation("grams")).toBe("g");
+      expect(getUnitAbbreviation("kilogram")).toBe("kg");
+      expect(getUnitAbbreviation("ounce")).toBe("oz");
+      expect(getUnitAbbreviation("pound")).toBe("lb");
+      expect(getUnitAbbreviation("liter")).toBe("l");
+      expect(getUnitAbbreviation("gallon")).toBe("gal");
+      expect(getUnitAbbreviation("celsius")).toBe("C");
+      expect(getUnitAbbreviation("fahrenheit")).toBe("F");
+    });
+
+    test("returns original unit if no abbreviation found", () => {
+      expect(getUnitAbbreviation("pkg")).toBe("pkg");
+      expect(getUnitAbbreviation("unknown")).toBe("unknown");
+    });
+  });
+
+  describe("UnitConverter", () => {
+    test("convertUnit performs conversions correctly", () => {
+      expect(UnitConverter.convertUnit(1, "kg", "lb")).toEqual({
+        value: expect.closeTo(2.20462, 4),
+        unit: "lb",
+      });
+      expect(UnitConverter.convertUnit(1, "gal", "l")).toEqual({
+        value: expect.closeTo(3.78541, 4),
+        unit: "l",
+      });
+      expect(UnitConverter.convertUnit(32, "f", "c")).toEqual({
+        value: 0,
+        unit: "c",
+      });
+    });
+
+    test("getAppropriateUnit returns correct units", () => {
+      expect(UnitConverter.getAppropriateUnit("metric", "weight", 500)).toBe(
+        "g"
+      );
+      expect(UnitConverter.getAppropriateUnit("metric", "weight", 1500)).toBe(
+        "kg"
+      );
+      expect(UnitConverter.getAppropriateUnit("imperial", "weight", 8)).toBe(
+        "oz"
+      );
+      expect(UnitConverter.getAppropriateUnit("imperial", "weight", 20)).toBe(
+        "lb"
+      );
+    });
+
+    test("formatValue formats values correctly", () => {
+      expect(UnitConverter.formatValue(1.234, "kg", "weight")).toBe("1.2 kg");
+      expect(UnitConverter.formatValue(500, "ml", "volume")).toBe("500 ml");
+      expect(UnitConverter.formatValue(25.5, "c", "temperature")).toBe("26 c");
+    });
+  });
+
+  describe("FrontendUnitConverter", () => {
+    test("conversion methods return correct values", () => {
+      expect(FrontendUnitConverter.convertWeight(1, "kg", "lb")).toBeCloseTo(
+        2.20462,
+        4
+      );
+      expect(FrontendUnitConverter.convertVolume(1, "gal", "l")).toBeCloseTo(
+        3.78541,
+        4
+      );
+      expect(FrontendUnitConverter.convertTemperature(32, "f", "c")).toBe(0);
+    });
+
+    test("getAppropriateUnit works correctly", () => {
+      expect(
+        FrontendUnitConverter.getAppropriateUnit("metric", "weight", 500)
+      ).toBe("g");
+      expect(
+        FrontendUnitConverter.getAppropriateUnit("imperial", "volume", 1)
+      ).toBe("gal");
     });
   });
 });

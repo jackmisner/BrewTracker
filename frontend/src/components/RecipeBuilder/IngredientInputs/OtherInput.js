@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import "../../../styles/SearchableSelect.css";
 
 function OtherInput({ others, onAdd, disabled = false }) {
+  const { unitSystem, getPreferredUnit } = useUnits();
+
   const [otherForm, setOtherForm] = useState({
     ingredient_id: "",
     amount: "",
-    unit: "oz",
+    unit: getPreferredUnit("other") || (unitSystem === "metric" ? "g" : "oz"),
     use: "boil",
     time: "",
     selectedIngredient: null,
@@ -14,6 +17,39 @@ function OtherInput({ others, onAdd, disabled = false }) {
 
   const [errors, setErrors] = useState({});
   const [resetTrigger, setResetTrigger] = useState(0);
+
+  // Get available units based on unit system preference
+  const getAvailableUnits = () => {
+    if (unitSystem === "metric") {
+      return [
+        { value: "g", label: "g", description: "Grams" },
+        { value: "kg", label: "kg", description: "Kilograms" },
+        { value: "ml", label: "ml", description: "Milliliters" },
+        { value: "l", label: "l", description: "Liters" },
+        { value: "tsp", label: "tsp", description: "Teaspoons" },
+        { value: "tbsp", label: "tbsp", description: "Tablespoons" },
+        { value: "each", label: "each", description: "Individual items" },
+        // Keep imperial options available for metric users
+        { value: "oz", label: "oz", description: "Ounces" },
+        { value: "cup", label: "cup", description: "Cups" },
+      ];
+    } else {
+      return [
+        { value: "oz", label: "oz", description: "Ounces" },
+        { value: "lb", label: "lb", description: "Pounds" },
+        { value: "tsp", label: "tsp", description: "Teaspoons" },
+        { value: "tbsp", label: "tbsp", description: "Tablespoons" },
+        { value: "cup", label: "cup", description: "Cups" },
+        { value: "ml", label: "ml", description: "Milliliters" },
+        { value: "each", label: "each", description: "Individual items" },
+        // Keep metric options available for imperial users
+        { value: "g", label: "g", description: "Grams" },
+        { value: "kg", label: "kg", description: "Kilograms" },
+        { value: "l", label: "l", description: "Liters" },
+      ];
+    }
+  };
+
   // Custom Fuse.js options for other ingredients - flexible matching
   const otherFuseOptions = {
     threshold: 0.5, // More lenient since "other" ingredients vary widely
@@ -95,11 +131,19 @@ function OtherInput({ others, onAdd, disabled = false }) {
       newErrors.amount = "More than 500g seems high for most additives";
     }
 
+    if (otherForm.unit === "kg" && amount > 2) {
+      newErrors.amount = "More than 2kg seems high for most additives";
+    }
+
     if (
       (otherForm.unit === "tsp" || otherForm.unit === "tbsp") &&
       amount > 10
     ) {
       newErrors.amount = "Large amounts of spices/nutrients - double check";
+    }
+
+    if (otherForm.unit === "l" && amount > 2) {
+      newErrors.amount = "More than 2 liters seems high for most additives";
     }
 
     setErrors(newErrors);
@@ -128,7 +172,8 @@ function OtherInput({ others, onAdd, disabled = false }) {
       setOtherForm({
         ingredient_id: "",
         amount: "",
-        unit: "oz",
+        unit:
+          getPreferredUnit("other") || (unitSystem === "metric" ? "g" : "oz"),
         use: "boil",
         time: "",
         selectedIngredient: null,
@@ -212,18 +257,53 @@ function OtherInput({ others, onAdd, disabled = false }) {
 
   const getAmountGuidance = () => {
     const category = getIngredientCategory(otherForm.selectedIngredient);
+    const batchSize = unitSystem === "metric" ? "19L" : "5 gallons";
 
     switch (category) {
       case "Yeast Nutrient":
-        return "Typical: 1/2 tsp per 5 gallons";
+        return unitSystem === "metric"
+          ? `Typical: 2-3g per ${batchSize}`
+          : `Typical: 1/2 tsp per ${batchSize}`;
       case "Clarifying Agent":
-        return "Irish Moss: 1 tsp/5 gal, Whirlfloc: 1 tablet/5 gal";
+        return unitSystem === "metric"
+          ? `Irish Moss: 2-3g per ${batchSize}, Whirlfloc: 1 tablet per ${batchSize}`
+          : `Irish Moss: 1 tsp per ${batchSize}, Whirlfloc: 1 tablet per ${batchSize}`;
       case "Water Chemistry":
         return "Small amounts - follow water calculator recommendations";
       case "Fermentable Sugar":
-        return "1 lb sugar ≈ 46 gravity points in 5 gallons";
+        return unitSystem === "metric"
+          ? `450g sugar ≈ 46 gravity points in ${batchSize}`
+          : `1 lb sugar ≈ 46 gravity points in ${batchSize}`;
       default:
         return "Amount varies by ingredient type";
+    }
+  };
+
+  const getAmountPlaceholder = () => {
+    const unit = otherForm.unit;
+    switch (unit) {
+      case "g":
+        return "5";
+      case "kg":
+        return "0.5";
+      case "oz":
+        return "0.5";
+      case "lb":
+        return "1";
+      case "tsp":
+        return "0.5";
+      case "tbsp":
+        return "1";
+      case "ml":
+        return "15";
+      case "l":
+        return "0.5";
+      case "cup":
+        return "0.25";
+      case "each":
+        return "1";
+      default:
+        return "1";
     }
   };
 
@@ -240,7 +320,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
               name="amount"
               value={otherForm.amount}
               onChange={handleChange}
-              placeholder="Amount"
+              placeholder={getAmountPlaceholder()}
               className={`other-amount-input ${errors.amount ? "error" : ""}`}
               step="0.1"
               min="0"
@@ -254,16 +334,15 @@ function OtherInput({ others, onAdd, disabled = false }) {
               className="other-unit-select"
               disabled={disabled}
             >
-              <option value="oz">oz</option>
-              <option value="g">g</option>
-              <option value="lb">lb</option>
-              <option value="kg">kg</option>
-              <option value="ml">ml</option>
-              <option value="l">l</option>
-              <option value="tsp">tsp</option>
-              <option value="tbsp">tbsp</option>
-              <option value="cup">cup</option>
-              <option value="each">each</option>
+              {getAvailableUnits().map((unit) => (
+                <option
+                  key={unit.value}
+                  value={unit.value}
+                  title={unit.description}
+                >
+                  {unit.label}
+                </option>
+              ))}
             </select>
             {errors.amount && (
               <div className="error-message">{errors.amount}</div>
@@ -364,7 +443,10 @@ function OtherInput({ others, onAdd, disabled = false }) {
             {/* Usage description */}
             <div className="usage-description">
               <small>
-                <strong>Usage:</strong> Added during the boil
+                <strong>Usage:</strong> Added during{" "}
+                {otherForm.use === "boil"
+                  ? "the boil"
+                  : otherForm.use.replace("-", " ")}
               </small>
             </div>
           </div>
@@ -376,7 +458,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
         )}
       </form>
 
-      {/* Help text */}
+      {/* Help text with unit-specific guidance */}
       <div className="ingredient-help">
         <small className="help-text">
           💡 For yeast nutrients, clarifying agents, water chemistry additions,

@@ -28,12 +28,49 @@ def initialize_db(mongo_uri):
 
 
 # User model
+class UserSettings(EmbeddedDocument):
+    # Privacy Settings
+    contribute_anonymous_data = BooleanField(default=False)
+    share_yeast_performance = BooleanField(default=False)
+    share_recipe_metrics = BooleanField(default=False)
+    public_recipes_default = BooleanField(default=False)
+
+    # Application Preferences
+    default_batch_size = FloatField(default=5.0)
+    preferred_units = StringField(choices=["imperial", "metric"], default="imperial")
+    timezone = StringField(default="UTC")
+
+    # Notification Preferences
+    email_notifications = BooleanField(default=True)
+    brew_reminders = BooleanField(default=True)
+
+    def to_dict(self):
+        return {
+            "contribute_anonymous_data": self.contribute_anonymous_data,
+            "share_yeast_performance": self.share_yeast_performance,
+            "share_recipe_metrics": self.share_recipe_metrics,
+            "public_recipes_default": self.public_recipes_default,
+            "default_batch_size": self.default_batch_size,
+            "preferred_units": self.preferred_units,
+            "timezone": self.timezone,
+            "email_notifications": self.email_notifications,
+            "brew_reminders": self.brew_reminders,
+        }
+
+
 class User(Document):
     username = StringField(required=True, unique=True, max_length=80)
     email = StringField(required=True, unique=True, max_length=120)
     password_hash = StringField(required=True)
     created_at = DateTimeField(default=lambda: datetime.now(UTC))
     last_login = DateTimeField()
+
+    # Add settings as embedded document
+    settings = EmbeddedDocumentField(UserSettings, default=UserSettings)
+
+    # Account status
+    is_active = BooleanField(default=True)
+    email_verified = BooleanField(default=False)
 
     meta = {"collection": "users", "indexes": ["username", "email"]}
 
@@ -43,6 +80,59 @@ class User(Document):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def update_settings(self, settings_data):
+        """Update user settings safely"""
+        if not self.settings:
+            self.settings = UserSettings()
+
+        for key, value in settings_data.items():
+            if hasattr(self.settings, key):
+                setattr(self.settings, key, value)
+
+        self.save()
+
+    def get_preferred_units(self):
+        """Get user's preferred unit system"""
+        if self.settings and hasattr(self.settings, "preferred_units"):
+            return self.settings.preferred_units
+        return "imperial"  # Default
+
+    def get_unit_preferences(self):
+        """Get detailed unit preferences for the user"""
+        from utils.unit_conversions import UnitConverter
+
+        return UnitConverter.get_preferred_units(self.get_preferred_units())
+
+    def convert_recipe_to_preferred_units(self, recipe_data):
+        """Convert recipe data to user's preferred units"""
+        from utils.unit_conversions import UnitConverter
+
+        if not recipe_data:
+            return recipe_data
+
+        converted = recipe_data.copy()
+        target_system = self.get_preferred_units()
+
+        # Convert batch size
+        if "batch_size" in converted:
+            # Assume batch size is in gallons, convert if user prefers metric
+            if target_system == "metric":
+                converted["batch_size"] = UnitConverter.convert_volume(
+                    converted["batch_size"], "gal", "l"
+                )
+                converted["batch_size_unit"] = "l"
+            else:
+                converted["batch_size_unit"] = "gal"
+
+        # Convert ingredients
+        if "ingredients" in converted and isinstance(converted["ingredients"], list):
+            converted["ingredients"] = [
+                UnitConverter.normalize_ingredient_data(ing, target_system)
+                for ing in converted["ingredients"]
+            ]
+
+        return converted
+
     def to_dict(self):
         return {
             "user_id": str(self.id),
@@ -50,6 +140,11 @@ class User(Document):
             "email": self.email,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_login": self.last_login.isoformat() if self.last_login else None,
+            "is_active": self.is_active,
+            "email_verified": self.email_verified,
+            "settings": (
+                self.settings.to_dict() if self.settings else UserSettings().to_dict()
+            ),
         }
 
 
@@ -258,8 +353,34 @@ class BrewSession(Document):
         "indexes": ["user_id", "recipe_id", "brew_date", "status"],
     }
 
+    # Store temperature unit preference
+    temperature_unit = StringField(choices=["F", "C"], default="F")
+
+    def convert_temperatures_to_unit(self, target_unit):
+        """Convert all temperature fields to target unit"""
+        from utils.unit_conversions import UnitConverter
+
+        if self.temperature_unit == target_unit:
+            return self  # No conversion needed
+
+        # Convert mash temperature
+        if self.mash_temp:
+            self.mash_temp = UnitConverter.convert_temperature(
+                self.mash_temp, self.temperature_unit, target_unit
+            )
+
+        # Convert fermentation data temperatures
+        for entry in self.fermentation_data:
+            if entry.temperature:
+                entry.temperature = UnitConverter.convert_temperature(
+                    entry.temperature, self.temperature_unit, target_unit
+                )
+
+        self.temperature_unit = target_unit
+        return self
+
     def to_dict(self):
-        return {
+        base_dict = {
             "session_id": str(self.id),
             "recipe_id": str(self.recipe_id),
             "user_id": str(self.user_id),
@@ -293,4 +414,8 @@ class BrewSession(Document):
             "tasting_notes": self.tasting_notes,
             "batch_rating": self.batch_rating,
             "photos_url": self.photos_url,
+            # Add temperature unit info
+            "temperature_unit": self.temperature_unit,
         }
+
+        return base_dict

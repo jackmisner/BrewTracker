@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import YeastInput from "../../src/components/RecipeBuilder/IngredientInputs/YeastInput";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
 jest.mock("../../src/components/SearchableSelect", () => {
@@ -69,12 +70,27 @@ jest.mock("../../src/components/SearchableSelect", () => {
   };
 });
 
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
 // Mock window.confirm
 const mockConfirm = jest.fn();
 Object.defineProperty(window, "confirm", {
   writable: true,
   value: mockConfirm,
 });
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
 
 describe("YeastInput", () => {
   const mockYeasts = [
@@ -122,17 +138,17 @@ describe("YeastInput", () => {
   });
 
   test("renders yeast input form", () => {
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     expect(screen.getByText("Yeast")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Amount")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("1")).toBeInTheDocument(); // Updated placeholder
     expect(screen.getByDisplayValue("pkg")).toBeInTheDocument();
     expect(screen.getByText("Add")).toBeInTheDocument();
   });
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     // Select an ingredient but don't enter amount
     const searchableSelect = screen
@@ -153,10 +169,10 @@ describe("YeastInput", () => {
 
   test("shows validation error for missing ingredient selection", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     // Enter amount but don't select ingredient
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "1");
 
     // Try to submit
@@ -172,9 +188,9 @@ describe("YeastInput", () => {
 
   test("shows validation error for excessive package amount", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "15");
 
     const searchableSelect = screen
@@ -194,9 +210,9 @@ describe("YeastInput", () => {
 
   test("shows validation error for invalid gram amount", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "200");
 
     const unitSelect = screen.getByDisplayValue("pkg");
@@ -219,9 +235,9 @@ describe("YeastInput", () => {
 
   test("shows validation error for invalid ml amount", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "600");
 
     const unitSelect = screen.getByDisplayValue("pkg");
@@ -246,10 +262,10 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -274,9 +290,9 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "5");
 
     const searchableSelect = screen
@@ -303,9 +319,9 @@ describe("YeastInput", () => {
     const mockOnAdd = jest.fn().mockResolvedValue();
     mockConfirm.mockReturnValue(false); // User cancels
 
-    render(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
 
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "5");
 
     const searchableSelect = screen
@@ -326,7 +342,7 @@ describe("YeastInput", () => {
 
   test("displays selected ingredient information", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -343,9 +359,9 @@ describe("YeastInput", () => {
     });
   });
 
-  test("displays yeast specifications", async () => {
+  test("displays yeast specifications with imperial temperatures", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -353,19 +369,20 @@ describe("YeastInput", () => {
     await user.type(searchableSelect, "us-05");
 
     await waitFor(() => {
+      // Should show temperatures in Fahrenheit for imperial unit system
       expect(
         screen.getByText("81% attenuation • 59-75°F • 11% alcohol tolerance")
       ).toBeInTheDocument();
     });
   });
 
-  test("shows amount guidance for different units", async () => {
+  test("shows amount guidance for different units with imperial context", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
-    // Default pkg
+    // Default pkg guidance should reference 5 gal
     expect(
-      screen.getByText("Typically 1-2 packages for 5 gallons")
+      screen.getByText("Typically 1-2 packages per 5 gal batch")
     ).toBeInTheDocument();
 
     // Change to grams
@@ -373,7 +390,7 @@ describe("YeastInput", () => {
     await user.selectOptions(unitSelect, "g");
 
     expect(
-      screen.getByText("Dry yeast: ~11g/pkg, Liquid: varies")
+      screen.getByText("Dry yeast: ~11g/pkg, Liquid: varies by strain")
     ).toBeInTheDocument();
 
     // Change to ml
@@ -386,7 +403,7 @@ describe("YeastInput", () => {
 
   test("changes unit selection", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     const unitSelect = screen.getByDisplayValue("pkg");
     await user.selectOptions(unitSelect, "g");
@@ -398,10 +415,10 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    render(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -425,7 +442,7 @@ describe("YeastInput", () => {
 
   test("clears errors when user starts typing", async () => {
     const user = userEvent.setup();
-    render(<YeastInput {...defaultProps} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
@@ -438,7 +455,7 @@ describe("YeastInput", () => {
     });
 
     // Start typing in amount field
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "1");
 
     await waitFor(() => {
@@ -452,10 +469,10 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
-    render(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} onAdd={mockOnAdd} />);
 
     // Fill out form
-    const amountInput = screen.getByPlaceholderText("Amount");
+    const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -481,18 +498,43 @@ describe("YeastInput", () => {
   });
 
   test("disables form when disabled prop is true", () => {
-    render(<YeastInput {...defaultProps} disabled={true} />);
+    renderWithUnitProvider(<YeastInput {...defaultProps} disabled={true} />);
 
-    expect(screen.getByPlaceholderText("Amount")).toBeDisabled();
+    expect(screen.getByPlaceholderText("1")).toBeDisabled();
     expect(screen.getByDisplayValue("pkg")).toBeDisabled();
     expect(screen.getByText("Adding...")).toBeDisabled();
   });
 
-  test("shows help text", () => {
-    render(<YeastInput {...defaultProps} />);
+  test("shows help text with imperial batch size", () => {
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
 
     expect(
       screen.getByText(/Most 5-gallon batches need 1-2 packages/)
     ).toBeInTheDocument();
+  });
+
+  test("updates placeholder based on unit selection", async () => {
+    const user = userEvent.setup();
+    renderWithUnitProvider(<YeastInput {...defaultProps} />);
+
+    // Default should be pkg placeholder
+    expect(screen.getByPlaceholderText("1")).toBeInTheDocument();
+
+    // Change to grams
+    const unitSelect = screen.getByDisplayValue("pkg");
+    await user.selectOptions(unitSelect, "g");
+
+    // Should update to g placeholder
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("11")).toBeInTheDocument();
+    });
+
+    // Change to ml
+    await user.selectOptions(unitSelect, "ml");
+
+    // Should update to ml placeholder
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("125")).toBeInTheDocument();
+    });
   });
 });

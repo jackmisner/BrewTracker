@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useUnits } from "../../contexts/UnitContext";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
   getSrmColour,
+  formatBatchSize,
 } from "../../utils/formatUtils";
 
 function RecipeMetrics({
@@ -14,6 +16,8 @@ function RecipeMetrics({
   recipe,
   cardView = false,
 }) {
+  const { unitSystem, formatValue, convertForDisplay, convertForStorage } =
+    useUnits();
   const [scaleVolume, setScaleVolume] = useState("");
 
   const getBalanceRatio = () => {
@@ -36,10 +40,23 @@ function RecipeMetrics({
 
   const handleScaleSubmit = () => {
     if (scaleVolume && !isNaN(scaleVolume) && parseFloat(scaleVolume) > 0) {
-      onScale(parseFloat(scaleVolume));
+      // Convert the entered volume to gallons for the scaling function
+      // (assuming the backend scaling function expects gallons)
+      const volumeInGallons = convertForStorage(
+        parseFloat(scaleVolume),
+        unitSystem === "metric" ? "l" : "gal",
+        "volume"
+      ).value;
+
+      onScale(volumeInGallons);
       setScaleVolume(""); // Clear input after scaling
     }
   };
+
+  // Convert batch size for display
+  const displayBatchSize = recipe?.batch_size
+    ? convertForDisplay(recipe.batch_size, "gal", "volume")
+    : null;
 
   // Use different class names for cardView
   const containerClass = cardView
@@ -53,6 +70,46 @@ function RecipeMetrics({
   const balanceMeterContainerClass = cardView
     ? "card-balance-meter-container"
     : "balance-meter-container";
+
+  // Get unit-specific placeholders and limits
+  const getScaleInputProps = () => {
+    if (unitSystem === "metric") {
+      return {
+        placeholder: "New batch size (L)",
+        step: "1",
+        min: "1",
+        max: "380",
+        unit: "L",
+      };
+    } else {
+      return {
+        placeholder: "New batch size (gal)",
+        step: "0.5",
+        min: "0.5",
+        max: "100",
+        unit: "gal",
+      };
+    }
+  };
+
+  const scaleInputProps = getScaleInputProps();
+
+  // Get current batch size display
+  const getCurrentBatchDisplay = () => {
+    if (!displayBatchSize) {
+      return unitSystem === "metric" ? "19 L" : "5 gal";
+    }
+    return formatValue(displayBatchSize.value, displayBatchSize.unit, "volume");
+  };
+
+  // Get typical batch size examples
+  const getTypicalBatchSizes = () => {
+    if (unitSystem === "metric") {
+      return "Typical: 19L (5 gal), 23L (6 gal), 38L (10 gal)";
+    } else {
+      return "Typical: 5 gal, 6 gal, 10 gal";
+    }
+  };
 
   return (
     <div className={containerClass}>
@@ -135,13 +192,13 @@ function RecipeMetrics({
 
       {!cardView && (
         <>
-          {/* Recipe scaling section */}
+          {/* Recipe scaling section - now fully unit-aware */}
           {onScale && recipe && (
             <div className="scaling-container">
               <h3 className="scaling-title">
                 Recipe Scaling
                 <span className="current-batch-size">
-                  (Current: {recipe.batch_size} gal)
+                  (Current: {getCurrentBatchDisplay()})
                 </span>
               </h3>
               <div className="scaling-input-group">
@@ -149,10 +206,10 @@ function RecipeMetrics({
                   type="number"
                   id="scale-volume"
                   name="scale-volume"
-                  placeholder="New batch size"
-                  step="0.5"
-                  min="0.5"
-                  max="100"
+                  placeholder={scaleInputProps.placeholder}
+                  step={scaleInputProps.step}
+                  min={scaleInputProps.min}
+                  max={scaleInputProps.max}
                   value={scaleVolume}
                   onChange={(e) => setScaleVolume(e.target.value)}
                   className="scaling-input"
@@ -171,15 +228,18 @@ function RecipeMetrics({
               <p className="scaling-help-text">
                 Enter a new batch size to proportionally scale all ingredients
               </p>
+              <p className="scaling-examples">
+                <small>{getTypicalBatchSizes()}</small>
+              </p>
             </div>
           )}
 
-          {/* Recipe analysis section */}
+          {/* Recipe analysis section - enhanced with unit awareness */}
           <div className="metrics-analysis">
             <h3 className="analysis-title">Recipe Analysis</h3>
 
             <div className="analysis-item">
-              <span className="analysis-label">Strength:</span>
+              <span className="analysis-label">Strength: </span>
               <span className="analysis-value">
                 {metrics.abv < 3.5
                   ? "Session"
@@ -193,7 +253,7 @@ function RecipeMetrics({
             </div>
 
             <div className="analysis-item">
-              <span className="analysis-label">Bitterness:</span>
+              <span className="analysis-label">Bitterness: </span>
               <span className="analysis-value">
                 {metrics.ibu < 15
                   ? "Low"
@@ -207,17 +267,19 @@ function RecipeMetrics({
             </div>
 
             <div className="analysis-item">
-              <span className="analysis-label">Color:</span>
+              <span className="analysis-label">
+                {unitSystem === "metric" ? "Colour" : "Color"}:
+              </span>
               <span className="analysis-value">
                 {metrics.srm < 4
-                  ? "Pale"
+                  ? " Pale"
                   : metrics.srm < 8
-                  ? "Gold"
+                  ? " Gold"
                   : metrics.srm < 15
-                  ? "Amber"
+                  ? " Amber"
                   : metrics.srm < 25
-                  ? "Brown"
-                  : "Dark"}{" "}
+                  ? " Brown"
+                  : " Dark"}{" "}
                 ({formatSrm(metrics.srm)} SRM)
               </span>
             </div>
@@ -225,13 +287,35 @@ function RecipeMetrics({
             {/* Attenuation info if we have both OG and FG */}
             {metrics.og > 1.01 && metrics.fg > 1.0 && (
               <div className="analysis-item">
-                <span className="analysis-label">Attenuation:</span>
+                <span className="analysis-label">Attenuation: </span>
                 <span className="analysis-value">
                   {(
                     ((metrics.og - metrics.fg) / (metrics.og - 1.0)) *
                     100
                   ).toFixed(1)}
                   %
+                </span>
+              </div>
+            )}
+
+            {/* Batch size analysis */}
+            {displayBatchSize && (
+              <div className="analysis-item">
+                <span className="analysis-label">Batch Size: </span>
+                <span className="analysis-value">
+                  {formatValue(
+                    displayBatchSize.value,
+                    displayBatchSize.unit,
+                    "volume"
+                  )}
+                  {displayBatchSize.value <
+                    (unitSystem === "metric" ? 10 : 3) && (
+                    <small className="batch-note"> (Small batch)</small>
+                  )}
+                  {displayBatchSize.value >
+                    (unitSystem === "metric" ? 40 : 10) && (
+                    <small className="batch-note"> (Large batch)</small>
+                  )}
                 </span>
               </div>
             )}

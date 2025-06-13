@@ -3,6 +3,31 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import RecipeDetails from "../../src/components/RecipeBuilder/RecipeDetails";
+import { UnitProvider } from "../../src/contexts/UnitContext";
+
+// Mock the UserSettingsService that UnitContext depends on
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn().mockResolvedValue({
+    settings: {
+      preferred_units: "imperial",
+    },
+  }),
+  updateSettings: jest.fn().mockResolvedValue({}),
+}));
+
+// Mock react-router Link component
+jest.mock("react-router", () => ({
+  Link: ({ to, children, className }) => (
+    <a href={to} className={className}>
+      {children}
+    </a>
+  ),
+}));
+
+// Helper function to render with UnitProvider
+const renderWithUnitProvider = (component) => {
+  return render(<UnitProvider>{component}</UnitProvider>);
+};
 
 describe("RecipeDetails", () => {
   const mockOnChange = jest.fn();
@@ -39,13 +64,15 @@ describe("RecipeDetails", () => {
 
   describe("Loading state", () => {
     it("renders loading message when recipe is null", () => {
-      render(<RecipeDetails {...defaultProps} recipe={null} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} recipe={null} />);
 
       expect(screen.getByText("Loading recipe details...")).toBeInTheDocument();
     });
 
     it("renders loading message when recipe is undefined", () => {
-      render(<RecipeDetails {...defaultProps} recipe={undefined} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} recipe={undefined} />
+      );
 
       expect(screen.getByText("Loading recipe details...")).toBeInTheDocument();
     });
@@ -53,26 +80,34 @@ describe("RecipeDetails", () => {
 
   describe("Title rendering", () => {
     it('shows "Recipe Details" when editing', () => {
-      render(<RecipeDetails {...defaultProps} isEditing={true} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} isEditing={true} />
+      );
 
       expect(screen.getByText("Recipe Details")).toBeInTheDocument();
     });
 
     it('shows "New Recipe Details" when not editing', () => {
-      render(<RecipeDetails {...defaultProps} isEditing={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} isEditing={false} />
+      );
 
       expect(screen.getByText("New Recipe Details")).toBeInTheDocument();
     });
 
     it("shows unsaved changes indicator when hasUnsavedChanges is true", () => {
-      render(<RecipeDetails {...defaultProps} hasUnsavedChanges={true} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} hasUnsavedChanges={true} />
+      );
 
       expect(screen.getByTitle("Unsaved changes")).toBeInTheDocument();
       expect(screen.getByText("*")).toBeInTheDocument();
     });
 
     it("hides unsaved changes indicator when hasUnsavedChanges is false", () => {
-      render(<RecipeDetails {...defaultProps} hasUnsavedChanges={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} hasUnsavedChanges={false} />
+      );
 
       expect(screen.queryByTitle("Unsaved changes")).not.toBeInTheDocument();
       expect(screen.queryByText("*")).not.toBeInTheDocument();
@@ -81,7 +116,7 @@ describe("RecipeDetails", () => {
 
   describe("Form field rendering", () => {
     it("renders all form fields with correct values", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       expect(screen.getByDisplayValue("Test Recipe")).toBeInTheDocument();
       expect(screen.getByDisplayValue("IPA")).toBeInTheDocument();
@@ -104,7 +139,9 @@ describe("RecipeDetails", () => {
         is_public: false,
       };
 
-      render(<RecipeDetails {...defaultProps} recipe={emptyRecipe} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} recipe={emptyRecipe} />
+      );
 
       expect(screen.getByDisplayValue("Test Recipe")).toBeInTheDocument();
       expect(screen.getByRole("textbox", { name: /beer style/i })).toHaveValue(
@@ -125,7 +162,7 @@ describe("RecipeDetails", () => {
     });
 
     it("sets checkbox correctly", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const checkbox = screen.getByRole("checkbox", {
         name: /make recipe public/i,
@@ -135,7 +172,9 @@ describe("RecipeDetails", () => {
 
     it("sets checkbox when recipe is public", () => {
       const publicRecipe = { ...defaultRecipe, is_public: true };
-      render(<RecipeDetails {...defaultProps} recipe={publicRecipe} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} recipe={publicRecipe} />
+      );
 
       const checkbox = screen.getByRole("checkbox", {
         name: /make recipe public/i,
@@ -146,7 +185,7 @@ describe("RecipeDetails", () => {
 
   describe("Form interactions", () => {
     it("calls onChange when text input changes", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const nameInput = screen.getByRole("textbox", { name: /recipe name/i });
       fireEvent.change(nameInput, {
@@ -157,7 +196,7 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onChange when number input changes", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const batchSizeInput = screen.getByRole("spinbutton", {
         name: /batch size/i,
@@ -170,7 +209,7 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onChange when textarea changes", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const descriptionInput = screen.getByRole("textbox", {
         name: /description/i,
@@ -186,7 +225,7 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onChange when checkbox changes", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const checkbox = screen.getByRole("checkbox", {
         name: /make recipe public/i,
@@ -197,7 +236,7 @@ describe("RecipeDetails", () => {
     });
 
     it("handles empty number input correctly", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const batchSizeInput = screen.getByRole("spinbutton", {
         name: /batch size/i,
@@ -210,7 +249,7 @@ describe("RecipeDetails", () => {
     });
 
     it("handles invalid number input correctly", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const efficiencyInput = screen.getByRole("spinbutton", {
         name: /mash efficiency/i,
@@ -224,7 +263,7 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onChange with correct string values for text inputs", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const styleInput = screen.getByRole("textbox", { name: /beer style/i });
       fireEvent.change(styleInput, {
@@ -235,7 +274,7 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onChange with correct numeric values for number inputs", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const boilTimeInput = screen.getByRole("spinbutton", {
         name: /boil time/i,
@@ -248,7 +287,7 @@ describe("RecipeDetails", () => {
     });
 
     it("handles decimal number input correctly", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const batchSizeInput = screen.getByRole("spinbutton", {
         name: /batch size/i,
@@ -264,7 +303,7 @@ describe("RecipeDetails", () => {
   describe("Form submission", () => {
     it("calls onSubmit when form is submitted via button click", async () => {
       const user = userEvent.setup();
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const submitButton = screen.getByRole("button", { name: /save recipe/i });
       await user.click(submitButton);
@@ -273,7 +312,9 @@ describe("RecipeDetails", () => {
     });
 
     it("calls onSubmit when form is submitted via Enter key", () => {
-      const { container } = render(<RecipeDetails {...defaultProps} />);
+      const { container } = renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} />
+      );
 
       const form = container.querySelector("form");
       fireEvent.submit(form);
@@ -283,7 +324,7 @@ describe("RecipeDetails", () => {
 
     it("form submission event has preventDefault method", async () => {
       const user = userEvent.setup();
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const submitButton = screen.getByRole("button", { name: /save recipe/i });
       await user.click(submitButton);
@@ -299,7 +340,9 @@ describe("RecipeDetails", () => {
 
   describe("Button states", () => {
     it('shows "Save Recipe" button when not editing', () => {
-      render(<RecipeDetails {...defaultProps} isEditing={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} isEditing={false} />
+      );
 
       expect(
         screen.getByRole("button", { name: /save recipe/i })
@@ -307,7 +350,9 @@ describe("RecipeDetails", () => {
     });
 
     it('shows "Update Recipe" button when editing', () => {
-      render(<RecipeDetails {...defaultProps} isEditing={true} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} isEditing={true} />
+      );
 
       expect(
         screen.getByRole("button", { name: /update recipe/i })
@@ -315,7 +360,9 @@ describe("RecipeDetails", () => {
     });
 
     it("disables submit button when canSave is false", () => {
-      render(<RecipeDetails {...defaultProps} canSave={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} canSave={false} />
+      );
 
       const submitButton = screen.getByRole("button", { name: /save recipe/i });
       expect(submitButton).toBeDisabled();
@@ -323,7 +370,9 @@ describe("RecipeDetails", () => {
     });
 
     it("shows tooltip when canSave is false", () => {
-      render(<RecipeDetails {...defaultProps} canSave={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} canSave={false} />
+      );
 
       const submitButton = screen.getByRole("button", { name: /save recipe/i });
       expect(submitButton).toHaveAttribute(
@@ -333,7 +382,9 @@ describe("RecipeDetails", () => {
     });
 
     it("enables submit button when canSave is true", () => {
-      render(<RecipeDetails {...defaultProps} canSave={true} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} canSave={true} />
+      );
 
       const submitButton = screen.getByRole("button", { name: /save recipe/i });
       expect(submitButton).not.toBeDisabled();
@@ -342,7 +393,7 @@ describe("RecipeDetails", () => {
 
     it("calls onCancel when cancel button is clicked", async () => {
       const user = userEvent.setup();
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       await user.click(cancelButton);
@@ -353,14 +404,14 @@ describe("RecipeDetails", () => {
 
   describe("Saving state", () => {
     it("shows saving state on submit button", () => {
-      render(<RecipeDetails {...defaultProps} saving={true} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} saving={true} />);
 
       expect(screen.getByText("Saving...")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /saving.../i })).toBeDisabled();
     });
 
     it("disables all inputs when saving", () => {
-      render(<RecipeDetails {...defaultProps} saving={true} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} saving={true} />);
 
       expect(
         screen.getByRole("textbox", { name: /recipe name/i })
@@ -390,7 +441,7 @@ describe("RecipeDetails", () => {
     });
 
     it("shows spinner when saving", () => {
-      render(<RecipeDetails {...defaultProps} saving={true} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} saving={true} />);
 
       expect(document.querySelector(".button-spinner")).toBeInTheDocument();
     });
@@ -398,7 +449,9 @@ describe("RecipeDetails", () => {
 
   describe("Validation messages", () => {
     it("shows validation message when canSave is false", () => {
-      render(<RecipeDetails {...defaultProps} canSave={false} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} canSave={false} />
+      );
 
       expect(
         screen.getByText(
@@ -408,7 +461,9 @@ describe("RecipeDetails", () => {
     });
 
     it("hides validation message when canSave is true", () => {
-      render(<RecipeDetails {...defaultProps} canSave={true} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} canSave={true} />
+      );
 
       expect(
         screen.queryByText(
@@ -421,7 +476,9 @@ describe("RecipeDetails", () => {
   describe("Public recipe help text", () => {
     it("shows help text when recipe is public", () => {
       const publicRecipe = { ...defaultRecipe, is_public: true };
-      render(<RecipeDetails {...defaultProps} recipe={publicRecipe} />);
+      renderWithUnitProvider(
+        <RecipeDetails {...defaultProps} recipe={publicRecipe} />
+      );
 
       expect(
         screen.getByText(
@@ -431,7 +488,7 @@ describe("RecipeDetails", () => {
     });
 
     it("hides help text when recipe is not public", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       expect(
         screen.queryByText(
@@ -443,7 +500,7 @@ describe("RecipeDetails", () => {
 
   describe("Input validation attributes", () => {
     it("sets correct input attributes for required fields", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const nameInput = screen.getByRole("textbox", { name: /recipe name/i });
       const batchSizeInput = screen.getByRole("spinbutton", {
@@ -455,7 +512,7 @@ describe("RecipeDetails", () => {
     });
 
     it("sets correct min/max/step attributes for number inputs", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       const batchSizeInput = screen.getByRole("spinbutton", {
         name: /batch size/i,
@@ -481,7 +538,7 @@ describe("RecipeDetails", () => {
     });
 
     it("sets correct placeholder text", () => {
-      render(<RecipeDetails {...defaultProps} />);
+      renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
       expect(
         screen.getByPlaceholderText("Enter recipe name")
