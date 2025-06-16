@@ -421,6 +421,7 @@ class MongoDBService:
                         "ingredient_id": ing_data.get("ingredient_id"),
                         "name": ing_data.get("name"),
                         "type": ing_data.get("type"),
+                        "grain_type": ing_data.get("grain_type"),
                         "amount": float(ing_data.get("amount", 0)),
                         "unit": ing_data.get("unit", ""),
                         "use": ing_data.get("use", ""),
