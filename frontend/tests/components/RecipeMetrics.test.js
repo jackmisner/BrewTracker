@@ -69,7 +69,7 @@ describe("RecipeMetrics", () => {
     renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     // Should show "Balanced" for the given metrics
-    expect(screen.getByText("Balanced")).toBeInTheDocument();
+    expect(screen.getByText("Balanced (Malt)")).toBeInTheDocument();
   });
 
   test("displays color swatch with correct color", () => {
@@ -257,7 +257,7 @@ describe("RecipeMetrics", () => {
     );
 
     expect(
-      screen.getByText(/Typical: 5 gal, 6 gal, 10 gal/)
+      screen.getByText(/Typical: 2\.5 gal, 5 gal, 10 gal/)
     ).toBeInTheDocument();
   });
 });

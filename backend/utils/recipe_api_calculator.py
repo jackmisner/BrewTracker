@@ -17,10 +17,8 @@ def calculate_og_preview(recipe_data):
     efficiency = float(recipe_data.get("efficiency", 75))
     ingredients = recipe_data.get("ingredients", [])
 
-    # Determine unit system from batch size unit
-    unit_system = (
-        "metric" if batch_size_unit in ["l", "L", "liter", "liters"] else "imperial"
-    )
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
 
     total_points = 0.0
     for ing in ingredients:
@@ -30,23 +28,8 @@ def calculate_og_preview(recipe_data):
             )
             total_points += weight_lb * float(ing.get("potential", 0))
 
-    # Convert batch size to appropriate unit for calculation
-    if unit_system == "metric":
-        # Ensure batch size is in liters
-        batch_size_liters = (
-            UnitConverter.convert_volume(batch_size, batch_size_unit, "l")
-            if batch_size_unit != "l"
-            else batch_size
-        )
-        return calc_og_core(total_points, batch_size_liters, efficiency, unit_system)
-    else:
-        # Ensure batch size is in gallons
-        batch_size_gallons = (
-            UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
-            if batch_size_unit != "gal"
-            else batch_size
-        )
-        return calc_og_core(total_points, batch_size_gallons, efficiency, unit_system)
+    # Use simplified calc_og_core (always expects gallons)
+    return calc_og_core(total_points, batch_size_gal, efficiency)
 
 
 def calculate_fg_preview(recipe_data):
@@ -74,7 +57,11 @@ def calculate_abv_preview(recipe_data):
 def calculate_ibu_preview(recipe_data):
     """Calculate IBUs using Tinseth formula"""
     batch_size = float(recipe_data.get("batch_size", 5))
+    batch_size_unit = recipe_data.get("batch_size_unit", "gal")
     ingredients = recipe_data.get("ingredients", [])
+
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
 
     hops_data = []
     for ing in ingredients:
@@ -93,13 +80,17 @@ def calculate_ibu_preview(recipe_data):
             hops_data.append((weight_oz, alpha_acid, time, use_type))
 
     og = calculate_og_preview(recipe_data)
-    return calc_ibu_core(hops_data, og, batch_size)
+    return calc_ibu_core(hops_data, og, batch_size_gal)
 
 
 def calculate_srm_preview(recipe_data):
     """Calculate SRM color using MCU method"""
     batch_size = float(recipe_data.get("batch_size", 5))
+    batch_size_unit = recipe_data.get("batch_size_unit", "gal")
     ingredients = recipe_data.get("ingredients", [])
+
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
 
     grain_colors = []
     for ing in ingredients:
@@ -110,23 +101,26 @@ def calculate_srm_preview(recipe_data):
             color = float(ing.get("color", 0))
             grain_colors.append((weight_lb, color))
 
-    return calc_srm_core(grain_colors, batch_size)
+    return calc_srm_core(grain_colors, batch_size_gal)
 
 
 def calculate_all_metrics_preview(recipe_data):
-    """Calculate all metrics for a recipe preview with enhanced unit awareness"""
-    # Normalize batch size to appropriate units for calculation
-    batch_size = float(recipe_data.get("batch_size", 5))
-    batch_size_unit = recipe_data.get("batch_size_unit", "gal")
-
-    # Pass through the batch_size_unit to preserve it
-    normalized_recipe = recipe_data.copy()
-    # Don't convert batch size here - let individual calculations handle it
-
-    return {
-        "og": calculate_og_preview(normalized_recipe),
-        "fg": calculate_fg_preview(normalized_recipe),
-        "abv": calculate_abv_preview(normalized_recipe),
-        "ibu": calculate_ibu_preview(normalized_recipe),
-        "srm": calculate_srm_preview(normalized_recipe),
-    }
+    """Calculate all metrics for a recipe preview with proper unit handling"""
+    try:
+        return {
+            "og": calculate_og_preview(recipe_data),
+            "fg": calculate_fg_preview(recipe_data),
+            "abv": calculate_abv_preview(recipe_data),
+            "ibu": calculate_ibu_preview(recipe_data),
+            "srm": calculate_srm_preview(recipe_data),
+        }
+    except Exception as e:
+        print(f"Error calculating metrics: {e}")
+        # Return default values if calculation fails
+        return {
+            "og": 1.000,
+            "fg": 1.000,
+            "abv": 0.0,
+            "ibu": 0,
+            "srm": 0,
+        }

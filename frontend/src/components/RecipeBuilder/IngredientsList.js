@@ -131,13 +131,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">
-        Recipe Ingredients
-        <span className="ingredient-count">({sortedIngredients.length})</span>
-        <span className="unit-system-badge">
-          {unitSystem === "metric" ? "🌍 Metric" : "🇺🇸 Imperial"}
-        </span>
-      </h3>
+      <h3 className="card-title">Recipe Ingredients</h3>
 
       <div className="ingredients-table-container">
         <table className="ingredients-table">
@@ -244,62 +238,6 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Summary information */}
-      <div className="ingredients-summary">
-        <div className="summary-stats">
-          <div className="stat-item">
-            <span className="stat-label">Grains:</span>
-            <span className="stat-value">
-              {sortedIngredients.filter((i) => i.type === "grain").length}
-            </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Hops:</span>
-            <span className="stat-value">
-              {sortedIngredients.filter((i) => i.type === "hop").length}
-            </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Yeast:</span>
-            <span className="stat-value">
-              {sortedIngredients.filter((i) => i.type === "yeast").length}
-            </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Other:</span>
-            <span className="stat-value">
-              {
-                sortedIngredients.filter(
-                  (i) => i.type === "other" || i.type === "adjunct"
-                ).length
-              }
-            </span>
-          </div>
-        </div>
-
-        {/* Brewing process summary */}
-        <div className="process-summary">
-          {sortedIngredients.some((i) => i.use === "mash") && (
-            <span className="process-step">Mash</span>
-          )}
-          {sortedIngredients.some((i) => i.use === "boil") && (
-            <span className="process-step">Boil</span>
-          )}
-          {sortedIngredients.some((i) => i.use === "whirlpool") && (
-            <span className="process-step">Whirlpool</span>
-          )}
-          {sortedIngredients.some((i) => i.use === "fermentation") && (
-            <span className="process-step">Fermentation</span>
-          )}
-          {sortedIngredients.some((i) => i.use === "dry-hop") && (
-            <span className="process-step">Dry Hop</span>
-          )}
-          {sortedIngredients.some((i) => i.use === "packaging") && (
-            <span className="process-step">Packaging</span>
-          )}
-        </div>
       </div>
     </div>
   );

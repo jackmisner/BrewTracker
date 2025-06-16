@@ -16,7 +16,7 @@ function RecipeMetrics({
   recipe,
   cardView = false,
 }) {
-  const { unitSystem, formatValue, convertForDisplay, convertForStorage } =
+  const { unitSystem, formatValue, convertForDisplay, convertUnit } =
     useUnits();
   const [scaleVolume, setScaleVolume] = useState("");
 
@@ -40,22 +40,32 @@ function RecipeMetrics({
 
   const handleScaleSubmit = () => {
     if (scaleVolume && !isNaN(scaleVolume) && parseFloat(scaleVolume) > 0) {
-      // Convert the entered volume to gallons for the scaling function
-      // (assuming the backend scaling function expects gallons)
-      const volumeInGallons = convertForStorage(
-        parseFloat(scaleVolume),
-        unitSystem === "metric" ? "l" : "gal",
-        "volume"
-      ).value;
+      const enteredUnit = unitSystem === "metric" ? "l" : "gal";
+      const recipeUnit = recipe.batch_size_unit || "gal";
 
-      onScale(volumeInGallons);
+      let volumeForScaling = parseFloat(scaleVolume);
+
+      // If entered unit differs from recipe's unit, convert it
+      if (enteredUnit !== recipeUnit) {
+        const converted = convertUnit(
+          volumeForScaling,
+          enteredUnit,
+          recipeUnit
+        );
+        volumeForScaling = converted.value;
+      }
+
+      onScale(volumeForScaling);
       setScaleVolume(""); // Clear input after scaling
     }
   };
 
-  // Convert batch size for display
   const displayBatchSize = recipe?.batch_size
-    ? convertForDisplay(recipe.batch_size, "gal", "volume")
+    ? convertForDisplay(
+        recipe.batch_size,
+        recipe.batch_size_unit || "gal", // Use recipe's unit, fallback to gallons
+        "volume"
+      )
     : null;
 
   // Use different class names for cardView
@@ -105,9 +115,9 @@ function RecipeMetrics({
   // Get typical batch size examples
   const getTypicalBatchSizes = () => {
     if (unitSystem === "metric") {
-      return "Typical: 19L (5 gal), 23L (6 gal), 38L (10 gal)";
+      return "Typical: 10L (Small batch), 19L, 38L (Large batch)";
     } else {
-      return "Typical: 5 gal, 6 gal, 10 gal";
+      return "Typical: 2.5 gal, 5 gal, 10 gal";
     }
   };
 
