@@ -10,7 +10,7 @@ from utils.brewing_calculation_core import (
 from utils.unit_conversions import UnitConverter
 
 
-# Formating functions for various attributes
+# Formatting functions for various attributes
 def format_gravity(gravity):
     return f"{float(gravity):.3f}" if gravity else "1.000"
 
@@ -111,28 +111,33 @@ def celsius_to_fahrenheit(temp_c):
 
 def calculate_og(recipe):
     """Calculate original gravity from recipe ingredients"""
-    if not recipe or not hasattr(recipe, "recipe_ingredients"):
+    if not recipe or not hasattr(recipe, "ingredients"):
         return 1.000
 
-    total_points = 0.0
-    for ri in recipe.recipe_ingredients:
-        if ri.ingredient.type == "grain" and ri.ingredient.potential:
-            weight_lb = convert_to_pounds(ri.amount, ri.unit)
-            total_points += weight_lb * ri.ingredient.potential
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(
+        recipe.batch_size, getattr(recipe, "batch_size_unit", "gal"), "gal"
+    )
 
-    return calc_og_core(total_points, recipe.batch_size, recipe.efficiency)
+    total_points = 0.0
+    for ri in recipe.ingredients:
+        if ri.type == "grain" and ri.potential:
+            weight_lb = convert_to_pounds(ri.amount, ri.unit)
+            total_points += weight_lb * ri.potential
+
+    return calc_og_core(total_points, batch_size_gal, recipe.efficiency or 75)
 
 
 def calculate_fg(recipe):
     """Calculate final gravity using yeast attenuation"""
-    if not recipe or not hasattr(recipe, "recipe_ingredients"):
+    if not recipe or not hasattr(recipe, "ingredients"):
         return 1.000
 
     # Find yeast with highest attenuation
     max_attenuation = 0
-    for ri in recipe.recipe_ingredients:
-        if ri.ingredient.type == "yeast" and ri.ingredient.attenuation:
-            max_attenuation = max(max_attenuation, ri.ingredient.attenuation)
+    for ri in recipe.ingredients:
+        if ri.type == "yeast" and ri.attenuation:
+            max_attenuation = max(max_attenuation, ri.attenuation)
 
     og = calculate_og(recipe)
     return calc_fg_core(og, max_attenuation)
@@ -147,37 +152,47 @@ def calculate_abv(recipe):
 
 def calculate_ibu(recipe):
     """Calculate IBUs using Tinseth formula"""
-    if not recipe or not hasattr(recipe, "recipe_ingredients"):
+    if not recipe or not hasattr(recipe, "ingredients"):
         return 0.0
 
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(
+        recipe.batch_size, getattr(recipe, "batch_size_unit", "gal"), "gal"
+    )
+
     hops_data = []
-    for ri in recipe.recipe_ingredients:
+    for ri in recipe.ingredients:
         if (
-            ri.ingredient.type == "hop"
-            and ri.ingredient.alpha_acid
+            ri.type == "hop"
+            and ri.alpha_acid
             and ri.use in ["boil", "whirlpool"]
             and ri.time
         ):
             weight_oz = convert_to_ounces(ri.amount, ri.unit)
-            alpha_acid = ri.ingredient.alpha_acid
+            alpha_acid = ri.alpha_acid
             time = ri.time
             use_type = ri.use
             hops_data.append((weight_oz, alpha_acid, time, use_type))
 
     og = calculate_og(recipe)
-    return calc_ibu_core(hops_data, og, recipe.batch_size)
+    return calc_ibu_core(hops_data, og, batch_size_gal)
 
 
 def calculate_srm(recipe):
     """Calculate SRM color using MCU method"""
-    if not recipe or not hasattr(recipe, "recipe_ingredients"):
+    if not recipe or not hasattr(recipe, "ingredients"):
         return 0.0
 
+    # Convert batch size to gallons for calculation
+    batch_size_gal = UnitConverter.convert_volume(
+        recipe.batch_size, getattr(recipe, "batch_size_unit", "gal"), "gal"
+    )
+
     grain_colors = []
-    for ri in recipe.recipe_ingredients:
-        if ri.ingredient.type == "grain" and ri.ingredient.color:
+    for ri in recipe.ingredients:
+        if ri.type == "grain" and ri.color:
             weight_lb = convert_to_pounds(ri.amount, ri.unit)
-            color = ri.ingredient.color
+            color = ri.color
             grain_colors.append((weight_lb, color))
 
-    return calc_srm_core(grain_colors, recipe.batch_size)
+    return calc_srm_core(grain_colors, batch_size_gal)

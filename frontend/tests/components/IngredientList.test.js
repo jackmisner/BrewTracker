@@ -179,10 +179,10 @@ describe("IngredientsList", () => {
         />
       );
 
-      // "Mash" appears in table rows (2 times) AND in process summary (1 time) = 3 total
-      expect(screen.getAllByText("Mash")).toHaveLength(3);
-      // "Boil" appears in table row (1 time) AND in process summary (1 time) = 2 total
-      expect(screen.getAllByText("Boil")).toHaveLength(2);
+      // "Mash" appears in table rows only (2 times)
+      expect(screen.getAllByText("Mash")).toHaveLength(2);
+      // "Boil" appears in table row only (1 time)
+      expect(screen.getAllByText("Boil")).toHaveLength(1);
     });
 
     it("displays time information correctly", () => {
@@ -212,30 +212,6 @@ describe("IngredientsList", () => {
       );
 
       expect(screen.getByText("-")).toBeInTheDocument();
-    });
-
-    it("displays unit system badge", () => {
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={sampleIngredients}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
-      );
-
-      expect(screen.getByText("🇺🇸 Imperial")).toBeInTheDocument();
-    });
-
-    it("displays ingredient count", () => {
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={sampleIngredients}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
-      );
-
-      expect(screen.getByText("(3)")).toBeInTheDocument();
     });
   });
 
@@ -402,50 +378,6 @@ describe("IngredientsList", () => {
       dataRows.forEach((row) => {
         expect(row).toHaveClass("ingredient-row");
       });
-    });
-  });
-
-  describe("Summary section", () => {
-    it("displays ingredient summary statistics", () => {
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={sampleIngredients}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
-      );
-
-      // Check for summary stats
-      expect(screen.getByText("Grains:")).toBeInTheDocument();
-      expect(screen.getByText("Hops:")).toBeInTheDocument();
-      expect(screen.getByText("Yeast:")).toBeInTheDocument();
-      expect(screen.getByText("Other:")).toBeInTheDocument();
-    });
-
-    it("displays brewing process steps", () => {
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={sampleIngredients}
-          onRemove={mockOnRemove}
-          isEditing={false}
-        />
-      );
-
-      // Look specifically in the process summary section for process steps
-      const processSummary = document.querySelector(".process-summary");
-      expect(processSummary).toBeInTheDocument();
-
-      // Check for process steps within the process summary
-      const mashStep = processSummary.querySelector(".process-step");
-      expect(mashStep).toHaveTextContent("Mash");
-
-      // Check that both Mash and Boil process steps exist
-      const processSteps = processSummary.querySelectorAll(".process-step");
-      const stepTexts = Array.from(processSteps).map(
-        (step) => step.textContent
-      );
-      expect(stepTexts).toContain("Mash");
-      expect(stepTexts).toContain("Boil");
     });
   });
 
