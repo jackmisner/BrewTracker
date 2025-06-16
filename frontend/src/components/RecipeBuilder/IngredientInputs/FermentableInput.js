@@ -206,10 +206,10 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     <div className="card">
       <h3 className="card-title">Fermentables</h3>
 
-      <form onSubmit={handleSubmit} className="grain-form">
-        <div className="grain-inputs">
+      <form onSubmit={handleSubmit} className="ingredient-form">
+        <div className="ingredient-inputs ingredient-inputs--grain">
           {/* Amount Input - 120px */}
-          <div className="grain-amount-container">
+          <div className="amount-container">
             <input
               type="number"
               id="fermentable-amount"
@@ -220,7 +220,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               min="0"
               max={unitSystem === "metric" ? "50000" : "1600"}
               placeholder={getAmountPlaceholder()}
-              className="grain-amount-input"
+              className={`amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
             />
@@ -229,7 +229,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               name="unit"
               value={fermentableForm.unit}
               onChange={handleChange}
-              className="grain-unit-select"
+              className="unit-select"
               disabled={disabled}
             >
               {getAvailableUnits().map((unit) => (
@@ -245,7 +245,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
           </div>
 
           {/* Fermentable Selector - 1fr */}
-          <div className="grain-selector">
+          <div className="ingredient-selector">
             <SearchableSelect
               options={grains}
               onSelect={handleFermentableSelect}
@@ -254,7 +254,6 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className="grain-select-control"
               fuseOptions={fermentableFuseOptions}
               maxResults={100}
               minQueryLength={1}
@@ -263,7 +262,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
           </div>
 
           {/* Color Input - 110px */}
-          <div className="grain-lovibond-container">
+          <div className="color-input-container">
             <input
               type="number"
               id="fermentable-color"
@@ -274,24 +273,22 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               min="0"
               max="600"
               placeholder="Color"
-              className={`grain-color-input ${errors.color ? "error" : ""}`}
+              className={`color-input ${errors.color ? "error" : ""}`}
               disabled={disabled}
             />
-            <span className="grain-color-unit">°L</span>
+            <span className="color-unit">°L</span>
             {fermentableForm.color && getColorPreview()}
           </div>
 
           {/* Add Button - 100px */}
-          <div className="grain-button-container">
-            <button
-              id="add-fermentable-btn"
-              type="submit"
-              className="grain-add-button"
-              disabled={disabled}
-            >
-              {disabled ? "Adding..." : "Add"}
-            </button>
-          </div>
+          <button
+            id="add-fermentable-btn"
+            type="submit"
+            className="ingredient-add-button"
+            disabled={disabled}
+          >
+            {disabled ? "Adding..." : "Add"}
+          </button>
         </div>
 
         {/* Display selected ingredient info */}
@@ -302,7 +299,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
                 {fermentableForm.selectedIngredient.name}
               </strong>
               {fermentableForm.selectedIngredient.grain_type && (
-                <span className="grain-type-badge">
+                <span className="ingredient-badge">
                   {fermentableForm.selectedIngredient.grain_type.replace(
                     "_",
                     " "

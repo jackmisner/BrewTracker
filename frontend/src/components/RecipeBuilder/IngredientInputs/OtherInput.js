@@ -311,17 +311,17 @@ function OtherInput({ others, onAdd, disabled = false }) {
     <div className="card mt-6">
       <h3 className="card-title">Other Ingredients</h3>
 
-      <form onSubmit={handleSubmit} className="other-form">
-        <div className="other-inputs">
+      <form onSubmit={handleSubmit} className="ingredient-form">
+        <div className="ingredient-inputs ingredient-inputs--adjunct">
           {/* Amount Input */}
-          <div className="other-amount-container">
+          <div className="amount-container">
             <input
               type="number"
               name="amount"
               value={otherForm.amount}
               onChange={handleChange}
               placeholder={getAmountPlaceholder()}
-              className={`other-amount-input ${errors.amount ? "error" : ""}`}
+              className={`amount-input ${errors.amount ? "error" : ""}`}
               step="0.1"
               min="0"
               disabled={disabled}
@@ -331,7 +331,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
               name="unit"
               value={otherForm.unit}
               onChange={handleChange}
-              className="other-unit-select"
+              className="unit-select"
               disabled={disabled}
             >
               {getAvailableUnits().map((unit) => (
@@ -344,13 +344,10 @@ function OtherInput({ others, onAdd, disabled = false }) {
                 </option>
               ))}
             </select>
-            {errors.amount && (
-              <div className="error-message">{errors.amount}</div>
-            )}
           </div>
 
           {/* Other Ingredient Selector */}
-          <div className="other-selector">
+          <div className="ingredient-selector">
             <SearchableSelect
               options={others}
               onSelect={handleOtherSelect}
@@ -359,26 +356,20 @@ function OtherInput({ others, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`other-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
               fuseOptions={otherFuseOptions}
               maxResults={15}
               minQueryLength={1}
               resetTrigger={resetTrigger}
             />
-            {errors.ingredient_id && (
-              <div className="error-message">{errors.ingredient_id}</div>
-            )}
           </div>
 
           {/* Usage Selection */}
-          <div className="other-use-container">
+          <div className="adjunct-use-container">
             <select
               name="use"
               value={otherForm.use}
               onChange={handleChange}
-              className="other-use-select"
+              className="adjunct-use-select"
               disabled={disabled}
             >
               {getUsageOptions().map((option) => (
@@ -390,34 +381,32 @@ function OtherInput({ others, onAdd, disabled = false }) {
           </div>
 
           {/* Optional Time Input */}
-          <div className="other-time-container">
+          <div className="adjunct-time-container">
             <input
               type="number"
               name="time"
               value={otherForm.time}
               onChange={handleChange}
               placeholder="Time (min)"
-              className="other-time-input"
+              className="adjunct-time-input"
               min="0"
               disabled={disabled}
             />
           </div>
 
           {/* Add Button */}
-          <div className="other-button-container">
-            <button
-              type="submit"
-              className="other-add-button btn-primary"
-              disabled={disabled}
-            >
-              {disabled ? "Adding..." : "Add"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="ingredient-add-button"
+            disabled={disabled}
+          >
+            {disabled ? "Adding..." : "Add"}
+          </button>
         </div>
 
         {/* Amount Guidance */}
         {otherForm.selectedIngredient && (
-          <div className="other-guidance">
+          <div className="usage-description">
             <small className="guidance-text">{getAmountGuidance()}</small>
           </div>
         )}
@@ -425,10 +414,12 @@ function OtherInput({ others, onAdd, disabled = false }) {
         {/* Display selected ingredient info */}
         {otherForm.selectedIngredient && (
           <div className="selected-ingredient-info">
-            <div className="other-header">
-              <strong>{otherForm.selectedIngredient.name}</strong>
+            <div className="ingredient-info-header">
+              <strong className="ingredient-name">
+                {otherForm.selectedIngredient.name}
+              </strong>
               {getIngredientCategory(otherForm.selectedIngredient) && (
-                <span className="other-category-badge">
+                <span className="ingredient-badge">
                   {getIngredientCategory(otherForm.selectedIngredient)}
                 </span>
               )}
@@ -442,7 +433,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
 
             {/* Usage description */}
             <div className="usage-description">
-              <small>
+              <small className="guidance-text">
                 <strong>Usage:</strong> Added during{" "}
                 {otherForm.use === "boil"
                   ? "the boil"
@@ -452,10 +443,18 @@ function OtherInput({ others, onAdd, disabled = false }) {
           </div>
         )}
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
-        )}
+        {/* Error Messages */}
+        <div className="validation-errors" role="alert">
+          {errors.amount && (
+            <div className="error-message">{errors.amount}</div>
+          )}
+          {errors.ingredient_id && (
+            <div className="error-message">{errors.ingredient_id}</div>
+          )}
+          {errors.submit && (
+            <div className="error-message submit-error">{errors.submit}</div>
+          )}
+        </div>
       </form>
 
       {/* Help text with unit-specific guidance */}

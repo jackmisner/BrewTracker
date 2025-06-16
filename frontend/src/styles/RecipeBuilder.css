@@ -1,20 +1,74 @@
 /* ==========================================================================
+   RecipeBuilder.css - Refactored and Optimized
+   
    TABLE OF CONTENTS
-   1. Base & Layout
-   2. Cards & Containers
-   3. Forms & Inputs
-   4. Buttons
-   5. Recipe Metrics
-   6. Recipe Cards
-   7. Ingredients Table
-   8. Ingredient Inputs
-   9. SRM Colors
-   10. Utilities & Animations
-   11. Recipe Version History
+   1. CSS Custom Properties
+   2. Base & Layout
+   3. Cards & Containers
+   4. Forms & Inputs
+   5. Buttons
+   6. Recipe Metrics
+   7. Recipe Cards
+   8. Ingredients Table
+   9. Ingredient Input System (Unified)
+   10. SRM Colors
+   11. Utilities & Animations
+   12. Recipe Version History
    ========================================================================== */
 
 /* ==========================================================================
-   1. Base & Layout
+   1. CSS Custom Properties
+   ========================================================================== */
+:root {
+  /* Colors */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-500: #6b7280;
+  --color-gray-700: #4b5563;
+  
+  --color-red-50: #fef2f2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  
+  --color-blue-50: #f0f9ff;
+  --color-blue-200: #bae6fd;
+  --color-blue-700: #0369a1;
+  
+  /* Dimensions */
+  --input-height: 42px;
+  --amount-container-width: 120px;
+  --button-width: 100px;
+  --border-radius: 0.375rem;
+  --border-radius-sm: 0.25rem;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
+  
+  /* Transitions */
+  --transition-fast: 0.1s;
+  --transition-normal: 0.2s;
+  --transition-slow: 0.3s;
+}
+
+/* ==========================================================================
+   2. Base & Layout
    ========================================================================== */
 .container {
   max-width: 1200px;
@@ -25,14 +79,14 @@
 .page-title {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-xl);
   color: #333;
 }
 
 .section-title {
   font-size: 1.5rem;
   font-weight: 700;
-  margin: 2rem 0 1rem;
+  margin: 2rem 0 var(--spacing-lg);
   color: #333;
 }
 
@@ -40,7 +94,7 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
 }
 
 .grid-col-2-3, .grid-col-1-3 {
@@ -56,33 +110,33 @@
 }
 
 /* ==========================================================================
-   2. Cards & Containers
+   3. Cards & Containers
    ========================================================================== */
 .card {
   background-color: #ffffff;
-  border-radius: 0.5rem;
+  border-radius: var(--spacing-sm);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
 }
 
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-  color: #92400e; /* amber-800 */
-  border-bottom: 1px solid #fde68a; /* amber-200 */
-  padding-bottom: 0.5rem;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-amber-800);
+  border-bottom: 1px solid var(--color-amber-200);
+  padding-bottom: var(--spacing-sm);
 }
 
 /* ==========================================================================
-   3. Forms & Inputs
+   4. Forms & Inputs
    ========================================================================== */
 .form-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 @media (min-width: 768px) {
@@ -92,28 +146,28 @@
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-label {
   display: block;
   font-weight: 500;
-  margin-bottom: 0.25rem;
-  color: #4b5563; /* gray-700 */
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-gray-700);
 }
 
 .form-control, .input-control {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db; /* gray-300 */
-  border-radius: 0.25rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .form-control:focus, .input-control:focus {
   outline: none;
-  border-color: #d97706; /* amber-600 */
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
@@ -125,17 +179,17 @@
 .form-check {
   display: flex;
   align-items: center;
-  margin-top: 1.5rem;
+  margin-top: var(--spacing-xl);
 }
 
 .form-check-input {
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-sm);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  margin-top: var(--spacing-xl);
 }
 
 /* Input groups */
@@ -153,17 +207,17 @@
 
 .input-group .input-addon {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  background-color: #f3f4f6; /* gray-100 */
-  border: 1px solid #d1d5db; /* gray-300 */
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-gray-100);
+  border: 1px solid var(--color-gray-300);
+  border-top-right-radius: var(--border-radius-sm);
+  border-bottom-right-radius: var(--border-radius-sm);
 }
 
 /* Highlighted inputs (for pre-filled values) */
 .prefilled-input {
-  border-color: #d97706 !important; /* amber-600 */
-  background-color: #fffbeb !important; /* amber-50 */
+  border-color: var(--color-amber-600) !important;
+  background-color: var(--color-amber-50) !important;
 }
 
 .prefilled-input:focus {
@@ -172,48 +226,48 @@
 }
 
 /* ==========================================================================
-   4. Buttons
+   5. Buttons
    ========================================================================== */
 .btn {
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
   text-align: center;
   font-size: 0.875rem;
 }
 
 .btn-default {
-  background-color: #f9fafb; /* gray-50 */
-  border: 1px solid #d1d5db; /* gray-300 */
-  color: #4b5563; /* gray-700 */
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-300);
+  color: var(--color-gray-700);
 }
 
 .btn-default:hover {
-  background-color: #f3f4f6; /* gray-100 */
+  background-color: var(--color-gray-100);
 }
 
 .btn-primary {
-  background-color: #d97706; /* amber-600 */
-  border: 1px solid #d97706; /* amber-600 */
+  background-color: var(--color-amber-600);
+  border: 1px solid var(--color-amber-600);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #b45309; /* amber-700 */
-  border-color: #b45309; /* amber-700 */
+  background-color: var(--color-amber-700);
+  border-color: var(--color-amber-700);
 }
 
 .btn-secondary {
-  background-color: #f59e0b; /* amber-500 */
-  border: 1px solid #f59e0b; /* amber-500 */
+  background-color: var(--color-amber-500);
+  border: 1px solid var(--color-amber-500);
   color: white;
 }
 
 .btn-secondary:hover {
-  background-color: #d97706; /* amber-600 */
-  border-color: #d97706; /* amber-600 */
+  background-color: var(--color-amber-600);
+  border-color: var(--color-amber-600);
 }
 
 .btn-full {
@@ -222,65 +276,65 @@
 }
 
 .btn + .btn {
-  margin-left: 0.5rem;
+  margin-left: var(--spacing-sm);
 }
 
 .calculate-button {
   width: 100%;
   padding: 0.625rem;
-  background-color: #f59e0b; /* amber-500 */
+  background-color: var(--color-amber-500);
   color: white;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: var(--border-radius-sm);
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .calculate-button:hover {
-  background-color: #d97706; /* amber-600 */
+  background-color: var(--color-amber-600);
 }
 
 /* ==========================================================================
-   5. Recipe Metrics
+   6. Recipe Metrics
    ========================================================================== */
 .metrics-container {
-  background-color: #fffbeb; /* amber-50 */
-  border-radius: 0.5rem;
+  background-color: var(--color-amber-50);
+  border-radius: var(--spacing-sm);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
 }
 
 .metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .metric-box {
   text-align: center;
-  padding: 0.75rem 0.5rem;
+  padding: var(--spacing-md) var(--spacing-sm);
   background-color: white;
-  border-radius: 0.25rem;
+  border-radius: var(--border-radius-sm);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .metric-label {
   font-size: 0.75rem;
-  color: #6b7280; /* gray-500 */
-  margin-bottom: 0.25rem;
+  color: var(--color-gray-500);
+  margin-bottom: var(--spacing-xs);
 }
 
 .metric-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #92400e; /* amber-800 */
+  color: var(--color-amber-800);
   line-height: 1.2;
 }
 
@@ -288,16 +342,16 @@
 .color-display {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
   background-color: white;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .color-info {
   flex-grow: 1;
-  margin-right: 1rem;
+  margin-right: var(--spacing-lg);
 }
 
 .color-swatch {
@@ -305,15 +359,15 @@
   height: 4rem;
   border-radius: 50%;
   border: 3px solid white;
-  box-shadow: 0 0 0 1px #e5e7eb;
+  box-shadow: 0 0 0 1px var(--color-gray-200);
 }
 
 /* Balance meter */
 .balance-meter-container {
   background-color: white;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  margin-bottom: 1rem;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-lg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -321,48 +375,48 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #6b7280; /* gray-500 */
-  margin-bottom: 0.25rem;
+  color: var(--color-gray-500);
+  margin-bottom: var(--spacing-xs);
 }
 
 .balance-meter {
-  height: 0.5rem;
-  background-color: #e5e7eb; /* gray-200 */
+  height: var(--spacing-sm);
+  background-color: var(--color-gray-200);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .balance-meter-progress {
   height: 100%;
-  background-color: #d97706; /* amber-600 */
-  transition: width 0.3s ease;
+  background-color: var(--color-amber-600);
+  transition: width var(--transition-slow) ease;
 }
 
 .balance-description {
   text-align: center;
   font-size: 0.75rem;
-  margin-top: 0.25rem;
-  color: #4b5563; /* gray-700 */
+  margin-top: var(--spacing-xs);
+  color: var(--color-gray-700);
 }
 
 /* Card metrics view (compact) */
 .card-metrics-container {
   background-color: transparent;
-  border-radius: 0.5rem;
-  padding: 1rem 0;
-  margin-top: 0.5rem;
+  border-radius: var(--spacing-sm);
+  padding: var(--spacing-lg) 0;
+  margin-top: var(--spacing-sm);
 }
 
 .card-metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .card-metrics-grid .metric-box {
-  padding: 0.5rem 0.25rem;
-  background-color: #fffbeb; /* light amber background */
+  padding: var(--spacing-sm) var(--spacing-xs);
+  background-color: var(--color-amber-50);
 }
 
 .card-metrics-grid .metric-label {
@@ -376,15 +430,15 @@
 .card-color-display {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
-  background-color: #fffbeb; /* light amber background */
-  border-radius: 0.375rem;
+  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-amber-50);
+  border-radius: var(--border-radius);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .card-color-display .color-info {
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-sm);
 }
 
 .card-color-display .color-swatch {
@@ -394,9 +448,9 @@
 }
 
 .card-balance-meter-container {
-  background-color: #fffbeb; /* light amber background */
-  padding: 0.5rem;
-  border-radius: 0.375rem;
+  background-color: var(--color-amber-50);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -414,15 +468,15 @@
 
 /* Recipe scaling */
 .scaling-container {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb; /* gray-200 */
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-gray-200);
 }
 
 .scaling-title {
   font-size: 1rem;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
 }
 
 .scaling-input-group {
@@ -431,46 +485,46 @@
 
 .scaling-input {
   flex-grow: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db; /* gray-300 */
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-gray-300);
   border-right: none;
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem;
+  border-top-left-radius: var(--border-radius-sm);
+  border-bottom-left-radius: var(--border-radius-sm);
 }
 
 .scaling-input:focus {
   outline: none;
-  border-color: #d97706; /* amber-600 */
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
 .scaling-button {
-  padding: 0.5rem 1rem;
-  background-color: #d97706; /* amber-600 */
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-amber-600);
   color: white;
-  border: 1px solid #d97706; /* amber-600 */
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  border: 1px solid var(--color-amber-600);
+  border-top-right-radius: var(--border-radius-sm);
+  border-bottom-right-radius: var(--border-radius-sm);
   cursor: pointer;
 }
 
 .scaling-button:hover {
-  background-color: #b45309; /* amber-700 */
-  border-color: #b45309; /* amber-700 */
+  background-color: var(--color-amber-700);
+  border-color: var(--color-amber-700);
 }
 
 /* ==========================================================================
-   6. Recipe Cards
+   7. Recipe Cards
    ========================================================================== */
 .recipe-card {
   background-color: white;
-  border-radius: 0.5rem;
+  border-radius: var(--spacing-sm);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .recipe-card:hover {
@@ -479,28 +533,27 @@
 }
 
 .recipe-card-header {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .recipe-card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #92400e; /* amber-800 */
-  margin-bottom: 0.25rem;
+  color: var(--color-amber-800);
+  margin-bottom: var(--spacing-xs);
 }
 
 .recipe-card-style {
   font-size: 0.875rem;
-  color: #b45309; /* amber-700 */
-  margin-bottom: 0.5rem;
+  color: var(--color-amber-700);
+  margin-bottom: var(--spacing-sm);
 }
 
 .recipe-card-description {
   font-size: 0.875rem;
-  color: #4b5563; /* gray-700 */
-  margin-bottom: 1rem;
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-lg);
   line-height: 1.4;
-  /* For line clamping (shows only 3 lines max) */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -509,19 +562,19 @@
 
 .recipe-card-footer {
   margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f3f4f6; /* gray-100 */
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-gray-100);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.75rem;
-  color: #6b7280; /* gray-500 */
+  color: var(--color-gray-500);
 }
 
 .recipe-card-container {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
 }
 
 @media (min-width: 640px) {
@@ -536,8 +589,86 @@
   }
 }
 
+/* Recipe card version and actions */
+.recipe-card-version {
+  display: inline-block;
+  font-size: 0.75rem;
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-700);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 9999px;
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--color-amber-300);
+}
+
+.recipe-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: var(--spacing-lg);
+  gap: var(--spacing-sm);
+}
+
+.recipe-card-button {
+  flex: 1;
+  min-width: calc(33% - var(--spacing-sm));
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast);
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.recipe-card-button.clone-button {
+  background-color: var(--color-amber-400);
+  color: white;
+}
+
+.recipe-card-button.clone-button:hover {
+  background-color: var(--color-amber-500);
+}
+
+.recipe-card-button.view-button {
+  background-color: var(--color-amber-500);
+  color: white;
+}
+
+.recipe-card-button.view-button:hover {
+  background-color: var(--color-amber-600);
+}
+
+.recipe-card-button.edit-button {
+  background-color: var(--color-amber-600);
+  color: white;
+}
+
+.recipe-card-button.edit-button:hover {
+  background-color: var(--color-amber-700);
+}
+
+.recipe-card-button.delete-button {
+  background-color: white;
+  border-color: var(--color-red-500);
+  color: var(--color-red-500);
+}
+
+.recipe-card-button.delete-button:hover {
+  background-color: var(--color-red-50);
+  color: var(--color-red-600);
+}
+
+@media (max-width: 480px) {
+  .recipe-card-button {
+    min-width: 100%;
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
 /* ==========================================================================
-   7. Ingredients Table
+   8. Ingredients Table
    ========================================================================== */
 .ingredients-table-container {
   overflow-x: auto;
@@ -549,21 +680,21 @@
 }
 
 .ingredients-table th {
-  background-color: #fffbeb; /* amber-50 */
-  color: #92400e; /* amber-800 */
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-800);
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: var(--spacing-md) var(--spacing-lg);
   font-weight: 600;
-  border-bottom: 2px solid #fde68a; /* amber-200 */
+  border-bottom: 2px solid var(--color-amber-200);
 }
 
 .ingredients-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-gray-200);
 }
 
 .ingredients-table tr:hover {
-  background-color: #fef3c7; /* amber-100 */
+  background-color: var(--color-amber-100);
 }
 
 .ingredient-name {
@@ -575,8 +706,8 @@
 }
 
 .ingredient-action {
-  padding: 0.25rem 0.5rem;
-  color: #ef4444; /* red-500 */
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-red-500);
   background: none;
   border: none;
   cursor: pointer;
@@ -585,305 +716,270 @@
 }
 
 .ingredient-action:hover {
-  color: #b91c1c; /* red-700 */
+  color: var(--color-red-700);
 }
 
 /* ==========================================================================
-   8. Ingredient Input Styles
+   9. Unified Ingredient Input System
    ========================================================================== */
 
 /* Base ingredient form styling */
-.grain-form,
-.hop-form,
-.yeast-form,
-.adjunct-form {
-  margin-bottom: 0; /* Remove bottom margin, handled by card */
+.ingredient-form {
+  margin-bottom: 0;
 }
 
-/* ==========================================================================
-   UNIFIED INPUT LAYOUT SYSTEM
-   ========================================================================== */
-
-/* Updated grid layouts for each ingredient type */
-.grain-inputs,
-.hop-inputs,
-.yeast-inputs,
-.adjunct-inputs {
+/* Base ingredient inputs grid */
+.ingredient-inputs {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
   align-items: start;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 /* Specific grid layouts for each ingredient type */
-.grain-inputs {
-  grid-template-columns: 120px 1fr 80px 100px; /* Amount | Selector | Color | Button */
+.ingredient-inputs--grain {
+  grid-template-columns: var(--amount-container-width) 1fr 110px var(--button-width);
 }
 
-.hop-inputs {
-  grid-template-columns: 120px 1fr 100px 260px 100px; /* Amount | Selector | Alpha | Time+Usage | Button */
+.ingredient-inputs--hop {
+  grid-template-columns: var(--amount-container-width) 1fr 100px 260px var(--button-width);
 }
 
-.yeast-inputs {
-  grid-template-columns: 120px 1fr 100px; /* Amount | Selector | Button */
+.ingredient-inputs--yeast {
+  grid-template-columns: var(--amount-container-width) 1fr var(--button-width);
 }
 
-.adjunct-inputs {
-  grid-template-columns: 120px 1fr 160px 80px 100px; /* Amount | Selector | Usage | Time | Button */
+.ingredient-inputs--adjunct {
+  grid-template-columns: var(--amount-container-width) 1fr 160px 80px var(--button-width);
 }
 
 /* ==========================================================================
-   AMOUNT INPUT CONTAINERS - STANDARDIZED AT 120PX
+   AMOUNT INPUT CONTAINERS - UNIFIED
    ========================================================================== */
-
-/* Force all amount containers to exact same width */
-.grain-amount-container,
-.hop-amount-container,
-.yeast-amount-container,
-.adjunct-amount-container {
+.amount-container {
   display: flex;
-  width: 120px !important; 
-  min-width: 120px !important;
-  max-width: 120px; /* Prevent expansion */
+  width: var(--amount-container-width);
+  min-width: var(--amount-container-width);
+  max-width: var(--amount-container-width);
+  flex-shrink: 0;
 }
 
-/* Ensure all amount inputs have identical styling */
-.grain-amount-input,
-.hop-amount-input,
-.yeast-amount-input,
-.adjunct-amount-input {
+.amount-input {
   flex: 2;
-  padding: 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem 0 0 0.375rem;
+  padding: 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
   border-right: none;
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  height: 42px;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  height: var(--input-height);
   box-sizing: border-box;
-  width: auto; /* Let flex handle the width */
 }
 
-.grain-amount-input:focus,
-.hop-amount-input:focus,
-.yeast-amount-input:focus,
-.adjunct-amount-input:focus {
+.amount-input:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
-/* Ensure all unit selects have identical styling */
-.grain-unit-select,
-.hop-unit-select,
-.yeast-unit-select,
-.adjunct-unit-select {
+.unit-select {
   flex: 1;
   padding: 0.625rem 0.375rem;
-  background-color: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 0 0.375rem 0.375rem 0;
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-300);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
   font-size: 0.875rem;
   line-height: 1.25;
   cursor: pointer;
-  height: 42px;
+  height: var(--input-height);
   box-sizing: border-box;
-  width: auto; /* Let flex handle the width */
 }
 
-.grain-unit-select:focus,
-.hop-unit-select:focus,
-.yeast-unit-select:focus,
-.adjunct-unit-select:focus {
+.unit-select:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
 /* ==========================================================================
-   INGREDIENT SELECTORS - STANDARDIZED
+   INGREDIENT SELECTORS - UNIFIED
    ========================================================================== */
-
-.grain-selector,
-.hop-selector,
-.yeast-selector,
-.adjunct-selector {
+.ingredient-selector {
   min-width: 280px;
   flex: 1;
 }
 
-.grain-select-control,
-.hop-select-control,
-.yeast-select-control,
-.adjunct-select-control {
+.ingredient-selector .searchable-select {
   width: 100%;
 }
 
-/* SearchableSelect styling is handled by SearchableSelect.css */
+.ingredient-selector .searchable-select-input {
+  height: var(--input-height);
+  box-sizing: border-box;
+  padding: 0.625rem 2.5rem 0.625rem var(--spacing-md);
+  font-size: 0.875rem;
+}
 
 /* ==========================================================================
-   FERMENTABLE-SPECIFIC INPUTS - FIXED COLOR INPUT SIZE
+   SPECIALIZED INPUTS
    ========================================================================== */
 
-.grain-lovibond-container {
+/* Fermentable color input */
+.color-input-container {
   position: relative;
-  width: 110px; /* Increased from 80px */
+  width: 110px;
   min-width: 110px;
+  flex-shrink: 0;
 }
 
-.grain-color-input {
+.color-input {
   width: 100%;
-  padding: 0.625rem 3rem 0.625rem 0.5rem; /* Increased right padding for °L + preview */
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem 3rem 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  height: 42px;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
-.grain-color-input:focus {
+.color-input:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
-.grain-color-unit {
+.color-unit {
   position: absolute;
-  right: 0.5rem;
+  right: 2rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #6b7280;
+  color: var(--color-gray-500);
   font-size: 0.75rem;
   font-weight: 500;
   pointer-events: none;
 }
-/* Color preview positioning */
+
 .color-preview-swatch {
   position: absolute;
-  right: 0.25rem; /* Position at right edge */
+  right: var(--spacing-xs);
   top: 50%;
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
   border-radius: 50%;
   border: 2px solid white;
-  box-shadow: 0 0 0 1px #e5e7eb;
+  box-shadow: 0 0 0 1px var(--color-gray-200);
   pointer-events: none;
 }
 
-/* ==========================================================================
-   HOP-SPECIFIC INPUTS - FIXED LAYOUT FOR COMPLEX INPUTS
-   ========================================================================== */
-
-.hop-alpha-container {
+/* Hop alpha input */
+.alpha-input-container {
   position: relative;
   width: 100px;
   min-width: 100px;
 }
 
-.hop-alpha-input {
+.alpha-input {
   width: 100%;
-  padding: 0.625rem 2rem 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem 2rem 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  height: 42px;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
-.hop-alpha-input:focus {
+.alpha-input:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
-.hop-alpha-unit {
+.alpha-unit {
   position: absolute;
-  right: 0.5rem;
+  right: var(--spacing-sm);
   top: 50%;
   transform: translateY(-50%);
-  color: #6b7280;
+  color: var(--color-gray-500);
   font-size: 0.75rem;
   font-weight: 500;
   pointer-events: none;
 }
 
+/* Hop time container */
 .hop-time-container {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   align-items: center;
   width: 260px;
   min-width: 260px;
   flex-wrap: nowrap;
 }
 
-.hop-time-input {
+.time-input {
   width: 60px;
-  padding: 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
   flex-shrink: 0;
-  height: 42px;
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
-.hop-time-input:focus {
+.time-input:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
-.hop-time-unit-select {
+.time-unit-select {
   width: 65px;
-  padding: 0.625rem 0.25rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem var(--spacing-xs);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
   cursor: pointer;
   flex-shrink: 0;
-  height: 42px;
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
-.hop-use-select {
+.use-select {
   width: 85px;
-  padding: 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
   cursor: pointer;
   flex-shrink: 0;
-  height: 42px;
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
-.hop-time-unit-select:focus,
-.hop-use-select:focus {
+.time-unit-select:focus,
+.use-select:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
-/* ==========================================================================
-   OTHER INGREDIENT-SPECIFIC INPUTS - ADJUSTED SIZING
-   ========================================================================== */
-
+/* Adjunct inputs */
 .adjunct-use-container {
   width: 160px;
   min-width: 160px;
@@ -891,20 +987,20 @@
 
 .adjunct-use-select {
   width: 100%;
-  padding: 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
   cursor: pointer;
-  height: 42px;
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
 .adjunct-use-select:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
@@ -915,127 +1011,98 @@
 
 .adjunct-time-input {
   width: 100%;
-  padding: 0.625rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
+  padding: 0.625rem var(--spacing-sm);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  height: 42px;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  height: var(--input-height);
   box-sizing: border-box;
 }
 
 .adjunct-time-input:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: var(--color-amber-600);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
 /* ==========================================================================
-   ADD BUTTONS - STANDARDIZED
+   ADD BUTTONS - UNIFIED
    ========================================================================== */
-
-.grain-button-container,
-.hop-button-container,
-.yeast-button-container,
-.adjunct-button-container {
-  width: 100px;
-  min-width: 100px;
-}
-
-.grain-add-button,
-.hop-add-button,
-.yeast-add-button,
-.adjunct-add-button {
-  width: 100%;
-  height: 42px;
-  min-height: 42px;
-  background-color: #d97706;
+.ingredient-add-button {
+  width: var(--button-width);
+  min-width: var(--button-width);
+  height: var(--input-height);
+  min-height: var(--input-height);
+  background-color: var(--color-amber-600);
   color: white;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: background-color var(--transition-normal), transform var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
 }
 
-.grain-add-button:hover:not(:disabled),
-.hop-add-button:hover:not(:disabled),
-.yeast-add-button:hover:not(:disabled),
-.adjunct-add-button:hover:not(:disabled) {
-  background-color: #b45309;
+.ingredient-add-button:hover:not(:disabled) {
+  background-color: var(--color-amber-700);
 }
 
-.grain-add-button:active,
-.hop-add-button:active,
-.yeast-add-button:active,
-.adjunct-add-button:active {
+.ingredient-add-button:active {
   transform: translateY(1px);
 }
 
-.grain-add-button:disabled,
-.hop-add-button:disabled,
-.yeast-add-button:disabled,
-.adjunct-add-button:disabled {
+.ingredient-add-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
 /* ==========================================================================
-   ERROR STATES
+   ERROR STATES - UNIFIED
    ========================================================================== */
-
-.grain-amount-input.error,
-.hop-amount-input.error,
-.yeast-amount-input.error,
-.adjunct-amount-input.error,
-.grain-color-input.error,
-.hop-alpha-input.error,
-.hop-time-input.error,
+.amount-input.error,
+.color-input.error,
+.alpha-input.error,
+.time-input.error,
 .adjunct-time-input.error {
-  border-color: #ef4444;
+  border-color: var(--color-red-500);
 }
 
 /* ==========================================================================
-   SELECTED INGREDIENT INFO & HELP TEXT - STANDARDIZED
+   SELECTED INGREDIENT INFO - UNIFIED
    ========================================================================== */
-
 .selected-ingredient-info {
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-  margin-top: 0.75rem;
+  background-color: var(--color-amber-50);
+  border: 1px solid var(--color-amber-200);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
 }
 
 .ingredient-info-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
   flex-wrap: wrap;
 }
 
 .ingredient-name {
   font-weight: 600;
-  color: #92400e;
+  color: var(--color-amber-800);
 }
 
-.grain-type-badge,
-.hop-origin-badge,
-.yeast-manufacturer-badge,
-.yeast-code-badge,
-.other-category-badge {
+.ingredient-badge {
   display: inline-block;
-  padding: 0.125rem 0.5rem;
-  background-color: #fbbf24;
+  padding: 0.125rem var(--spacing-sm);
+  background-color: var(--color-amber-400);
   color: white;
   border-radius: 9999px;
   font-size: 0.75rem;
@@ -1044,110 +1111,90 @@
 
 .ingredient-description {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-gray-500);
   line-height: 1.4;
-  margin: 0.5rem 0 0 0;
+  margin: var(--spacing-sm) 0 0 0;
 }
 
 .ingredient-help {
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background-color: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 0.375rem;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-blue-50);
+  border: 1px solid var(--color-blue-200);
+  border-radius: var(--border-radius);
 }
 
 .help-text {
   font-size: 0.875rem;
-  color: #0369a1;
+  color: var(--color-blue-700);
   line-height: 1.4;
   margin: 0;
 }
 
-/* Usage descriptions for hops and other ingredients */
-.hop-usage-description,
-.other-guidance,
-.yeast-guidance {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: #f3f4f6;
-  border-radius: 0.375rem;
+.usage-description {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-gray-100);
+  border-radius: var(--border-radius);
 }
 
-.hop-usage-description small,
 .guidance-text {
   font-size: 0.75rem;
-  color: #4b5563;
+  color: var(--color-gray-700);
   line-height: 1.4;
   margin: 0;
   font-style: italic;
 }
 
-/* Color preview for fermentables */
-.color-preview-swatch {
-  margin-left: 8px;
-}
-
-/* Yeast specs display */
 .yeast-specs {
   font-size: 0.75rem;
-  color: #92400e;
-  margin-top: 0.25rem;
+  color: var(--color-amber-800);
+  margin-top: var(--spacing-xs);
 }
 
 /* ==========================================================================
-   RESPONSIVE ADJUSTMENTS - UPDATED FOR NEW SIZING
+   RESPONSIVE ADJUSTMENTS - UNIFIED
    ========================================================================== */
-
 @media (max-width: 1400px) {
-  .grain-inputs,
-  .hop-inputs,
-  .yeast-inputs,
-  .adjunct-inputs {
+  .ingredient-inputs--grain,
+  .ingredient-inputs--hop,
+  .ingredient-inputs--yeast,
+  .ingredient-inputs--adjunct {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
   }
 
-  .grain-amount-container,
-  .hop-amount-container,
-  .yeast-amount-container,
-  .adjunct-amount-container,
-  .grain-selector,
-  .hop-selector,
-  .yeast-selector,
-  .adjunct-selector,
-  .grain-lovibond-container,
-  .hop-alpha-container,
+  .amount-container,
+  .ingredient-selector,
+  .color-input-container,
+  .alpha-input-container,
   .hop-time-container,
   .adjunct-use-container,
   .adjunct-time-container,
-  .grain-button-container,
-  .hop-button-container,
-  .yeast-button-container,
-  .adjunct-button-container {
+  .ingredient-add-button {
     width: 100%;
     min-width: unset;
   }
 
   .hop-time-container {
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
   }
 
-  .hop-time-input,
-  .hop-time-unit-select,
-  .hop-use-select {
+  .time-input,
+  .time-unit-select,
+  .use-select {
     flex: 1;
     min-width: 80px;
   }
 }
 
 @media (max-width: 768px) {
-  .grain-inputs,
-  .hop-inputs,
-  .yeast-inputs,
-  .adjunct-inputs {
-    gap: 0.5rem;
+  .ingredient-inputs--grain,
+  .ingredient-inputs--hop,
+  .ingredient-inputs--yeast,
+  .ingredient-inputs--adjunct {
+    gap: var(--spacing-sm);
   }
 
   .hop-time-container {
@@ -1155,97 +1202,66 @@
     align-items: stretch;
   }
 
-  .hop-time-input,
-  .hop-time-unit-select,
-  .hop-use-select {
+  .time-input,
+  .time-unit-select,
+  .use-select {
     width: 100%;
     min-width: unset;
   }
 }
 
 /* ==========================================================================
-   ACCESSIBILITY IMPROVEMENTS
+   ACCESSIBILITY
    ========================================================================== */
-
-/* Focus visible for keyboard navigation */
-.grain-amount-input:focus-visible,
-.hop-amount-input:focus-visible,
-.yeast-amount-input:focus-visible,
-.adjunct-amount-input:focus-visible,
-.grain-unit-select:focus-visible,
-.hop-unit-select:focus-visible,
-.yeast-unit-select:focus-visible,
-.adjunct-unit-select:focus-visible,
-.grain-color-input:focus-visible,
-.hop-alpha-input:focus-visible,
-.hop-time-input:focus-visible,
-.hop-time-unit-select:focus-visible,
-.hop-use-select:focus-visible,
+.amount-input:focus-visible,
+.unit-select:focus-visible,
+.color-input:focus-visible,
+.alpha-input:focus-visible,
+.time-input:focus-visible,
+.time-unit-select:focus-visible,
+.use-select:focus-visible,
 .adjunct-use-select:focus-visible,
 .adjunct-time-input:focus-visible,
-.grain-add-button:focus-visible,
-.hop-add-button:focus-visible,
-.yeast-add-button:focus-visible,
-.adjunct-add-button:focus-visible {
-  outline: 2px solid #d97706;
+.ingredient-add-button:focus-visible {
+  outline: 2px solid var(--color-amber-600);
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
-  .grain-amount-input,
-  .hop-amount-input,
-  .yeast-amount-input,
-  .adjunct-amount-input,
-  .grain-unit-select,
-  .hop-unit-select,
-  .yeast-unit-select,
-  .adjunct-unit-select,
-  .grain-color-input,
-  .hop-alpha-input,
-  .hop-time-input,
-  .hop-time-unit-select,
-  .hop-use-select,
+  .amount-input,
+  .unit-select,
+  .color-input,
+  .alpha-input,
+  .time-input,
+  .time-unit-select,
+  .use-select,
   .adjunct-use-select,
   .adjunct-time-input {
     border-width: 2px;
   }
   
-  .grain-add-button,
-  .hop-add-button,
-  .yeast-add-button,
-  .adjunct-add-button {
+  .ingredient-add-button {
     border: 2px solid white;
   }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .grain-amount-input,
-  .hop-amount-input,
-  .yeast-amount-input,
-  .adjunct-amount-input,
-  .grain-unit-select,
-  .hop-unit-select,
-  .yeast-unit-select,
-  .adjunct-unit-select,
-  .grain-color-input,
-  .hop-alpha-input,
-  .hop-time-input,
-  .hop-time-unit-select,
-  .hop-use-select,
+  .amount-input,
+  .unit-select,
+  .color-input,
+  .alpha-input,
+  .time-input,
+  .time-unit-select,
+  .use-select,
   .adjunct-use-select,
   .adjunct-time-input,
-  .grain-add-button,
-  .hop-add-button,
-  .yeast-add-button,
-  .adjunct-add-button {
+  .ingredient-add-button {
     transition: none;
   }
 }
 
 /* ==========================================================================
-   9. SRM Colors
+   10. SRM Colors
    ========================================================================== */
 .srm-1 { background-color: #ffe699; }
 .srm-2 { background-color: #ffd878; }
@@ -1274,11 +1290,10 @@
 .srm-36, .srm-37, .srm-38, .srm-39, .srm-40 { background-color: #7c2200; }
 
 /* ==========================================================================
-   10. Utilities & Animations
+   11. Utilities & Animations
    ========================================================================== */
-/* Animations */
 @keyframes highlight {
-  0% { background-color: #fef3c7; /* amber-100 */ }
+  0% { background-color: var(--color-amber-100); }
   100% { background-color: transparent; }
 }
 
@@ -1287,403 +1302,88 @@
 }
 
 /* Margin utilities */
-.mb-1 { margin-bottom: 0.25rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 0.75rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: var(--spacing-xs); }
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mb-3 { margin-bottom: var(--spacing-md); }
+.mb-4 { margin-bottom: var(--spacing-lg); }
+.mb-6 { margin-bottom: var(--spacing-xl); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mt-4 { margin-top: var(--spacing-lg); }
+.mt-6 { margin-top: var(--spacing-xl); }
 
 /* ==========================================================================
-11. Recipe Version History
-========================================================================== */
-/* Version container */
+   12. Recipe Version History
+   ========================================================================== */
 .version-history {
-margin-top: 2rem;
-padding: 1rem;
-background-color: #fffbeb; /* amber-50 */
-border-radius: 0.5rem;
-border: 1px solid #fcd34d; /* amber-300 */
+  margin-top: 2rem;
+  padding: var(--spacing-lg);
+  background-color: var(--color-amber-50);
+  border-radius: var(--spacing-sm);
+  border: 1px solid var(--color-amber-300);
 }
+
 .version-history-title {
-font-size: 1.25rem;
-color: #92400e; /* amber-800 */
-margin-bottom: 0.75rem;
-font-weight: 600;
-border-bottom: 1px solid #fde68a; /* amber-200 */
-padding-bottom: 0.5rem;
+  font-size: 1.25rem;
+  color: var(--color-amber-800);
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-amber-200);
+  padding-bottom: var(--spacing-sm);
 }
+
 .parent-version, .current-version, .child-versions {
-margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
+
 .parent-version h4, .current-version h4, .child-versions h4 {
-font-size: 0.875rem;
-color: #b45309; /* amber-700 */
-margin-bottom: 0.25rem;
-font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-amber-700);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 500;
 }
+
 .parent-link {
-color: #d97706; /* amber-600 */
-text-decoration: none;
-font-weight: 500;
+  color: var(--color-amber-600);
+  text-decoration: none;
+  font-weight: 500;
 }
+
 .parent-link:hover {
-text-decoration: underline;
+  text-decoration: underline;
 }
+
 .version-badge {
-display: inline-block;
-font-size: 0.75rem;
-background-color: #fde68a; /* amber-200 /
-color: #92400e; / amber-800 */
-padding: 0.25rem 0.5rem;
-border-radius: 9999px;
-font-weight: 600;
+  display: inline-block;
+  font-size: 0.75rem;
+  background-color: var(--color-amber-200);
+  color: var(--color-amber-800);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 9999px;
+  font-weight: 600;
 }
+
 .derived-recipes-list {
-list-style-type: disc;
-margin-left: 1.5rem;
+  list-style-type: disc;
+  margin-left: var(--spacing-xl);
 }
+
 .derived-recipes-list a {
-color: #d97706; /* amber-600 */
-text-decoration: none;
+  color: var(--color-amber-600);
+  text-decoration: none;
 }
+
 .derived-recipes-list a:hover {
-text-decoration: underline;
+  text-decoration: underline;
 }
+
 .version-history-loading {
-padding: 1rem;
-text-align: center;
-color: #6b7280; /* gray-500 */
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-gray-500);
 }
+
 .version-history-error {
-padding: 1rem;
-text-align: center;
-color: #ef4444; /* red-500 */
-}
-/* Recipe card version badge */
-.recipe-card-version {
-display: inline-block;
-font-size: 0.75rem;
-background-color: #fffbeb; /* amber-50 */
-color: #b45309; /* amber-700 */
-padding: 0.25rem 0.5rem;
-border-radius: 9999px;
-margin-bottom: 0.5rem;
-border: 1px solid #fcd34d; /* amber-300 */
-}
-/* Update recipe card actions for clone button */
-.recipe-card-actions {
-display: flex;
-flex-wrap: wrap;
-justify-content: space-between;
-margin-top: 1rem;
-gap: 0.5rem;
-}
-.recipe-card-button {
-flex: 1;
-min-width: calc(33% - 0.5rem); /* For better alignment with 3 buttons */
-padding: 0.5rem 0.75rem;
-border-radius: 0.25rem;
-font-weight: 500;
-font-size: 0.875rem;
-cursor: pointer;
-transition:
-background-color 0.2s,
-border-color 0.2s,
-transform 0.1s;
-text-align: center;
-border: 1px solid transparent;
-}
-/* Clone button styling */
-.recipe-card-button.clone-button {
-background-color: #fbbf24; /* amber-400 */
-color: white;
-}
-.recipe-card-button.clone-button:hover {
-background-color: #f59e0b; /* amber-500 */
-}
-/* Renamed other buttons for clarity */
-.recipe-card-button.view-button {
-background-color: #f59e0b; /* amber-500 */
-color: white;
-}
-.recipe-card-button.view-button:hover {
-background-color: #d97706; /* amber-600 */
-}
-.recipe-card-button.edit-button {
-background-color: #d97706; /* amber-600 */
-color: white;
-}
-.recipe-card-button.edit-button:hover {
-background-color: #b45309; /* amber-700 */
-}
-.recipe-card-button.delete-button {
-background-color: white;
-border-color: #ef4444; /* red-500 /
-color: #ef4444; / red-500 */
-}
-.recipe-card-button.delete-button:hover {
-background-color: #fef2f2; /* red-50 */
-color: #dc2626; /* red-600 */
-}
-
-/* Responsive button adjustments */
-@media (max-width: 480px) {
-.recipe-card-button {
-min-width: 100%;
-margin-bottom: 0.25rem;
-}
-}
-
-/* ==========================================================================
-   FERMENTABLE INPUT FIXES - HIGH SPECIFICITY TO OVERRIDE CONFLICTS
-   Add this to the END of your RecipeBuilder.css file
-   ========================================================================== */
-
-/* ==========================================================================
-   OVERRIDE GENERIC FORM STYLES FOR FERMENTABLE INPUTS
-   ========================================================================== */
-
-/* Force the correct grid layout for fermentables with higher specificity */
-.grain-form .grain-inputs {
-  grid-template-columns: 120px 1fr 110px 100px !important; /* Amount | Selector | Color | Button */
-  display: grid !important;
-  gap: 0.75rem !important;
-  align-items: start !important;
-  margin-bottom: 1rem !important;
-}
-
-/* ==========================================================================
-   AMOUNT CONTAINER - FORCE EXACT 120PX WIDTH
-   ========================================================================== */
-
-.grain-form .grain-amount-container {
-  display: flex !important;
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
-  flex-shrink: 0 !important;
-}
-
-.grain-form .grain-amount-input {
-  flex: 2 !important;
-  padding: 0.625rem 0.5rem !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 0.375rem 0 0 0.375rem !important;
-  border-right: none !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25 !important;
-  background-color: white !important;
-  transition: border-color 0.2s, box-shadow 0.2s !important;
-  height: 42px !important;
-  box-sizing: border-box !important;
-  width: auto !important;
-}
-
-.grain-form .grain-unit-select {
-  flex: 1 !important;
-  padding: 0.625rem 0.375rem !important;
-  background-color: #f9fafb !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 0 0.375rem 0.375rem 0 !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25 !important;
-  cursor: pointer !important;
-  height: 42px !important;
-  box-sizing: border-box !important;
-  width: auto !important;
-}
-
-/* ==========================================================================
-   COLOR INPUT - FORCE EXACT 110PX WIDTH
-   ========================================================================== */
-
-.grain-form .grain-lovibond-container {
-  position: relative !important;
-  width: 110px !important;
-  min-width: 110px !important;
-  max-width: 110px !important;
-  flex-shrink: 0 !important;
-}
-
-.grain-form .grain-color-input {
-  width: 100% !important;
-  padding: 0.625rem 3rem 0.625rem 0.5rem !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 0.375rem !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25 !important;
-  background-color: white !important;
-  transition: border-color 0.2s, box-shadow 0.2s !important;
-  height: 42px !important;
-  box-sizing: border-box !important;
-}
-
-.grain-form .grain-color-unit {
-  position: absolute !important;
-  right: 2rem !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  color: #6b7280 !important;
-  font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  pointer-events: none !important;
-}
-
-.grain-form .color-preview-swatch {
-  position: absolute !important;
-  right: 0.25rem !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  border: 2px solid white !important;
-  box-shadow: 0 0 0 1px #e5e7eb !important;
-  pointer-events: none !important;
-}
-
-/* ==========================================================================
-   SELECTOR - ENSURE PROPER FLEX SIZING
-   ========================================================================== */
-
-.grain-form .grain-selector {
-  min-width: 280px !important;
-  flex: 1 !important;
-}
-
-.grain-form .grain-selector .searchable-select {
-  width: 100% !important;
-}
-
-.grain-form .grain-selector .searchable-select-input {
-  height: 42px !important;
-  box-sizing: border-box !important;
-  padding: 0.625rem 2.5rem 0.625rem 0.75rem !important;
-  font-size: 0.875rem !important;
-}
-
-/* ==========================================================================
-   ADD BUTTON - FORCE EXACT 100PX WIDTH
-   ========================================================================== */
-
-.grain-form .grain-button-container {
-  width: 100px !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
-  flex-shrink: 0 !important;
-}
-
-.grain-form .grain-add-button {
-  width: 100% !important;
-  height: 42px !important;
-  min-height: 42px !important;
-  background-color: #d97706 !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 0.375rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: background-color 0.2s, transform 0.1s !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-}
-
-/* ==========================================================================
-   OVERRIDE ANY CONFLICTING GENERIC STYLES
-   ========================================================================== */
-
-/* Override generic input-control styles that might interfere */
-.grain-form .grain-amount-input.input-control,
-.grain-form .grain-color-input.input-control {
-  width: auto !important;
-  flex: unset !important;
-}
-
-/* Override generic form-control styles that might interfere */
-.grain-form .grain-amount-input.form-control,
-.grain-form .grain-color-input.form-control {
-  width: auto !important;
-  padding: 0.625rem 0.5rem !important;
-  font-size: 0.875rem !important;
-}
-
-.grain-form .grain-color-input.form-control {
-  padding: 0.625rem 3rem 0.625rem 0.5rem !important;
-}
-
-/* Override any input-group styles that might interfere */
-.grain-form .grain-amount-container.input-group {
-  display: flex !important;
-  width: 120px !important;
-}
-
-.grain-form .grain-amount-container.input-group .grain-amount-input {
-  border-radius: 0.375rem 0 0 0.375rem !important;
-  border-right: none !important;
-}
-
-.grain-form .grain-amount-container.input-group .grain-unit-select {
-  border-radius: 0 0.375rem 0.375rem 0 !important;
-}
-
-/* ==========================================================================
-   FOCUS STATES WITH HIGH SPECIFICITY
-   ========================================================================== */
-
-.grain-form .grain-amount-input:focus {
-  outline: none !important;
-  border-color: #d97706 !important;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
-}
-
-.grain-form .grain-unit-select:focus {
-  outline: none !important;
-  border-color: #d97706 !important;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
-}
-
-.grain-form .grain-color-input:focus {
-  outline: none !important;
-  border-color: #d97706 !important;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
-}
-
-.grain-form .grain-add-button:hover:not(:disabled) {
-  background-color: #b45309 !important;
-}
-
-.grain-form .grain-add-button:active {
-  transform: translateY(1px) !important;
-}
-
-.grain-form .grain-add-button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-}
-
-/* ==========================================================================
-   RESPONSIVE OVERRIDES WITH HIGH SPECIFICITY
-   ========================================================================== */
-
-@media (max-width: 1400px) {
-  .grain-form .grain-inputs {
-    grid-template-columns: 1fr !important;
-    gap: 0.5rem !important;
-  }
-
-  .grain-form .grain-amount-container,
-  .grain-form .grain-selector,
-  .grain-form .grain-lovibond-container,
-  .grain-form .grain-button-container {
-    width: 100% !important;
-    min-width: unset !important;
-    max-width: unset !important;
-  }
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-red-500);
 }
