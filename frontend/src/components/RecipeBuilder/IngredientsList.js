@@ -24,7 +24,10 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   useEffect(() => {
     if (editingCell.ingredientId && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      // Only call select() on input elements that support it
+      if (typeof inputRef.current.select === "function") {
+        inputRef.current.select();
+      }
     }
   }, [editingCell.ingredientId]);
 
@@ -37,9 +40,28 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     );
   }
 
+  // Determine if a field should be editable for a given ingredient type
+  const isFieldEditable = (ingredientType, field) => {
+    const editableFields = {
+      grain: ["amount", "color"],
+      hop: ["amount", "use", "time", "alpha_acid"],
+      yeast: ["amount"],
+      other: ["amount", "use", "time"],
+      adjunct: ["amount", "use", "time"], // Support legacy adjunct type
+    };
+
+    return editableFields[ingredientType]?.includes(field) || false;
+  };
+
   // Start editing a cell
   const startEdit = (ingredientId, field, currentValue) => {
     if (!isEditing) return; // Only allow editing when in edit mode
+
+    // Find the ingredient to check if field is editable
+    const ingredient = ingredients.find((ing) => ing.id === ingredientId);
+    if (!ingredient || !isFieldEditable(ingredient.type, field)) {
+      return; // Don't start editing if field isn't editable for this ingredient type
+    }
 
     setEditingCell({ ingredientId, field });
     setEditValue(currentValue);
@@ -86,6 +108,14 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
 
   // Validate field value based on type
   const validateField = (field, value, ingredient) => {
+    // Check if this field should be editable for this ingredient type
+    if (!isFieldEditable(ingredient.type, field)) {
+      return {
+        isValid: false,
+        error: `${field} is not editable for ${ingredient.type} ingredients`,
+      };
+    }
+
     const trimmedValue = typeof value === "string" ? value.trim() : value;
 
     switch (field) {
@@ -226,8 +256,14 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   ) => {
     const isEditing =
       editingCell.ingredientId === ingredient.id && editingCell.field === field;
+    const fieldIsEditable = isFieldEditable(ingredient.type, field);
 
     if (!isEditing) {
+      if (!fieldIsEditable) {
+        // Return non-editable display for fields that shouldn't be editable
+        return <span className="non-editable-cell">{displayValue}</span>;
+      }
+
       return (
         <span
           className="editable-cell"
@@ -474,25 +510,33 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                 </td>
 
                 <td className="ingredient-use">
-                  {isEditing
-                    ? renderEditableCell(
-                        ingredient,
-                        "use",
-                        ingredient.use,
-                        formatUsage(ingredient)
-                      )
-                    : formatUsage(ingredient)}
+                  {isEditing && isFieldEditable(ingredient.type, "use") ? (
+                    renderEditableCell(
+                      ingredient,
+                      "use",
+                      ingredient.use,
+                      formatUsage(ingredient)
+                    )
+                  ) : (
+                    <span className="non-editable-cell">
+                      {formatUsage(ingredient)}
+                    </span>
+                  )}
                 </td>
 
                 <td className="ingredient-time">
-                  {isEditing
-                    ? renderEditableCell(
-                        ingredient,
-                        "time",
-                        ingredient.time || "",
-                        formatTime(ingredient)
-                      )
-                    : formatTime(ingredient)}
+                  {isEditing && isFieldEditable(ingredient.type, "time") ? (
+                    renderEditableCell(
+                      ingredient,
+                      "time",
+                      ingredient.time || "",
+                      formatTime(ingredient)
+                    )
+                  ) : (
+                    <span className="non-editable-cell">
+                      {formatTime(ingredient)}
+                    </span>
+                  )}
                 </td>
 
                 {isEditing && (
@@ -501,10 +545,16 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                       {ingredient.type === "hop" && (
                         <div className="detail-item">
                           <span className="detail-label">AA:</span>
-                          {renderEditableCell(
-                            ingredient,
-                            "alpha_acid",
-                            ingredient.alpha_acid || "",
+                          {isFieldEditable(ingredient.type, "alpha_acid") ? (
+                            renderEditableCell(
+                              ingredient,
+                              "alpha_acid",
+                              ingredient.alpha_acid || "",
+                              <span className="detail-value">
+                                {ingredient.alpha_acid || "-"}%
+                              </span>
+                            )
+                          ) : (
                             <span className="detail-value">
                               {ingredient.alpha_acid || "-"}%
                             </span>
@@ -514,10 +564,16 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                       {ingredient.type === "grain" && (
                         <div className="detail-item">
                           <span className="detail-label">Color:</span>
-                          {renderEditableCell(
-                            ingredient,
-                            "color",
-                            ingredient.color || "",
+                          {isFieldEditable(ingredient.type, "color") ? (
+                            renderEditableCell(
+                              ingredient,
+                              "color",
+                              ingredient.color || "",
+                              <span className="detail-value">
+                                {ingredient.color || "-"}°L
+                              </span>
+                            )
+                          ) : (
                             <span className="detail-value">
                               {ingredient.color || "-"}°L
                             </span>
@@ -558,8 +614,11 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
       {isEditing && (
         <div className="editing-help">
           <small className="help-text">
-            💡 Click on amounts, usage, time, or detail values to edit them
-            directly. Press Enter to save, Escape to cancel.
+            💡 <strong>Editable fields:</strong> Grains (amount, color) • Hops
+            (amount, use, time, alpha acid) • Yeast (amount) • Other (amount,
+            use, time)
+            <br />
+            Press Enter to save, Escape to cancel.
           </small>
         </div>
       )}
