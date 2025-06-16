@@ -733,8 +733,8 @@
 }
 
 .ingredient-inputs--adjunct {
-  grid-template-columns: var(--amount-container-width) 1fr 160px 80px var(--button-width);
-}
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 160px 80px var(--button-width);
+ }
 
 /* ==========================================================================
    AMOUNT INPUT CONTAINERS - UNIFIED
