@@ -591,43 +591,127 @@
 /* ==========================================================================
    8. Ingredient Input Styles
    ========================================================================== */
+
+/* Base ingredient form styling */
 .grain-form,
 .hop-form,
 .yeast-form,
 .adjunct-form {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0; /* Remove bottom margin, handled by card */
 }
 
-/* Base grid layout for all ingredient inputs */
+/* ==========================================================================
+   UNIFIED INPUT LAYOUT SYSTEM
+   ========================================================================== */
+
+/* Updated grid layouts for each ingredient type */
 .grain-inputs,
 .hop-inputs,
 .yeast-inputs,
 .adjunct-inputs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 40px;
-  position: relative;
-  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+  margin-bottom: 1rem;
 }
 
-/* Common styling for all amount containers */
+/* Specific grid layouts for each ingredient type */
+.grain-inputs {
+  grid-template-columns: 120px 1fr 80px 100px; /* Amount | Selector | Color | Button */
+}
+
+.hop-inputs {
+  grid-template-columns: 120px 1fr 100px 260px 100px; /* Amount | Selector | Alpha | Time+Usage | Button */
+}
+
+.yeast-inputs {
+  grid-template-columns: 120px 1fr 100px; /* Amount | Selector | Button */
+}
+
+.adjunct-inputs {
+  grid-template-columns: 120px 1fr 160px 80px 100px; /* Amount | Selector | Usage | Time | Button */
+}
+
+/* ==========================================================================
+   AMOUNT INPUT CONTAINERS - STANDARDIZED AT 120PX
+   ========================================================================== */
+
+/* Force all amount containers to exact same width */
 .grain-amount-container,
 .hop-amount-container,
 .yeast-amount-container,
 .adjunct-amount-container {
   display: flex;
-  width: 140px; /* Fixed width for all amount inputs */
-  flex-shrink: 0;
+  width: 120px !important; 
+  min-width: 120px !important;
+  max-width: 120px; /* Prevent expansion */
 }
 
-/* Common styling for all selectors */
+/* Ensure all amount inputs have identical styling */
+.grain-amount-input,
+.hop-amount-input,
+.yeast-amount-input,
+.adjunct-amount-input {
+  flex: 2;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem 0 0 0.375rem;
+  border-right: none;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px;
+  box-sizing: border-box;
+  width: auto; /* Let flex handle the width */
+}
+
+.grain-amount-input:focus,
+.hop-amount-input:focus,
+.yeast-amount-input:focus,
+.adjunct-amount-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* Ensure all unit selects have identical styling */
+.grain-unit-select,
+.hop-unit-select,
+.yeast-unit-select,
+.adjunct-unit-select {
+  flex: 1;
+  padding: 0.625rem 0.375rem;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 0 0.375rem 0.375rem 0;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  cursor: pointer;
+  height: 42px;
+  box-sizing: border-box;
+  width: auto; /* Let flex handle the width */
+}
+
+.grain-unit-select:focus,
+.hop-unit-select:focus,
+.yeast-unit-select:focus,
+.adjunct-unit-select:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* ==========================================================================
+   INGREDIENT SELECTORS - STANDARDIZED
+   ========================================================================== */
+
 .grain-selector,
 .hop-selector,
 .yeast-selector,
 .adjunct-selector {
-  width: 280px; /* Fixed width for all ingredient selectors */
-  flex-shrink: 0;
+  min-width: 280px;
+  flex: 1;
 }
 
 .grain-select-control,
@@ -635,45 +719,229 @@
 .yeast-select-control,
 .adjunct-select-control {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  font-size: 1rem;
 }
 
-/* Amount inputs styling */
-.grain-amount-input,
-.hop-amount-input,
-.yeast-amount-input,
-.adjunct-amount-input {
-  flex: 2;
-  min-width: 70px;
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem 0 0 0.25rem;
-  border-right: none;
+/* SearchableSelect styling is handled by SearchableSelect.css */
+
+/* ==========================================================================
+   FERMENTABLE-SPECIFIC INPUTS - FIXED COLOR INPUT SIZE
+   ========================================================================== */
+
+.grain-lovibond-container {
+  position: relative;
+  width: 110px; /* Increased from 80px */
+  min-width: 110px;
 }
 
-.grain-unit-select,
-.hop-unit-select,
-.yeast-unit-select,
-.adjunct-unit-select {
-  flex: 1;
-  padding: 0.5rem 0.5rem;
-  background-color: #f3f4f6;
+.grain-color-input {
+  width: 100%;
+  padding: 0.625rem 3rem 0.625rem 0.5rem; /* Increased right padding for °L + preview */
   border: 1px solid #d1d5db;
-  border-radius: 0 0.25rem 0.25rem 0;
-  max-width: 100%;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px;
+  box-sizing: border-box;
 }
 
-/* Common styling for all button containers */
+.grain-color-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.grain-color-unit {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+/* Color preview positioning */
+.color-preview-swatch {
+  position: absolute;
+  right: 0.25rem; /* Position at right edge */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px #e5e7eb;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   HOP-SPECIFIC INPUTS - FIXED LAYOUT FOR COMPLEX INPUTS
+   ========================================================================== */
+
+.hop-alpha-container {
+  position: relative;
+  width: 100px;
+  min-width: 100px;
+}
+
+.hop-alpha-input {
+  width: 100%;
+  padding: 0.625rem 2rem 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.hop-alpha-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.hop-alpha-unit {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.hop-time-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 260px;
+  min-width: 260px;
+  flex-wrap: nowrap;
+}
+
+.hop-time-input {
+  width: 60px;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.hop-time-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.hop-time-unit-select {
+  width: 65px;
+  padding: 0.625rem 0.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.hop-use-select {
+  width: 85px;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.hop-time-unit-select:focus,
+.hop-use-select:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* ==========================================================================
+   OTHER INGREDIENT-SPECIFIC INPUTS - ADJUSTED SIZING
+   ========================================================================== */
+
+.adjunct-use-container {
+  width: 160px;
+  min-width: 160px;
+}
+
+.adjunct-use-select {
+  width: 100%;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  cursor: pointer;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.adjunct-use-select:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.adjunct-time-container {
+  width: 80px;
+  min-width: 80px;
+}
+
+.adjunct-time-input {
+  width: 100%;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.adjunct-time-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* ==========================================================================
+   ADD BUTTONS - STANDARDIZED
+   ========================================================================== */
+
 .grain-button-container,
 .hop-button-container,
 .yeast-button-container,
 .adjunct-button-container {
-  width: 100px; /* Fixed width for all button containers */
-  flex-shrink: 0;
-  margin-left: auto; /* Push to the right edge */
+  width: 100px;
+  min-width: 100px;
 }
 
 .grain-add-button,
@@ -681,130 +949,298 @@
 .yeast-add-button,
 .adjunct-add-button {
   width: 100%;
-  height: 38px;
+  height: 42px;
+  min-height: 42px;
+  background-color: #d97706;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-/* ===== Grain-specific styling ===== */
-.grain-lovibond-container {
-  position: relative;
-  width: 100px;
-  flex-shrink: 0;
+.grain-add-button:hover:not(:disabled),
+.hop-add-button:hover:not(:disabled),
+.yeast-add-button:hover:not(:disabled),
+.adjunct-add-button:hover:not(:disabled) {
+  background-color: #b45309;
 }
 
-.grain-color-input {
-  width: 70px;
-  padding: 0.5rem 0.5rem;
-  padding-right: 30px;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+.grain-add-button:active,
+.hop-add-button:active,
+.yeast-add-button:active,
+.adjunct-add-button:active {
+  transform: translateY(1px);
 }
 
-.grain-color-unit {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 500;
-  pointer-events: none;
+.grain-add-button:disabled,
+.hop-add-button:disabled,
+.yeast-add-button:disabled,
+.adjunct-add-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-/* ===== Hop-specific styling ===== */
-.hop-alpha-container {
-  position: relative;
-  width: 130px;
-  flex-shrink: 0;
+/* ==========================================================================
+   ERROR STATES
+   ========================================================================== */
+
+.grain-amount-input.error,
+.hop-amount-input.error,
+.yeast-amount-input.error,
+.adjunct-amount-input.error,
+.grain-color-input.error,
+.hop-alpha-input.error,
+.hop-time-input.error,
+.adjunct-time-input.error {
+  border-color: #ef4444;
 }
 
-.hop-alpha-input {
-  width: 80px;
-  padding: 0.5rem 0.5rem;
-  padding-right: 50px;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+/* ==========================================================================
+   SELECTED INGREDIENT INFO & HELP TEXT - STANDARDIZED
+   ========================================================================== */
+
+.selected-ingredient-info {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
 }
 
-.hop-alpha-unit {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 500;
-  pointer-events: none;
-}
-
-.hop-time-container {
+.ingredient-info-header {
   display: flex;
-  gap: 10px;
-  width: 240px;
-  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.hop-time-input {
-  width: 60px;
-  padding: 0.5rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+.ingredient-name {
+  font-weight: 600;
+  color: #92400e;
 }
 
-.hop-time-unit-select,
-.hop-use-select {
+.grain-type-badge,
+.hop-origin-badge,
+.yeast-manufacturer-badge,
+.yeast-code-badge,
+.other-category-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background-color: #fbbf24;
+  color: white;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ingredient-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0.5rem 0 0 0;
+}
+
+.ingredient-help {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 0.375rem;
+}
+
+.help-text {
+  font-size: 0.875rem;
+  color: #0369a1;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Usage descriptions for hops and other ingredients */
+.hop-usage-description,
+.other-guidance,
+.yeast-guidance {
+  margin-top: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+  background-color: #f3f4f6;
+  border-radius: 0.375rem;
 }
 
-.hop-time-unit-select {
-  width: 85px;
+.hop-usage-description small,
+.guidance-text {
+  font-size: 0.75rem;
+  color: #4b5563;
+  line-height: 1.4;
+  margin: 0;
+  font-style: italic;
 }
 
-.hop-use-select {
-  flex-grow: 1;
-  min-width: 100px;
+/* Color preview for fermentables */
+.color-preview-swatch {
+  margin-left: 8px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 992px) {
+/* Yeast specs display */
+.yeast-specs {
+  font-size: 0.75rem;
+  color: #92400e;
+  margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS - UPDATED FOR NEW SIZING
+   ========================================================================== */
+
+@media (max-width: 1400px) {
   .grain-inputs,
   .hop-inputs,
   .yeast-inputs,
   .adjunct-inputs {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
-  
-  .grain-selector,
-  .hop-selector,
-  .yeast-selector,
-  .adjunct-selector,
+
   .grain-amount-container,
   .hop-amount-container,
   .yeast-amount-container,
   .adjunct-amount-container,
+  .grain-selector,
+  .hop-selector,
+  .yeast-selector,
+  .adjunct-selector,
   .grain-lovibond-container,
   .hop-alpha-container,
   .hop-time-container,
+  .adjunct-use-container,
+  .adjunct-time-container,
   .grain-button-container,
   .hop-button-container,
   .yeast-button-container,
   .adjunct-button-container {
     width: 100%;
-    margin: 5px 0;
+    min-width: unset;
   }
-  
+
+  .hop-time-container {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .hop-time-input,
+  .hop-time-unit-select,
+  .hop-use-select {
+    flex: 1;
+    min-width: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .grain-inputs,
+  .hop-inputs,
+  .yeast-inputs,
+  .adjunct-inputs {
+    gap: 0.5rem;
+  }
+
+  .hop-time-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hop-time-input,
+  .hop-time-unit-select,
+  .hop-use-select {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ========================================================================== */
+
+/* Focus visible for keyboard navigation */
+.grain-amount-input:focus-visible,
+.hop-amount-input:focus-visible,
+.yeast-amount-input:focus-visible,
+.adjunct-amount-input:focus-visible,
+.grain-unit-select:focus-visible,
+.hop-unit-select:focus-visible,
+.yeast-unit-select:focus-visible,
+.adjunct-unit-select:focus-visible,
+.grain-color-input:focus-visible,
+.hop-alpha-input:focus-visible,
+.hop-time-input:focus-visible,
+.hop-time-unit-select:focus-visible,
+.hop-use-select:focus-visible,
+.adjunct-use-select:focus-visible,
+.adjunct-time-input:focus-visible,
+.grain-add-button:focus-visible,
+.hop-add-button:focus-visible,
+.yeast-add-button:focus-visible,
+.adjunct-add-button:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .grain-amount-input,
+  .hop-amount-input,
+  .yeast-amount-input,
+  .adjunct-amount-input,
+  .grain-unit-select,
+  .hop-unit-select,
+  .yeast-unit-select,
+  .adjunct-unit-select,
   .grain-color-input,
-  .hop-alpha-input {
-    width: 100px;
+  .hop-alpha-input,
+  .hop-time-input,
+  .hop-time-unit-select,
+  .hop-use-select,
+  .adjunct-use-select,
+  .adjunct-time-input {
+    border-width: 2px;
   }
   
-  .hop-time-input {
-    width: 70px;
+  .grain-add-button,
+  .hop-add-button,
+  .yeast-add-button,
+  .adjunct-add-button {
+    border: 2px solid white;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .grain-amount-input,
+  .hop-amount-input,
+  .yeast-amount-input,
+  .adjunct-amount-input,
+  .grain-unit-select,
+  .hop-unit-select,
+  .yeast-unit-select,
+  .adjunct-unit-select,
+  .grain-color-input,
+  .hop-alpha-input,
+  .hop-time-input,
+  .hop-time-unit-select,
+  .hop-use-select,
+  .adjunct-use-select,
+  .adjunct-time-input,
+  .grain-add-button,
+  .hop-add-button,
+  .yeast-add-button,
+  .adjunct-add-button {
+    transition: none;
   }
 }
 
@@ -999,4 +1435,255 @@ color: #dc2626; /* red-600 */
 min-width: 100%;
 margin-bottom: 0.25rem;
 }
+}
+
+/* ==========================================================================
+   FERMENTABLE INPUT FIXES - HIGH SPECIFICITY TO OVERRIDE CONFLICTS
+   Add this to the END of your RecipeBuilder.css file
+   ========================================================================== */
+
+/* ==========================================================================
+   OVERRIDE GENERIC FORM STYLES FOR FERMENTABLE INPUTS
+   ========================================================================== */
+
+/* Force the correct grid layout for fermentables with higher specificity */
+.grain-form .grain-inputs {
+  grid-template-columns: 120px 1fr 110px 100px !important; /* Amount | Selector | Color | Button */
+  display: grid !important;
+  gap: 0.75rem !important;
+  align-items: start !important;
+  margin-bottom: 1rem !important;
+}
+
+/* ==========================================================================
+   AMOUNT CONTAINER - FORCE EXACT 120PX WIDTH
+   ========================================================================== */
+
+.grain-form .grain-amount-container {
+  display: flex !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  flex-shrink: 0 !important;
+}
+
+.grain-form .grain-amount-input {
+  flex: 2 !important;
+  padding: 0.625rem 0.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem 0 0 0.375rem !important;
+  border-right: none !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+  background-color: white !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+}
+
+.grain-form .grain-unit-select {
+  flex: 1 !important;
+  padding: 0.625rem 0.375rem !important;
+  background-color: #f9fafb !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+  cursor: pointer !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+}
+
+/* ==========================================================================
+   COLOR INPUT - FORCE EXACT 110PX WIDTH
+   ========================================================================== */
+
+.grain-form .grain-lovibond-container {
+  position: relative !important;
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+  flex-shrink: 0 !important;
+}
+
+.grain-form .grain-color-input {
+  width: 100% !important;
+  padding: 0.625rem 3rem 0.625rem 0.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+  background-color: white !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+}
+
+.grain-form .grain-color-unit {
+  position: absolute !important;
+  right: 2rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #6b7280 !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  pointer-events: none !important;
+}
+
+.grain-form .color-preview-swatch {
+  position: absolute !important;
+  right: 0.25rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  border: 2px solid white !important;
+  box-shadow: 0 0 0 1px #e5e7eb !important;
+  pointer-events: none !important;
+}
+
+/* ==========================================================================
+   SELECTOR - ENSURE PROPER FLEX SIZING
+   ========================================================================== */
+
+.grain-form .grain-selector {
+  min-width: 280px !important;
+  flex: 1 !important;
+}
+
+.grain-form .grain-selector .searchable-select {
+  width: 100% !important;
+}
+
+.grain-form .grain-selector .searchable-select-input {
+  height: 42px !important;
+  box-sizing: border-box !important;
+  padding: 0.625rem 2.5rem 0.625rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+/* ==========================================================================
+   ADD BUTTON - FORCE EXACT 100PX WIDTH
+   ========================================================================== */
+
+.grain-form .grain-button-container {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  flex-shrink: 0 !important;
+}
+
+.grain-form .grain-add-button {
+  width: 100% !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  background-color: #d97706 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s, transform 0.1s !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   OVERRIDE ANY CONFLICTING GENERIC STYLES
+   ========================================================================== */
+
+/* Override generic input-control styles that might interfere */
+.grain-form .grain-amount-input.input-control,
+.grain-form .grain-color-input.input-control {
+  width: auto !important;
+  flex: unset !important;
+}
+
+/* Override generic form-control styles that might interfere */
+.grain-form .grain-amount-input.form-control,
+.grain-form .grain-color-input.form-control {
+  width: auto !important;
+  padding: 0.625rem 0.5rem !important;
+  font-size: 0.875rem !important;
+}
+
+.grain-form .grain-color-input.form-control {
+  padding: 0.625rem 3rem 0.625rem 0.5rem !important;
+}
+
+/* Override any input-group styles that might interfere */
+.grain-form .grain-amount-container.input-group {
+  display: flex !important;
+  width: 120px !important;
+}
+
+.grain-form .grain-amount-container.input-group .grain-amount-input {
+  border-radius: 0.375rem 0 0 0.375rem !important;
+  border-right: none !important;
+}
+
+.grain-form .grain-amount-container.input-group .grain-unit-select {
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+}
+
+/* ==========================================================================
+   FOCUS STATES WITH HIGH SPECIFICITY
+   ========================================================================== */
+
+.grain-form .grain-amount-input:focus {
+  outline: none !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
+}
+
+.grain-form .grain-unit-select:focus {
+  outline: none !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
+}
+
+.grain-form .grain-color-input:focus {
+  outline: none !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1) !important;
+}
+
+.grain-form .grain-add-button:hover:not(:disabled) {
+  background-color: #b45309 !important;
+}
+
+.grain-form .grain-add-button:active {
+  transform: translateY(1px) !important;
+}
+
+.grain-form .grain-add-button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE OVERRIDES WITH HIGH SPECIFICITY
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .grain-form .grain-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .grain-form .grain-amount-container,
+  .grain-form .grain-selector,
+  .grain-form .grain-lovibond-container,
+  .grain-form .grain-button-container {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
 }

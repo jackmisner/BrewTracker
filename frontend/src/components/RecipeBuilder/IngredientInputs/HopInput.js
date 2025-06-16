@@ -272,7 +272,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               min="0"
               max={hopForm.unit === "oz" ? "10" : "300"}
               placeholder={getAmountPlaceholder()}
-              className={`hop-amount-input ${errors.amount ? "error" : ""}`}
+              className="hop-amount-input"
               disabled={disabled}
               required
             />
@@ -309,9 +309,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`hop-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
+              className="hop-select-control"
               fuseOptions={hopFuseOptions}
               maxResults={15}
               minQueryLength={1}
@@ -334,7 +332,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               min="0"
               max="25"
               placeholder="Alpha"
-              className={`hop-alpha-input ${errors.alpha_acid ? "error" : ""}`}
+              className="hop-alpha-input"
               disabled={disabled}
               required
             />
@@ -355,7 +353,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               step="1"
               min="0"
               placeholder={getTimePlaceholder()}
-              className={`hop-time-input ${errors.time ? "error" : ""}`}
+              className="hop-time-input"
               disabled={disabled}
             />
             <select
@@ -393,7 +391,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
             <button
               id="add-hop-btn"
               type="submit"
-              className="hop-add-button btn-primary"
+              className="hop-add-button"
               disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}

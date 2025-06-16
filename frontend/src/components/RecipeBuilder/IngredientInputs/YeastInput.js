@@ -227,7 +227,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               name="amount"
               value={yeastForm.amount}
               onChange={handleChange}
-              className={`yeast-amount-input ${errors.amount ? "error" : ""}`}
+              className="yeast-amount-input"
               placeholder={getAmountPlaceholder()}
               step="0.5"
               min="0.5"
@@ -267,9 +267,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`yeast-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
+              className="yeast-select-control"
               fuseOptions={yeastFuseOptions}
               maxResults={12}
               minQueryLength={2}
@@ -284,7 +282,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
           <div className="yeast-button-container">
             <button
               type="submit"
-              className="yeast-add-button btn-primary"
+              className="yeast-add-button"
               disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}

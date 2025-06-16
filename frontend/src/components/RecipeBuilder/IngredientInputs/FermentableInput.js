@@ -180,15 +180,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     return (
       <div
         className="color-preview-swatch"
-        style={{
-          backgroundColor,
-          width: "20px",
-          height: "20px",
-          borderRadius: "50%",
-          border: "2px solid white",
-          boxShadow: "0 0 0 1px #e5e7eb",
-          marginLeft: "8px",
-        }}
+        style={{ backgroundColor }}
         title={`~${colorValue}°L`}
       />
     );
@@ -214,10 +206,10 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     <div className="card">
       <h3 className="card-title">Fermentables</h3>
 
-      <form onSubmit={handleSubmit} className="fermentable-form">
-        <div className="fermentable-inputs">
-          {/* Amount Input */}
-          <div className="fermentable-amount-container">
+      <form onSubmit={handleSubmit} className="grain-form">
+        <div className="grain-inputs">
+          {/* Amount Input - 120px */}
+          <div className="grain-amount-container">
             <input
               type="number"
               id="fermentable-amount"
@@ -228,9 +220,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               min="0"
               max={unitSystem === "metric" ? "50000" : "1600"}
               placeholder={getAmountPlaceholder()}
-              className={`fermentable-amount-input ${
-                errors.amount ? "error" : ""
-              }`}
+              className="grain-amount-input"
               disabled={disabled}
               required
             />
@@ -239,7 +229,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               name="unit"
               value={fermentableForm.unit}
               onChange={handleChange}
-              className="fermentable-unit-select"
+              className="grain-unit-select"
               disabled={disabled}
             >
               {getAvailableUnits().map((unit) => (
@@ -254,8 +244,8 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
             </select>
           </div>
 
-          {/* Fermentable Selector with reset trigger */}
-          <div className="fermentable-selector">
+          {/* Fermentable Selector - 1fr */}
+          <div className="grain-selector">
             <SearchableSelect
               options={grains}
               onSelect={handleFermentableSelect}
@@ -264,9 +254,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`fermentable-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
+              className="grain-select-control"
               fuseOptions={fermentableFuseOptions}
               maxResults={100}
               minQueryLength={1}
@@ -274,35 +262,31 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
             />
           </div>
 
-          {/* Color Input with Preview */}
-          <div className="fermentable-color-container">
-            <div className="color-input-wrapper">
-              <input
-                type="number"
-                id="fermentable-color"
-                name="color"
-                value={fermentableForm.color}
-                onChange={handleChange}
-                step="0.5"
-                min="0"
-                max="600"
-                placeholder="Color"
-                className={`fermentable-color-input ${
-                  errors.color ? "error" : ""
-                }`}
-                disabled={disabled}
-              />
-              <span className="fermentable-color-unit">°L</span>
-              {getColorPreview()}
-            </div>
+          {/* Color Input - 110px */}
+          <div className="grain-lovibond-container">
+            <input
+              type="number"
+              id="fermentable-color"
+              name="color"
+              value={fermentableForm.color}
+              onChange={handleChange}
+              step="0.5"
+              min="0"
+              max="600"
+              placeholder="Color"
+              className={`grain-color-input ${errors.color ? "error" : ""}`}
+              disabled={disabled}
+            />
+            <span className="grain-color-unit">°L</span>
+            {fermentableForm.color && getColorPreview()}
           </div>
 
-          {/* Add Button */}
-          <div className="fermentable-button-container">
+          {/* Add Button - 100px */}
+          <div className="grain-button-container">
             <button
               id="add-fermentable-btn"
               type="submit"
-              className="fermentable-add-button btn-primary"
+              className="grain-add-button"
               disabled={disabled}
             >
               {disabled ? "Adding..." : "Add"}
@@ -313,15 +297,19 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
         {/* Display selected ingredient info */}
         {fermentableForm.selectedIngredient && (
           <div className="selected-ingredient-info">
-            <strong>{fermentableForm.selectedIngredient.name}</strong>
-            {fermentableForm.selectedIngredient.grain_type && (
-              <span className="grain-type-badge">
-                {fermentableForm.selectedIngredient.grain_type.replace(
-                  "_",
-                  " "
-                )}
-              </span>
-            )}
+            <div className="ingredient-info-header">
+              <strong className="ingredient-name">
+                {fermentableForm.selectedIngredient.name}
+              </strong>
+              {fermentableForm.selectedIngredient.grain_type && (
+                <span className="grain-type-badge">
+                  {fermentableForm.selectedIngredient.grain_type.replace(
+                    "_",
+                    " "
+                  )}
+                </span>
+              )}
+            </div>
             {fermentableForm.selectedIngredient.description && (
               <p className="ingredient-description">
                 {fermentableForm.selectedIngredient.description}
@@ -330,10 +318,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
           </div>
         )}
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
-        )}
+        {/* Error Messages */}
         <div className="validation-errors" role="alert">
           {errors.amount && (
             <div className="error-message">{errors.amount}</div>
@@ -342,6 +327,9 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
             <div className="error-message">{errors.ingredient_id}</div>
           )}
           {errors.color && <div className="error-message">{errors.color}</div>}
+          {errors.submit && (
+            <div className="error-message submit-error">{errors.submit}</div>
+          )}
         </div>
       </form>
 
