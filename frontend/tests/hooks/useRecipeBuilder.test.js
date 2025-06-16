@@ -1,4 +1,5 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
+import React from "react";
 import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
 import { Services } from "../../src/services";
 
@@ -34,6 +35,13 @@ jest.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Mock UnitContext
+jest.mock("../../src/contexts/UnitContext", () => ({
+  useUnits: () => ({
+    unitSystem: "imperial", // Default to imperial for tests
+  }),
+}));
+
 describe("useRecipeBuilder", () => {
   // Mock data
   const mockAvailableIngredients = {
@@ -48,6 +56,7 @@ describe("useRecipeBuilder", () => {
     name: "Test Recipe",
     style: "IPA",
     batch_size: 5,
+    batch_size_unit: "gal",
     description: "Test description",
     boil_time: 60,
     efficiency: 75,
@@ -114,6 +123,7 @@ describe("useRecipeBuilder", () => {
         name: "",
         style: "",
         batch_size: 5,
+        batch_size_unit: "gal",
         description: "",
         boil_time: 60,
         efficiency: 75,
