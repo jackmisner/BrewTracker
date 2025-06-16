@@ -723,9 +723,17 @@
 .ingredient-inputs--grain {
   grid-template-columns: var(--amount-container-width) 1fr 110px var(--button-width);
 }
+ .ingredient-inputs--grain .amount-input {
+  min-width: 50px;
+  max-width: 150px;
+}
+ .ingredient-inputs--grain .unit-select {
+  min-width: 50px;
+  max-width: 100px;
+}
 
 .ingredient-inputs--hop {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 240px var(--button-width);
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 225px var(--button-width);
 }
 
 .ingredient-inputs--yeast {
@@ -733,8 +741,21 @@
 }
 
 .ingredient-inputs--adjunct {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 160px 80px var(--button-width);
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 120px 120px var(--button-width);
  }
+
+ .ingredient-inputs--adjunct .ingredient-selector {
+  min-width: 200px;
+  max-width: 700px;
+}
+ .ingredient-inputs--adjunct .amount-input {
+  min-width: 50px;
+  max-width: 150px;
+}
+ .ingredient-inputs--adjunct .unit-select {
+  min-width: 50px;
+  max-width: 100px;
+}
 
 /* ==========================================================================
    AMOUNT INPUT CONTAINERS - UNIFIED
@@ -964,8 +985,8 @@
 
 /* Adjunct inputs */
 .adjunct-use-container {
-  width: 160px;
-  min-width: 160px;
+  width: 120px;
+  min-width: 120px;
 }
 
 .adjunct-use-select {
@@ -988,8 +1009,8 @@
 }
 
 .adjunct-time-container {
-  width: 80px;
-  min-width: 80px;
+  width: 120px;
+  min-width: 120px;
 }
 
 .adjunct-time-input {
