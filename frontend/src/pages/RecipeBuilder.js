@@ -145,9 +145,10 @@ function RecipeBuilder() {
         </div>
       )}
 
-      <div className="grid">
-        {/* Recipe Details Form */}
-        <div className="grid-col-2-3">
+      {/* New layout structure for sticky metrics */}
+      <div className="recipe-builder-layout">
+        <div className="recipe-builder-main">
+          {/* Recipe Details Form */}
           <RecipeDetails
             recipe={recipe}
             onChange={updateRecipe}
@@ -158,76 +159,41 @@ function RecipeBuilder() {
             canSave={canSave}
             hasUnsavedChanges={hasUnsavedChanges}
           />
-        </div>
 
-        {/* Recipe Metrics */}
-        <div className="grid-col-1-3">
-          <RecipeMetrics
-            metrics={metrics}
-            onScale={scaleRecipe}
-            calculating={calculatingMetrics}
-            recipe={recipe}
-          />
-        </div>
-      </div>
-
-      {/* Ingredients Section */}
-      <div className="ingredients-section">
-        <div className="ingredients-header">
-          <h2 className="section-title">Ingredients</h2>
-        </div>
-
-        {/* Ingredients List */}
-        <IngredientsList
-          ingredients={ingredients}
-          onRemove={removeIngredient}
-          isEditing={true}
-        />
-
-        {/* Ingredient Input Forms */}
-        <IngredientInputsContainer
-          ingredients={availableIngredients}
-          addIngredient={addIngredient}
-          disabled={addingIngredient || saving}
-        />
-      </div>
-
-      {/* Floating Action Bar (for better UX) */}
-      {hasUnsavedChanges && (
-        <div className="floating-action-bar">
-          <div className="action-bar-content">
-            <div className="changes-info">
-              <span className="changes-icon">●</span>
-              <span className="changes-text">You have unsaved changes</span>
+          {/* Ingredients Section */}
+          <div className="ingredients-section">
+            <div className="ingredients-header">
+              <h2 className="section-title">Ingredients</h2>
             </div>
 
-            <div className="action-buttons">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="btn btn-secondary"
-                disabled={saving}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveRecipe}
-                disabled={!canSave}
-                className="btn btn-primary"
-              >
-                {saving ? (
-                  <>
-                    <span className="button-spinner"></span>
-                    Saving...
-                  </>
-                ) : (
-                  `${isEditing ? "Update" : "Save"} Recipe`
-                )}
-              </button>
-            </div>
+            {/* Ingredients List */}
+            <IngredientsList
+              ingredients={ingredients}
+              onRemove={removeIngredient}
+              isEditing={true}
+            />
+
+            {/* Ingredient Input Forms */}
+            <IngredientInputsContainer
+              ingredients={availableIngredients}
+              addIngredient={addIngredient}
+              disabled={addingIngredient || saving}
+            />
           </div>
         </div>
-      )}
+
+        {/* Metrics sidebar - sticky throughout */}
+        <div className="recipe-builder-sidebar">
+          <div className="sticky-metrics-wrapper">
+            <RecipeMetrics
+              metrics={metrics}
+              onScale={scaleRecipe}
+              calculating={calculatingMetrics}
+              recipe={recipe}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

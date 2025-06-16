@@ -122,7 +122,11 @@ function RecipeMetrics({
   };
 
   return (
-    <div className={containerClass}>
+    <div
+      className={`${containerClass} ${
+        calculating ? "metrics-updating" : "metrics-updated"
+      }`}
+    >
       {!cardView && (
         <div className="metrics-header">
           <h2 className="card-title">Recipe Metrics</h2>
@@ -335,5 +339,4 @@ function RecipeMetrics({
     </div>
   );
 }
-
 export default RecipeMetrics;
