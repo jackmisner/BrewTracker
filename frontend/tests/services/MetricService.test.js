@@ -194,6 +194,7 @@ describe("MetricService", () => {
 
       expect(result).toEqual({
         batch_size: 5,
+        batch_size_unit: "gal",
         efficiency: 75,
         boil_time: 60,
         ingredients: [],
@@ -203,6 +204,7 @@ describe("MetricService", () => {
     test("uses provided values when available", () => {
       const recipeData = {
         batch_size: "10.5",
+        batch_size_unit: "l",
         efficiency: "80",
         boil_time: "90",
       };
@@ -214,6 +216,7 @@ describe("MetricService", () => {
       );
 
       expect(result.batch_size).toBe(10.5);
+      expect(result.batch_size_unit).toBe("l");
       expect(result.efficiency).toBe(80);
       expect(result.boil_time).toBe(90);
     });

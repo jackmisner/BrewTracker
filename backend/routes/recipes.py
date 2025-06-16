@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
+from mongoengine.queryset.visitor import Q
 from models.mongo_models import Recipe, User
 from services.mongodb_service import MongoDBService
 from utils.recipe_api_calculator import calculate_all_metrics_preview
@@ -42,6 +43,58 @@ def get_recipes():
     )
 
 
+@recipes_bp.route("/defaults", methods=["GET"])
+@jwt_required()
+def get_recipe_defaults():
+    """Get default values for new recipes based on user preferences"""
+    user_id = get_jwt_identity()
+
+    try:
+        user = User.objects(id=user_id).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        unit_system = user.get_preferred_units()
+        default_batch_size = user.get_default_batch_size()
+
+        # Provide unit-appropriate defaults
+        defaults = {
+            "batch_size": default_batch_size,
+            "efficiency": 75.0,
+            "boil_time": 60,
+            "unit_system": unit_system,
+            "suggested_units": {
+                "grain": "kg" if unit_system == "metric" else "lb",
+                "hop": "g" if unit_system == "metric" else "oz",
+                "yeast": "pkg",
+                "other": "g" if unit_system == "metric" else "oz",
+                "volume": "l" if unit_system == "metric" else "gal",
+                "temperature": "c" if unit_system == "metric" else "f",
+            },
+            "typical_batch_sizes": (
+                [
+                    {"value": 10, "label": "10 L", "description": "Small batch"},
+                    {"value": 19, "label": "19 L", "description": "Standard batch"},
+                    {"value": 23, "label": "23 L", "description": "Large batch"},
+                    {"value": 38, "label": "38 L", "description": "Very large batch"},
+                ]
+                if unit_system == "metric"
+                else [
+                    {"value": 2.5, "label": "2.5 gal", "description": "Small batch"},
+                    {"value": 5, "label": "5 gal", "description": "Standard batch"},
+                    {"value": 6, "label": "6 gal", "description": "Large batch"},
+                    {"value": 10, "label": "10 gal", "description": "Very large batch"},
+                ]
+            ),
+        }
+
+        return jsonify(defaults), 200
+
+    except Exception as e:
+        print(f"Error getting recipe defaults: {e}")
+        return jsonify({"error": "Failed to get recipe defaults"}), 500
+
+
 @recipes_bp.route("/<recipe_id>", methods=["GET"])
 @jwt_required()
 def get_recipe(recipe_id):
@@ -58,27 +111,41 @@ def get_recipe(recipe_id):
     if str(recipe.user_id) != user_id and not recipe.is_public:
         return jsonify({"error": "Access denied"}), 403
 
+    # Ensure unit_system is included in the response
+    if "unit_system" not in recipe_data:
+        recipe_data["unit_system"] = getattr(recipe, "unit_system", "imperial")
+
     return jsonify(recipe_data), 200
 
 
 @recipes_bp.route("", methods=["POST"])
 @jwt_required()
 def create_recipe():
+    """Create a new recipe"""
     user_id = get_jwt_identity()
     data = request.get_json()
-
-    # Add user_id to the recipe data
     data["user_id"] = ObjectId(user_id)
+    try:
+        # Get user's current unit system preference
+        user = User.objects(id=user_id).first()
+        unit_system = user.get_preferred_units() if user else "imperial"
+        data["unit_system"] = unit_system
+        # Create recipe with unit system
+        recipe = MongoDBService.create_recipe(data, user_id)
 
-    # Create recipe with unit awareness
-    recipe = MongoDBService.create_recipe(data, user_id)
+        return (
+            jsonify(
+                {
+                    "message": "Recipe created successfully",
+                    "recipe": recipe.to_dict(),
+                    "recipe_id": str(recipe.id),
+                }
+            ),
+            201,
+        )
 
-    if recipe:
-        # Return recipe converted to user's preferred units
-        recipe_data = MongoDBService.get_recipe_for_user(str(recipe.id), user_id)
-        return jsonify(recipe_data), 201
-    else:
-        return jsonify({"error": "Failed to create recipe"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Failed to create recipe: {str(e)}"}), 400
 
 
 @recipes_bp.route("/<recipe_id>", methods=["PUT"])
@@ -224,6 +291,7 @@ def get_recipe_versions(recipe_id):
                 "recipe_id": str(parent.id),
                 "name": parent.name,
                 "version": parent.version,
+                "unit_system": getattr(parent, "unit_system", "imperial"),
             }
 
     # Get child versions
@@ -231,7 +299,12 @@ def get_recipe_versions(recipe_id):
     children = Recipe.objects(parent_recipe_id=recipe_id)
     for child in children:
         child_versions.append(
-            {"recipe_id": str(child.id), "name": child.name, "version": child.version}
+            {
+                "recipe_id": str(child.id),
+                "name": child.name,
+                "version": child.version,
+                "unit_system": getattr(child, "unit_system", "imperial"),
+            }
         )
 
     return (
@@ -240,6 +313,66 @@ def get_recipe_versions(recipe_id):
                 "current_version": recipe.version,
                 "parent_recipe": parent_recipe,
                 "child_versions": child_versions,
+            }
+        ),
+        200,
+    )
+
+
+@recipes_bp.route("/public", methods=["GET"])
+def get_public_recipes():
+    """Get all public recipes from all users"""
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    style_filter = request.args.get("style", None)
+    search_query = request.args.get("search", None)
+
+    # Build query
+    query = {"is_public": True}
+
+    if style_filter:
+        query["style__icontains"] = style_filter
+
+    if search_query:
+        # Search in name and description
+        query["$or"] = [
+            {"name__icontains": search_query},
+            {"description__icontains": search_query},
+        ]
+
+    # Calculate pagination
+    skip = (page - 1) * per_page
+
+    # Get public recipes
+    recipes = Recipe.objects(**query).order_by("-created_at").skip(skip).limit(per_page)
+    total = Recipe.objects(**query).count()
+
+    # Include username for each recipe
+    recipes_with_users = []
+    for recipe in recipes:
+        recipe_dict = recipe.to_dict()
+        # Get the username
+        user = User.objects(id=recipe.user_id).first()
+        recipe_dict["username"] = user.username if user else "Unknown"
+        recipes_with_users.append(recipe_dict)
+
+    # Calculate pagination metadata
+    total_pages = (total + per_page - 1) // per_page
+
+    return (
+        jsonify(
+            {
+                "recipes": recipes_with_users,
+                "pagination": {
+                    "page": page,
+                    "pages": total_pages,
+                    "per_page": per_page,
+                    "total": total,
+                    "has_next": page < total_pages,
+                    "has_prev": page > 1,
+                    "next_num": page + 1 if page < total_pages else None,
+                    "prev_num": page - 1 if page > 1 else None,
+                },
             }
         ),
         200,

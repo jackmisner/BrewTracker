@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import RecipeBuilder from "./pages/RecipeBuilder";
 import ViewRecipe from "./pages/ViewRecipe";
 import AllRecipes from "./pages/AllRecipes";
+import PublicRecipes from "./pages/PublicRecipes";
 import BrewSessionList from "./components/BrewSessions/BrewSessionList";
 import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
@@ -142,6 +143,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RecipeBuilder />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Routes for public recipes */}
+            <Route
+              path="/recipes/public"
+              element={
+                <ProtectedRoute>
+                  <PublicRecipes />
                 </ProtectedRoute>
               }
             />

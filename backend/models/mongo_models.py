@@ -44,6 +44,13 @@ class UserSettings(EmbeddedDocument):
     email_notifications = BooleanField(default=True)
     brew_reminders = BooleanField(default=True)
 
+    def get_default_batch_size_for_units(self):
+        """Get appropriate default batch size for user's unit system"""
+        if self.preferred_units == "metric":
+            return 19.0  # 19L for metric users
+        else:
+            return 5.0  # 5 gallons for imperial users
+
     def to_dict(self):
         return {
             "contribute_anonymous_data": self.contribute_anonymous_data,
@@ -234,6 +241,10 @@ class Recipe(Document):
     name = StringField(required=True, max_length=100)
     style = StringField(max_length=50)
     batch_size = FloatField(required=True)  # in gallons/liters
+    batch_size_unit = StringField(default="gal", choices=["gal", "l"])  # NEW FIELD
+    unit_system = StringField(
+        choices=["imperial", "metric"], default="imperial"
+    )  # NEW FIELD for unit system
     description = StringField()
     is_public = BooleanField(default=False)
     created_at = DateTimeField(default=lambda: datetime.now(UTC))
@@ -267,6 +278,8 @@ class Recipe(Document):
             "name": self.name,
             "style": self.style,
             "batch_size": self.batch_size,
+            "batch_size_unit": self.batch_size_unit,
+            "unit_system": self.unit_system,
             "description": self.description,
             "is_public": self.is_public,
             "created_at": (

@@ -79,6 +79,7 @@ class MetricService {
   prepareCalculationData(recipeData, ingredients) {
     const calculationData = {
       batch_size: parseFloat(recipeData.batch_size) || 5,
+      batch_size_unit: recipeData.batch_size_unit || "gal", // Include batch size unit
       efficiency: parseFloat(recipeData.efficiency) || 75,
       boil_time: parseInt(recipeData.boil_time) || 60,
       ingredients: this.formatIngredientsForCalculation(ingredients),

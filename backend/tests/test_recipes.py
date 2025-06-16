@@ -65,6 +65,7 @@ class TestRecipeEndpoints:
         recipe_data = {
             "name": "American IPA",
             "style": "American IPA",
+            "unit_system": "imperial",
             "batch_size": 5.0,
             "description": "A hoppy American IPA",
             "boil_time": 60,
@@ -102,12 +103,11 @@ class TestRecipeEndpoints:
         }
 
         response = client.post("/api/recipes", json=recipe_data, headers=headers)
-
         assert response.status_code == 201
-        assert response.json["name"] == "American IPA"
-        assert response.json["style"] == "American IPA"
-        assert response.json["batch_size"] == 5.0
-        assert len(response.json["ingredients"]) == 3
+        assert response.json["recipe"]["name"] == "American IPA"
+        assert response.json["recipe"]["style"] == "American IPA"
+        assert response.json["recipe"]["batch_size"] == 5.0
+        assert len(response.json["recipe"]["ingredients"]) == 3
 
         # Verify recipe was saved to database
         recipe = Recipe.objects(name="American IPA").first()

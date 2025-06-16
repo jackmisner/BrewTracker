@@ -17,6 +17,8 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
     ibu: 0,
     srm: 0,
   });
+  const [metricsLoading, setMetricsLoading] = useState(false);
+  const [metricsError, setMetricsError] = useState(null);
   const [brewingSummary, setBrewingSummary] = useState(null);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionError, setSessionError] = useState(null);
@@ -91,17 +93,77 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
+        setMetricsLoading(true);
+        setMetricsError(null);
+
+        // Validate recipe ID
+        if (!recipe.recipe_id) {
+          throw new Error("Invalid recipe ID");
+        }
+
         const response = await ApiService.recipes.calculateMetrics(
           recipe.recipe_id
         );
-        setMetrics(response.data);
+
+        // Validate response structure
+        if (!response || !response.data) {
+          throw new Error("Invalid metrics response");
+        }
+
+        // Use the metrics from the response, with fallbacks
+        const newMetrics = {
+          og:
+            response.data.og ||
+            response.data.avg_og ||
+            recipe.estimated_og ||
+            1.0,
+          fg:
+            response.data.fg ||
+            response.data.avg_fg ||
+            recipe.estimated_fg ||
+            1.0,
+          abv:
+            response.data.abv ||
+            response.data.avg_abv ||
+            recipe.estimated_abv ||
+            0.0,
+          ibu: response.data.ibu || recipe.estimated_ibu || 0,
+          srm: response.data.srm || recipe.estimated_srm || 0,
+        };
+
+        setMetrics(newMetrics);
       } catch (error) {
         console.error("Error fetching metrics:", error);
+        setMetricsError(error.message);
+
+        // Fall back to recipe's estimated metrics if available
+        if (
+          recipe.estimated_og ||
+          recipe.estimated_fg ||
+          recipe.estimated_abv
+        ) {
+          setMetrics({
+            og: recipe.estimated_og || 1.0,
+            fg: recipe.estimated_fg || 1.0,
+            abv: recipe.estimated_abv || 0.0,
+            ibu: recipe.estimated_ibu || 0,
+            srm: recipe.estimated_srm || 0,
+          });
+        }
+      } finally {
+        setMetricsLoading(false);
       }
     };
 
     fetchMetrics();
-  }, [recipe.recipe_id]);
+  }, [
+    recipe.recipe_id,
+    recipe.estimated_og,
+    recipe.estimated_fg,
+    recipe.estimated_abv,
+    recipe.estimated_ibu,
+    recipe.estimated_srm,
+  ]);
 
   useEffect(() => {
     refreshBrewingData();
@@ -142,7 +204,21 @@ const RecipeCard = ({ recipe, onDelete, refreshTrigger }) => {
         </p>
       </div>
 
-      <RecipeMetrics metrics={metrics} cardView={true} />
+      {/* Enhanced Metrics Display with Error Handling */}
+      <div className="recipe-card-metrics">
+        {metricsLoading ? (
+          <div className="metrics-loading">
+            <span className="loading-text">Loading metrics...</span>
+          </div>
+        ) : metricsError ? (
+          <div className="metrics-error">
+            <span className="error-text">Metrics unavailable</span>
+            <small className="error-detail">{metricsError}</small>
+          </div>
+        ) : (
+          <RecipeMetrics metrics={metrics} cardView={true} />
+        )}
+      </div>
 
       {/* Enhanced Brew Sessions Info */}
       <div className="recipe-card-brewing">

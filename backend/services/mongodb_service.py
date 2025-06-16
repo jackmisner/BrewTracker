@@ -63,19 +63,14 @@ class MongoDBService:
 
     @staticmethod
     def get_recipe_for_user(recipe_id, user_id):
-        """Get recipe converted to user's preferred units"""
+        """Get recipe in its original units (no conversion)"""
         try:
             recipe = Recipe.objects(id=recipe_id).first()
             if not recipe:
                 return None
 
-            user = User.objects(id=user_id).first()
-            if not user:
-                return recipe.to_dict()
-
-            # Convert recipe to user's preferred units
-            recipe_dict = recipe.to_dict()
-            return user.convert_recipe_to_preferred_units(recipe_dict)
+            # Return recipe in its original units without conversion
+            return recipe.to_dict()
 
         except Exception as e:
             print(f"Database error: {e}")
@@ -83,29 +78,63 @@ class MongoDBService:
 
     @staticmethod
     def get_user_recipes_with_units(user_id, page=1, per_page=10):
-        """Get user recipes with unit conversion"""
+        """Get user recipes with unit system information"""
         try:
-            user = User.objects(id=user_id).first()
-            if not user:
-                return MongoDBService.get_user_recipes(user_id, page, per_page)
+            # Calculate skip value based on page and per_page
+            skip = (page - 1) * per_page
 
-            # Get recipes normally
-            result = MongoDBService.get_user_recipes(user_id, page, per_page)
+            # Get recipes with pagination
+            recipes = (
+                Recipe.objects(user_id=user_id)
+                .order_by("-created_at")
+                .skip(skip)
+                .limit(per_page)
+            )
 
-            # Convert each recipe to user's preferred units
-            converted_recipes = []
-            for recipe in result["items"]:
+            # Count total documents for pagination metadata
+            total = Recipe.objects(user_id=user_id).count()
+
+            # Calculate pagination metadata
+            total_pages = (total + per_page - 1) // per_page  # Ceiling division
+            has_next = page < total_pages
+            has_prev = page > 1
+
+            # Convert to dicts with unit_system
+            recipes_data = []
+            for recipe in recipes:
                 recipe_dict = recipe.to_dict()
-                converted_dict = user.convert_recipe_to_preferred_units(recipe_dict)
-                # Just append the converted dictionary, don't create a type object
-                converted_recipes.append(converted_dict)
+                # Ensure unit_system is included
+                if "unit_system" not in recipe_dict:
+                    recipe_dict["unit_system"] = getattr(
+                        recipe, "unit_system", "imperial"
+                    )
+                recipes_data.append(recipe_dict)
 
-            result["items"] = converted_recipes
-            return result
+            return {
+                "items": recipes_data,
+                "page": page,
+                "pages": total_pages,
+                "per_page": per_page,
+                "total": total,
+                "has_next": has_next,
+                "has_prev": has_prev,
+                "next_num": page + 1 if has_next else None,
+                "prev_num": page - 1 if has_prev else None,
+            }
 
         except Exception as e:
-            print(f"Database error: {e}")
-            return MongoDBService.get_user_recipes(user_id, page, per_page)
+            print(f"Error getting user recipes: {e}")
+            return {
+                "items": [],
+                "page": 1,
+                "pages": 0,
+                "per_page": per_page,
+                "total": 0,
+                "has_next": False,
+                "has_prev": False,
+                "next_num": None,
+                "prev_num": None,
+            }
 
     @staticmethod
     def get_user_recipes(user_id, page=1, per_page=10):
@@ -293,6 +322,27 @@ class MongoDBService:
             return []
 
     @staticmethod
+    def get_default_batch_size_for_user(user_id):
+        """Get appropriate default batch size based on user's unit preference"""
+        try:
+            user = User.objects(id=user_id).first()
+            if not user:
+                return 5.0  # Default to imperial
+
+            unit_system = user.get_preferred_units()
+
+            # Return batch size in gallons (storage unit)
+            # Frontend will convert for display
+            if unit_system == "metric":
+                return 5.0  # Will be displayed as ~19L by frontend
+            else:
+                return 5.0  # Will be displayed as 5 gal by frontend
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return 5.0
+
+    @staticmethod
     def create_recipe(recipe_data, user_id=None):
         """Create a new recipe with unit conversion support"""
         try:
@@ -304,16 +354,12 @@ class MongoDBService:
             # Extract ingredients data if provided
             ingredients_data = recipe_data.pop("ingredients", [])
 
-            # Convert recipe data to storage format (keep user's preferred units)
-            if user and user.get_preferred_units() == "metric":
-                # Store metric batch sizes in liters
-                if "batch_size" in recipe_data and "batch_size_unit" not in recipe_data:
-                    # Assume gallons if no unit specified
-                    from utils.unit_conversions import UnitConverter
-
-                    recipe_data["batch_size"] = UnitConverter.convert_volume(
-                        recipe_data["batch_size"], "gal", "l"
-                    )
+            # Store the batch_size_unit if provided, otherwise infer from user preference
+            if "batch_size_unit" not in recipe_data:
+                if user and user.get_preferred_units() == "metric":
+                    recipe_data["batch_size_unit"] = "l"
+                else:
+                    recipe_data["batch_size_unit"] = "gal"
 
             # Create recipe object
             recipe = Recipe(**recipe_data)
@@ -348,10 +394,10 @@ class MongoDBService:
             # Extract ingredients if included
             ingredients_data = recipe_data.pop("ingredients", None)
 
-            # Log data for debugging
-            # print(f"Updating recipe {recipe_id}")
-            # print(f"Recipe data: {recipe_data}")
-            # print(f"Ingredients data: {ingredients_data}")
+            # Remove unit_system from update data if present
+            # We don't want to change the unit system after creation
+            if "unit_system" in recipe_data:
+                recipe_data.pop("unit_system")
 
             # Update recipe fields
             for key, value in recipe_data.items():
@@ -405,6 +451,7 @@ class MongoDBService:
 
         except Exception as e:
             print(f"Database error updating recipe: {e}")
+            return None, str(e)
 
     @staticmethod
     def clone_recipe(recipe_id, user_id):
@@ -421,6 +468,10 @@ class MongoDBService:
                 and not original_recipe.is_public
             ):
                 return None, "Access denied"
+
+            # Get the cloner's unit system preference
+            user = User.objects(id=user_id).first()
+            unit_system = user.get_preferred_units() if user else "imperial"
 
             # Find the root recipe (the one without a parent)
             root_recipe = original_recipe
@@ -454,10 +505,13 @@ class MongoDBService:
             new_recipe.style = original_recipe.style
             new_recipe.batch_size = original_recipe.batch_size
             new_recipe.description = original_recipe.description
-            new_recipe.is_public = original_recipe.is_public
+            new_recipe.is_public = False  # Cloned recipes start as private
             new_recipe.boil_time = original_recipe.boil_time
             new_recipe.efficiency = original_recipe.efficiency
             new_recipe.notes = original_recipe.notes
+
+            # Set unit system to cloner's preference
+            new_recipe.unit_system = unit_system
 
             # Set version info with new calculated version
             new_recipe.parent_recipe_id = root_recipe.id  # Always link to root recipe

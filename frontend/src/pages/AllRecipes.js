@@ -44,6 +44,7 @@ const AllRecipes = () => {
           {error}
         </div>
       )}
+
       {!loading && !error && recipes.length === 0 && (
         <div className="text-center py-10">No recipes found.</div>
       )}
