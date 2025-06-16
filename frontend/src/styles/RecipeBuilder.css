@@ -1261,33 +1261,74 @@
 }
 
 /* ==========================================================================
-   10. SRM Colors
+   10. SRM Colors - Accurate Beer Color Progression
    ========================================================================== */
-.srm-1 { background-color: #ffe699; }
-.srm-2 { background-color: #ffd878; }
-.srm-3 { background-color: #ffca5a; }
-.srm-4 { background-color: #ffbf42; }
-.srm-5 { background-color: #fbb123; }
-.srm-6 { background-color: #f8a600; }
-.srm-7 { background-color: #f39c00; }
-.srm-8 { background-color: #ea8f00; }
-.srm-9 { background-color: #e58500; }
-.srm-10 { background-color: #de7c00; }
-.srm-11 { background-color: #d77200; }
-.srm-12 { background-color: #cf6900; }
-.srm-13 { background-color: #cb6200; }
-.srm-14 { background-color: #c35900; }
-.srm-15 { background-color: #bb5100; }
-.srm-16 { background-color: #b54c00; }
-.srm-17 { background-color: #b04500; }
-.srm-18 { background-color: #a63e00; }
-.srm-19 { background-color: #a13700; }
-.srm-20 { background-color: #9b3200; }
-.srm-21 { background-color: #952d00; }
-.srm-22, .srm-23, .srm-24, .srm-25,
-.srm-26, .srm-27, .srm-28, .srm-29, .srm-30 { background-color: #8f2a00; }
-.srm-31, .srm-32, .srm-33, .srm-34, .srm-35, 
-.srm-36, .srm-37, .srm-38, .srm-39, .srm-40 { background-color: #7c2200; }
+
+/* Very Light - Pale Straw */
+.srm-1 { background-color: #f8f6e8; }
+.srm-2 { background-color: #f5f2d4; }
+
+/* Light - Straw to Pale Gold */
+.srm-3 { background-color: #f2edc0; }
+.srm-4 { background-color: #ede8ac; }
+
+/* Gold */
+.srm-5 { background-color: #e8e298; }
+.srm-6 { background-color: #e3dd84; }
+
+/* Deep Gold to Light Amber */
+.srm-7 { background-color: #ded870; }
+.srm-8 { background-color: #d9d35c; }
+
+/* Amber */
+.srm-9 { background-color: #d4ce48; }
+.srm-10 { background-color: #cfc934; }
+
+/* Deep Amber to Light Copper */
+.srm-11 { background-color: #c4b82e; }
+.srm-12 { background-color: #b8a728; }
+
+/* Copper */
+.srm-13 { background-color: #ac9622; }
+.srm-14 { background-color: #a0851c; }
+
+/* Deep Copper to Light Brown */
+.srm-15 { background-color: #947416; }
+.srm-16 { background-color: #886310; }
+
+/* Light to Medium Brown */
+.srm-17 { background-color: #7c520a; }
+.srm-18 { background-color: #704108; }
+.srm-19 { background-color: #643006; }
+.srm-20 { background-color: #581f04; }
+
+/* Dark Brown */
+.srm-21 { background-color: #4c1e04; }
+.srm-22 { background-color: #451b03; }
+.srm-23 { background-color: #3e1803; }
+.srm-24 { background-color: #371503; }
+.srm-25 { background-color: #301202; }
+
+/* Very Dark Brown */
+.srm-26 { background-color: #290f02; }
+.srm-27 { background-color: #220c02; }
+.srm-28 { background-color: #1b0901; }
+.srm-29 { background-color: #140601; }
+.srm-30 { background-color: #0d0301; }
+
+/* Nearly Black */
+.srm-31 { background-color: #0b0201; }
+.srm-32 { background-color: #090201; }
+.srm-33 { background-color: #070101; }
+.srm-34 { background-color: #050101; }
+.srm-35 { background-color: #030000; }
+
+/* Black */
+.srm-36 { background-color: #020000; }
+.srm-37 { background-color: #010000; }
+.srm-38 { background-color: #000000; }
+.srm-39 { background-color: #000000; }
+.srm-40 { background-color: #000000; }
 
 /* ==========================================================================
    11. Utilities & Animations
