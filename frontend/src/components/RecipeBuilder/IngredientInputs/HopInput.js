@@ -258,10 +258,10 @@ function HopInput({ hops, onAdd, disabled = false }) {
     <div className="card mt-6">
       <h3 className="card-title">Hops</h3>
 
-      <form onSubmit={handleSubmit} className="hop-form">
-        <div className="hop-inputs">
+      <form onSubmit={handleSubmit} className="ingredient-form">
+        <div className="ingredient-inputs ingredient-inputs--hop">
           {/* Amount Input */}
-          <div className="hop-amount-container">
+          <div className="amount-container">
             <input
               type="number"
               id="hop-amount"
@@ -272,7 +272,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               min="0"
               max={hopForm.unit === "oz" ? "10" : "300"}
               placeholder={getAmountPlaceholder()}
-              className={`hop-amount-input ${errors.amount ? "error" : ""}`}
+              className={`amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
             />
@@ -281,7 +281,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               name="unit"
               value={hopForm.unit}
               onChange={handleChange}
-              className="hop-unit-select"
+              className="unit-select"
               disabled={disabled}
             >
               {getAvailableUnits().map((unit) => (
@@ -294,13 +294,10 @@ function HopInput({ hops, onAdd, disabled = false }) {
                 </option>
               ))}
             </select>
-            {errors.amount && (
-              <div className="error-message">{errors.amount}</div>
-            )}
           </div>
 
           {/* Hop Selector */}
-          <div className="hop-selector">
+          <div className="ingredient-selector">
             <SearchableSelect
               options={hops}
               onSelect={handleHopSelect}
@@ -309,21 +306,15 @@ function HopInput({ hops, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`hop-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
               fuseOptions={hopFuseOptions}
               maxResults={15}
               minQueryLength={1}
               resetTrigger={resetTrigger}
             />
-            {errors.ingredient_id && (
-              <div className="error-message">{errors.ingredient_id}</div>
-            )}
           </div>
 
           {/* Alpha Acid Input */}
-          <div className="hop-alpha-container">
+          <div className="alpha-input-container">
             <input
               type="number"
               id="hop-alpha-acid"
@@ -334,14 +325,11 @@ function HopInput({ hops, onAdd, disabled = false }) {
               min="0"
               max="25"
               placeholder="Alpha"
-              className={`hop-alpha-input ${errors.alpha_acid ? "error" : ""}`}
+              className={`alpha-input ${errors.alpha_acid ? "error" : ""}`}
               disabled={disabled}
               required
             />
-            <span className="hop-alpha-unit">%AA</span>
-            {errors.alpha_acid && (
-              <div className="error-message">{errors.alpha_acid}</div>
-            )}
+            <span className="alpha-unit">%AA</span>
           </div>
 
           {/* Time and Usage Controls */}
@@ -355,7 +343,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               step="1"
               min="0"
               placeholder={getTimePlaceholder()}
-              className={`hop-time-input ${errors.time ? "error" : ""}`}
+              className={`time-input ${errors.time ? "error" : ""}`}
               disabled={disabled}
             />
             <select
@@ -363,7 +351,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
               name="time_unit"
               value={hopForm.time_unit}
               onChange={handleChange}
-              className="hop-time-unit-select"
+              className="time-unit-select"
               disabled={disabled}
             >
               <option value="minutes">min</option>
@@ -374,49 +362,46 @@ function HopInput({ hops, onAdd, disabled = false }) {
               name="use"
               value={hopForm.use}
               onChange={handleChange}
-              className="hop-use-select"
+              className="use-select"
               disabled={disabled}
             >
               <option value="boil">Boil</option>
               <option value="whirlpool">Whirlpool</option>
               <option value="dry-hop">Dry Hop</option>
             </select>
-            {errors.time && (
-              <div data-testid="time-error-message" className="error-message">
-                {errors.time}
-              </div>
-            )}
           </div>
 
           {/* Add Button */}
-          <div className="hop-button-container">
-            <button
-              id="add-hop-btn"
-              type="submit"
-              className="hop-add-button btn-primary"
-              disabled={disabled}
-            >
-              {disabled ? "Adding..." : "Add"}
-            </button>
-          </div>
+          <button
+            id="add-hop-btn"
+            type="submit"
+            className="ingredient-add-button"
+            disabled={disabled}
+          >
+            {disabled ? "Adding..." : "Add"}
+          </button>
         </div>
 
         {/* Usage Description */}
         {hopForm.use && (
-          <div className="hop-usage-description">
-            <small>{getUsageDescription()}</small>
+          <div className="usage-description">
+            <small className="guidance-text">{getUsageDescription()}</small>
           </div>
         )}
 
         {/* Display selected ingredient info */}
         {hopForm.selectedIngredient && (
           <div className="selected-ingredient-info">
-            <strong>{hopForm.selectedIngredient.name}</strong>
-            {hopForm.selectedIngredient.origin && (
-              <span className="hop-origin-badge">
-                {hopForm.selectedIngredient.origin}
-              </span>
-            )}
+            <div className="ingredient-info-header">
+              <strong className="ingredient-name">
+                {hopForm.selectedIngredient.name}
+              </strong>
+              {hopForm.selectedIngredient.origin && (
+                <span className="ingredient-badge">
+                  {hopForm.selectedIngredient.origin}
+                </span>
+              )}
+            </div>
             {hopForm.selectedIngredient.description && (
               <p className="ingredient-description">
                 {hopForm.selectedIngredient.description}
@@ -425,10 +410,26 @@ function HopInput({ hops, onAdd, disabled = false }) {
           </div>
         )}
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
-        )}
+        {/* Error Messages */}
+        <div className="validation-errors" role="alert">
+          {errors.amount && (
+            <div className="error-message">{errors.amount}</div>
+          )}
+          {errors.ingredient_id && (
+            <div className="error-message">{errors.ingredient_id}</div>
+          )}
+          {errors.alpha_acid && (
+            <div className="error-message">{errors.alpha_acid}</div>
+          )}
+          {errors.time && (
+            <div data-testid="time-error-message" className="error-message">
+              {errors.time}
+            </div>
+          )}
+          {errors.submit && (
+            <div className="error-message submit-error">{errors.submit}</div>
+          )}
+        </div>
       </form>
 
       {/* Help text with unit-specific guidance */}

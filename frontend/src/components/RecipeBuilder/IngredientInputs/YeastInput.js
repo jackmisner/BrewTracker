@@ -218,16 +218,16 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     <div className="card">
       <h3 className="card-title">Yeast</h3>
 
-      <form onSubmit={handleSubmit} className="yeast-form">
-        <div className="yeast-inputs">
+      <form onSubmit={handleSubmit} className="ingredient-form">
+        <div className="ingredient-inputs ingredient-inputs--yeast">
           {/* Amount Input */}
-          <div className="yeast-amount-container">
+          <div className="amount-container">
             <input
               type="number"
               name="amount"
               value={yeastForm.amount}
               onChange={handleChange}
-              className={`yeast-amount-input ${errors.amount ? "error" : ""}`}
+              className={`amount-input ${errors.amount ? "error" : ""}`}
               placeholder={getAmountPlaceholder()}
               step="0.5"
               min="0.5"
@@ -239,7 +239,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               name="unit"
               value={yeastForm.unit}
               onChange={handleChange}
-              className="yeast-unit-select"
+              className="unit-select"
               disabled={disabled}
             >
               {getAvailableUnits().map((unit) => (
@@ -252,13 +252,10 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
                 </option>
               ))}
             </select>
-            {errors.amount && (
-              <div className="error-message">{errors.amount}</div>
-            )}
           </div>
 
           {/* Yeast Selector */}
-          <div className="yeast-selector">
+          <div className="ingredient-selector">
             <SearchableSelect
               options={yeasts}
               onSelect={handleYeastSelect}
@@ -267,48 +264,42 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               displayKey="name"
               valueKey="ingredient_id"
               disabled={disabled}
-              className={`yeast-select-control ${
-                errors.ingredient_id ? "error" : ""
-              }`}
               fuseOptions={yeastFuseOptions}
               maxResults={12}
               minQueryLength={2}
               resetTrigger={resetTrigger}
             />
-            {errors.ingredient_id && (
-              <div className="error-message">{errors.ingredient_id}</div>
-            )}
           </div>
 
           {/* Add Button */}
-          <div className="yeast-button-container">
-            <button
-              type="submit"
-              className="yeast-add-button btn-primary"
-              disabled={disabled}
-            >
-              {disabled ? "Adding..." : "Add"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="ingredient-add-button"
+            disabled={disabled}
+          >
+            {disabled ? "Adding..." : "Add"}
+          </button>
         </div>
 
         {/* Amount Guidance */}
-        <div className="yeast-guidance">
+        <div className="usage-description">
           <small className="guidance-text">{getAmountGuidance()}</small>
         </div>
 
         {/* Display selected yeast info */}
         {yeastForm.selectedIngredient && (
           <div className="selected-ingredient-info">
-            <div className="yeast-header">
-              <strong>{yeastForm.selectedIngredient.name}</strong>
+            <div className="ingredient-info-header">
+              <strong className="ingredient-name">
+                {yeastForm.selectedIngredient.name}
+              </strong>
               {yeastForm.selectedIngredient.manufacturer && (
-                <span className="yeast-manufacturer-badge">
+                <span className="ingredient-badge">
                   {yeastForm.selectedIngredient.manufacturer}
                 </span>
               )}
               {yeastForm.selectedIngredient.code && (
-                <span className="yeast-code-badge">
+                <span className="ingredient-badge">
                   {yeastForm.selectedIngredient.code}
                 </span>
               )}
@@ -328,10 +319,18 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
           </div>
         )}
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
-        )}
+        {/* Error Messages */}
+        <div className="validation-errors" role="alert">
+          {errors.amount && (
+            <div className="error-message">{errors.amount}</div>
+          )}
+          {errors.ingredient_id && (
+            <div className="error-message">{errors.ingredient_id}</div>
+          )}
+          {errors.submit && (
+            <div className="error-message submit-error">{errors.submit}</div>
+          )}
+        </div>
       </form>
 
       {/* Help text with unit-specific guidance */}
