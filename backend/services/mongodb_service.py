@@ -504,6 +504,7 @@ class MongoDBService:
             # Copy fields from the recipe being cloned
             new_recipe.style = original_recipe.style
             new_recipe.batch_size = original_recipe.batch_size
+            new_recipe.batch_size_unit = original_recipe.batch_size_unit
             new_recipe.description = original_recipe.description
             new_recipe.is_public = False  # Cloned recipes start as private
             new_recipe.boil_time = original_recipe.boil_time

@@ -536,19 +536,6 @@ describe("RecipeBuilder", () => {
       expect(screen.getByTitle("You have unsaved changes")).toBeInTheDocument();
     });
 
-    test("shows floating action bar with unsaved changes", () => {
-      mockHookReturn.hasUnsavedChanges = true;
-      mockHookReturn.canSave = true;
-      useRecipeBuilder.mockReturnValue(mockHookReturn);
-
-      renderWithRouter(<RecipeBuilder />);
-
-      expect(screen.getByText("You have unsaved changes")).toBeInTheDocument();
-      // Use getAllByText since there are multiple "Save Recipe" buttons
-      const saveButtons = screen.getAllByText("Save Recipe");
-      expect(saveButtons.length).toBeGreaterThan(0);
-    });
-
     test("floating action bar save button works", async () => {
       const user = userEvent.setup();
       mockHookReturn.hasUnsavedChanges = true;

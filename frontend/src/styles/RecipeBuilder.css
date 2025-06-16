@@ -14,6 +14,7 @@
    10. SRM Colors
    11. Utilities & Animations
    12. Recipe Version History
+   13. Sticky Sidebar Layout (NEW)
    ========================================================================== */
 
 /* ==========================================================================
@@ -71,7 +72,7 @@
    2. Base & Layout
    ========================================================================== */
 .container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -90,24 +91,6 @@
   color: #333;
 }
 
-/* Grid layout */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-xl);
-}
-
-.grid-col-2-3, .grid-col-1-3 {
-  grid-column: span 1;
-}
-
-@media (min-width: 992px) {
-  .grid {
-    grid-template-columns: 2fr 1fr;
-  }
-  .grid-col-2-3 { grid-column: 1; }
-  .grid-col-1-3 { grid-column: 2; }
-}
 
 /* ==========================================================================
    3. Cards & Containers
@@ -742,7 +725,7 @@
 }
 
 .ingredient-inputs--hop {
-  grid-template-columns: var(--amount-container-width) 1fr 100px 260px var(--button-width);
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 240px var(--button-width);
 }
 
 .ingredient-inputs--yeast {
@@ -807,7 +790,7 @@
    INGREDIENT SELECTORS - UNIFIED
    ========================================================================== */
 .ingredient-selector {
-  min-width: 280px;
+  min-width: 150px;
   flex: 1;
 }
 
@@ -1428,3 +1411,50 @@
   text-align: center;
   color: var(--color-red-500);
 }
+
+/* ==========================================================================
+   13. Sticky Sidebar Layout 
+   ========================================================================== */
+.recipe-builder-layout {
+  display: flex;
+  gap: 2rem;
+  min-height: 100vh;
+  position: relative;
+}
+
+.recipe-builder-main {
+  flex: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recipe-builder-sidebar {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+
+}
+
+.sticky-metrics-wrapper {
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
+  z-index: 10;
+}
+
+/* .recipe-builder-layout {
+  border: 2px solid red;
+}
+
+.recipe-builder-sidebar {
+  border: 2px solid blue;
+}
+
+.sticky-metrics-wrapper {
+  border: 2px solid green;
+}
+
+.metrics-container {
+  border: 2px solid purple;
+} */
