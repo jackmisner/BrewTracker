@@ -354,7 +354,7 @@ describe("OtherInput", () => {
     // Check specific element by role/selector
     expect(
       screen.getByText("Yeast Nutrient", {
-        selector: ".other-category-badge",
+        selector: ".ingredient-badge",
       })
     ).toBeInTheDocument();
   });
