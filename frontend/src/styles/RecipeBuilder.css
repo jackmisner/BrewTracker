@@ -1464,18 +1464,543 @@
   z-index: 10;
 }
 
-/* .recipe-builder-layout {
-  border: 2px solid red;
+/* ==========================================================================
+   Inline Editing Styles for IngredientsList
+   ========================================================================== */
+
+/* Editable cells */
+.editable-cell {
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-normal);
+  display: inline-block;
+  min-width: 40px;
+  min-height: 1.5rem;
 }
 
-.recipe-builder-sidebar {
-  border: 2px solid blue;
+.editable-cell:hover {
+  background-color: var(--color-amber-100);
+  outline: 1px dashed var(--color-amber-400);
 }
 
-.sticky-metrics-wrapper {
-  border: 2px solid green;
+.editable-cell:focus {
+  background-color: var(--color-amber-50);
+  outline: 2px solid var(--color-amber-600);
 }
 
-.metrics-container {
-  border: 2px solid purple;
-} */
+/* Edit cell container */
+.edit-cell-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  min-width: 80px;
+}
+
+/* Edit input styles */
+.edit-cell-input {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--color-amber-600);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+  transition: border-color var(--transition-normal);
+  min-width: 60px;
+}
+
+.edit-cell-input:focus {
+  outline: none;
+  border-color: var(--color-amber-700);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+}
+
+.edit-cell-input[type="number"] {
+  text-align: right;
+}
+
+.edit-cell-input[type="select"] {
+  cursor: pointer;
+}
+
+/* Edit error messages */
+.edit-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background-color: var(--color-red-600);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: 0.125rem;
+}
+
+.edit-error::before {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  left: 0.5rem;
+  width: 0;
+  height: 0;
+  border-left: 0.25rem solid transparent;
+  border-right: 0.25rem solid transparent;
+  border-bottom: 0.25rem solid var(--color-red-600);
+}
+
+/* Detail items in editable mode */
+.ingredient-details-container .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.125rem;
+}
+
+.ingredient-details-container .detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.ingredient-details-container .detail-label {
+  font-size: 0.75rem;
+  color: var(--color-gray-600);
+  min-width: 2rem;
+  flex-shrink: 0;
+}
+
+.ingredient-details-container .detail-value {
+  font-size: 0.75rem;
+  color: var(--color-gray-800);
+}
+
+/* Special styling for editable detail values */
+.ingredient-details-container .editable-cell {
+  font-size: 0.75rem;
+  min-width: 2rem;
+  padding: 0.125rem 0.25rem;
+}
+
+.ingredient-details-container .edit-cell-input {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  min-width: 40px;
+}
+
+/* Help text for editing instructions */
+.editing-help {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-blue-50);
+  border: 1px solid var(--color-blue-200);
+  border-radius: var(--border-radius);
+}
+
+.editing-help .help-text {
+  font-size: 0.875rem;
+  color: var(--color-blue-700);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Row highlighting when editing */
+.ingredient-row:has(.edit-cell-container) {
+  background-color: var(--color-amber-50);
+  outline: 1px solid var(--color-amber-300);
+}
+
+/* Responsive adjustments for editing */
+@media (max-width: 768px) {
+  .edit-cell-input {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    min-width: 50px;
+  }
+  
+  .edit-error {
+    font-size: 0.7rem;
+    position: relative;
+    top: auto;
+    left: auto;
+    margin-top: 0.25rem;
+    margin-left: 0;
+    display: block;
+  }
+  
+  .edit-error::before {
+    display: none;
+  }
+  
+  .ingredient-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .ingredient-details-container .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .editable-cell,
+  .edit-cell-input {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .editable-cell:hover {
+    outline: 2px solid var(--color-amber-600);
+    background-color: var(--color-amber-200);
+  }
+  
+  .edit-cell-input {
+    border-width: 3px;
+  }
+  
+  .edit-error {
+    border: 2px solid white;
+  }
+}
+
+/* Focus indicators for keyboard navigation */
+.editable-cell:focus-visible {
+  outline: 2px solid var(--color-amber-600);
+  outline-offset: 2px;
+}
+
+.edit-cell-input:focus-visible {
+  outline: 2px solid var(--color-amber-700);
+  outline-offset: 1px;
+}
+
+/* Loading/saving states (for future enhancement) */
+.edit-cell-container.saving .edit-cell-input {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.edit-cell-container.saving::after {
+  content: '';
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-amber-300);
+  border-top: 2px solid var(--color-amber-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* Better visual separation for editing mode */
+.ingredients-table.editing-mode {
+  border: 2px solid var(--color-amber-300);
+  border-radius: var(--border-radius);
+}
+
+.ingredients-table.editing-mode th {
+  background-color: var(--color-amber-100);
+}
+
+/* Improved table cell spacing for editing */
+.ingredients-table td.ingredient-amount,
+.ingredients-table td.ingredient-use,
+.ingredients-table td.ingredient-time {
+  padding: 0.5rem 0.75rem;
+}
+
+.ingredients-table td.ingredient-details {
+  padding: 0.5rem 0.75rem;
+  min-width: 120px;
+}
+
+/* Select styling for use dropdown */
+.edit-cell-input[type="select"],
+.edit-cell-input select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+}
+
+/* Better visual feedback for valid/invalid states */
+.edit-cell-input.valid {
+  border-color: var(--color-green-500);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.edit-cell-input.invalid {
+  border-color: var(--color-red-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* ==========================================================================
+   Additional Status Indicators for Recipe Builder
+   ========================================================================== */
+
+/* Recipe builder header and status indicators */
+.recipe-builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.status-indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.status-indicator.calculating {
+  background-color: var(--color-blue-50);
+  border: 1px solid var(--color-blue-200);
+  color: var(--color-blue-800);
+}
+
+.status-indicator.adding {
+  background-color: var(--color-amber-50);
+  border: 1px solid var(--color-amber-200);
+  color: var(--color-amber-800);
+}
+
+.status-indicator.updating {
+  background-color: #f0f9ff; /* Light sky blue */
+  border: 1px solid #bae6fd; /* Sky blue border */
+  color: #0369a1; /* Sky blue text */
+}
+
+.status-indicator.saving {
+  background-color: #dcfce7; /* Light green */
+  border: 1px solid #bbf7d0; /* Green border */
+  color: #166534; /* Dark green text */
+}
+
+/* Spinner animation for status indicators */
+.status-indicator .spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error banner styling */
+.error-banner {
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
+  color: var(--color-red-700);
+  font-weight: 500;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-red-500);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.error-dismiss:hover {
+  background-color: var(--color-red-100);
+}
+
+/* Unsaved changes indicator */
+.unsaved-indicator {
+  color: var(--color-amber-600);
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Enhanced ingredients section */
+.ingredients-section {
+  margin-top: 2rem;
+}
+
+.ingredients-header {
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments for header */
+@media (max-width: 768px) {
+  .recipe-builder-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .status-indicators {
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .status-indicator {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+/* Loading states for different operations */
+.ingredients-table.updating {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.ingredients-table.updating::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  border-radius: var(--border-radius);
+}
+
+.ingredients-table.updating::after {
+  content: 'Updating...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  background-color: white;
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: var(--color-amber-700);
+}
+
+/* Smooth transitions for ingredient updates */
+.ingredient-row {
+  transition: background-color var(--transition-normal);
+}
+
+.ingredient-row.updating {
+  background-color: #f0f9ff;
+  animation: ingredientUpdate 1s ease;
+}
+
+@keyframes ingredientUpdate {
+  0% { 
+    background-color: #dbeafe;
+    transform: scale(1.01);
+  }
+  50% { 
+    background-color: #bfdbfe;
+  }
+  100% { 
+    background-color: #f0f9ff;
+    transform: scale(1);
+  }
+}
+
+/* Success feedback for successful updates */
+.ingredient-row.updated {
+  animation: ingredientUpdated 0.5s ease;
+}
+
+@keyframes ingredientUpdated {
+  0% { 
+    background-color: #dcfce7;
+    transform: scale(1.01);
+  }
+  100% { 
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Error state for ingredient rows */
+.ingredient-row.error {
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Better visual hierarchy */
+.ingredients-section .section-title {
+  border-bottom: 2px solid var(--color-amber-200);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}

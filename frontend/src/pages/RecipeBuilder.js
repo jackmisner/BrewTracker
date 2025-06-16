@@ -28,10 +28,12 @@ function RecipeBuilder() {
     hasUnsavedChanges,
     calculatingMetrics,
     addingIngredient,
+    updatingIngredient, // NEW STATE
 
     // Actions
     updateRecipe,
     addIngredient,
+    updateIngredient, // NEW ACTION
     removeIngredient,
     scaleRecipe,
     saveRecipe,
@@ -119,6 +121,13 @@ function RecipeBuilder() {
             </div>
           )}
 
+          {updatingIngredient && (
+            <div className="status-indicator updating">
+              <span className="spinner"></span>
+              Updating ingredient...
+            </div>
+          )}
+
           {saving && (
             <div className="status-indicator saving">
               <span className="spinner"></span>
@@ -166,10 +175,11 @@ function RecipeBuilder() {
               <h2 className="section-title">Ingredients</h2>
             </div>
 
-            {/* Ingredients List */}
+            {/* Ingredients List - NOW WITH UPDATE SUPPORT */}
             <IngredientsList
               ingredients={ingredients}
               onRemove={removeIngredient}
+              onUpdate={updateIngredient} // NEW PROP
               isEditing={true}
             />
 
@@ -177,7 +187,7 @@ function RecipeBuilder() {
             <IngredientInputsContainer
               ingredients={availableIngredients}
               addIngredient={addIngredient}
-              disabled={addingIngredient || saving}
+              disabled={addingIngredient || updatingIngredient || saving} // Include updatingIngredient
             />
           </div>
         </div>

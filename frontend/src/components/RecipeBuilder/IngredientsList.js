@@ -1,15 +1,32 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Services } from "../../services";
 
-function IngredientsList({ ingredients, onRemove, isEditing }) {
+function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   const { unitSystem, formatValue, convertForDisplay } = useUnits();
+
+  // State for tracking which cell is being edited
+  const [editingCell, setEditingCell] = useState({
+    ingredientId: null,
+    field: null,
+  });
+  const [editValue, setEditValue] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const inputRef = useRef(null);
 
   // Sort ingredients using the centralized service method
   const sortedIngredients = useMemo(() => {
     if (!ingredients || ingredients.length === 0) return [];
     return Services.ingredient.sortIngredients(ingredients);
   }, [ingredients]);
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editingCell.ingredientId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingCell.ingredientId]);
 
   if (!ingredients || ingredients.length === 0) {
     return (
@@ -19,6 +36,270 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       </div>
     );
   }
+
+  // Start editing a cell
+  const startEdit = (ingredientId, field, currentValue) => {
+    if (!isEditing) return; // Only allow editing when in edit mode
+
+    setEditingCell({ ingredientId, field });
+    setEditValue(currentValue);
+    setValidationError("");
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingCell({ ingredientId: null, field: null });
+    setEditValue("");
+    setValidationError("");
+  };
+
+  // Save the edited value
+  const saveEdit = async () => {
+    const { ingredientId, field } = editingCell;
+    const ingredient = ingredients.find((ing) => ing.id === ingredientId);
+
+    if (!ingredient) {
+      cancelEdit();
+      return;
+    }
+
+    // Validate the new value
+    const validation = validateField(field, editValue, ingredient);
+    if (!validation.isValid) {
+      setValidationError(validation.error);
+      return;
+    }
+
+    // Prepare updated ingredient
+    const updatedIngredient = {
+      ...ingredient,
+      [field]: validation.value,
+    };
+
+    try {
+      await onUpdate(ingredientId, updatedIngredient);
+      cancelEdit();
+    } catch (error) {
+      setValidationError("Failed to update ingredient");
+    }
+  };
+
+  // Validate field value based on type
+  const validateField = (field, value, ingredient) => {
+    const trimmedValue = typeof value === "string" ? value.trim() : value;
+
+    switch (field) {
+      case "amount":
+        const amount = parseFloat(trimmedValue);
+        if (isNaN(amount) || amount <= 0) {
+          return { isValid: false, error: "Amount must be greater than 0" };
+        }
+
+        // Unit-specific validation
+        if (
+          ingredient.unit === "oz" &&
+          amount > 10 &&
+          ingredient.type === "hop"
+        ) {
+          return {
+            isValid: false,
+            error: "More than 10 oz seems high for hops",
+          };
+        }
+        if (
+          ingredient.unit === "g" &&
+          amount > 300 &&
+          ingredient.type === "hop"
+        ) {
+          return {
+            isValid: false,
+            error: "More than 300g seems high for hops",
+          };
+        }
+        if (
+          ingredient.unit === "kg" &&
+          amount > 50 &&
+          ingredient.type === "grain"
+        ) {
+          return {
+            isValid: false,
+            error: "More than 50kg seems unusually high",
+          };
+        }
+
+        return { isValid: true, value: amount };
+
+      case "time":
+        if (!trimmedValue) {
+          return { isValid: true, value: 0 };
+        }
+        const time = parseInt(trimmedValue);
+        if (isNaN(time) || time < 0) {
+          return { isValid: false, error: "Time must be 0 or greater" };
+        }
+        if (
+          time > 120 &&
+          ingredient.type === "hop" &&
+          ingredient.use === "boil"
+        ) {
+          return {
+            isValid: false,
+            error: "Boil time over 120 minutes is unusual",
+          };
+        }
+        return { isValid: true, value: time };
+
+      case "alpha_acid":
+        if (!trimmedValue) {
+          return { isValid: false, error: "Alpha acid is required for hops" };
+        }
+        const alpha = parseFloat(trimmedValue);
+        if (isNaN(alpha) || alpha <= 0) {
+          return { isValid: false, error: "Alpha acid must be greater than 0" };
+        }
+        if (alpha > 25) {
+          return {
+            isValid: false,
+            error: "Alpha acid over 25% seems unusually high",
+          };
+        }
+        return { isValid: true, value: alpha };
+
+      case "color":
+        if (!trimmedValue) {
+          return { isValid: true, value: null };
+        }
+        const color = parseFloat(trimmedValue);
+        if (isNaN(color) || color < 0) {
+          return { isValid: false, error: "Color must be 0 or greater" };
+        }
+        if (color > 600) {
+          return {
+            isValid: false,
+            error: "Color over 600°L seems unusually high",
+          };
+        }
+        return { isValid: true, value: color };
+
+      case "use":
+        const validUses = {
+          hop: ["boil", "whirlpool", "dry-hop"],
+          other: [
+            "boil",
+            "whirlpool",
+            "fermentation",
+            "secondary",
+            "packaging",
+            "mash",
+          ],
+        };
+        const allowedUses = validUses[ingredient.type] || validUses.other;
+
+        if (!allowedUses.includes(trimmedValue)) {
+          return {
+            isValid: false,
+            error: `Use must be one of: ${allowedUses.join(", ")}`,
+          };
+        }
+        return { isValid: true, value: trimmedValue };
+
+      default:
+        return { isValid: true, value: trimmedValue };
+    }
+  };
+
+  // Handle key press in edit input
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      saveEdit();
+    } else if (e.key === "Escape") {
+      cancelEdit();
+    }
+  };
+
+  // Render editable cell
+  const renderEditableCell = (
+    ingredient,
+    field,
+    currentValue,
+    displayValue
+  ) => {
+    const isEditing =
+      editingCell.ingredientId === ingredient.id && editingCell.field === field;
+
+    if (!isEditing) {
+      return (
+        <span
+          className="editable-cell"
+          onClick={() => startEdit(ingredient.id, field, currentValue)}
+          title="Click to edit"
+        >
+          {displayValue}
+        </span>
+      );
+    }
+
+    // Render appropriate input based on field type
+    if (field === "use") {
+      const options =
+        ingredient.type === "hop"
+          ? ["boil", "whirlpool", "dry-hop"]
+          : [
+              "boil",
+              "whirlpool",
+              "fermentation",
+              "secondary",
+              "packaging",
+              "mash",
+            ];
+
+      return (
+        <div className="edit-cell-container">
+          <select
+            ref={inputRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={saveEdit}
+            onKeyDown={handleKeyPress}
+            className="edit-cell-input"
+          >
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option.charAt(0).toUpperCase() +
+                  option.slice(1).replace("-", " ")}
+              </option>
+            ))}
+          </select>
+          {validationError && (
+            <div className="edit-error">{validationError}</div>
+          )}
+        </div>
+      );
+    }
+
+    const inputType = ["amount", "time", "alpha_acid", "color"].includes(field)
+      ? "number"
+      : "text";
+    const step =
+      field === "amount" ? "0.1" : field === "alpha_acid" ? "0.1" : "1";
+
+    return (
+      <div className="edit-cell-container">
+        <input
+          ref={inputRef}
+          type={inputType}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={saveEdit}
+          onKeyDown={handleKeyPress}
+          step={step}
+          min="0"
+          className="edit-cell-input"
+        />
+        {validationError && <div className="edit-error">{validationError}</div>}
+      </div>
+    );
+  };
 
   const mapGrainType = (type) => {
     if (!type) return "Unknown";
@@ -55,8 +336,6 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
       measurementType = "other";
     }
 
-    // For most ingredients, just format as-is since they're already in user's preferred units
-    // But we can still use formatValue for consistent decimal places
     return formatValue(amount, unit, measurementType);
   };
 
@@ -72,7 +351,7 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
     // Singular/plural handling
     let displayUnit = timeUnit;
     if (time === 1) {
-      displayUnit = timeUnit === "minutes" ? "min" : timeUnit.slice(0, -1); // Remove 's'
+      displayUnit = timeUnit === "minutes" ? "min" : timeUnit.slice(0, -1);
     } else {
       displayUnit = timeUnit === "minutes" ? "min" : timeUnit;
     }
@@ -109,7 +388,6 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
   const getRowClass = (ingredient) => {
     let baseClass = "ingredient-row";
 
-    // Add type-specific classes for styling
     if (ingredient.type === "grain") {
       baseClass += " grain-row";
       if (ingredient.grain_type === "base_malt") {
@@ -183,30 +461,67 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
                 </td>
 
                 <td className="ingredient-amount">
-                  <strong>{formatIngredientAmount(ingredient)}</strong>
+                  {isEditing ? (
+                    renderEditableCell(
+                      ingredient,
+                      "amount",
+                      ingredient.amount,
+                      <strong>{formatIngredientAmount(ingredient)}</strong>
+                    )
+                  ) : (
+                    <strong>{formatIngredientAmount(ingredient)}</strong>
+                  )}
                 </td>
 
-                <td className="ingredient-use">{formatUsage(ingredient)}</td>
+                <td className="ingredient-use">
+                  {isEditing
+                    ? renderEditableCell(
+                        ingredient,
+                        "use",
+                        ingredient.use,
+                        formatUsage(ingredient)
+                      )
+                    : formatUsage(ingredient)}
+                </td>
 
-                <td className="ingredient-time">{formatTime(ingredient)}</td>
+                <td className="ingredient-time">
+                  {isEditing
+                    ? renderEditableCell(
+                        ingredient,
+                        "time",
+                        ingredient.time || "",
+                        formatTime(ingredient)
+                      )
+                    : formatTime(ingredient)}
+                </td>
 
                 {isEditing && (
                   <td className="ingredient-details">
                     <div className="ingredient-details-container">
-                      {ingredient.type === "hop" && ingredient.alpha_acid && (
+                      {ingredient.type === "hop" && (
                         <div className="detail-item">
                           <span className="detail-label">AA:</span>
-                          <span className="detail-value">
-                            {ingredient.alpha_acid}%
-                          </span>
+                          {renderEditableCell(
+                            ingredient,
+                            "alpha_acid",
+                            ingredient.alpha_acid || "",
+                            <span className="detail-value">
+                              {ingredient.alpha_acid || "-"}%
+                            </span>
+                          )}
                         </div>
                       )}
-                      {ingredient.type === "grain" && ingredient.color && (
+                      {ingredient.type === "grain" && (
                         <div className="detail-item">
                           <span className="detail-label">Color:</span>
-                          <span className="detail-value">
-                            {ingredient.color}°L
-                          </span>
+                          {renderEditableCell(
+                            ingredient,
+                            "color",
+                            ingredient.color || "",
+                            <span className="detail-value">
+                              {ingredient.color || "-"}°L
+                            </span>
+                          )}
                         </div>
                       )}
                       {ingredient.type === "yeast" &&
@@ -239,6 +554,15 @@ function IngredientsList({ ingredients, onRemove, isEditing }) {
           </tbody>
         </table>
       </div>
+
+      {isEditing && (
+        <div className="editing-help">
+          <small className="help-text">
+            💡 Click on amounts, usage, time, or detail values to edit them
+            directly. Press Enter to save, Escape to cancel.
+          </small>
+        </div>
+      )}
     </div>
   );
 }
