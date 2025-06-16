@@ -1,801 +1,801 @@
 [{
   "_id": {
-    "$oid": "68263551a6be603e11b3151c"
+    "$oid": "68507ac201ff131f7111eb4f"
   },
   "name": "Acidulated Malt",
   "type": "grain",
-  "description": "",
+  "description": "Naturally soured malt that lowers mash pH without adding harsh acidity. Provides subtle tartness and helps achieve proper mash chemistry. Used in German brewing traditions and sour beer styles.",
   "potential": 27,
   "color": 3.5,
   "grain_type": "specialty_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3151d"
+    "$oid": "68507ac201ff131f7111eb50"
   },
   "name": "Aromatic Malt",
   "type": "grain",
-  "description": "",
+  "description": "Intensely aromatic malt with deep malty character. Provides rich bread crust, biscuit, and honey flavors. Essential for Belgian ales, bocks, and Oktoberfest styles. Use sparingly due to intense flavor.",
   "potential": 33,
   "color": 38,
   "grain_type": "specialty_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3151e"
+    "$oid": "68507ac201ff131f7111eb51"
   },
   "name": "Beechwood Smoked Malt",
   "type": "grain",
-  "description": "",
+  "description": "Gentle, clean smoke character from beechwood. Provides subtle smoky notes without overwhelming other flavors. Traditional for German Rauchbier and adds complexity to porters and stouts.",
   "potential": 35,
   "color": 2.5,
   "grain_type": "smoked"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3151f"
+    "$oid": "68507ac201ff131f7111eb52"
   },
   "name": "Blackprinz Malt",
   "type": "grain",
-  "description": "",
+  "description": "Intensely dark roasted malt with smooth, less harsh character than black patent malt. Provides deep color and roasted flavor without excessive bitterness. Excellent for stouts and porters.",
   "potential": 25,
   "color": 500,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31520"
+    "$oid": "68507ac201ff131f7111eb53"
   },
   "name": "Bohemian Pilsner",
   "type": "grain",
-  "description": "",
+  "description": "Traditional floor-malted pilsner malt with rich, honeyed character. Provides the foundation for Czech pilsners with fuller body and more complex flavor than modern pilsner malts.",
   "potential": 38,
   "color": 2,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31521"
+    "$oid": "68507ac201ff131f7111eb54"
   },
   "name": "Caramel Malt - 10L",
   "type": "grain",
-  "description": "",
+  "description": "Light crystal malt providing subtle sweetness and pale golden color. Adds honey-like flavors and enhances mouthfeel. Perfect for blonde ales, wheat beers, and light lagers.",
   "potential": 35.4,
   "color": 10,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31522"
+    "$oid": "68507ac201ff131f7111eb55"
   },
   "name": "Caramel Malt - 120L",
   "type": "grain",
-  "description": "",
+  "description": "Dark crystal malt with intense caramel and toffee flavors. Provides deep amber color and rich sweetness. Essential for brown ales, porters, and holiday beers.",
   "potential": 34.5,
   "color": 120,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31523"
+    "$oid": "68507ac201ff131f7111eb56"
   },
   "name": "Caramel Malt - 20L",
   "type": "grain",
-  "description": "",
+  "description": "Light crystal malt contributing mild caramel sweetness and light golden color. Enhances body and adds gentle malty character to pale ales and amber beers.",
   "potential": 35,
   "color": 20,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31524"
+    "$oid": "68507ac201ff131f7111eb57"
   },
   "name": "Caramel Malt - 40L",
   "type": "grain",
-  "description": "",
+  "description": "Medium-light crystal malt providing moderate caramel flavors and light amber color. Adds complexity to IPAs, amber ales, and enhances mouthfeel in lighter beers.",
   "potential": 35.4,
   "color": 40,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31525"
+    "$oid": "68507ac201ff131f7111eb58"
   },
   "name": "Caramel Malt - 60L",
   "type": "grain",
-  "description": "",
+  "description": "Classic medium crystal malt with balanced caramel sweetness and medium amber color. The most versatile crystal malt, suitable for most amber and red beer styles.",
   "potential": 35.4,
   "color": 60,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31526"
+    "$oid": "68507ac201ff131f7111eb59"
   },
   "name": "Caramel Malt - 80L",
   "type": "grain",
-  "description": "",
+  "description": "Medium-dark crystal malt with pronounced caramel and slight toffee flavors. Provides reddish-amber color and enhances malt backbone in red ales and brown ales.",
   "potential": 35,
   "color": 80,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31527"
+    "$oid": "68507ac201ff131f7111eb5a"
   },
   "name": "Caramel Rye",
   "type": "grain",
-  "description": "",
+  "description": "Crystal malt made from rye, providing unique spicy-sweet character. Combines rye's distinctive spiciness with caramel sweetness. Excellent for rye beers and adding complexity to ales.",
   "potential": 32,
   "color": 60,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31528"
+    "$oid": "68507ac201ff131f7111eb5b"
   },
   "name": "Caramunich",
   "type": "grain",
-  "description": "",
+  "description": "German crystal malt with rich, malty sweetness and deep golden color. Provides fuller body and enhanced malt character. Traditional for German amber lagers and Belgian ales.",
   "potential": 33.5,
   "color": 35,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31529"
+    "$oid": "68507ac201ff131f7111eb5c"
   },
   "name": "CaraWheat",
   "type": "grain",
-  "description": "",
+  "description": "Crystal wheat malt combining wheat's smooth character with caramel sweetness. Enhances head retention and provides subtle honey flavors. Perfect for wheat beers and lighter ales.",
   "potential": 31,
   "color": 45,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152a"
+    "$oid": "68507ac201ff131f7111eb5d"
   },
   "name": "Cherrywood Smoked Malt",
   "type": "grain",
-  "description": "",
+  "description": "Mild, sweet smoke character from cherrywood. Provides fruity smoke notes without harsh edges. Excellent for porters, stouts, and autumn seasonals requiring subtle smoke complexity.",
   "potential": 37,
   "color": 5,
   "grain_type": "smoked"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152b"
+    "$oid": "68507ac201ff131f7111eb5e"
   },
   "name": "Chocolate Malt",
   "type": "grain",
-  "description": "",
+  "description": "Medium roasted malt with rich chocolate and coffee flavors without harsh bitterness. Provides deep brown color and nutty, roasted character. Essential for porters, stouts, and brown ales.",
   "potential": 25,
   "color": 350,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152c"
+    "$oid": "68507ac201ff131f7111eb5f"
   },
   "name": "Dark Chocolate Malt",
   "type": "grain",
-  "description": "",
+  "description": "Darker roasted malt with intense chocolate and coffee flavors. More pronounced roasted character than regular chocolate malt. Perfect for robust stouts and imperial porters.",
   "potential": 33,
   "color": 450,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152d"
+    "$oid": "68507ac201ff131f7111eb60"
   },
   "name": "Flaked Barley",
   "type": "grain",
-  "description": "",
+  "description": "Unmalted barley flakes that enhance head retention and provide creamy mouthfeel. Adds subtle grainy character and helps create the signature texture of Irish stouts.",
   "potential": 32.2,
   "color": 1.5,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152e"
+    "$oid": "68507ac201ff131f7111eb61"
   },
   "name": "Flaked Corn",
   "type": "grain",
-  "description": "",
+  "description": "Pre-gelatinized corn flakes that lighten body and add subtle sweetness. Provides clean, neutral flavor and can increase alcohol potential. Common in American lagers and cream ales.",
   "potential": 34.5,
   "color": 1,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3152f"
+    "$oid": "68507ac201ff131f7111eb62"
   },
   "name": "Flaked Oats",
   "type": "grain",
-  "description": "",
+  "description": "Unmalted oat flakes that provide smooth, silky mouthfeel and enhanced head retention. Adds subtle sweetness and creamy texture. Essential for oatmeal stouts and New England IPAs.",
   "potential": 32.2,
   "color": 2.5,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31530"
+    "$oid": "68507ac201ff131f7111eb63"
   },
   "name": "Flaked Rice",
   "type": "grain",
-  "description": "",
+  "description": "Pre-gelatinized rice flakes that create light, crisp character. Provides clean flavor and lightens body. Traditional in Japanese lagers and American light beers.",
   "potential": 32.2,
   "color": 1,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31531"
+    "$oid": "68507ac201ff131f7111eb64"
   },
   "name": "Flaked Rye",
   "type": "grain",
-  "description": "",
+  "description": "Unmalted rye flakes providing distinctive spicy, peppery character. Adds complexity and slight tartness. Enhances mouthfeel while contributing rye's signature flavor profile.",
   "potential": 32.7,
   "color": 3,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31532"
+    "$oid": "68507ac201ff131f7111eb65"
   },
   "name": "Flaked Wheat",
   "type": "grain",
-  "description": "",
+  "description": "Unmalted wheat flakes that enhance head retention and provide smooth texture. Contributes mild grain character and helps create the signature haze in wheat beers.",
   "potential": 32.2,
   "color": 2,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31533"
+    "$oid": "68507ac201ff131f7111eb66"
   },
   "name": "Golden Naked Oats",
   "type": "grain",
-  "description": "",
+  "description": "Specialty dehusked oats with golden color and nutty, biscuity flavor. Provides creamy mouthfeel and rich grain character. Excellent for adding complexity to pale ales and golden ales.",
   "potential": 27,
   "color": 7,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31534"
+    "$oid": "68507ac201ff131f7111eb67"
   },
   "name": "Golden Promise",
   "type": "grain",
-  "description": "",
+  "description": "Premium Scottish barley malt with rich, sweet character and excellent enzymatic power. Provides fuller flavor than standard pale malts. Traditional base for Scottish ales and single malt whiskies.",
   "potential": 37,
   "color": 3,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31535"
+    "$oid": "68507ac201ff131f7111eb68"
   },
   "name": "Honey Malt",
   "type": "grain",
-  "description": "",
+  "description": "Unique malt with intense honey-like sweetness and complexity. Provides rich golden color and pronounced honey character. Use sparingly as it can easily overpower other flavors.",
   "potential": 37,
   "color": 25,
   "grain_type": "specialty_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31536"
+    "$oid": "68507ac201ff131f7111eb69"
   },
   "name": "Malted Oats",
   "type": "grain",
-  "description": "",
+  "description": "Malted oats providing creamy texture and subtle nutty flavors. Enhances mouthfeel and head retention while adding gentle grain complexity. Popular in modern hazy IPAs and stouts.",
   "potential": 28,
   "color": 2,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31537"
+    "$oid": "68507ac201ff131f7111eb6a"
   },
   "name": "Malted Rye",
   "type": "grain",
-  "description": "",
+  "description": "Malted rye with distinctive spicy, peppery character and slight tartness. Provides unique flavor complexity and can be used as partial base malt. Essential for rye beers and adds interest to any style.",
   "potential": 40.2,
   "color": 3,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31538"
+    "$oid": "68507ac201ff131f7111eb6b"
   },
   "name": "Malted Spelt",
   "type": "grain",
-  "description": "",
+  "description": "Ancient grain with nutty, slightly sweet character. Provides unique flavor profile and contributes to smooth mouthfeel. Excellent for experimental beers and historical recreations.",
   "potential": 37,
   "color": 2,
   "grain_type": "adjunct_grain"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31539"
+    "$oid": "68507ac201ff131f7111eb6c"
   },
   "name": "Medium Crystal",
   "type": "grain",
-  "description": "",
+  "description": "Medium crystal malt providing balanced caramel sweetness and amber color. Versatile crystal malt suitable for most amber and red beer styles requiring moderate caramel character.",
   "potential": 33,
   "color": 65,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153a"
+    "$oid": "68507ac201ff131f7111eb6d"
   },
   "name": "Midnight Wheat Malt",
   "type": "grain",
-  "description": "",
+  "description": "Dark roasted wheat malt providing intense color with smoother flavor than barley-based roasted malts. Contributes deep color without harsh roasted bitterness. Perfect for dark wheat beers.",
   "potential": 25,
   "color": 550,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153b"
+    "$oid": "68507ac201ff131f7111eb6e"
   },
   "name": "Munich Dark",
   "type": "grain",
-  "description": "",
+  "description": "Darker Munich malt with rich, malty sweetness and deep golden color. Provides intense malt character and bready flavors. Excellent base for Oktoberfest, bocks, and malty ales.",
   "potential": 37.1,
   "color": 12,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153c"
+    "$oid": "68507ac201ff131f7111eb6f"
   },
   "name": "Munich Light",
   "type": "grain",
-  "description": "",
+  "description": "Traditional Munich malt with rich, malty character and golden color. Provides excellent enzymatic power and deep malt flavor. Can be used as base malt or to enhance malt character in any beer.",
   "potential": 37,
   "color": 8,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153d"
+    "$oid": "68507ac201ff131f7111eb70"
   },
   "name": "Oak Smoked Wheat Malt",
   "type": "grain",
-  "description": "",
+  "description": "Wheat malt with subtle oak smoke character. Provides gentle smoke notes with wheat's smooth texture. Excellent for unique wheat beers and adding complexity to lighter styles.",
   "potential": 38,
   "color": 2,
   "grain_type": "smoked"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153e"
+    "$oid": "68507ac201ff131f7111eb71"
   },
   "name": "Pale Chocolate Malt",
   "type": "grain",
-  "description": "",
+  "description": "Lightly roasted malt with mild chocolate and coffee notes. Provides color and roasted character without excessive bitterness. Perfect for brown ales and lighter porters.",
   "potential": 32.7,
   "color": 220,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3153f"
+    "$oid": "68507ac201ff131f7111eb72"
   },
   "name": "Red Wheat",
   "type": "grain",
-  "description": "",
+  "description": "Red wheat variety with slightly more character than white wheat. Provides smooth texture, enhanced head retention, and subtle grain complexity. Excellent for wheat beers and hazy ales.",
   "potential": 38,
   "color": 2.5,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31540"
+    "$oid": "68507ac201ff131f7111eb73"
   },
   "name": "Roasted Barley",
   "type": "grain",
-  "description": "",
+  "description": "Unmalted roasted barley with intense roasted flavor and deep color. Provides coffee-like bitterness and signature flavor of Irish stouts. Creates distinctive dry, roasted character.",
   "potential": 33.1,
   "color": 300,
   "grain_type": "roasted"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31541"
+    "$oid": "68507ac201ff131f7111eb74"
   },
   "name": "Special B",
   "type": "grain",
-  "description": "",
+  "description": "Belgian specialty malt with intense caramel, raisin, and dark fruit flavors. Provides deep amber-brown color and complex sweetness. Essential for Belgian dubbels, quadrupels, and dark ales.",
   "potential": 34,
   "color": 115,
   "grain_type": "caramel_crystal"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31542"
+    "$oid": "68507ac201ff131f7111eb75"
   },
   "name": "Vienna Malt",
   "type": "grain",
-  "description": "",
+  "description": "Traditional Austrian malt with orange-amber color and rich, toasty character. Provides excellent enzymatic power and malty sweetness. Classic base for Vienna lagers and Oktoberfest beers.",
   "potential": 35,
   "color": 4,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31543"
+    "$oid": "68507ac201ff131f7111eb76"
   },
   "name": "White Wheat",
   "type": "grain",
-  "description": "",
+  "description": "Traditional wheat malt with clean, mild character. Enhances head retention and provides smooth mouthfeel. Essential for German wheat beers and popular in modern hazy IPAs.",
   "potential": 40,
   "color": 3,
   "grain_type": "base_malt"
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31544"
+    "$oid": "68507ac201ff131f7111eb77"
   },
   "name": "Amarillo",
   "type": "hop",
-  "description": "",
+  "description": "American hop with bright citrus character featuring orange, lemon, and floral notes. Medium alpha acids with excellent aroma properties. Popular for American IPAs and pale ales.",
   "alpha_acid": 8.6
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31545"
+    "$oid": "68507ac201ff131f7111eb78"
   },
   "name": "Azacca",
   "type": "hop",
-  "description": "",
+  "description": "American hop with tropical and citrus character, featuring mango, papaya, and citrus notes. High alpha acids with intense aroma. Excellent for modern IPAs and fruit-forward beers.",
   "alpha_acid": 15
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31546"
+    "$oid": "68507ac201ff131f7111eb79"
   },
   "name": "Cascade",
   "type": "hop",
-  "description": "",
+  "description": "Classic American hop with signature grapefruit and floral character. Medium alpha acids with excellent aroma properties. The defining hop of American Pale Ale and essential for West Coast IPAs.",
   "alpha_acid": 7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31547"
+    "$oid": "68507ac201ff131f7111eb7a"
   },
   "name": "Centennial",
   "type": "hop",
-  "description": "",
+  "description": "American hop with intense citrus and floral character, featuring grapefruit and lemon notes. High alpha acids with excellent dual-purpose properties. Perfect for American IPAs and pale ales.",
   "alpha_acid": 10
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31548"
+    "$oid": "68507ac201ff131f7111eb7b"
   },
   "name": "Challenger",
   "type": "hop",
-  "description": "",
+  "description": "English hop with spicy, fruity character and mild earthiness. Medium alpha acids with good bittering and aroma properties. Traditional for English ales and modern British-style beers.",
   "alpha_acid": 8.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31549"
+    "$oid": "68507ac201ff131f7111eb7c"
   },
   "name": "Chinook",
   "type": "hop",
-  "description": "",
+  "description": "American hop with intense grapefruit and pine character with spicy notes. High alpha acids excellent for bittering. Provides bold, assertive flavor perfect for West Coast IPAs.",
   "alpha_acid": 13
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154a"
+    "$oid": "68507ac201ff131f7111eb7d"
   },
   "name": "Citra",
   "type": "hop",
-  "description": "",
+  "description": "Popular American hop with intense tropical and citrus character featuring lime, passion fruit, and lychee. High alpha acids with exceptional aroma. Essential for modern IPAs and fruit-forward beers.",
   "alpha_acid": 11
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154b"
+    "$oid": "68507ac201ff131f7111eb7e"
   },
   "name": "Columbus",
   "type": "hop",
-  "description": "",
+  "description": "High alpha American hop with pungent, resinous character and citrus notes. Excellent bittering hop with distinctive dank, earthy aroma. Popular for American IPAs and strong ales.",
   "alpha_acid": 15
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154c"
+    "$oid": "68507ac201ff131f7111eb7f"
   },
   "name": "East Kent Goldings",
   "type": "hop",
-  "description": "",
+  "description": "Classic English hop with gentle, honey-like character and subtle spice. Low alpha acids ideal for aroma and late additions. Traditional for English ales, milds, and bitters.",
   "alpha_acid": 5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154d"
+    "$oid": "68507ac201ff131f7111eb80"
   },
   "name": "El Dorado",
   "type": "hop",
-  "description": "",
+  "description": "American hop with tropical fruit character featuring pineapple, mango, and stone fruit notes. High alpha acids with intense aroma. Excellent for tropical IPAs and fruit-forward ales.",
   "alpha_acid": 15.7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154e"
+    "$oid": "68507ac201ff131f7111eb81"
   },
   "name": "Fuggles",
   "type": "hop",
-  "description": "",
+  "description": "Traditional English hop with mild, earthy character and subtle fruit notes. Low alpha acids perfect for aroma and traditional English ales. Provides classic English hop character.",
   "alpha_acid": 4.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3154f"
+    "$oid": "68507ac201ff131f7111eb82"
   },
   "name": "Galaxy",
   "type": "hop",
-  "description": "",
+  "description": "Australian hop with intense tropical fruit character featuring passion fruit, peach, and citrus. High alpha acids with exceptional aroma intensity. Popular for modern IPAs and pale ales.",
   "alpha_acid": 14.2
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31550"
+    "$oid": "68507ac201ff131f7111eb83"
   },
   "name": "Hallertau Mittelfruh",
   "type": "hop",
-  "description": "",
+  "description": "Traditional German noble hop with mild, spicy, and floral character. Low alpha acids ideal for aroma. Classic for German lagers, pilsners, and traditional European styles.",
   "alpha_acid": 3.7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31551"
+    "$oid": "68507ac201ff131f7111eb84"
   },
   "name": "Huell Melon",
   "type": "hop",
-  "description": "",
+  "description": "German hop with distinctive honeydew melon and strawberry character. Medium alpha acids with unique fruit profile. Excellent for wheat beers, lagers, and fruit-forward ales.",
   "alpha_acid": 7.2
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31552"
+    "$oid": "68507ac201ff131f7111eb85"
   },
   "name": "Kohatu",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with tropical fruit character featuring pineapple and passion fruit notes. Medium alpha acids with bright, fruity aroma. Perfect for modern pale ales and IPAs.",
   "alpha_acid": 6.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31553"
+    "$oid": "68507ac201ff131f7111eb86"
   },
   "name": "Lemondrop",
   "type": "hop",
-  "description": "",
+  "description": "American hop with bright lemon character and subtle mint notes. Medium alpha acids with clean citrus profile. Excellent for wheat beers, pale ales, and citrus-forward styles.",
   "alpha_acid": 6
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31554"
+    "$oid": "68507ac201ff131f7111eb87"
   },
   "name": "Magnum",
   "type": "hop",
-  "description": "",
+  "description": "German hop with clean, neutral bittering character and mild aroma. High alpha acids ideal for efficient bittering. Provides smooth bitterness without excessive flavor in any style.",
   "alpha_acid": 15
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31555"
+    "$oid": "68507ac201ff131f7111eb88"
   },
   "name": "Mandarina Bavaria",
   "type": "hop",
-  "description": "",
+  "description": "German hop with distinctive tangerine and citrus character. Medium alpha acids with bright, fruity aroma. Excellent for wheat beers, lagers, and citrus-focused ales.",
   "alpha_acid": 8.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31556"
+    "$oid": "68507ac201ff131f7111eb89"
   },
   "name": "Mosaic",
   "type": "hop",
-  "description": "",
+  "description": "American hop with complex tropical and berry character featuring mango, blueberry, and pine notes. High alpha acids with exceptional aroma complexity. Essential for modern IPAs and complex ales.",
   "alpha_acid": 12.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31557"
+    "$oid": "68507ac201ff131f7111eb8a"
   },
   "name": "Motueka",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with bright lime and tropical fruit character. Medium alpha acids with clean, zesty aroma. Excellent for pale ales, lagers, and citrus-forward beers.",
   "alpha_acid": 7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31558"
+    "$oid": "68507ac201ff131f7111eb8b"
   },
   "name": "Nectaron",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with intense tropical fruit character featuring peach, passion fruit, and pineapple. Medium alpha acids with exceptional aroma intensity. Perfect for modern IPAs and tropical ales.",
   "alpha_acid": 8.1
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31559"
+    "$oid": "68507ac201ff131f7111eb8c"
   },
   "name": "Nelson Sauvin",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with unique white wine and tropical fruit character. High alpha acids with distinctive gooseberry and passion fruit notes. Creates wine-like complexity in pale ales and IPAs.",
   "alpha_acid": 12.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155a"
+    "$oid": "68507ac201ff131f7111eb8d"
   },
   "name": "Nugget",
   "type": "hop",
-  "description": "",
+  "description": "American hop with herbal, spicy character and citrus undertones. High alpha acids excellent for bittering. Provides clean, neutral bitterness with subtle complexity.",
   "alpha_acid": 14
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155b"
+    "$oid": "68507ac201ff131f7111eb8e"
   },
   "name": "Pacifica",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with citrus and floral character featuring orange and marmalade notes. Low alpha acids ideal for aroma additions. Excellent for pale ales and lagers.",
   "alpha_acid": 5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155c"
+    "$oid": "68507ac201ff131f7111eb8f"
   },
   "name": "Perle",
   "type": "hop",
-  "description": "",
+  "description": "German hop with spicy, minty character and mild fruit notes. Medium alpha acids suitable for both bittering and aroma. Traditional for German lagers and continental styles.",
   "alpha_acid": 8.2
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155d"
+    "$oid": "68507ac201ff131f7111eb90"
   },
   "name": "Rakau",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with stone fruit character featuring apricot and peach notes. High alpha acids with fruity aroma. Excellent for pale ales, IPAs, and fruit-forward beers.",
   "alpha_acid": 10.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155e"
+    "$oid": "68507ac201ff131f7111eb91"
   },
   "name": "Riwaka",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with intense grapefruit and passion fruit character. Medium alpha acids with powerful aroma. Provides bright, zesty character perfect for pale ales and IPAs.",
   "alpha_acid": 5.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3155f"
+    "$oid": "68507ac201ff131f7111eb92"
   },
   "name": "Saaz",
   "type": "hop",
-  "description": "",
+  "description": "Classic Czech noble hop with mild, spicy, and earthy character. Low alpha acids ideal for aroma and late additions. Essential for Czech pilsners and traditional European lagers.",
   "alpha_acid": 3.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31560"
+    "$oid": "68507ac201ff131f7111eb93"
   },
   "name": "Simcoe",
   "type": "hop",
-  "description": "",
+  "description": "American hop with complex pine, grapefruit, and passion fruit character. High alpha acids with distinctive aroma profile. Popular for American IPAs and provides unique complexity.",
   "alpha_acid": 12.7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31561"
+    "$oid": "68507ac201ff131f7111eb94"
   },
   "name": "Sorachi Ace",
   "type": "hop",
-  "description": "",
+  "description": "Japanese hop with unique coconut and lemon character. High alpha acids with distinctive tropical profile. Creates unusual and interesting flavor combinations in pale ales and experimental beers.",
   "alpha_acid": 11.1
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31562"
+    "$oid": "68507ac201ff131f7111eb95"
   },
   "name": "Spalt",
   "type": "hop",
-  "description": "",
+  "description": "German noble hop with mild, spicy character and subtle fruit notes. Low alpha acids perfect for aroma. Traditional for German lagers and provides classic continental hop character.",
   "alpha_acid": 4.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31563"
+    "$oid": "68507ac201ff131f7111eb96"
   },
   "name": "Sterling",
   "type": "hop",
-  "description": "",
+  "description": "American hop with floral, spicy character similar to Saaz. Medium alpha acids with clean bittering qualities. Excellent for lagers, pilsners, and continental-style ales.",
   "alpha_acid": 8.7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31564"
+    "$oid": "68507ac201ff131f7111eb97"
   },
   "name": "Styrian Goldings",
   "type": "hop",
-  "description": "",
+  "description": "Slovenian hop with earthy, spicy character and subtle fruit notes. Medium alpha acids with unique terroir. Provides distinctive character for European-style ales and lagers.",
   "alpha_acid": 5.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31565"
+    "$oid": "68507ac201ff131f7111eb98"
   },
   "name": "Tettnanger",
   "type": "hop",
-  "description": "",
+  "description": "German noble hop with mild, spicy, and floral character. Low alpha acids ideal for aroma additions. Traditional for German wheat beers, lagers, and continental styles.",
   "alpha_acid": 4.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31566"
+    "$oid": "68507ac201ff131f7111eb99"
   },
   "name": "Wai-iti",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with citrus and tropical fruit character featuring lime and stone fruit notes. Low alpha acids excellent for aroma. Perfect for pale ales and citrus-forward beers.",
   "alpha_acid": 3
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31567"
+    "$oid": "68507ac201ff131f7111eb9a"
   },
   "name": "Waimea",
   "type": "hop",
-  "description": "",
+  "description": "New Zealand hop with intense citrus and pine character. Very high alpha acids with powerful aroma. Provides bold, assertive character perfect for strong IPAs and hop-forward beers.",
   "alpha_acid": 17.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31568"
+    "$oid": "68507ac201ff131f7111eb9b"
   },
   "name": "Warrior",
   "type": "hop",
-  "description": "",
+  "description": "American hop with clean, neutral bittering character and mild aroma. Very high alpha acids ideal for efficient bittering. Provides smooth bitterness without excessive flavor contribution.",
   "alpha_acid": 16
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31569"
+    "$oid": "68507ac201ff131f7111eb9c"
   },
   "name": "Willamette",
   "type": "hop",
-  "description": "",
+  "description": "American hop with mild, earthy character and subtle fruit notes. Low alpha acids perfect for aroma. Provides classic American hop character for pale ales and traditional styles.",
   "alpha_acid": 4.5
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156a"
+    "$oid": "68507ac201ff131f7111eb9d"
   },
   "name": "Zappa",
   "type": "hop",
-  "description": "",
+  "description": "American hop with tropical fruit and citrus character. Medium alpha acids with bright, fruity aroma. Excellent for modern pale ales and IPAs requiring tropical fruit notes.",
   "alpha_acid": 7
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156b"
+    "$oid": "68507ac201ff131f7111eb9e"
   },
   "name": "S-33",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian-style ale yeast producing fruity esters and spicy phenols. Creates complex character with banana and clove notes. Ideal for Belgian ales, wheat beers, and specialty styles requiring Belgian character.",
   "attenuation": 70,
   "manufacturer": "Fermentis",
   "code": "S-33",
@@ -804,11 +804,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156c"
+    "$oid": "68507ac201ff131f7111eb9f"
   },
   "name": "US-05",
   "type": "yeast",
-  "description": "",
+  "description": "Clean American ale yeast with neutral character and reliable performance. High attenuation with minimal esters. The go-to choice for American ales, IPAs, and any style requiring clean fermentation.",
   "attenuation": 81,
   "manufacturer": "Fermentis",
   "code": "US-05",
@@ -817,11 +817,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156d"
+    "$oid": "68507ac201ff131f7111eba0"
   },
   "name": "BE-134",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian-style ale yeast with very high attenuation and complex character. Produces subtle esters and phenols. Excellent for saisons, Belgian ales, and any style requiring high attenuation and dry finish.",
   "attenuation": 90,
   "manufacturer": "Fermentis",
   "code": "BE-134",
@@ -830,11 +830,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156e"
+    "$oid": "68507ac201ff131f7111eba1"
   },
   "name": "S-04",
   "type": "yeast",
-  "description": "",
+  "description": "English ale yeast with fruity character and good flocculation. Produces subtle esters and reliable performance. Classic choice for English bitters, milds, porters, and traditional British styles.",
   "attenuation": 75,
   "manufacturer": "Fermentis",
   "code": "S-04",
@@ -844,25 +844,25 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3156f"
+    "$oid": "68507ac201ff131f7111eba2"
   },
-  "name": "L-97",
+  "name": "K-97",
   "type": "yeast",
-  "description": "",
+  "description": "German lager yeast producing clean, crisp character with excellent cold tolerance. Creates neutral, malty profile allowing hop and grain flavors to dominate. Perfect for German pilsners, helles, märzen, and traditional continental lager styles requiring clarity and crispness.",
   "attenuation": 81,
   "manufacturer": "Fermentis",
-  "code": "L-97",
+  "code": "K-97",
   "alcohol_tolerance": 10.4,
   "min_temperature": 54,
   "max_temperature": 77
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31570"
+    "$oid": "68507ac201ff131f7111eba3"
   },
   "name": "BE-256",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian abbey-style yeast producing balanced esters and phenols. Creates classic Belgian character with fruit and spice notes. Excellent for abbey ales, dubbels, tripels, and traditional Belgian styles.",
   "attenuation": 75,
   "manufacturer": "Fermentis",
   "code": "BE-256",
@@ -871,11 +871,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31571"
+    "$oid": "68507ac201ff131f7111eba4"
   },
   "name": "T-58",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian specialty yeast producing spicy, estery character. Creates complex flavors with pepper and fruit notes. Ideal for Belgian ales, strong ales, and styles requiring distinctive Belgian character.",
   "attenuation": 75,
   "manufacturer": "Fermentis",
   "code": "T-58",
@@ -884,11 +884,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31572"
+    "$oid": "68507ac201ff131f7111eba5"
   },
   "name": "WB-06",
   "type": "yeast",
-  "description": "",
+  "description": "German wheat beer yeast producing classic banana and clove character. High attenuation with excellent wheat beer phenolics. Essential for hefeweizens, wit beers, and German wheat styles.",
   "attenuation": 86,
   "manufacturer": "Fermentis",
   "code": "WB-06",
@@ -898,11 +898,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31573"
+    "$oid": "68507ac201ff131f7111eba6"
   },
   "name": "S-23",
   "type": "yeast",
-  "description": "",
+  "description": "German lager yeast with clean, crisp character. Produces classic lager profile with excellent attenuation. Ideal for German lagers, pilsners, and any style requiring clean, neutral fermentation.",
   "attenuation": 82,
   "manufacturer": "Fermentis",
   "code": "S-23",
@@ -912,11 +912,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31574"
+    "$oid": "68507ac201ff131f7111eba7"
   },
   "name": "W34/70",
   "type": "yeast",
-  "description": "",
+  "description": "Classic German lager yeast with excellent cold tolerance and clean character. Produces crisp, neutral profile with high attenuation. The standard for German lagers, pilsners, and continental styles.",
   "attenuation": 83,
   "manufacturer": "Fermentis",
   "code": "W34/70",
@@ -926,11 +926,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31575"
+    "$oid": "68507ac201ff131f7111eba8"
   },
   "name": "S-189",
   "type": "yeast",
-  "description": "",
+  "description": "Swiss lager yeast with exceptionally clean character and high attenuation. Produces very neutral profile allowing malt and hop flavors to shine. Perfect for light lagers and delicate styles.",
   "attenuation": 84,
   "manufacturer": "Fermentis",
   "code": "S-189",
@@ -940,11 +940,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31576"
+    "$oid": "68507ac201ff131f7111eba9"
   },
   "name": "Belle Saison",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian saison yeast with very high attenuation and complex character. Produces peppery, spicy notes with fruity esters. Wide temperature tolerance perfect for saisons and farmhouse ales.",
   "attenuation": 90,
   "manufacturer": "Lallemand",
   "code": "Belle Saison",
@@ -953,11 +953,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31577"
+    "$oid": "68507ac201ff131f7111ebaa"
   },
   "name": "Diamond Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Cold-fermenting lager yeast with clean, neutral character. Excellent for traditional lagers requiring low fermentation temperatures. Produces crisp, clean profile ideal for pilsners and light lagers.",
   "attenuation": 80,
   "manufacturer": "Lallemand",
   "code": "Diamond Lager",
@@ -966,11 +966,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31578"
+    "$oid": "68507ac201ff131f7111ebab"
   },
   "name": "Farmhouse Hybrid Saison",
   "type": "yeast",
-  "description": "",
+  "description": "Hybrid yeast combining ale and wild characteristics. Produces complex farmhouse character with subtle funk and high attenuation. Perfect for saisons and rustic farmhouse ales.",
   "attenuation": 82,
   "manufacturer": "Lallemand",
   "code": "Farmhouse Hybrid Saison",
@@ -979,11 +979,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31579"
+    "$oid": "68507ac201ff131f7111ebac"
   },
   "name": "NovaLager",
   "type": "yeast",
-  "description": "",
+  "description": "Modern lager yeast with clean character and wide temperature tolerance. Allows for faster lager production without compromising flavor. Excellent for contemporary lager styles.",
   "attenuation": 81,
   "manufacturer": "Lallemand",
   "code": "NovaLager",
@@ -992,11 +992,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157a"
+    "$oid": "68507ac201ff131f7111ebad"
   },
   "name": "CBC-1",
   "type": "yeast",
-  "description": "",
+  "description": "Conditioning yeast ideal for bottle conditioning and secondary fermentation. Produces minimal flavors while ensuring complete carbonation. Perfect for priming and conditioning finished beers.",
   "attenuation": 65,
   "manufacturer": "Lallemand",
   "code": "CBC-1",
@@ -1005,11 +1005,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157b"
+    "$oid": "68507ac201ff131f7111ebae"
   },
   "name": "Koln",
   "type": "yeast",
-  "description": "",
+  "description": "German Kölsch yeast producing clean, crisp character with subtle fruit notes. Ferments at cooler temperatures creating delicate, refined flavor. Essential for authentic Kölsch and similar light ales.",
   "attenuation": 75,
   "manufacturer": "Lallemand",
   "code": "Koln",
@@ -1018,11 +1018,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157c"
+    "$oid": "68507ac201ff131f7111ebaf"
   },
   "name": "London ESB",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional English ale yeast with moderate attenuation and fruity character. Produces classic English ale profile with balanced esters. Perfect for bitters, milds, and traditional English styles.",
   "attenuation": 65,
   "manufacturer": "Lallemand",
   "code": "London ESB",
@@ -1031,11 +1031,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157d"
+    "$oid": "68507ac201ff131f7111ebb0"
   },
   "name": "Nottingham",
   "type": "yeast",
-  "description": "",
+  "description": "English ale yeast with high attenuation and clean character. Produces neutral profile allowing malt and hop flavors to dominate. Excellent for ales requiring high attenuation and clean finish.",
   "attenuation": 80,
   "manufacturer": "Lallemand",
   "code": "Nottingham",
@@ -1044,11 +1044,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157e"
+    "$oid": "68507ac201ff131f7111ebb1"
   },
   "name": "Voss Kveik",
   "type": "yeast",
-  "description": "",
+  "description": "Norwegian farmhouse yeast with extremely high temperature tolerance and fast fermentation. Produces clean character with subtle orange and citrus notes. Perfect for quick turnaround ales and warm fermentation.",
   "attenuation": 80,
   "manufacturer": "Lallemand",
   "code": "Voss Kveik",
@@ -1057,11 +1057,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3157f"
+    "$oid": "68507ac201ff131f7111ebb2"
   },
   "name": "Belgian Wit",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian witbier yeast producing characteristic spicy and citrusy character. Creates classic wit beer profile with coriander and orange peel notes. Essential for Belgian witbiers and wheat beers.",
   "attenuation": 70,
   "manufacturer": "Lallemand",
   "code": "Belgian Wit",
@@ -1070,11 +1070,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31580"
+    "$oid": "68507ac201ff131f7111ebb3"
   },
   "name": "WildBrew Philly Sour",
   "type": "yeast",
-  "description": "",
+  "description": "Innovative yeast producing natural lactic acid for sour beer production. Creates tart, refreshing character without secondary acidification. Perfect for kettle sours and quick-turn sour ales.",
   "attenuation": 85,
   "manufacturer": "Lallemand",
   "code": "WildBrew Philly Sour",
@@ -1083,11 +1083,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31581"
+    "$oid": "68507ac201ff131f7111ebb4"
   },
   "name": "All the Bretts",
   "type": "yeast",
-  "description": "",
+  "description": "Brett blend producing complex funkiness with fruit and barnyard character. Creates evolving flavors over time with high alcohol tolerance. Perfect for wild ales, sours, and complex farmhouse beers.",
   "attenuation": 48,
   "manufacturer": "Omega Yeast",
   "code": "OYL-218",
@@ -1097,11 +1097,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31582"
+    "$oid": "68507ac201ff131f7111ebb5"
   },
   "name": "Bananza",
   "type": "yeast",
-  "description": "",
+  "description": "Tropical thiolized yeast enhancing hop-derived tropical fruit flavors. Amplifies passion fruit, guava, and citrus character from hops. Excellent for tropical IPAs and fruit-forward ales.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-400",
@@ -1110,11 +1110,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31583"
+    "$oid": "68507ac201ff131f7111ebb6"
   },
   "name": "Bayern Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Bavarian lager yeast producing rich, malty character with excellent cold tolerance. Creates traditional German lager profile with balanced flavor. Perfect for Oktoberfest, bocks, and malty lagers.",
   "attenuation": 74,
   "manufacturer": "Omega Yeast",
   "code": "OYL-114",
@@ -1124,11 +1124,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31584"
+    "$oid": "68507ac201ff131f7111ebb7"
   },
   "name": "Belgian Ale A",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian abbey yeast producing complex esters and phenols. Creates classic Belgian character with fruit and spice notes. High alcohol tolerance perfect for strong Belgian ales and abbey styles.",
   "attenuation": 79,
   "manufacturer": "Omega Yeast",
   "code": "OYL-024",
@@ -1138,11 +1138,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31585"
+    "$oid": "68507ac201ff131f7111ebb8"
   },
   "name": "Belgian Ale O",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian ale yeast with balanced character and moderate ester production. Creates approachable Belgian profile without excessive phenolics. Excellent for Belgian ales requiring subtlety.",
   "attenuation": 77,
   "manufacturer": "Omega Yeast",
   "code": "OYL-046",
@@ -1152,11 +1152,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31586"
+    "$oid": "68507ac201ff131f7111ebb9"
   },
   "name": "Belgian Ale R",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian ale yeast producing rich, complex character with high alcohol tolerance. Creates intense Belgian flavors with fruit and spice complexity. Perfect for strong Belgian ales and specialty styles.",
   "attenuation": 78,
   "manufacturer": "Omega Yeast",
   "code": "OYL-020",
@@ -1166,11 +1166,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31587"
+    "$oid": "68507ac201ff131f7111ebba"
   },
   "name": "Belgian Ale W",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian wheat beer yeast producing spicy, phenolic character. Creates classic wit beer profile with coriander and citrus notes. Ideal for witbiers and spiced Belgian ales.",
   "attenuation": 76,
   "manufacturer": "Omega Yeast",
   "code": "OYL-028",
@@ -1180,11 +1180,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31588"
+    "$oid": "68507ac201ff131f7111ebbb"
   },
   "name": "Belgian Saison I",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian saison yeast with wide temperature tolerance and complex character. Produces peppery, spicy notes with high attenuation. Excellent for traditional and modern saison styles.",
   "attenuation": 78,
   "manufacturer": "Omega Yeast",
   "code": "OYL-027",
@@ -1194,11 +1194,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31589"
+    "$oid": "68507ac201ff131f7111ebbc"
   },
   "name": "Brett Blend #1 Where Da Funk?",
   "type": "yeast",
-  "description": "",
+  "description": "Brett blend producing intense funkiness with barnyard and fruit character. Creates complex, evolving flavors with high attenuation. Perfect for wild ales and complex sour beers.",
   "attenuation": 83,
   "manufacturer": "Omega Yeast",
   "code": "OYL-210",
@@ -1208,11 +1208,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158a"
+    "$oid": "68507ac201ff131f7111ebbd"
   },
   "name": "Brett Blend #2 Bit O' Funk",
   "type": "yeast",
-  "description": "",
+  "description": "Brett blend with moderate funkiness and fruit character. Provides subtle wild character without overwhelming other flavors. Good introduction to Brett character in mixed fermentation.",
   "attenuation": 48,
   "manufacturer": "Omega Yeast",
   "code": "OYL-211",
@@ -1222,11 +1222,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158b"
+    "$oid": "68507ac201ff131f7111ebbe"
   },
   "name": "Brett Blend #3 Bring On Da Funk",
   "type": "yeast",
-  "description": "",
+  "description": "Brett blend with maximum funkiness and complex character. Creates intense barnyard, fruit, and earthy flavors. For brewers seeking extreme wild character in their beers.",
   "attenuation": 48,
   "manufacturer": "Omega Yeast",
   "code": "OYL-212",
@@ -1236,11 +1236,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158c"
+    "$oid": "68507ac201ff131f7111ebbf"
   },
   "name": "British Ale I",
   "type": "yeast",
-  "description": "",
+  "description": "Classic British ale yeast with balanced character and moderate esters. Produces traditional English ale profile with subtle fruit notes. Excellent for bitters, milds, and English ales.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-006",
@@ -1250,11 +1250,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158d"
+    "$oid": "68507ac201ff131f7111ebc0"
   },
   "name": "British Ale V",
   "type": "yeast",
-  "description": "",
+  "description": "British ale yeast with moderate attenuation and fruity character. Creates classic English ale profile with balanced esters and malty character. Perfect for traditional British styles.",
   "attenuation": 73,
   "manufacturer": "Omega Yeast",
   "code": "OYL-011",
@@ -1264,11 +1264,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158e"
+    "$oid": "68507ac201ff131f7111ebc1"
   },
   "name": "British Ale VIII",
   "type": "yeast",
-  "description": "",
+  "description": "British ale yeast with low attenuation and rich, malty character. Produces full-bodied ales with complex fruit esters. Excellent for milds, porters, and malty English ales.",
   "attenuation": 69,
   "manufacturer": "Omega Yeast",
   "code": "OYL-016",
@@ -1278,11 +1278,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3158f"
+    "$oid": "68507ac201ff131f7111ebc2"
   },
   "name": "CL-50",
   "type": "yeast",
-  "description": "",
+  "description": "California ale yeast producing clean character with subtle complexity. Balances neutral fermentation with gentle flavor contribution. Excellent for ales requiring clean profile with character.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-041",
@@ -1292,11 +1292,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31590"
+    "$oid": "68507ac201ff131f7111ebc3"
   },
   "name": "Cosmic Punch",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty yeast producing unique tropical and stone fruit character. Enhances fruit flavors and creates complex ester profile. Perfect for fruit beers and tropical-themed ales.",
   "attenuation": 73,
   "manufacturer": "Omega Yeast",
   "code": "OYL-402",
@@ -1305,11 +1305,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31591"
+    "$oid": "68507ac201ff131f7111ebc4"
   },
   "name": "French Saison",
   "type": "yeast",
-  "description": "",
+  "description": "French saison yeast with very high attenuation and spicy character. Produces dry, crisp saisons with peppery, earthy notes. Excellent for traditional and modern farmhouse ales.",
   "attenuation": 85,
   "manufacturer": "Omega Yeast",
   "code": "OYL-026",
@@ -1319,11 +1319,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31592"
+    "$oid": "68507ac201ff131f7111ebc5"
   },
   "name": "German Bock",
   "type": "yeast",
-  "description": "",
+  "description": "German lager yeast specialized for malty, strong lagers. Produces rich, complex character while maintaining lager cleanliness. Perfect for bocks, doppelbocks, and strong German lagers.",
   "attenuation": 73,
   "manufacturer": "Omega Yeast",
   "code": "OYL-111",
@@ -1333,11 +1333,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31593"
+    "$oid": "68507ac201ff131f7111ebc6"
   },
   "name": "German Lager I",
   "type": "yeast",
-  "description": "",
+  "description": "Classic German lager yeast with clean, crisp character. Produces traditional lager profile with excellent cold tolerance. The standard for German pilsners, märzens, and continental lagers.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-106",
@@ -1347,11 +1347,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31594"
+    "$oid": "68507ac201ff131f7111ebc7"
   },
   "name": "Gulo Ale",
   "type": "yeast",
-  "description": "",
+  "description": "High-attenuating ale yeast producing very dry character. Creates clean profile with minimal residual sweetness. Excellent for low-carb ales and styles requiring maximum dryness.",
   "attenuation": 87.5,
   "manufacturer": "Omega Yeast",
   "code": "OYL-501",
@@ -1360,11 +1360,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31595"
+    "$oid": "68507ac201ff131f7111ebc8"
   },
   "name": "Hefeweizen Ale I",
   "type": "yeast",
-  "description": "",
+  "description": "German wheat beer yeast producing classic banana and clove character. Creates traditional hefeweizen profile with balanced phenolics and esters. Essential for authentic German wheat beers.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-021",
@@ -1374,11 +1374,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31596"
+    "$oid": "68507ac201ff131f7111ebc9"
   },
   "name": "Helio Gazer",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty yeast producing bright, citrusy character. Enhances citrus and tropical hop flavors while providing clean fermentation. Perfect for hop-forward ales and citrus-themed beers.",
   "attenuation": 73,
   "manufacturer": "Omega Yeast",
   "code": "OYL-405",
@@ -1387,11 +1387,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31597"
+    "$oid": "68507ac201ff131f7111ebca"
   },
   "name": "Hornindal Kveik",
   "type": "yeast",
-  "description": "",
+  "description": "Norwegian kveik with tropical fruit character and extreme temperature tolerance. Produces pineapple and citrus esters with fast fermentation. Excellent for quick-turn tropical ales.",
   "attenuation": 79,
   "manufacturer": "Omega Yeast",
   "code": "OYL-091",
@@ -1401,11 +1401,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31598"
+    "$oid": "68507ac201ff131f7111ebcb"
   },
   "name": "HotHead Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Norwegian kveik with clean character and exceptional temperature tolerance. Ferments cleanly at high temperatures without off-flavors. Perfect for fast fermentation and hot climates.",
   "attenuation": 80,
   "manufacturer": "Omega Yeast",
   "code": "OYL-057",
@@ -1415,11 +1415,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b31599"
+    "$oid": "68507ac201ff131f7111ebcc"
   },
   "name": "Irish Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Irish ale yeast with moderate attenuation and malty character. Produces balanced profile with subtle fruit esters. Excellent for Irish reds, stouts, and traditional Celtic ales.",
   "attenuation": 72,
   "manufacturer": "Omega Yeast",
   "code": "OYL-005",
@@ -1429,11 +1429,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159a"
+    "$oid": "68507ac201ff131f7111ebcd"
   },
   "name": "Jovaru Lithuanian Farmhouse",
   "type": "yeast",
-  "description": "",
+  "description": "Baltic farmhouse yeast with unique character and high attenuation. Produces distinctive farmhouse profile with earthy, spicy notes. Excellent for experimental farmhouse and rustic ales.",
   "attenuation": 85,
   "manufacturer": "Omega Yeast",
   "code": "OYL-033",
@@ -1442,11 +1442,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159b"
+    "$oid": "68507ac201ff131f7111ebce"
   },
   "name": "Kolsch II",
   "type": "yeast",
-  "description": "",
+  "description": "German Kölsch yeast producing clean, delicate character. Ferments at cool temperatures creating subtle, refined flavor. Essential for authentic Kölsch and similar light German ales.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-044",
@@ -1456,11 +1456,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159c"
+    "$oid": "68507ac201ff131f7111ebcf"
   },
   "name": "London Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional London ale yeast with moderate attenuation and fruity character. Produces classic English ale profile with balanced complexity. Perfect for traditional London ales and bitters.",
   "attenuation": 72,
   "manufacturer": "Omega Yeast",
   "code": "OYL-003",
@@ -1470,11 +1470,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159d"
+    "$oid": "68507ac201ff131f7111ebd0"
   },
   "name": "Lunar Crush Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Modern lager yeast producing clean character with subtle complexity. Ferments cleanly while adding gentle flavor contribution. Excellent for contemporary lager styles requiring character.",
   "attenuation": 74.5,
   "manufacturer": "Omega Yeast",
   "code": "OYL-403",
@@ -1483,11 +1483,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159e"
+    "$oid": "68507ac201ff131f7111ebd1"
   },
   "name": "Lutra Kveik",
   "type": "yeast",
-  "description": "",
+  "description": "Norwegian kveik with exceptionally clean character at high temperatures. Produces neutral profile similar to lager yeast but ferments like ale. Perfect for pseudo-lagers and clean ales.",
   "attenuation": 78,
   "manufacturer": "Omega Yeast",
   "code": "OYL-071",
@@ -1496,11 +1496,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b3159f"
+    "$oid": "68507ac201ff131f7111ebd2"
   },
   "name": "Mexican Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Mexican lager yeast producing clean, crisp character with subtle corn-like notes. Creates traditional Mexican lager profile. Perfect for light lagers, adjunct lagers, and tropical-themed beers.",
   "attenuation": 74,
   "manufacturer": "Omega Yeast",
   "code": "OYL-113",
@@ -1510,11 +1510,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a0"
+    "$oid": "68507ac201ff131f7111ebd3"
   },
   "name": "Oktoberfest",
   "type": "yeast",
-  "description": "",
+  "description": "German Oktoberfest lager yeast producing rich, malty character. Creates traditional märzen profile with excellent balance. Perfect for Oktoberfest, märzen, and malty German lagers.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-107",
@@ -1524,11 +1524,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a1"
+    "$oid": "68507ac201ff131f7111ebd4"
   },
-  "name": "Saisonstein’s Monster",
+  "name": "Saisonstein's Monster",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty saison yeast blend producing complex, funky character. Creates unique farmhouse profile with Brett-like complexity. Perfect for experimental saisons and wild farmhouse ales.",
   "attenuation": 80,
   "manufacturer": "Omega Yeast",
   "code": "OYL-500",
@@ -1537,11 +1537,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a2"
+    "$oid": "68507ac201ff131f7111ebd5"
   },
   "name": "Scottish Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Scottish ale yeast with moderate attenuation and malty character. Produces rich, complex profile with subtle fruit esters. Excellent for Scottish ales, wee heavy, and malty British styles.",
   "attenuation": 75,
   "manufacturer": "Omega Yeast",
   "code": "OYL-015",
@@ -1551,11 +1551,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a3"
+    "$oid": "68507ac201ff131f7111ebd6"
   },
   "name": "Star Party",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty yeast producing bright, cosmic-themed character. Creates unique flavor profile with enhanced hop and fruit expression. Perfect for experimental ales and creative brewing projects.",
   "attenuation": 76.5,
   "manufacturer": "Omega Yeast",
   "code": "OYL-404",
@@ -1564,11 +1564,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a4"
+    "$oid": "68507ac201ff131f7111ebd7"
   },
   "name": "Sundew",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty yeast producing complex, botanical character. Enhances hop and fruit flavors while adding unique complexity. Excellent for hoppy ales and experimental flavor combinations.",
   "attenuation": 79,
   "manufacturer": "Omega Yeast",
   "code": "OYL-401",
@@ -1577,11 +1577,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a5"
+    "$oid": "68507ac201ff131f7111ebd8"
   },
   "name": "Tropical IPA",
   "type": "yeast",
-  "description": "",
+  "description": "Specialty yeast producing intense tropical fruit character. Amplifies tropical hop flavors and creates unique ester profile. Perfect for tropical IPAs and fruit-forward ales requiring maximum fruit expression.",
   "attenuation": 92.5,
   "manufacturer": "Omega Yeast",
   "code": "OYL-200",
@@ -1591,11 +1591,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a6"
+    "$oid": "68507ac201ff131f7111ebd9"
   },
   "name": "Voss Kveik",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional Norwegian kveik with orange citrus character. Produces clean fermentation with subtle fruit esters at high temperatures. Fast fermenting and perfect for quick-turn ales.",
   "attenuation": 79,
   "manufacturer": "Omega Yeast",
   "code": "OYL-061",
@@ -1605,11 +1605,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a7"
+    "$oid": "68507ac201ff131f7111ebda"
   },
   "name": "West Coast Ale I",
   "type": "yeast",
-  "description": "",
+  "description": "Classic West Coast ale yeast with clean character and high attenuation. Produces neutral profile allowing hop character to dominate. Essential for American IPAs and hop-forward styles.",
   "attenuation": 77,
   "manufacturer": "Omega Yeast",
   "code": "OYL-004",
@@ -1619,11 +1619,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a8"
+    "$oid": "68507ac201ff131f7111ebdb"
   },
   "name": "West Coast Ale II",
   "type": "yeast",
-  "description": "",
+  "description": "Alternative West Coast ale yeast with moderate attenuation and clean character. Produces balanced profile with subtle complexity. Excellent for American ales requiring clean fermentation with character.",
   "attenuation": 74,
   "manufacturer": "Omega Yeast",
   "code": "OYL-009",
@@ -1633,11 +1633,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315a9"
+    "$oid": "68507ac201ff131f7111ebdc"
   },
   "name": "Wit",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian witbier yeast producing spicy, citrusy character. Creates classic wit beer profile with coriander and orange notes. Essential for Belgian witbiers and spiced wheat beers.",
   "attenuation": 74,
   "manufacturer": "Omega Yeast",
   "code": "OYL-030",
@@ -1647,11 +1647,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315aa"
+    "$oid": "68507ac201ff131f7111ebdd"
   },
-  "name": "American Ale  ",
+  "name": "American Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Classic American ale yeast with clean, neutral character. Produces reliable fermentation with minimal esters. The standard for American ales, IPAs, and styles requiring clean ale character.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "1056",
@@ -1661,11 +1661,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ab"
+    "$oid": "68507ac201ff131f7111ebde"
   },
-  "name": "American Ale II ",
+  "name": "American Ale II",
   "type": "yeast",
-  "description": "",
+  "description": "Alternative American ale yeast with moderate attenuation and clean character. Produces balanced profile with subtle complexity. Excellent for American ales requiring character without excessive esters.",
   "attenuation": 74,
   "manufacturer": "Wyeast",
   "code": "1272",
@@ -1675,11 +1675,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ac"
+    "$oid": "68507ac201ff131f7111ebdf"
   },
-  "name": "Bavarian Lager  ",
+  "name": "Bavarian Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional Bavarian lager yeast producing rich, malty character. Creates classic German lager profile with excellent balance. Perfect for traditional Bavarian styles and malty lagers.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "2206",
@@ -1689,11 +1689,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ad"
+    "$oid": "68507ac201ff131f7111ebe0"
   },
   "name": "Belgian Abby Ale II",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian abbey yeast producing complex esters and phenols. Creates classic abbey character with fruit and spice notes. Excellent for abbey ales, dubbels, and traditional Belgian styles.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "1762",
@@ -1703,11 +1703,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ae"
+    "$oid": "68507ac201ff131f7111ebe1"
   },
-  "name": "Belgian Ale  ",
+  "name": "Belgian Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Classic Belgian ale yeast with complex character and high alcohol tolerance. Produces intense esters and phenols with fruit and spice notes. Perfect for traditional Belgian ales and strong styles.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "1214",
@@ -1717,11 +1717,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315af"
+    "$oid": "68507ac201ff131f7111ebe2"
   },
-  "name": "Belgian Ardennes  ",
+  "name": "Belgian Ardennes",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian saison-style yeast with spicy, peppery character. Produces complex farmhouse profile with wide temperature tolerance. Excellent for saisons, farmhouse ales, and rustic Belgian styles.",
   "attenuation": 74,
   "manufacturer": "Wyeast",
   "code": "3522",
@@ -1731,11 +1731,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b0"
+    "$oid": "68507ac201ff131f7111ebe3"
   },
-  "name": "Belgian Lambic Blend ",
+  "name": "Belgian Lambic Blend",
   "type": "yeast",
-  "description": "",
+  "description": "Complex blend for lambic and sour beer production. Contains multiple wild yeast and bacteria strains creating evolving sourness and funk. Perfect for traditional lambics and wild ales.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "3278",
@@ -1745,11 +1745,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b1"
+    "$oid": "68507ac201ff131f7111ebe4"
   },
-  "name": "Belgian Saison  ",
+  "name": "Belgian Saison",
   "type": "yeast",
-  "description": "",
+  "description": "Classic Belgian saison yeast with high attenuation and spicy character. Produces dry, peppery saisons with wide temperature tolerance. Essential for traditional and modern farmhouse ales.",
   "attenuation": 78,
   "manufacturer": "Wyeast",
   "code": "3724",
@@ -1759,11 +1759,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b2"
+    "$oid": "68507ac201ff131f7111ebe5"
   },
-  "name": "Belgian Strong Ale ",
+  "name": "Belgian Strong Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian yeast for strong ales with high alcohol tolerance and complex character. Produces rich esters and phenols with fruit and spice complexity. Perfect for tripels, quadrupels, and strong Belgian ales.",
   "attenuation": 76,
   "manufacturer": "Wyeast",
   "code": "1388",
@@ -1773,11 +1773,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b3"
+    "$oid": "68507ac201ff131f7111ebe6"
   },
-  "name": "Belgian Witbier  ",
+  "name": "Belgian Witbier",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional witbier yeast producing spicy, citrusy character. Creates classic wit beer profile with coriander and orange peel notes. Essential for authentic Belgian witbiers and wheat beers.",
   "attenuation": 74,
   "manufacturer": "Wyeast",
   "code": "3944",
@@ -1787,11 +1787,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b4"
+    "$oid": "68507ac201ff131f7111ebe7"
   },
-  "name": "Bohemian Lager  ",
+  "name": "Bohemian Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Czech lager yeast producing rich, malty character with subtle complexity. Creates traditional Bohemian pilsner profile with excellent balance. Perfect for Czech pilsners and continental lagers.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "2124",
@@ -1801,11 +1801,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b5"
+    "$oid": "68507ac201ff131f7111ebe8"
   },
-  "name": "British Ale  ",
+  "name": "British Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Classic British ale yeast with moderate attenuation and fruity character. Produces traditional English ale profile with balanced esters. Excellent for bitters, milds, and traditional British styles.",
   "attenuation": 74,
   "manufacturer": "Wyeast",
   "code": "1098",
@@ -1815,11 +1815,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b6"
+    "$oid": "68507ac201ff131f7111ebe9"
   },
-  "name": "British Ale  ",
+  "name": "British Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Alternative British ale yeast with moderate attenuation and complex character. Produces rich English ale profile with pronounced fruit esters. Excellent for traditional British ales requiring complexity.",
   "attenuation": 74.5,
   "manufacturer": "Wyeast",
   "code": "1335",
@@ -1829,11 +1829,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b7"
+    "$oid": "68507ac201ff131f7111ebea"
   },
-  "name": "California Lager  ",
+  "name": "California Lager",
   "type": "yeast",
-  "description": "",
+  "description": "California lager yeast with lower attenuation and malty character. Ferments at warmer temperatures than traditional lagers. Perfect for steam beers and California common styles.",
   "attenuation": 69,
   "manufacturer": "Wyeast",
   "code": "2112",
@@ -1843,11 +1843,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b8"
+    "$oid": "68507ac201ff131f7111ebeb"
   },
-  "name": "Czech Pils  ",
+  "name": "Czech Pils",
   "type": "yeast",
-  "description": "",
+  "description": "Czech pilsner yeast producing clean, malty character with subtle complexity. Creates traditional Czech pilsner profile with rich, full flavor. Essential for authentic Bohemian pilsners.",
   "attenuation": 72,
   "manufacturer": "Wyeast",
   "code": "2278",
@@ -1857,11 +1857,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315b9"
+    "$oid": "68507ac201ff131f7111ebec"
   },
-  "name": "Denny's Favorite 50 ",
+  "name": "Denny's Favorite 50",
   "type": "yeast",
-  "description": "",
+  "description": "Versatile ale yeast with clean character and moderate attenuation. Produces balanced profile suitable for many styles. Excellent all-purpose yeast for American and English ales.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "1450",
@@ -1871,11 +1871,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ba"
+    "$oid": "68507ac201ff131f7111ebed"
   },
-  "name": "English Special Bitter ",
+  "name": "English Special Bitter",
   "type": "yeast",
-  "description": "",
+  "description": "English bitter yeast with low attenuation and malty character. Produces full-bodied bitters with rich, complex flavor. Perfect for ESBs, milds, and malty English ales.",
   "attenuation": 70,
   "manufacturer": "Wyeast",
   "code": "1768",
@@ -1885,11 +1885,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315bb"
+    "$oid": "68507ac201ff131f7111ebee"
   },
-  "name": "Farmhouse Ale  ",
+  "name": "Farmhouse Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Farmhouse ale yeast with high attenuation and rustic character. Produces traditional farmhouse profile with spicy, earthy notes. Excellent for saisons and rustic farmhouse ales.",
   "attenuation": 76,
   "manufacturer": "Wyeast",
   "code": "3726",
@@ -1899,11 +1899,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315bc"
+    "$oid": "68507ac201ff131f7111ebef"
   },
-  "name": "French Saison  ",
+  "name": "French Saison",
   "type": "yeast",
-  "description": "",
+  "description": "French saison yeast with very high attenuation and spicy character. Produces bone-dry saisons with complex, peppery profile. Excellent for traditional and modern farmhouse styles.",
   "attenuation": 80,
   "manufacturer": "Wyeast",
   "code": "3711",
@@ -1913,11 +1913,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315bd"
+    "$oid": "68507ac201ff131f7111ebf0"
   },
-  "name": "German Ale  ",
+  "name": "German Ale",
   "type": "yeast",
-  "description": "",
+  "description": "German ale yeast with clean character and wide temperature tolerance. Produces balanced profile suitable for German ale styles. Excellent for altbier, Kölsch, and German wheat beers.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "1007",
@@ -1927,11 +1927,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315be"
+    "$oid": "68507ac201ff131f7111ebf1"
   },
-  "name": "Irish Ale  ",
+  "name": "Irish Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Irish ale yeast with moderate attenuation and malty character. Produces traditional Irish ale profile with balanced fruit esters. Excellent for Irish reds, stouts, and Celtic ales.",
   "attenuation": 73,
   "manufacturer": "Wyeast",
   "code": "1084",
@@ -1941,11 +1941,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315bf"
+    "$oid": "68507ac201ff131f7111ebf2"
   },
-  "name": "Kölsch   ",
+  "name": "Kölsch",
   "type": "yeast",
-  "description": "",
+  "description": "German Kölsch yeast producing clean, delicate character. Ferments at cool temperatures creating crisp, subtle flavor. Essential for authentic Kölsch and similar light German ales.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "2565",
@@ -1955,11 +1955,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c0"
+    "$oid": "68507ac201ff131f7111ebf3"
   },
-  "name": "London Ale III ",
+  "name": "London Ale III",
   "type": "yeast",
-  "description": "",
+  "description": "London ale yeast with moderate attenuation and complex character. Produces rich English ale profile with mineral and fruity notes. Excellent for traditional London ales and porters.",
   "attenuation": 73,
   "manufacturer": "Wyeast",
   "code": "1318",
@@ -1969,11 +1969,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c1"
+    "$oid": "68507ac201ff131f7111ebf4"
   },
-  "name": "London ESB Ale ",
+  "name": "London ESB Ale",
   "type": "yeast",
-  "description": "",
+  "description": "London ESB yeast with low attenuation and malty character. Produces full-bodied ales with rich, complex flavor. Perfect for ESBs, porters, and malty English ales requiring body.",
   "attenuation": 69,
   "manufacturer": "Wyeast",
   "code": "1968",
@@ -1983,11 +1983,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c2"
+    "$oid": "68507ac201ff131f7111ebf5"
   },
-  "name": "Munich Lager  ",
+  "name": "Munich Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Munich lager yeast producing rich, malty character. Creates traditional Bavarian lager profile with excellent balance. Perfect for Oktoberfest, märzen, and malty German lagers.",
   "attenuation": 72,
   "manufacturer": "Wyeast",
   "code": "2308",
@@ -1997,11 +1997,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c3"
+    "$oid": "68507ac201ff131f7111ebf6"
   },
-  "name": "Northwest Ale  ",
+  "name": "Northwest Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Pacific Northwest ale yeast with low attenuation and malty character. Produces full-bodied ales with rich flavor and moderate esters. Excellent for malty American ales and winter styles.",
   "attenuation": 69,
   "manufacturer": "Wyeast",
   "code": "1332",
@@ -2011,11 +2011,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c4"
+    "$oid": "68507ac201ff131f7111ebf7"
   },
-  "name": "Octoberfest Lager Blend ",
+  "name": "Octoberfest Lager Blend",
   "type": "yeast",
-  "description": "",
+  "description": "Oktoberfest lager yeast blend producing rich, malty character. Creates traditional märzen profile with complex flavor development. Perfect for Oktoberfest, märzen, and festbier styles.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "2633",
@@ -2025,11 +2025,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c5"
+    "$oid": "68507ac201ff131f7111ebf8"
   },
-  "name": "Pilsen Lager  ",
+  "name": "Pilsen Lager",
   "type": "yeast",
-  "description": "",
+  "description": "Classic pilsner lager yeast producing clean, crisp character. Creates traditional pilsner profile with excellent clarity. Essential for German pilsners and continental lagers.",
   "attenuation": 73,
   "manufacturer": "Wyeast",
   "code": "2007",
@@ -2039,11 +2039,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c6"
+    "$oid": "68507ac201ff131f7111ebf9"
   },
-  "name": "Pilsner Urquell H ",
+  "name": "Pilsner Urquell H",
   "type": "yeast",
-  "description": "",
+  "description": "Traditional Czech pilsner yeast producing the classic Pilsner Urquell character. Creates rich, malty complexity with subtle hop balance. Essential for authentic Czech pilsner recreation.",
   "attenuation": 74,
   "manufacturer": "Wyeast",
   "code": "2001",
@@ -2052,11 +2052,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c7"
+    "$oid": "68507ac201ff131f7111ebfa"
   },
-  "name": "Roeselare Ale Blend ",
+  "name": "Roeselare Ale Blend",
   "type": "yeast",
-  "description": "",
+  "description": "Complex blend for sour beer production including lambic strains and bacteria. Creates evolving sourness with funk and complexity over time. Perfect for traditional sour ales and wild fermentation.",
   "attenuation": 80,
   "manufacturer": "Wyeast",
   "code": "3763",
@@ -2066,11 +2066,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c8"
+    "$oid": "68507ac201ff131f7111ebfb"
   },
-  "name": "Scottish Ale  ",
+  "name": "Scottish Ale",
   "type": "yeast",
-  "description": "",
+  "description": "Scottish ale yeast with moderate attenuation and rich, malty character. Produces traditional Scottish ale profile with subtle fruit esters and full body. Perfect for Scottish ales and wee heavy styles.",
   "attenuation": 71,
   "manufacturer": "Wyeast",
   "code": "1728",
@@ -2080,11 +2080,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315c9"
+    "$oid": "68507ac201ff131f7111ebfc"
   },
-  "name": "Thames Valley Ale ",
+  "name": "Thames Valley Ale",
   "type": "yeast",
-  "description": "",
+  "description": "English ale yeast with high attenuation and clean character. Produces balanced English ale profile with subtle fruit esters. Excellent for bitters, milds, and traditional English styles requiring dryness.",
   "attenuation": 77,
   "manufacturer": "Wyeast",
   "code": "1275",
@@ -2094,11 +2094,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315ca"
+    "$oid": "68507ac201ff131f7111ebfd"
   },
-  "name": "Trappist High Gravity ",
+  "name": "Trappist High Gravity",
   "type": "yeast",
-  "description": "",
+  "description": "Belgian Trappist yeast with high alcohol tolerance and complex character. Produces intense esters and phenols with fruit and spice complexity. Perfect for abbey ales, tripels, and strong Belgian styles.",
   "attenuation": 76,
   "manufacturer": "Wyeast",
   "code": "3787",
@@ -2108,11 +2108,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315cb"
+    "$oid": "68507ac201ff131f7111ebfe"
   },
-  "name": "Weihenstephan Weizen  ",
+  "name": "Weihenstephan Weizen",
   "type": "yeast",
-  "description": "",
+  "description": "Classic German wheat beer yeast producing balanced banana and clove character. Creates traditional hefeweizen profile with excellent wheat beer characteristics. Essential for authentic German wheat beers.",
   "attenuation": 75,
   "manufacturer": "Wyeast",
   "code": "3068",
@@ -2122,11 +2122,11 @@
 },
 {
   "_id": {
-    "$oid": "68263551a6be603e11b315cc"
+    "$oid": "68507ac201ff131f7111ebff"
   },
-  "name": "West Yorkshire  ",
+  "name": "West Yorkshire",
   "type": "yeast",
-  "description": "",
+  "description": "English ale yeast with low attenuation and rich, malty character. Produces full-bodied ales with complex fruit esters and mineral notes. Perfect for traditional Yorkshire bitters and malty English ales.",
   "attenuation": 69,
   "manufacturer": "Wyeast",
   "code": "1469",
@@ -2136,12 +2136,20 @@
 },
 {
   "_id": {
-    "$oid": "682897381b4534aba15e2c4a"
+    "$oid": "68507ac201ff131f7111ec00"
   },
   "name": "Maris Otter",
   "type": "grain",
-  "description": "",
+  "description": "Premium English pale malt with rich, biscuity character and excellent enzymatic power. Provides fuller flavor and superior mouthfeel compared to standard pale malts. The gold standard for English ales and traditional British styles.",
   "potential": 37,
   "color": 3,
   "grain_type": "base_malt"
+},
+{
+  "_id": {
+    "$oid": "68507ac201ff131f7111ec01"
+  },
+  "name": "Irish Moss",
+  "type": "other",
+  "description": "Natural seaweed-derived fining agent used to clarify beer by binding proteins and improving clarity. Added during the last 10-15 minutes of the boil. Helps create brilliantly clear beer without affecting flavor."
 }]
