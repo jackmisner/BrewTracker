@@ -1,6 +1,6 @@
 [{
   "_id": {
-    "$oid": "68507ac201ff131f7111eb4f"
+    "$oid": "68515f66d6b61a5de3de07d0"
   },
   "name": "Acidulated Malt",
   "type": "grain",
@@ -11,7 +11,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb50"
+    "$oid": "68515f66d6b61a5de3de07d1"
   },
   "name": "Aromatic Malt",
   "type": "grain",
@@ -22,7 +22,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb51"
+    "$oid": "68515f66d6b61a5de3de07d2"
   },
   "name": "Beechwood Smoked Malt",
   "type": "grain",
@@ -33,7 +33,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb52"
+    "$oid": "68515f66d6b61a5de3de07d3"
   },
   "name": "Blackprinz Malt",
   "type": "grain",
@@ -44,7 +44,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb53"
+    "$oid": "68515f66d6b61a5de3de07d4"
   },
   "name": "Bohemian Pilsner",
   "type": "grain",
@@ -55,7 +55,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb54"
+    "$oid": "68515f66d6b61a5de3de07d5"
   },
   "name": "Caramel Malt - 10L",
   "type": "grain",
@@ -66,7 +66,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb55"
+    "$oid": "68515f66d6b61a5de3de07d6"
   },
   "name": "Caramel Malt - 120L",
   "type": "grain",
@@ -77,7 +77,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb56"
+    "$oid": "68515f66d6b61a5de3de07d7"
   },
   "name": "Caramel Malt - 20L",
   "type": "grain",
@@ -88,7 +88,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb57"
+    "$oid": "68515f66d6b61a5de3de07d8"
   },
   "name": "Caramel Malt - 40L",
   "type": "grain",
@@ -99,7 +99,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb58"
+    "$oid": "68515f66d6b61a5de3de07d9"
   },
   "name": "Caramel Malt - 60L",
   "type": "grain",
@@ -110,7 +110,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb59"
+    "$oid": "68515f66d6b61a5de3de07da"
   },
   "name": "Caramel Malt - 80L",
   "type": "grain",
@@ -121,7 +121,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5a"
+    "$oid": "68515f66d6b61a5de3de07db"
   },
   "name": "Caramel Rye",
   "type": "grain",
@@ -132,7 +132,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5b"
+    "$oid": "68515f66d6b61a5de3de07dc"
   },
   "name": "Caramunich",
   "type": "grain",
@@ -143,7 +143,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5c"
+    "$oid": "68515f66d6b61a5de3de07dd"
   },
   "name": "CaraWheat",
   "type": "grain",
@@ -154,7 +154,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5d"
+    "$oid": "68515f66d6b61a5de3de07de"
   },
   "name": "Cherrywood Smoked Malt",
   "type": "grain",
@@ -165,7 +165,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5e"
+    "$oid": "68515f66d6b61a5de3de07df"
   },
   "name": "Chocolate Malt",
   "type": "grain",
@@ -176,7 +176,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb5f"
+    "$oid": "68515f66d6b61a5de3de07e0"
   },
   "name": "Dark Chocolate Malt",
   "type": "grain",
@@ -187,7 +187,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb60"
+    "$oid": "68515f66d6b61a5de3de07e1"
   },
   "name": "Flaked Barley",
   "type": "grain",
@@ -198,7 +198,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb61"
+    "$oid": "68515f66d6b61a5de3de07e2"
   },
   "name": "Flaked Corn",
   "type": "grain",
@@ -209,7 +209,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb62"
+    "$oid": "68515f66d6b61a5de3de07e3"
   },
   "name": "Flaked Oats",
   "type": "grain",
@@ -220,7 +220,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb63"
+    "$oid": "68515f66d6b61a5de3de07e4"
   },
   "name": "Flaked Rice",
   "type": "grain",
@@ -231,7 +231,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb64"
+    "$oid": "68515f66d6b61a5de3de07e5"
   },
   "name": "Flaked Rye",
   "type": "grain",
@@ -242,7 +242,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb65"
+    "$oid": "68515f66d6b61a5de3de07e6"
   },
   "name": "Flaked Wheat",
   "type": "grain",
@@ -253,7 +253,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb66"
+    "$oid": "68515f66d6b61a5de3de07e7"
   },
   "name": "Golden Naked Oats",
   "type": "grain",
@@ -264,7 +264,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb67"
+    "$oid": "68515f66d6b61a5de3de07e8"
   },
   "name": "Golden Promise",
   "type": "grain",
@@ -275,7 +275,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb68"
+    "$oid": "68515f66d6b61a5de3de07e9"
   },
   "name": "Honey Malt",
   "type": "grain",
@@ -286,7 +286,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb69"
+    "$oid": "68515f66d6b61a5de3de07ea"
   },
   "name": "Malted Oats",
   "type": "grain",
@@ -297,7 +297,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6a"
+    "$oid": "68515f66d6b61a5de3de07eb"
   },
   "name": "Malted Rye",
   "type": "grain",
@@ -308,7 +308,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6b"
+    "$oid": "68515f66d6b61a5de3de07ec"
   },
   "name": "Malted Spelt",
   "type": "grain",
@@ -319,7 +319,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6c"
+    "$oid": "68515f66d6b61a5de3de07ed"
   },
   "name": "Medium Crystal",
   "type": "grain",
@@ -330,7 +330,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6d"
+    "$oid": "68515f66d6b61a5de3de07ee"
   },
   "name": "Midnight Wheat Malt",
   "type": "grain",
@@ -341,7 +341,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6e"
+    "$oid": "68515f66d6b61a5de3de07ef"
   },
   "name": "Munich Dark",
   "type": "grain",
@@ -352,7 +352,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb6f"
+    "$oid": "68515f66d6b61a5de3de07f0"
   },
   "name": "Munich Light",
   "type": "grain",
@@ -363,7 +363,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb70"
+    "$oid": "68515f66d6b61a5de3de07f1"
   },
   "name": "Oak Smoked Wheat Malt",
   "type": "grain",
@@ -374,7 +374,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb71"
+    "$oid": "68515f66d6b61a5de3de07f2"
   },
   "name": "Pale Chocolate Malt",
   "type": "grain",
@@ -385,7 +385,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb72"
+    "$oid": "68515f66d6b61a5de3de07f3"
   },
   "name": "Red Wheat",
   "type": "grain",
@@ -396,7 +396,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb73"
+    "$oid": "68515f66d6b61a5de3de07f4"
   },
   "name": "Roasted Barley",
   "type": "grain",
@@ -407,7 +407,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb74"
+    "$oid": "68515f66d6b61a5de3de07f5"
   },
   "name": "Special B",
   "type": "grain",
@@ -418,7 +418,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb75"
+    "$oid": "68515f66d6b61a5de3de07f6"
   },
   "name": "Vienna Malt",
   "type": "grain",
@@ -429,7 +429,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb76"
+    "$oid": "68515f66d6b61a5de3de07f7"
   },
   "name": "White Wheat",
   "type": "grain",
@@ -440,7 +440,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb77"
+    "$oid": "68515f66d6b61a5de3de07f8"
   },
   "name": "Amarillo",
   "type": "hop",
@@ -449,7 +449,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb78"
+    "$oid": "68515f66d6b61a5de3de07f9"
   },
   "name": "Azacca",
   "type": "hop",
@@ -458,7 +458,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb79"
+    "$oid": "68515f66d6b61a5de3de07fa"
   },
   "name": "Cascade",
   "type": "hop",
@@ -467,7 +467,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7a"
+    "$oid": "68515f66d6b61a5de3de07fb"
   },
   "name": "Centennial",
   "type": "hop",
@@ -476,7 +476,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7b"
+    "$oid": "68515f66d6b61a5de3de07fc"
   },
   "name": "Challenger",
   "type": "hop",
@@ -485,7 +485,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7c"
+    "$oid": "68515f66d6b61a5de3de07fd"
   },
   "name": "Chinook",
   "type": "hop",
@@ -494,7 +494,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7d"
+    "$oid": "68515f66d6b61a5de3de07fe"
   },
   "name": "Citra",
   "type": "hop",
@@ -503,7 +503,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7e"
+    "$oid": "68515f66d6b61a5de3de07ff"
   },
   "name": "Columbus",
   "type": "hop",
@@ -512,7 +512,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb7f"
+    "$oid": "68515f66d6b61a5de3de0800"
   },
   "name": "East Kent Goldings",
   "type": "hop",
@@ -521,7 +521,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb80"
+    "$oid": "68515f66d6b61a5de3de0801"
   },
   "name": "El Dorado",
   "type": "hop",
@@ -530,7 +530,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb81"
+    "$oid": "68515f66d6b61a5de3de0802"
   },
   "name": "Fuggles",
   "type": "hop",
@@ -539,7 +539,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb82"
+    "$oid": "68515f66d6b61a5de3de0803"
   },
   "name": "Galaxy",
   "type": "hop",
@@ -548,7 +548,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb83"
+    "$oid": "68515f66d6b61a5de3de0804"
   },
   "name": "Hallertau Mittelfruh",
   "type": "hop",
@@ -557,7 +557,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb84"
+    "$oid": "68515f66d6b61a5de3de0805"
   },
   "name": "Huell Melon",
   "type": "hop",
@@ -566,7 +566,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb85"
+    "$oid": "68515f66d6b61a5de3de0806"
   },
   "name": "Kohatu",
   "type": "hop",
@@ -575,7 +575,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb86"
+    "$oid": "68515f66d6b61a5de3de0807"
   },
   "name": "Lemondrop",
   "type": "hop",
@@ -584,7 +584,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb87"
+    "$oid": "68515f66d6b61a5de3de0808"
   },
   "name": "Magnum",
   "type": "hop",
@@ -593,7 +593,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb88"
+    "$oid": "68515f66d6b61a5de3de0809"
   },
   "name": "Mandarina Bavaria",
   "type": "hop",
@@ -602,7 +602,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb89"
+    "$oid": "68515f66d6b61a5de3de080a"
   },
   "name": "Mosaic",
   "type": "hop",
@@ -611,7 +611,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8a"
+    "$oid": "68515f66d6b61a5de3de080b"
   },
   "name": "Motueka",
   "type": "hop",
@@ -620,7 +620,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8b"
+    "$oid": "68515f66d6b61a5de3de080c"
   },
   "name": "Nectaron",
   "type": "hop",
@@ -629,7 +629,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8c"
+    "$oid": "68515f66d6b61a5de3de080d"
   },
   "name": "Nelson Sauvin",
   "type": "hop",
@@ -638,7 +638,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8d"
+    "$oid": "68515f66d6b61a5de3de080e"
   },
   "name": "Nugget",
   "type": "hop",
@@ -647,7 +647,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8e"
+    "$oid": "68515f66d6b61a5de3de080f"
   },
   "name": "Pacifica",
   "type": "hop",
@@ -656,7 +656,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb8f"
+    "$oid": "68515f66d6b61a5de3de0810"
   },
   "name": "Perle",
   "type": "hop",
@@ -665,7 +665,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb90"
+    "$oid": "68515f66d6b61a5de3de0811"
   },
   "name": "Rakau",
   "type": "hop",
@@ -674,7 +674,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb91"
+    "$oid": "68515f66d6b61a5de3de0812"
   },
   "name": "Riwaka",
   "type": "hop",
@@ -683,7 +683,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb92"
+    "$oid": "68515f66d6b61a5de3de0813"
   },
   "name": "Saaz",
   "type": "hop",
@@ -692,7 +692,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb93"
+    "$oid": "68515f66d6b61a5de3de0814"
   },
   "name": "Simcoe",
   "type": "hop",
@@ -701,16 +701,16 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb94"
+    "$oid": "68515f66d6b61a5de3de0815"
   },
   "name": "Sorachi Ace",
   "type": "hop",
-  "description": "Japanese hop with unique coconut and lemon character. High alpha acids with distinctive tropical profile. Creates unusual and interesting flavor combinations in pale ales and experimental beers.",
+  "description": "Japanese hop with unique dill and lemon character. High alpha acids with distinctive tropical profile. Creates unusual and interesting flavor combinations in pale ales and experimental beers.",
   "alpha_acid": 11.1
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb95"
+    "$oid": "68515f66d6b61a5de3de0816"
   },
   "name": "Spalt",
   "type": "hop",
@@ -719,7 +719,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb96"
+    "$oid": "68515f66d6b61a5de3de0817"
   },
   "name": "Sterling",
   "type": "hop",
@@ -728,7 +728,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb97"
+    "$oid": "68515f66d6b61a5de3de0818"
   },
   "name": "Styrian Goldings",
   "type": "hop",
@@ -737,7 +737,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb98"
+    "$oid": "68515f66d6b61a5de3de0819"
   },
   "name": "Tettnanger",
   "type": "hop",
@@ -746,7 +746,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb99"
+    "$oid": "68515f66d6b61a5de3de081a"
   },
   "name": "Wai-iti",
   "type": "hop",
@@ -755,7 +755,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9a"
+    "$oid": "68515f66d6b61a5de3de081b"
   },
   "name": "Waimea",
   "type": "hop",
@@ -764,7 +764,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9b"
+    "$oid": "68515f66d6b61a5de3de081c"
   },
   "name": "Warrior",
   "type": "hop",
@@ -773,7 +773,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9c"
+    "$oid": "68515f66d6b61a5de3de081d"
   },
   "name": "Willamette",
   "type": "hop",
@@ -782,7 +782,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9d"
+    "$oid": "68515f66d6b61a5de3de081e"
   },
   "name": "Zappa",
   "type": "hop",
@@ -791,7 +791,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9e"
+    "$oid": "68515f66d6b61a5de3de081f"
   },
   "name": "S-33",
   "type": "yeast",
@@ -804,7 +804,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eb9f"
+    "$oid": "68515f66d6b61a5de3de0820"
   },
   "name": "US-05",
   "type": "yeast",
@@ -817,7 +817,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba0"
+    "$oid": "68515f66d6b61a5de3de0821"
   },
   "name": "BE-134",
   "type": "yeast",
@@ -830,7 +830,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba1"
+    "$oid": "68515f66d6b61a5de3de0822"
   },
   "name": "S-04",
   "type": "yeast",
@@ -844,7 +844,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba2"
+    "$oid": "68515f66d6b61a5de3de0823"
   },
   "name": "K-97",
   "type": "yeast",
@@ -858,7 +858,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba3"
+    "$oid": "68515f66d6b61a5de3de0824"
   },
   "name": "BE-256",
   "type": "yeast",
@@ -871,7 +871,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba4"
+    "$oid": "68515f66d6b61a5de3de0825"
   },
   "name": "T-58",
   "type": "yeast",
@@ -884,7 +884,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba5"
+    "$oid": "68515f66d6b61a5de3de0826"
   },
   "name": "WB-06",
   "type": "yeast",
@@ -898,7 +898,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba6"
+    "$oid": "68515f66d6b61a5de3de0827"
   },
   "name": "S-23",
   "type": "yeast",
@@ -912,7 +912,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba7"
+    "$oid": "68515f66d6b61a5de3de0828"
   },
   "name": "W34/70",
   "type": "yeast",
@@ -926,7 +926,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba8"
+    "$oid": "68515f66d6b61a5de3de0829"
   },
   "name": "S-189",
   "type": "yeast",
@@ -940,7 +940,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111eba9"
+    "$oid": "68515f66d6b61a5de3de082a"
   },
   "name": "Belle Saison",
   "type": "yeast",
@@ -953,7 +953,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebaa"
+    "$oid": "68515f66d6b61a5de3de082b"
   },
   "name": "Diamond Lager",
   "type": "yeast",
@@ -966,7 +966,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebab"
+    "$oid": "68515f66d6b61a5de3de082c"
   },
   "name": "Farmhouse Hybrid Saison",
   "type": "yeast",
@@ -979,7 +979,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebac"
+    "$oid": "68515f66d6b61a5de3de082d"
   },
   "name": "NovaLager",
   "type": "yeast",
@@ -992,7 +992,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebad"
+    "$oid": "68515f66d6b61a5de3de082e"
   },
   "name": "CBC-1",
   "type": "yeast",
@@ -1005,7 +1005,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebae"
+    "$oid": "68515f66d6b61a5de3de082f"
   },
   "name": "Koln",
   "type": "yeast",
@@ -1018,7 +1018,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebaf"
+    "$oid": "68515f66d6b61a5de3de0830"
   },
   "name": "London ESB",
   "type": "yeast",
@@ -1031,7 +1031,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb0"
+    "$oid": "68515f66d6b61a5de3de0831"
   },
   "name": "Nottingham",
   "type": "yeast",
@@ -1044,7 +1044,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb1"
+    "$oid": "68515f66d6b61a5de3de0832"
   },
   "name": "Voss Kveik",
   "type": "yeast",
@@ -1057,7 +1057,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb2"
+    "$oid": "68515f66d6b61a5de3de0833"
   },
   "name": "Belgian Wit",
   "type": "yeast",
@@ -1070,7 +1070,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb3"
+    "$oid": "68515f66d6b61a5de3de0834"
   },
   "name": "WildBrew Philly Sour",
   "type": "yeast",
@@ -1083,7 +1083,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb4"
+    "$oid": "68515f66d6b61a5de3de0835"
   },
   "name": "All the Bretts",
   "type": "yeast",
@@ -1097,7 +1097,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb5"
+    "$oid": "68515f66d6b61a5de3de0836"
   },
   "name": "Bananza",
   "type": "yeast",
@@ -1110,7 +1110,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb6"
+    "$oid": "68515f66d6b61a5de3de0837"
   },
   "name": "Bayern Lager",
   "type": "yeast",
@@ -1124,7 +1124,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb7"
+    "$oid": "68515f66d6b61a5de3de0838"
   },
   "name": "Belgian Ale A",
   "type": "yeast",
@@ -1138,7 +1138,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb8"
+    "$oid": "68515f66d6b61a5de3de0839"
   },
   "name": "Belgian Ale O",
   "type": "yeast",
@@ -1152,7 +1152,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebb9"
+    "$oid": "68515f66d6b61a5de3de083a"
   },
   "name": "Belgian Ale R",
   "type": "yeast",
@@ -1166,7 +1166,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebba"
+    "$oid": "68515f66d6b61a5de3de083b"
   },
   "name": "Belgian Ale W",
   "type": "yeast",
@@ -1180,7 +1180,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebbb"
+    "$oid": "68515f66d6b61a5de3de083c"
   },
   "name": "Belgian Saison I",
   "type": "yeast",
@@ -1194,7 +1194,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebbc"
+    "$oid": "68515f66d6b61a5de3de083d"
   },
   "name": "Brett Blend #1 Where Da Funk?",
   "type": "yeast",
@@ -1208,7 +1208,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebbd"
+    "$oid": "68515f66d6b61a5de3de083e"
   },
   "name": "Brett Blend #2 Bit O' Funk",
   "type": "yeast",
@@ -1222,7 +1222,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebbe"
+    "$oid": "68515f66d6b61a5de3de083f"
   },
   "name": "Brett Blend #3 Bring On Da Funk",
   "type": "yeast",
@@ -1236,7 +1236,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebbf"
+    "$oid": "68515f66d6b61a5de3de0840"
   },
   "name": "British Ale I",
   "type": "yeast",
@@ -1250,7 +1250,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc0"
+    "$oid": "68515f66d6b61a5de3de0841"
   },
   "name": "British Ale V",
   "type": "yeast",
@@ -1264,7 +1264,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc1"
+    "$oid": "68515f66d6b61a5de3de0842"
   },
   "name": "British Ale VIII",
   "type": "yeast",
@@ -1278,7 +1278,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc2"
+    "$oid": "68515f66d6b61a5de3de0843"
   },
   "name": "CL-50",
   "type": "yeast",
@@ -1292,7 +1292,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc3"
+    "$oid": "68515f66d6b61a5de3de0844"
   },
   "name": "Cosmic Punch",
   "type": "yeast",
@@ -1305,7 +1305,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc4"
+    "$oid": "68515f66d6b61a5de3de0845"
   },
   "name": "French Saison",
   "type": "yeast",
@@ -1319,7 +1319,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc5"
+    "$oid": "68515f66d6b61a5de3de0846"
   },
   "name": "German Bock",
   "type": "yeast",
@@ -1333,7 +1333,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc6"
+    "$oid": "68515f66d6b61a5de3de0847"
   },
   "name": "German Lager I",
   "type": "yeast",
@@ -1347,7 +1347,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc7"
+    "$oid": "68515f66d6b61a5de3de0848"
   },
   "name": "Gulo Ale",
   "type": "yeast",
@@ -1360,7 +1360,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc8"
+    "$oid": "68515f66d6b61a5de3de0849"
   },
   "name": "Hefeweizen Ale I",
   "type": "yeast",
@@ -1374,7 +1374,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebc9"
+    "$oid": "68515f66d6b61a5de3de084a"
   },
   "name": "Helio Gazer",
   "type": "yeast",
@@ -1387,7 +1387,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebca"
+    "$oid": "68515f66d6b61a5de3de084b"
   },
   "name": "Hornindal Kveik",
   "type": "yeast",
@@ -1401,7 +1401,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebcb"
+    "$oid": "68515f66d6b61a5de3de084c"
   },
   "name": "HotHead Ale",
   "type": "yeast",
@@ -1415,7 +1415,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebcc"
+    "$oid": "68515f66d6b61a5de3de084d"
   },
   "name": "Irish Ale",
   "type": "yeast",
@@ -1429,7 +1429,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebcd"
+    "$oid": "68515f66d6b61a5de3de084e"
   },
   "name": "Jovaru Lithuanian Farmhouse",
   "type": "yeast",
@@ -1442,7 +1442,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebce"
+    "$oid": "68515f66d6b61a5de3de084f"
   },
   "name": "Kolsch II",
   "type": "yeast",
@@ -1456,7 +1456,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebcf"
+    "$oid": "68515f66d6b61a5de3de0850"
   },
   "name": "London Ale",
   "type": "yeast",
@@ -1470,7 +1470,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd0"
+    "$oid": "68515f66d6b61a5de3de0851"
   },
   "name": "Lunar Crush Lager",
   "type": "yeast",
@@ -1483,7 +1483,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd1"
+    "$oid": "68515f66d6b61a5de3de0852"
   },
   "name": "Lutra Kveik",
   "type": "yeast",
@@ -1496,7 +1496,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd2"
+    "$oid": "68515f66d6b61a5de3de0853"
   },
   "name": "Mexican Lager",
   "type": "yeast",
@@ -1510,7 +1510,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd3"
+    "$oid": "68515f66d6b61a5de3de0854"
   },
   "name": "Oktoberfest",
   "type": "yeast",
@@ -1524,7 +1524,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd4"
+    "$oid": "68515f66d6b61a5de3de0855"
   },
   "name": "Saisonstein's Monster",
   "type": "yeast",
@@ -1537,7 +1537,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd5"
+    "$oid": "68515f66d6b61a5de3de0856"
   },
   "name": "Scottish Ale",
   "type": "yeast",
@@ -1551,7 +1551,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd6"
+    "$oid": "68515f66d6b61a5de3de0857"
   },
   "name": "Star Party",
   "type": "yeast",
@@ -1564,7 +1564,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd7"
+    "$oid": "68515f66d6b61a5de3de0858"
   },
   "name": "Sundew",
   "type": "yeast",
@@ -1577,7 +1577,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd8"
+    "$oid": "68515f66d6b61a5de3de0859"
   },
   "name": "Tropical IPA",
   "type": "yeast",
@@ -1591,7 +1591,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebd9"
+    "$oid": "68515f66d6b61a5de3de085a"
   },
   "name": "Voss Kveik",
   "type": "yeast",
@@ -1605,7 +1605,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebda"
+    "$oid": "68515f66d6b61a5de3de085b"
   },
   "name": "West Coast Ale I",
   "type": "yeast",
@@ -1619,7 +1619,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebdb"
+    "$oid": "68515f66d6b61a5de3de085c"
   },
   "name": "West Coast Ale II",
   "type": "yeast",
@@ -1633,7 +1633,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebdc"
+    "$oid": "68515f66d6b61a5de3de085d"
   },
   "name": "Wit",
   "type": "yeast",
@@ -1647,7 +1647,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebdd"
+    "$oid": "68515f66d6b61a5de3de085e"
   },
   "name": "American Ale",
   "type": "yeast",
@@ -1661,7 +1661,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebde"
+    "$oid": "68515f66d6b61a5de3de085f"
   },
   "name": "American Ale II",
   "type": "yeast",
@@ -1675,7 +1675,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebdf"
+    "$oid": "68515f66d6b61a5de3de0860"
   },
   "name": "Bavarian Lager",
   "type": "yeast",
@@ -1689,7 +1689,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe0"
+    "$oid": "68515f66d6b61a5de3de0861"
   },
   "name": "Belgian Abby Ale II",
   "type": "yeast",
@@ -1703,7 +1703,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe1"
+    "$oid": "68515f66d6b61a5de3de0862"
   },
   "name": "Belgian Ale",
   "type": "yeast",
@@ -1717,7 +1717,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe2"
+    "$oid": "68515f66d6b61a5de3de0863"
   },
   "name": "Belgian Ardennes",
   "type": "yeast",
@@ -1731,7 +1731,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe3"
+    "$oid": "68515f66d6b61a5de3de0864"
   },
   "name": "Belgian Lambic Blend",
   "type": "yeast",
@@ -1745,7 +1745,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe4"
+    "$oid": "68515f66d6b61a5de3de0865"
   },
   "name": "Belgian Saison",
   "type": "yeast",
@@ -1759,7 +1759,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe5"
+    "$oid": "68515f66d6b61a5de3de0866"
   },
   "name": "Belgian Strong Ale",
   "type": "yeast",
@@ -1773,7 +1773,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe6"
+    "$oid": "68515f66d6b61a5de3de0867"
   },
   "name": "Belgian Witbier",
   "type": "yeast",
@@ -1787,7 +1787,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe7"
+    "$oid": "68515f66d6b61a5de3de0868"
   },
   "name": "Bohemian Lager",
   "type": "yeast",
@@ -1801,7 +1801,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe8"
+    "$oid": "68515f66d6b61a5de3de0869"
   },
   "name": "British Ale",
   "type": "yeast",
@@ -1815,7 +1815,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebe9"
+    "$oid": "68515f66d6b61a5de3de086a"
   },
   "name": "British Ale",
   "type": "yeast",
@@ -1829,7 +1829,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebea"
+    "$oid": "68515f66d6b61a5de3de086b"
   },
   "name": "California Lager",
   "type": "yeast",
@@ -1843,7 +1843,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebeb"
+    "$oid": "68515f66d6b61a5de3de086c"
   },
   "name": "Czech Pils",
   "type": "yeast",
@@ -1857,7 +1857,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebec"
+    "$oid": "68515f66d6b61a5de3de086d"
   },
   "name": "Denny's Favorite 50",
   "type": "yeast",
@@ -1871,7 +1871,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebed"
+    "$oid": "68515f66d6b61a5de3de086e"
   },
   "name": "English Special Bitter",
   "type": "yeast",
@@ -1885,7 +1885,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebee"
+    "$oid": "68515f66d6b61a5de3de086f"
   },
   "name": "Farmhouse Ale",
   "type": "yeast",
@@ -1899,7 +1899,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebef"
+    "$oid": "68515f66d6b61a5de3de0870"
   },
   "name": "French Saison",
   "type": "yeast",
@@ -1913,7 +1913,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf0"
+    "$oid": "68515f66d6b61a5de3de0871"
   },
   "name": "German Ale",
   "type": "yeast",
@@ -1927,7 +1927,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf1"
+    "$oid": "68515f66d6b61a5de3de0872"
   },
   "name": "Irish Ale",
   "type": "yeast",
@@ -1941,7 +1941,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf2"
+    "$oid": "68515f66d6b61a5de3de0873"
   },
   "name": "Kölsch",
   "type": "yeast",
@@ -1955,7 +1955,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf3"
+    "$oid": "68515f66d6b61a5de3de0874"
   },
   "name": "London Ale III",
   "type": "yeast",
@@ -1969,7 +1969,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf4"
+    "$oid": "68515f66d6b61a5de3de0875"
   },
   "name": "London ESB Ale",
   "type": "yeast",
@@ -1983,7 +1983,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf5"
+    "$oid": "68515f66d6b61a5de3de0876"
   },
   "name": "Munich Lager",
   "type": "yeast",
@@ -1997,7 +1997,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf6"
+    "$oid": "68515f66d6b61a5de3de0877"
   },
   "name": "Northwest Ale",
   "type": "yeast",
@@ -2011,7 +2011,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf7"
+    "$oid": "68515f66d6b61a5de3de0878"
   },
   "name": "Octoberfest Lager Blend",
   "type": "yeast",
@@ -2025,7 +2025,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf8"
+    "$oid": "68515f66d6b61a5de3de0879"
   },
   "name": "Pilsen Lager",
   "type": "yeast",
@@ -2039,7 +2039,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebf9"
+    "$oid": "68515f66d6b61a5de3de087a"
   },
   "name": "Pilsner Urquell H",
   "type": "yeast",
@@ -2052,7 +2052,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebfa"
+    "$oid": "68515f66d6b61a5de3de087b"
   },
   "name": "Roeselare Ale Blend",
   "type": "yeast",
@@ -2066,7 +2066,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebfb"
+    "$oid": "68515f66d6b61a5de3de087c"
   },
   "name": "Scottish Ale",
   "type": "yeast",
@@ -2080,7 +2080,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebfc"
+    "$oid": "68515f66d6b61a5de3de087d"
   },
   "name": "Thames Valley Ale",
   "type": "yeast",
@@ -2094,7 +2094,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebfd"
+    "$oid": "68515f66d6b61a5de3de087e"
   },
   "name": "Trappist High Gravity",
   "type": "yeast",
@@ -2108,7 +2108,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebfe"
+    "$oid": "68515f66d6b61a5de3de087f"
   },
   "name": "Weihenstephan Weizen",
   "type": "yeast",
@@ -2122,7 +2122,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ebff"
+    "$oid": "68515f66d6b61a5de3de0880"
   },
   "name": "West Yorkshire",
   "type": "yeast",
@@ -2136,7 +2136,7 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ec00"
+    "$oid": "68515f66d6b61a5de3de0881"
   },
   "name": "Maris Otter",
   "type": "grain",
@@ -2147,9 +2147,369 @@
 },
 {
   "_id": {
-    "$oid": "68507ac201ff131f7111ec01"
+    "$oid": "68515f66d6b61a5de3de0882"
   },
   "name": "Irish Moss",
   "type": "other",
   "description": "Natural seaweed-derived fining agent used to clarify beer by binding proteins and improving clarity. Added during the last 10-15 minutes of the boil. Helps create brilliantly clear beer without affecting flavor."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0883"
+  },
+  "name": "Belgian Pilsner",
+  "type": "grain",
+  "description": "Light-colored base malt with clean, crisp character. Provides excellent enzymatic power and neutral flavor foundation. Essential for pilsners, lagers, and light ales.",
+  "potential": 37,
+  "color": 1.8,
+  "grain_type": "base_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0884"
+  },
+  "name": "2-Row Malt",
+  "type": "grain",
+  "description": "Standard American base malt with clean, neutral character and excellent enzymatic power. Provides foundation for American ales and IPAs with subtle grain sweetness.",
+  "potential": 37,
+  "color": 2,
+  "grain_type": "base_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0885"
+  },
+  "name": "Black Patent Malt",
+  "type": "grain",
+  "description": "Intensely roasted malt providing deep black color and sharp, acrid roasted flavor. Use sparingly for color and roasted character in stouts and porters.",
+  "potential": 25,
+  "color": 525,
+  "grain_type": "roasted"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0886"
+  },
+  "name": "Caramel Malt - 30L",
+  "type": "grain",
+  "description": "Light-medium crystal malt providing moderate caramel sweetness and golden-amber color. Adds complexity and mouthfeel to pale ales and amber beers.",
+  "potential": 35,
+  "color": 30,
+  "grain_type": "caramel_crystal"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0887"
+  },
+  "name": "Caramel Malt - 50L",
+  "type": "grain",
+  "description": "Medium crystal malt with balanced caramel sweetness and amber color. Versatile crystal malt suitable for many amber and brown beer styles.",
+  "potential": 35,
+  "color": 50,
+  "grain_type": "caramel_crystal"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0888"
+  },
+  "name": "Caramel Malt - 90L",
+  "type": "grain",
+  "description": "Dark crystal malt with rich caramel and slight raisin flavors. Provides deep reddish-brown color and enhances malt complexity in darker ales.",
+  "potential": 34,
+  "color": 90,
+  "grain_type": "caramel_crystal"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0889"
+  },
+  "name": "Victory Malt",
+  "type": "grain",
+  "description": "Lightly kilned specialty malt with nutty, biscuity character and golden color. Adds toasted flavor and complexity without excessive sweetness. Excellent for nut brown ales and amber beers.",
+  "potential": 34,
+  "color": 25,
+  "grain_type": "specialty_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088a"
+  },
+  "name": "Biscuit Malt",
+  "type": "grain",
+  "description": "Specialty malt with warm biscuit and bread crust flavors. Provides light color and toasty character. Enhances malt complexity in ales and lagers.",
+  "potential": 36,
+  "color": 23,
+  "grain_type": "specialty_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088b"
+  },
+  "name": "Brown Malt",
+  "type": "grain",
+  "description": "Traditional English malt with coffee, chocolate, and nutty flavors. Provides amber-brown color and complex roasted character. Historical malt for porters and brown ales.",
+  "potential": 32,
+  "color": 65,
+  "grain_type": "specialty_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088c"
+  },
+  "name": "Dextrin Malt (Cara-Pils)",
+  "type": "grain",
+  "description": "Non-fermentable malt that enhances body and head retention without adding color or flavor. Improves mouthfeel and foam stability in light beers.",
+  "potential": 33,
+  "color": 1.5,
+  "grain_type": "specialty_malt"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088d"
+  },
+  "name": "Apple Smoked Malt",
+  "type": "grain",
+  "description": "Gentle, fruity smoke character from applewood. Provides sweet, mild smoke notes with subtle fruit undertones. Excellent for unique seasonal beers and lighter smoked styles.",
+  "potential": 36,
+  "color": 3,
+  "grain_type": "smoked"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088e"
+  },
+  "name": "Peat Smoked Malt",
+  "type": "grain",
+  "description": "Intense, earthy smoke character from peat. Provides distinctive Scottish Highland flavor with medicinal, phenolic notes. Traditional for Scotch whisky and specialty Scottish ales.",
+  "potential": 34,
+  "color": 3,
+  "grain_type": "smoked"
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de088f"
+  },
+  "name": "Ekuanot",
+  "type": "hop",
+  "description": "American hop with complex tropical and berry character featuring papaya, citrus, and green pepper notes. High alpha acids with unique flavor profile. Excellent for modern IPAs and experimental ales.",
+  "alpha_acid": 14.5
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0890"
+  },
+  "name": "Idaho 7",
+  "type": "hop",
+  "description": "American hop with intense tropical fruit and citrus character featuring pineapple, mango, and citrus peel. High alpha acids with bold aroma. Perfect for tropical IPAs and fruit-forward ales.",
+  "alpha_acid": 13
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0891"
+  },
+  "name": "Strata",
+  "type": "hop",
+  "description": "American hop with unique layered character featuring tropical fruit, cannabis, and dank notes. High alpha acids with complex aroma profile. Creates distinctive character in modern IPAs.",
+  "alpha_acid": 12
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0892"
+  },
+  "name": "Sabro",
+  "type": "hop",
+  "description": "American hop with tropical fruit and coconut character featuring tangerine, coconut, and tropical fruit. Medium-high alpha acids with distinctive aroma. Excellent for tropical and experimental ales.",
+  "alpha_acid": 15.3
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0893"
+  },
+  "name": "Talus",
+  "type": "hop",
+  "description": "American hop with intense tropical fruit character featuring grapefruit, citrus, and tropical notes. High alpha acids with powerful aroma. Perfect for citrus-forward IPAs and pale ales.",
+  "alpha_acid": 8.5
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0895"
+  },
+  "name": "Northern Brewer",
+  "type": "hop",
+  "description": "Dual-purpose hop with woody, minty character and mild bitterness. Medium alpha acids suitable for bittering and aroma. Traditional for California Common and German lagers.",
+  "alpha_acid": 8.5
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0896"
+  },
+  "name": "WLP001 California Ale",
+  "type": "yeast",
+  "description": "Clean American ale yeast with neutral character and reliable performance. Produces clean fermentation with minimal esters. Industry standard for American ales and IPAs.",
+  "attenuation": 76,
+  "manufacturer": "White Labs",
+  "code": "WLP001",
+  "alcohol_tolerance": 10,
+  "min_temperature": 68,
+  "max_temperature": 73
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0897"
+  },
+  "name": "WLP002 English Ale",
+  "type": "yeast",
+  "description": "Classic English ale yeast with fruity character and good flocculation. Produces traditional English ale profile with balanced esters. Excellent for bitters, milds, and English styles.",
+  "attenuation": 68,
+  "manufacturer": "White Labs",
+  "code": "WLP002",
+  "alcohol_tolerance": 10,
+  "min_temperature": 65,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0898"
+  },
+  "name": "WLP830 German Lager",
+  "type": "yeast",
+  "description": "Traditional German lager yeast producing clean, malty character. Creates authentic German lager profile with excellent cold tolerance. Perfect for German pilsners and traditional lagers.",
+  "attenuation": 74,
+  "manufacturer": "White Labs",
+  "code": "WLP830",
+  "alcohol_tolerance": 9,
+  "min_temperature": 50,
+  "max_temperature": 55
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de0899"
+  },
+  "name": "Imperial Juice",
+  "type": "yeast",
+  "description": "Specialty yeast designed to enhance hop character and create hazy appearance. Produces biotransformation of hop compounds for enhanced tropical fruit flavors. Perfect for New England IPAs.",
+  "attenuation": 75,
+  "manufacturer": "Imperial Yeast",
+  "code": "A38",
+  "alcohol_tolerance": 10,
+  "min_temperature": 66,
+  "max_temperature": 72
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089a"
+  },
+  "name": "Imperial Darkness",
+  "type": "yeast",
+  "description": "English ale yeast with rich, malty character and moderate attenuation. Produces complex esters perfect for porters, stouts, and dark ales. Creates full-bodied, flavorful beers.",
+  "attenuation": 72,
+  "manufacturer": "Imperial Yeast",
+  "code": "A10",
+  "alcohol_tolerance": 10,
+  "min_temperature": 64,
+  "max_temperature": 70
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089b"
+  },
+  "name": "Whirlfloc Tablets",
+  "type": "other",
+  "description": "Convenient tablet form of Irish moss and carrageenan for beer clarification. Add one tablet per 5 gallons during last 5-10 minutes of boil. Improves clarity and reduces chill haze."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089c"
+  },
+  "name": "Yeast Nutrient",
+  "type": "other",
+  "description": "Blend of nutrients essential for healthy yeast fermentation including nitrogen, phosphorus, and vitamins. Prevents stuck fermentations and improves yeast health, especially in high gravity beers."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089d"
+  },
+  "name": "Gypsum (Calcium Sulfate)",
+  "type": "other",
+  "description": "Water treatment salt that increases calcium and sulfate levels. Enhances hop character and creates crisp, dry finish. Essential for brewing hoppy beers and adjusting water chemistry."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089e"
+  },
+  "name": "Calcium Chloride",
+  "type": "other",
+  "description": "Water treatment salt that increases calcium and chloride levels. Enhances malt character and creates fuller mouthfeel. Balances water chemistry for malty beer styles."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de089f"
+  },
+  "name": "Epsom Salt (Magnesium Sulfate)",
+  "type": "other",
+  "description": "Water treatment salt that adds magnesium and sulfate to brewing water. Provides essential nutrients for yeast health and helps achieve proper mineral balance in brewing water."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a0"
+  },
+  "name": "Baking Soda (Sodium Bicarbonate)",
+  "type": "other",
+  "description": "Water treatment chemical used to raise mash pH and add alkalinity. Essential for brewing dark beers and adjusting water chemistry. Use sparingly to avoid salty flavors."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a1"
+  },
+  "name": "Campden Tablets (Potassium Metabisulfite)",
+  "type": "other",
+  "description": "Sanitizing and antioxidant tablets that remove chlorine from water and prevent oxidation. One tablet treats 5-6 gallons of water. Essential for water treatment and beer preservation."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a2"
+  },
+  "name": "Corn Sugar (Dextrose)",
+  "type": "other",
+  "description": "Simple sugar that ferments completely dry without adding flavor. Used for priming carbonation, increasing alcohol content, or lightening body. Standard priming sugar for bottle conditioning."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a3"
+  },
+  "name": "Coriander Seed",
+  "type": "other",
+  "description": "Traditional spice for Belgian witbiers providing citrusy, slightly peppery flavor. Crush lightly before adding to boil. Use 0.5-1 oz per 5 gallons during last 5-10 minutes of boil."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a4"
+  },
+  "name": "Bitter Orange Peel",
+  "type": "other",
+  "description": "Traditional spice for Belgian witbiers and holiday beers providing citrus character and slight bitterness. Use dried Curaçao or Seville orange peel. Add during last 5-10 minutes of boil."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a5"
+  },
+  "name": "Vanilla Beans",
+  "type": "other",
+  "description": "Premium flavoring providing rich vanilla character for stouts, porters, and specialty beers. Split beans and scrape seeds before adding to secondary fermentation or aging. Use 1-2 beans per 5 gallons."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a6"
+  },
+  "name": "Cacao Nibs",
+  "type": "other",
+  "description": "Roasted cocoa bean pieces providing chocolate flavor without sweetness. Add to secondary fermentation for chocolate character in stouts and porters. Use 2-4 oz per 5 gallons."
+},
+{
+  "_id": {
+    "$oid": "68515f66d6b61a5de3de08a7"
+  },
+  "name": "Lactose (Milk Sugar)",
+  "type": "other",
+  "description": "Unfermentable sugar that adds sweetness and body to beer. Creates creamy mouthfeel and balances hop bitterness. Essential for milk stouts and sweet stouts. Use 0.5-1 lb per 5 gallons."
 }]
