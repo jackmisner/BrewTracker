@@ -69,18 +69,40 @@ class IngredientService {
 
   /**
    * Create a new recipe ingredient with proper ID and metadata
+   * Updated to handle newly created ingredients and prioritize provided name
    */
   createRecipeIngredient(type, ingredientData, availableIngredients) {
-    const baseData = this.getIngredientMetadata(
+    // Prioritize provided name over cache lookup
+    let ingredientName =
+      ingredientData.name ||
+      this.getIngredientName(
+        ingredientData.ingredient_id,
+        type,
+        availableIngredients
+      );
+
+    // If still no name found, use a fallback
+    if (!ingredientName || ingredientName === "Unknown") {
+      ingredientName = ingredientData.name || `Unknown ${type}`;
+    }
+
+    // Try to get metadata from available ingredients
+    let baseData = this.getIngredientMetadata(
       ingredientData.ingredient_id,
       type,
       availableIngredients
     );
-    const ingredientName = this.getIngredientName(
-      ingredientData.ingredient_id,
-      type,
-      availableIngredients
-    );
+
+    // If no metadata found in cache, use provided ingredient data
+    if (Object.keys(baseData).length === 0) {
+      baseData = {
+        potential: ingredientData.potential || null,
+        color: ingredientData.color || null,
+        grain_type: ingredientData.grain_type || null,
+        alpha_acid: ingredientData.alpha_acid || null,
+        attenuation: ingredientData.attenuation || null,
+      };
+    }
 
     const newIngredient = {
       id: this.generateIngredientId(),
@@ -96,13 +118,25 @@ class IngredientService {
       ...baseData,
     };
 
-    // Override with custom values if provided
-    if (type === "hop" && ingredientData.alpha_acid) {
+    // Override with custom values if provided (for newly created ingredients)
+    if (type === "hop" && ingredientData.alpha_acid !== undefined) {
       newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid);
     }
 
-    if (type === "grain" && ingredientData.color) {
+    if (type === "grain" && ingredientData.color !== undefined) {
       newIngredient.color = parseFloat(ingredientData.color);
+    }
+
+    if (type === "grain" && ingredientData.potential !== undefined) {
+      newIngredient.potential = parseFloat(ingredientData.potential);
+    }
+
+    if (type === "grain" && ingredientData.grain_type) {
+      newIngredient.grain_type = ingredientData.grain_type;
+    }
+
+    if (type === "yeast" && ingredientData.attenuation !== undefined) {
+      newIngredient.attenuation = parseFloat(ingredientData.attenuation);
     }
 
     return newIngredient;

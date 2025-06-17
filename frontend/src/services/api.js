@@ -136,6 +136,14 @@ const ApiService = {
       api.get(`/brew-sessions/${sessionId}/fermentation/stats`),
   },
 
+  // BeerXML endpoints
+  beerxml: {
+    export: (recipeId) => api.get(`/beerxml/export/${recipeId}`),
+    parse: (data) => api.post("/beerxml/parse", data),
+    matchIngredients: (data) => api.post("/beerxml/match-ingredients", data),
+    createIngredients: (data) => api.post("/beerxml/create-ingredients", data),
+  },
+
   // Dashboard and statistics
   dashboard: {
     getData: () => api.get("/dashboard"),

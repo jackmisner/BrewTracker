@@ -1,0 +1,574 @@
+/* ==========================================================================
+   BeerXMLImportExport.css - BeerXML Import/Export Component Styles
+   ========================================================================== */
+
+/* ==========================================================================
+   MAIN CONTAINER
+   ========================================================================== */
+.beerxml-import-export {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   SECTION STYLING
+   ========================================================================== */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.beerxml-import-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.beerxml-export-section {
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+/* ==========================================================================
+   FILE UPLOAD
+   ========================================================================== */
+.file-upload-area {
+  margin-bottom: 1rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.upload-dropzone:hover {
+  border-color: #3b82f6;
+  background: #f8faff;
+}
+
+.upload-dropzone.has-file {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  font-size: 2rem;
+}
+
+.upload-text {
+  font-weight: 500;
+  color: #374151;
+}
+
+.upload-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+}
+
+.file-details {
+  text-align: left;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+.file-size {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* ==========================================================================
+   ACTIONS & BUTTONS
+   ========================================================================== */
+.import-actions,
+.export-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   RECIPE SELECTION & PREVIEW
+   ========================================================================== */
+.recipe-selection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+}
+
+.recipe-selection h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.125rem;
+}
+
+.recipe-selector {
+  margin-bottom: 1rem;
+}
+
+.recipe-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.recipe-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.recipe-preview h5 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.recipe-details {
+  margin: 1rem 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.detail-row .label {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.detail-row .value {
+  color: #374151;
+}
+
+/* ==========================================================================
+   INGREDIENT SUMMARY
+   ========================================================================== */
+.ingredient-summary {
+  margin-top: 1rem;
+}
+
+.ingredient-summary h6 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ingredient-types {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.ingredient-type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ingredient-type-badge.grain {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ingredient-type-badge.hop {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.ingredient-type-badge.yeast {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.ingredient-type-badge.other {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.import-recipe-actions {
+  margin-top: 1rem;
+}
+
+/* ==========================================================================
+   EXPORT SECTION
+   ========================================================================== */
+.export-info {
+  margin-bottom: 1.5rem;
+}
+
+.export-info p {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.current-recipe-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.recipe-name {
+  margin-bottom: 0.5rem;
+}
+
+.recipe-name strong {
+  color: #374151;
+  font-size: 1rem;
+}
+
+.recipe-stats {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* ==========================================================================
+   ERROR HANDLING
+   ========================================================================== */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 768px) {
+  .beerxml-import-export {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .beerxml-import-section,
+  .beerxml-export-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .upload-dropzone {
+    padding: 1.5rem 1rem;
+  }
+
+  .upload-icon {
+    font-size: 1.5rem;
+  }
+
+  .upload-text {
+    font-size: 0.875rem;
+  }
+
+  .upload-hint {
+    font-size: 0.8125rem;
+  }
+
+  .import-actions,
+  .export-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .detail-row .label {
+    font-size: 0.8125rem;
+  }
+
+  .detail-row .value {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .ingredient-types {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ingredient-type-badge {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  .recipe-preview,
+  .current-recipe-info {
+    padding: 0.75rem;
+  }
+
+  .upload-dropzone {
+    padding: 1rem;
+  }
+
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .file-details {
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+.btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.form-select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.upload-dropzone:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+  .upload-dropzone {
+    border-width: 3px;
+  }
+  
+  .btn {
+    border-width: 2px;
+  }
+  
+  .ingredient-type-badge {
+    border: 1px solid currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-dropzone,
+  .btn,
+  .button-spinner {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   LOADING STATES
+   ========================================================================== */
+.beerxml-import-section.loading,
+.beerxml-export-section.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.recipe-selection.loading {
+  opacity: 0.8;
+}
+
+.recipe-selection.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   SUCCESS STATES
+   ========================================================================== */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  color: #166534;
+}
+
+.success-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.success-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   PROGRESS INDICATORS
+   ========================================================================== */
+.progress-container {
+  margin: 1rem 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}

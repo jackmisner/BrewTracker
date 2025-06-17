@@ -596,6 +596,151 @@ export function useRecipeBuilder(recipeId) {
   const getRecipeAnalysis = useCallback(() => {
     return Services.metrics.getRecipeAnalysis(state.metrics, state.recipe);
   }, [state.metrics, state.recipe]);
+  const refreshAvailableIngredients = useCallback(async () => {
+    try {
+      const updatedAvailableIngredients =
+        await Services.ingredient.fetchIngredients();
+      setState((prev) => ({
+        ...prev,
+        availableIngredients: updatedAvailableIngredients,
+      }));
+    } catch (error) {
+      console.error("Error refreshing available ingredients:", error);
+    }
+  }, []);
+
+  // Import multiple ingredients at once (for BeerXML import)
+  const importIngredients = useCallback(
+    async (ingredientsToImport) => {
+      try {
+        console.log("🍺 Starting BeerXML ingredient import", {
+          ingredientCount: ingredientsToImport.length,
+          ingredients: ingredientsToImport.map((ing) => ({
+            name: ing.name,
+            type: ing.type,
+            amount: ing.amount,
+            unit: ing.unit,
+            ingredient_id: ing.ingredient_id,
+          })),
+        });
+
+        setState((prev) => ({
+          ...prev,
+          addingIngredient: true,
+          error: null,
+        }));
+
+        const processedIngredients = [];
+
+        // Process each ingredient with complete data including name
+        for (const importIngredient of ingredientsToImport) {
+          console.log(
+            `🔍 Processing ingredient: ${importIngredient.name} (${importIngredient.type})`
+          );
+
+          // Create ingredient data object with all properties including name
+          const ingredientData = {
+            ingredient_id: importIngredient.ingredient_id,
+            name: importIngredient.name, // Include the name!
+            amount: importIngredient.amount,
+            unit: importIngredient.unit,
+            use: importIngredient.use,
+            time: importIngredient.time,
+            alpha_acid: importIngredient.alpha_acid,
+            color: importIngredient.color,
+            potential: importIngredient.potential,
+            grain_type: importIngredient.grain_type,
+            attenuation: importIngredient.attenuation,
+          };
+
+          console.log(`📊 Ingredient data:`, ingredientData);
+
+          // Validate ingredient data
+          const validation = Services.ingredient.validateIngredientData(
+            importIngredient.type,
+            ingredientData
+          );
+          if (!validation.isValid) {
+            console.error(
+              `❌ Validation failed for ${importIngredient.name}:`,
+              validation.errors
+            );
+            throw new Error(
+              `${importIngredient.name}: ${validation.errors.join(", ")}`
+            );
+          }
+
+          // Create new recipe ingredient using the service
+          const newIngredient = Services.ingredient.createRecipeIngredient(
+            importIngredient.type,
+            ingredientData,
+            state.availableIngredients
+          );
+
+          console.log(`✅ Created recipe ingredient:`, {
+            id: newIngredient.id,
+            name: newIngredient.name,
+            type: newIngredient.type,
+            amount: newIngredient.amount,
+            unit: newIngredient.unit,
+          });
+
+          processedIngredients.push(newIngredient);
+        }
+
+        console.log(
+          `🎯 Total processed ingredients: ${processedIngredients.length}`
+        );
+
+        // Sort all ingredients together
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(processedIngredients);
+
+        console.log(
+          `📝 Sorted ingredients:`,
+          sortedIngredients.map((ing) => ({
+            name: ing.name,
+            type: ing.type,
+            amount: ing.amount,
+          }))
+        );
+
+        // Update state with all ingredients at once
+        setState((prev) => ({
+          ...prev,
+          ingredients: sortedIngredients,
+          hasUnsavedChanges: true,
+          addingIngredient: false,
+          calculatingMetrics: true,
+        }));
+
+        console.log("🏁 Import completed successfully");
+
+        // Recalculate metrics with all ingredients
+        const metrics = await Services.metrics.calculateMetricsDebounced(
+          "recipe-builder-import",
+          state.recipe,
+          sortedIngredients
+        );
+
+        setState((prev) => ({
+          ...prev,
+          metrics,
+          calculatingMetrics: false,
+        }));
+      } catch (error) {
+        console.error("💥 Error importing ingredients:", error);
+        setState((prev) => ({
+          ...prev,
+          error: error.message || "Failed to import ingredients",
+          addingIngredient: false,
+          calculatingMetrics: false,
+        }));
+        throw error;
+      }
+    },
+    [state.recipe, state.availableIngredients]
+  );
 
   // Return interface
   return {
@@ -617,16 +762,18 @@ export function useRecipeBuilder(recipeId) {
     // Core actions
     updateRecipe,
     addIngredient,
-    updateIngredient, // NEW ACTION
+    updateIngredient,
     removeIngredient,
     scaleRecipe,
     saveRecipe,
     recalculateMetrics,
+    importIngredients,
 
     // Utility actions
     clearError,
     cancelOperation,
     getRecipeAnalysis,
+    refreshAvailableIngredients, // NEW
 
     // Computed properties
     isEditing: Boolean(recipeId),
