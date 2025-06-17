@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../services/api";
+import "../styles/IngredientManager.css";
 
 const IngredientManager = () => {
   // Form state
@@ -535,10 +536,10 @@ const IngredientManager = () => {
                       name="potential"
                       value={formData.potential}
                       onChange={handleChange}
-                      step="0.001"
-                      min="1.000"
-                      max="1.100"
-                      placeholder="e.g., 1.037"
+                      step="1"
+                      min="1"
+                      max="100"
+                      placeholder="e.g., 37"
                       style={{
                         width: "100%",
                         padding: "10px",
