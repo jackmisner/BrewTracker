@@ -64,13 +64,15 @@ homebrew-tracker/
 │   │   ├── hooks/                        # Custom ReactJS hook implementations
 │   │   ├── images/
 │   │   ├── pages/
-│   │   │   ├── AllRecipes.js
-│   │   │   ├── Dashboard.js
+│   │   │   ├── AllRecipes.js             # View all of your recipes
+│   │   │   ├── Dashboard.js              # Homepage when logged in
+│   │   │   ├── IngredientManager.js      # Add ingredients to database
 │   │   │   ├── Login.js
-│   │   │   ├── RecipeBuilder.js
+│   │   │   ├── PublicRecipes.js          # View all recipes tagged as "Public"
+│   │   │   ├── RecipeBuilder.js          # Create a recipe
 │   │   │   ├── Register.js
-│   │   │   ├── UserSettings.js
-│   │   │   └── ViewRecipe.js
+│   │   │   ├── UserSettings.js           # Adjust your user settings
+│   │   │   └── ViewRecipe.js             # View a single recipe
 │   │   ├── services/
 |   |   |   └── api.js                    # Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
 │   │   │   ├── index.js                  # Central export for all business logic services, provides a clean interface for importing services throughout the application
@@ -78,8 +80,9 @@ homebrew-tracker/
 │   │   │   ├── CacheManager.js           # Higher-level abstraction specifically for cache-management operations
 │   │   │   ├── IngredientService.js      # Higher-level abstraction specifically for ingredient-related operations
 │   │   │   ├── MetricService.js          # Higher-level abstraction specifically for metric-calculation operations
+│   │   │   ├── RecipeDefaultsService.js  # Service to provide appropriate default values for new recipes based on user's unit preferences
 │   │   │   ├── RecipeService.js          # Higher-level abstraction specifically for recipe-related operations
-|   |   |   └── UserSettings.js           # Higher-level abstraction specifically for managing user settings and account management
+|   |   |   └── UserSettingsService.js    # Higher-level abstraction specifically for managing user settings and account management
 │   │   ├── styles/                       # CSS for various frontend components
 │   │   ├── utils/
 |   |   |   └── formatUtils.js            # Utility functions for formatting units for displaying to the end user
