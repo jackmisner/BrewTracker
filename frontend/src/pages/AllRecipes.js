@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../services/api";
 import RecipeCardContainer from "../components/RecipeCardContainer";
+import { useNavigate } from "react-router";
 
 const AllRecipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const navigate = useNavigate();
   const fetchRecipes = async () => {
     try {
       setLoading(true);
@@ -48,6 +50,13 @@ const AllRecipes = () => {
       {!loading && !error && recipes.length === 0 && (
         <div className="text-center py-10">No recipes found.</div>
       )}
+      <button
+        onClick={() => navigate("/recipes/new")}
+        className="primary-button"
+      >
+        + New Recipe
+      </button>
+
       {!loading && !error && recipes.length > 0 && (
         <RecipeCardContainer
           recipes={recipes}
