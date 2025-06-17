@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Fuse from "fuse.js";
 import ApiService from "../services/api";
+import { ingredientServiceInstance } from "../services";
 import "../styles/IngredientManager.css";
 
 const IngredientManager = () => {
@@ -28,9 +30,35 @@ const IngredientManager = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [existingIngredients, setExistingIngredients] = useState([]);
+  const [groupedIngredients, setGroupedIngredients] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredResults, setFilteredResults] = useState({});
 
-  // Load existing ingredients for reference
+  // Initialize Fuse.js for fuzzy search
+  const fuse = useMemo(() => {
+    const allIngredients = Object.values(groupedIngredients).flat();
+
+    if (allIngredients.length === 0) return null;
+
+    return new Fuse(allIngredients, {
+      keys: [
+        { name: "name", weight: 1.0 },
+        { name: "description", weight: 0.6 },
+        { name: "manufacturer", weight: 0.4 },
+        { name: "type", weight: 0.3 },
+        { name: "grain_type", weight: 0.3 },
+      ],
+      threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
+      distance: 50,
+      minMatchCharLength: 1,
+      includeScore: true,
+      includeMatches: true,
+      ignoreLocation: true,
+      useExtendedSearch: false,
+    });
+  }, [groupedIngredients]);
+
+  // Load and group existing ingredients
   useEffect(() => {
     const loadIngredients = async () => {
       try {
@@ -40,6 +68,14 @@ const IngredientManager = () => {
           : response.data.ingredients || [];
 
         setExistingIngredients(ingredients);
+
+        // Use the IngredientService to group ingredients by type
+        const grouped =
+          ingredientServiceInstance.groupIngredientsByType(ingredients);
+        setGroupedIngredients(grouped);
+
+        // Initialize filtered results with all grouped ingredients
+        setFilteredResults(grouped);
       } catch (err) {
         console.error("Error loading ingredients:", err);
         setError("Failed to load existing ingredients");
@@ -47,6 +83,47 @@ const IngredientManager = () => {
     };
     loadIngredients();
   }, []);
+
+  // Handle search with fuzzy matching
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      // No search query - show all grouped ingredients
+      setFilteredResults(groupedIngredients);
+      return;
+    }
+
+    if (!fuse) {
+      // Fuse not ready yet
+      setFilteredResults({});
+      return;
+    }
+
+    // Perform fuzzy search
+    const searchResults = fuse.search(searchQuery);
+
+    // Group the search results by type
+    const groupedResults = {
+      grain: [],
+      hop: [],
+      yeast: [],
+      other: [],
+    };
+
+    searchResults.forEach((result) => {
+      const ingredient = result.item;
+      const type = ingredient.type === "adjunct" ? "other" : ingredient.type;
+
+      if (groupedResults[type]) {
+        groupedResults[type].push({
+          ...ingredient,
+          searchScore: result.score,
+          searchMatches: result.matches || [],
+        });
+      }
+    });
+
+    setFilteredResults(groupedResults);
+  }, [searchQuery, fuse, groupedIngredients]);
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -191,18 +268,19 @@ const IngredientManager = () => {
 
       setSuccess(`${formData.name} has been added successfully!`);
 
-      const newIngredient = {
-        ingredient_id: Date.now().toString(),
-        ...submissionData,
-        created_at: new Date().toISOString(),
-      };
-      setExistingIngredients((prev) => [...prev, newIngredient]);
-
+      // Refresh the ingredients list
       const updatedResponse = await ApiService.ingredients.getAll();
       const ingredients = Array.isArray(updatedResponse.data)
         ? updatedResponse.data
         : updatedResponse.data.ingredients || [];
+
       setExistingIngredients(ingredients);
+
+      // Re-group ingredients using the service
+      const grouped =
+        ingredientServiceInstance.groupIngredientsByType(ingredients);
+      setGroupedIngredients(grouped);
+      setFilteredResults(grouped);
 
       // Reset form
       setFormData({
@@ -253,12 +331,36 @@ const IngredientManager = () => {
     setSuccess("");
   };
 
-  // Filter existing ingredients for display
-  const filteredIngredients = existingIngredients.filter(
-    (ing) =>
-      ing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ing.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
+
+  // Highlight search matches in text
+  const highlightMatches = (text, matches = [], searchTerm = "") => {
+    if (!matches.length || !searchTerm) return text;
+
+    // Simple approach: highlight the search query if it appears
+    const searchTerms = searchTerm
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
+
+    let highlightedText = text;
+
+    searchTerms.forEach((term) => {
+      const regex = new RegExp(
+        `(\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+        "gi"
+      );
+      highlightedText = highlightedText.replace(
+        regex,
+        '<mark class="search-highlight">$1</mark>'
+      );
+    });
+
+    return highlightedText;
+  };
 
   const getTypeColor = (type) => {
     switch (type) {
@@ -269,140 +371,77 @@ const IngredientManager = () => {
       case "yeast":
         return "#DAA520";
       case "other":
+      case "adjunct":
         return "#6B6B6B";
       default:
         return "#000";
     }
   };
 
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "16px",
-    boxSizing: "border-box",
+  const getTypeDisplayName = (type) => {
+    switch (type) {
+      case "grain":
+        return "Grains & Fermentables";
+      case "hop":
+        return "Hops";
+      case "yeast":
+        return "Yeast";
+      case "other":
+        return "Other/Adjuncts";
+      default:
+        return type;
+    }
   };
 
-  const buttonStyle = {
-    padding: "12px 24px",
-    borderRadius: "8px",
-    fontSize: "16px",
-    cursor: "pointer",
-    border: "none",
-  };
+  // Calculate total counts for display
+  const totalCount = existingIngredients.length;
+  const filteredCount = Object.values(filteredResults).reduce(
+    (sum, arr) => sum + arr.length,
+    0
+  );
+  const showingFiltered = searchQuery.trim() !== "";
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+    <div className="ingredient-manager-container">
       {/* Header */}
-      <div style={{ marginBottom: "30px" }}>
-        <h1
-          style={{
-            margin: "0 0 10px 0",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-          }}
-        >
-          Ingredient Manager
-        </h1>
-        <p style={{ color: "#666", margin: 0 }}>
+      <div className="ingredient-manager-header">
+        <h1 className="page-title">Ingredient Manager</h1>
+        <p className="page-subtitle">
           Add new ingredients to your database for use in recipes
         </p>
       </div>
 
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px" }}
-      >
+      <div className="ingredient-manager-layout">
         {/* Add New Ingredient Form */}
-        <div
-          style={{
-            background: "white",
-            padding: "25px",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            height: "fit-content",
-          }}
-        >
-          <h2
-            style={{
-              margin: "0 0 20px 0",
-              fontSize: "1.5rem",
-              fontWeight: "600",
-            }}
-          >
-            Add New Ingredient
-          </h2>
+        <div className="card ingredient-form-card">
+          <h2 className="card-title">Add New Ingredient</h2>
 
           {/* Messages */}
-          {error && (
-            <div
-              style={{
-                padding: "12px",
-                marginBottom: "20px",
-                background: "#fee2e2",
-                border: "1px solid #fecaca",
-                borderRadius: "8px",
-                color: "#dc2626",
-              }}
-            >
-              {error}
-            </div>
-          )}
+          {error && <div className="alert alert-error">{error}</div>}
 
-          {success && (
-            <div
-              style={{
-                padding: "12px",
-                marginBottom: "20px",
-                background: "#dcfce7",
-                border: "1px solid #bbf7d0",
-                borderRadius: "8px",
-                color: "#16a34a",
-              }}
-            >
-              {success}
-            </div>
-          )}
+          {success && <div className="alert alert-success">{success}</div>}
 
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-          >
+          <div className="ingredient-form">
             {/* Basic Information */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Ingredient Name *
-              </label>
+            <div className="form-group">
+              <label className="form-label">Ingredient Name *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
-                style={inputStyle}
+                className="form-input"
               />
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Ingredient Type *
-              </label>
+            <div className="form-group">
+              <label className="form-label">Ingredient Type *</label>
               <select
                 name="type"
                 value={formData.type}
                 onChange={handleTypeChange}
-                style={inputStyle}
+                className="form-select"
               >
                 <option value="grain">Grain/Fermentable</option>
                 <option value="hop">Hop</option>
@@ -411,76 +450,31 @@ const IngredientManager = () => {
               </select>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "500",
-                }}
-              >
-                Description
-              </label>
+            <div className="form-group">
+              <label className="form-label">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Optional description of the ingredient..."
                 rows={3}
-                style={{
-                  ...inputStyle,
-                  resize: "vertical",
-                }}
+                className="form-textarea"
               />
             </div>
 
             {/* Type-specific fields */}
             {formData.type === "grain" && (
-              <div
-                style={{
-                  padding: "20px",
-                  background: "#f9fafb",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3
-                  style={{
-                    margin: "0 0 15px 0",
-                    fontSize: "1.1rem",
-                    color: "#8B4513",
-                  }}
-                >
-                  Grain Properties
-                </h3>
+              <div className="type-specific-fields grain-fields">
+                <h3 className="section-title">Grain Properties</h3>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "15px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Grain Type
-                    </label>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">Grain Type</label>
                     <select
                       name="grain_type"
                       value={formData.grain_type}
                       onChange={handleChange}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-select"
                     >
                       <option value="">Select type...</option>
                       <option value="base_malt">Base Malt</option>
@@ -492,16 +486,8 @@ const IngredientManager = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Color (°Lovibond)
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Color (°Lovibond)</label>
                     <input
                       type="number"
                       name="color"
@@ -511,26 +497,12 @@ const IngredientManager = () => {
                       min="0"
                       max="600"
                       placeholder="e.g., 2.5"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div style={{ gridColumn: "span 2" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Potential (SG)
-                    </label>
+                  <div className="form-group full-width">
+                    <label className="form-label">Potential (SG)</label>
                     <input
                       type="number"
                       name="potential"
@@ -540,13 +512,7 @@ const IngredientManager = () => {
                       min="1"
                       max="100"
                       placeholder="e.g., 37"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
                 </div>
@@ -554,33 +520,11 @@ const IngredientManager = () => {
             )}
 
             {formData.type === "hop" && (
-              <div
-                style={{
-                  padding: "20px",
-                  background: "#f0f9f0",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3
-                  style={{
-                    margin: "0 0 15px 0",
-                    fontSize: "1.1rem",
-                    color: "#228B22",
-                  }}
-                >
-                  Hop Properties
-                </h3>
+              <div className="type-specific-fields hop-fields">
+                <h3 className="section-title">Hop Properties</h3>
 
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Alpha Acid (%)
-                  </label>
+                <div className="form-group">
+                  <label className="form-label">Alpha Acid (%)</label>
                   <input
                     type="number"
                     name="alpha_acid"
@@ -590,105 +534,43 @@ const IngredientManager = () => {
                     min="0.1"
                     max="25"
                     placeholder="e.g., 5.5"
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      boxSizing: "border-box",
-                    }}
+                    className="form-input"
                   />
                 </div>
               </div>
             )}
 
             {formData.type === "yeast" && (
-              <div
-                style={{
-                  padding: "20px",
-                  background: "#fffbeb",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3
-                  style={{
-                    margin: "0 0 15px 0",
-                    fontSize: "1.1rem",
-                    color: "#DAA520",
-                  }}
-                >
-                  Yeast Properties
-                </h3>
+              <div className="type-specific-fields yeast-fields">
+                <h3 className="section-title">Yeast Properties</h3>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "15px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Manufacturer
-                    </label>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">Manufacturer</label>
                     <input
                       type="text"
                       name="manufacturer"
                       value={formData.manufacturer}
                       onChange={handleChange}
                       placeholder="e.g., Wyeast, White Labs"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Code/Number
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Code/Number</label>
                     <input
                       type="text"
                       name="code"
                       value={formData.code}
                       onChange={handleChange}
                       placeholder="e.g., 1056, WLP001"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Attenuation (%)
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Attenuation (%)</label>
                     <input
                       type="number"
                       name="attenuation"
@@ -698,26 +580,12 @@ const IngredientManager = () => {
                       min="1"
                       max="100"
                       placeholder="e.g., 75"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Alcohol Tolerance (%)
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Alcohol Tolerance (%)</label>
                     <input
                       type="number"
                       name="alcohol_tolerance"
@@ -727,26 +595,12 @@ const IngredientManager = () => {
                       min="0"
                       max="20"
                       placeholder="e.g., 12"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Min Temperature (°F)
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Min Temperature (°F)</label>
                     <input
                       type="number"
                       name="min_temperature"
@@ -756,26 +610,12 @@ const IngredientManager = () => {
                       min="50"
                       max="100"
                       placeholder="e.g., 60"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
 
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Max Temperature (°F)
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Max Temperature (°F)</label>
                     <input
                       type="number"
                       name="max_temperature"
@@ -785,13 +625,7 @@ const IngredientManager = () => {
                       min="50"
                       max="100"
                       placeholder="e.g., 72"
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        boxSizing: "border-box",
-                      }}
+                      className="form-input"
                     />
                   </div>
                 </div>
@@ -799,182 +633,219 @@ const IngredientManager = () => {
             )}
 
             {/* Form Actions */}
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                justifyContent: "flex-end",
-                marginTop: "20px",
-              }}
-            >
-              <button
-                onClick={handleReset}
-                style={{
-                  ...buttonStyle,
-                  background: "white",
-                  border: "1px solid #d1d5db",
-                  color: "#374151",
-                }}
-              >
+            <div className="form-actions">
+              <button onClick={handleReset} className="btn btn-secondary">
                 Reset
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                style={{
-                  ...buttonStyle,
-                  background: loading ? "#9ca3af" : "#2563eb",
-                  color: "white",
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
+                className="btn btn-primary"
               >
-                {loading ? "Adding..." : "Add Ingredient"}
+                {loading ? (
+                  <>
+                    <span className="button-spinner"></span>
+                    Adding...
+                  </>
+                ) : (
+                  "Add Ingredient"
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Existing Ingredients List */}
-        <div
-          style={{
-            background: "white",
-            padding: "25px",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-            <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "600" }}>
-              Existing Ingredients ({existingIngredients.length})
-            </h2>
+        {/* Existing Ingredients List with Fuzzy Search */}
+        <div className="card ingredients-list-card">
+          <div className="card-header">
+            <h2 className="card-title">Existing Ingredients</h2>
+            <div className="ingredient-count">
+              {showingFiltered ? (
+                <>
+                  Showing {filteredCount} of {totalCount} ingredients
+                  {searchQuery && (
+                    <span className="search-term">
+                      {" "}
+                      matching "{searchQuery}"
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>{totalCount} ingredients total</>
+              )}
+            </div>
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
-            <input
-              type="text"
-              placeholder="Search ingredients..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={inputStyle}
-            />
+          {/* Enhanced Search Input */}
+          <div className="search-container">
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                placeholder="Search ingredients by name, description, manufacturer, type..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="form-input search-input"
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="search-clear-button"
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <div className="search-help">
+                Fuzzy search enabled - try partial matches or typos
+              </div>
+            )}
           </div>
 
-          <div style={{ maxHeight: "600px", overflowY: "auto" }}>
-            {filteredIngredients.length === 0 ? (
-              <p
-                style={{ textAlign: "center", color: "#666", padding: "20px" }}
-              >
-                {existingIngredients.length === 0
+          {/* Grouped Ingredients Display */}
+          <div className="ingredients-list">
+            {Object.keys(filteredResults).length === 0 ||
+            Object.values(filteredResults).every((arr) => arr.length === 0) ? (
+              <div className="empty-state">
+                {totalCount === 0
                   ? "No ingredients in database yet."
-                  : "No ingredients match your search."}
-              </p>
+                  : searchQuery
+                  ? `No ingredients match your search for "${searchQuery}".`
+                  : "No ingredients to display."}
+              </div>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                {filteredIngredients.map((ingredient) => (
-                  <div
-                    key={ingredient.ingredient_id}
-                    style={{
-                      padding: "15px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      borderLeft: `4px solid ${getTypeColor(ingredient.type)}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: "0 0 5px 0", fontWeight: "600" }}>
-                          {ingredient.name}
-                        </h4>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "10px",
-                            marginBottom: "8px",
-                          }}
+              <div className="ingredient-items">
+                {Object.entries(filteredResults)
+                  .filter(([_, ingredients]) => ingredients.length > 0)
+                  .map(([type, ingredients]) => (
+                    <div key={type} className="ingredient-type-section">
+                      {/* Type Header */}
+                      <div
+                        className="ingredient-type-header"
+                        style={{ borderBottomColor: getTypeColor(type) }}
+                      >
+                        <h3
+                          className="ingredient-type-title"
+                          style={{ color: getTypeColor(type) }}
                         >
-                          <span
-                            style={{
-                              padding: "2px 8px",
-                              background: getTypeColor(ingredient.type),
-                              color: "white",
-                              borderRadius: "12px",
-                              fontSize: "12px",
-                              fontWeight: "500",
-                            }}
-                          >
-                            {ingredient.type}
+                          {getTypeDisplayName(type)}
+                          <span className="ingredient-type-count">
+                            ({ingredients.length})
                           </span>
-                          {ingredient.grain_type && (
-                            <span
-                              style={{
-                                padding: "2px 8px",
-                                background: "#f3f4f6",
-                                color: "#374151",
-                                borderRadius: "12px",
-                                fontSize: "12px",
-                              }}
-                            >
-                              {ingredient.grain_type.replace("_", " ")}
-                            </span>
-                          )}
-                        </div>
-                        {ingredient.description && (
-                          <p
+                        </h3>
+                      </div>
+
+                      {/* Ingredients in this type */}
+                      <div className="ingredient-type-items">
+                        {ingredients.map((ingredient) => (
+                          <div
+                            key={ingredient.ingredient_id}
+                            className={`ingredient-item ${
+                              searchQuery && ingredient.searchScore
+                                ? "highlighted"
+                                : ""
+                            }`}
                             style={{
-                              margin: "5px 0",
-                              fontSize: "14px",
-                              color: "#666",
-                              lineHeight: "1.4",
+                              borderLeftColor: getTypeColor(ingredient.type),
+                              backgroundColor:
+                                searchQuery && ingredient.searchScore
+                                  ? `rgba(${getTypeColor(ingredient.type)
+                                      .replace("#", "")
+                                      .match(/.{2}/g)
+                                      .map((hex) => parseInt(hex, 16))
+                                      .join(", ")}, 0.05)`
+                                  : undefined,
                             }}
                           >
-                            {ingredient.description}
-                          </p>
-                        )}
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "15px",
-                            fontSize: "13px",
-                            color: "#666",
-                            marginTop: "8px",
-                          }}
-                        >
-                          {ingredient.alpha_acid && (
-                            <span>AA: {ingredient.alpha_acid}%</span>
-                          )}
-                          {ingredient.color && (
-                            <span>Color: {ingredient.color}°L</span>
-                          )}
-                          {ingredient.attenuation && (
-                            <span>Attenuation: {ingredient.attenuation}%</span>
-                          )}
-                          {ingredient.manufacturer && (
-                            <span>Mfg: {ingredient.manufacturer}</span>
-                          )}
-                        </div>
+                            <div className="ingredient-content">
+                              <div className="ingredient-header">
+                                <h4
+                                  className="ingredient-name"
+                                  dangerouslySetInnerHTML={{
+                                    __html: highlightMatches(
+                                      ingredient.name,
+                                      ingredient.searchMatches,
+                                      searchQuery
+                                    ),
+                                  }}
+                                />
+                                <div className="ingredient-badges">
+                                  <span
+                                    className={`type-badge ${ingredient.type}`}
+                                  >
+                                    {ingredient.type}
+                                  </span>
+                                  {ingredient.grain_type && (
+                                    <span className="grain-type-badge">
+                                      {ingredient.grain_type.replace("_", " ")}
+                                    </span>
+                                  )}
+                                  {searchQuery && ingredient.searchScore && (
+                                    <span className="search-score-badge">
+                                      Match:{" "}
+                                      {Math.round(
+                                        (1 - ingredient.searchScore) * 100
+                                      )}
+                                      %
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {ingredient.description && (
+                                <p
+                                  className="ingredient-description"
+                                  dangerouslySetInnerHTML={{
+                                    __html: highlightMatches(
+                                      ingredient.description,
+                                      ingredient.searchMatches,
+                                      searchQuery
+                                    ),
+                                  }}
+                                />
+                              )}
+                              <div className="ingredient-details">
+                                {ingredient.alpha_acid && (
+                                  <span>AA: {ingredient.alpha_acid}%</span>
+                                )}
+                                {ingredient.color && (
+                                  <span>Color: {ingredient.color}°L</span>
+                                )}
+                                {ingredient.potential && (
+                                  <span>
+                                    Potential: 1.
+                                    {String(ingredient.potential).padStart(
+                                      3,
+                                      "0"
+                                    )}
+                                  </span>
+                                )}
+                                {ingredient.attenuation && (
+                                  <span>
+                                    Attenuation: {ingredient.attenuation}%
+                                  </span>
+                                )}
+                                {ingredient.manufacturer && (
+                                  <span
+                                    dangerouslySetInnerHTML={{
+                                      __html: `Mfg: ${highlightMatches(
+                                        ingredient.manufacturer,
+                                        ingredient.searchMatches,
+                                        searchQuery
+                                      )}`,
+                                    }}
+                                  />
+                                )}
+                                {ingredient.code && (
+                                  <span>Code: {ingredient.code}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
