@@ -1,4 +1,3 @@
-
 /* ==========================================================================
    LAYOUT & CONTAINERS
    ========================================================================== */
@@ -17,8 +16,8 @@
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: bold;
   color: #1f2937; /* gray-800 - matches Dashboard.css */
   margin: 0 0 0.5rem 0;
 }
@@ -83,8 +82,8 @@
 
 .form-label {
   display: block;
-  font-weight: 500;
   margin-bottom: 0.5rem;
+  font-weight: 500;
   color: #374151; /* gray-700 - matches UserSettings.css */
   font-size: 0.875rem;
 }
@@ -260,9 +259,15 @@
 
 .search-container {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
-.search-input {
+/* Enhanced search input styling */
+.search-input-enhanced {
+  width: 100%;
+}
+
+.search-input-enhanced .searchable-select-input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db; /* gray-300 */
@@ -270,12 +275,70 @@
   font-size: 1rem;
   box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: white;
 }
 
-.search-input:focus {
+.search-input-enhanced .searchable-select-input:focus {
   outline: none;
   border-color: #d97706; /* amber-600 */
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+/* Clear search button */
+.search-clear-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Enhanced search dropdown styling */
+.search-input-enhanced .searchable-select-dropdown {
+  max-height: 300px;
+  border: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-input-enhanced .searchable-select-option {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.search-input-enhanced .searchable-select-option:hover,
+.search-input-enhanced .searchable-select-option.highlighted {
+  background-color: #fef3c7; /* amber-100 */
+}
+
+.search-input-enhanced .searchable-select-option .option-name {
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.search-input-enhanced .searchable-select-option .option-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.search-input-enhanced .searchable-select-option .option-manufacturer {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Search highlighting */
+.search-input-enhanced .search-highlight {
+  background-color: #fbbf24; /* amber-400 */
+  color: #92400e; /* amber-800 */
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
 }
 
 .ingredients-list {
@@ -306,7 +369,7 @@
   border: 1px solid #e5e7eb; /* gray-200 */
   border-radius: 0.75rem; /* Matches card border-radius */
   background: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
   border-left: 4px solid #d97706; /* amber-600 accent */
 }
 
@@ -315,10 +378,35 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Highlighted ingredient styling */
+.ingredient-item.highlighted {
+  background-color: #fefce8; /* yellow-50 */
+  border-color: #eab308; /* yellow-500 */
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.3);
+  animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    background-color: #fefce8; /* yellow-50 */
+    transform: scale(1);
+  }
+  50% {
+    background-color: #fef08a; /* yellow-200 */
+    transform: scale(1.02);
+  }
+}
+
 .ingredient-content {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.ingredient-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .ingredient-name {
@@ -455,6 +543,19 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .ingredient-header {
+    align-items: flex-start;
+  }
+
+  .search-container {
+    margin-bottom: 1rem;
+  }
+
+  .search-clear-btn {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -474,6 +575,14 @@
   .ingredient-details {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .search-input-enhanced .searchable-select-dropdown {
+    max-height: 200px;
+  }
+
+  .search-input-enhanced .searchable-select-option {
+    padding: 0.5rem;
   }
 }
 
@@ -528,10 +637,19 @@
 .btn:focus-visible,
 .form-input:focus-visible,
 .form-select:focus-visible,
-.form-textarea:focus-visible,
-.search-input:focus-visible {
+.form-textarea:focus-visible {
   outline: 2px solid #d97706; /* amber-600 */
   outline-offset: 2px;
+}
+
+.search-input-enhanced .searchable-select-input:focus-visible {
+  outline: 2px solid #d97706; /* amber-600 */
+  outline-offset: 2px;
+}
+
+.search-input-enhanced .searchable-select-option:focus-visible {
+  outline: 2px solid #d97706; /* amber-600 */
+  outline-offset: -2px;
 }
 
 @media (prefers-contrast: high) {
@@ -542,6 +660,11 @@
   .type-badge {
     border: 1px solid currentColor;
   }
+
+  .search-highlight {
+    background-color: #fbbf24;
+    border: 1px solid #92400e;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -550,7 +673,8 @@
   .form-input,
   .form-select,
   .form-textarea,
-  .search-input {
+  .search-input-enhanced .searchable-select-input,
+  .search-input-enhanced .searchable-select-option {
     transition: none;
   }
   
@@ -561,25 +685,178 @@
   .ingredient-item:hover {
     transform: none;
   }
+
+  .ingredient-item.highlighted {
+    animation: none;
+  }
 }
 
 /* ==========================================================================
    SCROLLBAR STYLING - Matches BrewTracker
    ========================================================================== */
 
-.ingredients-list::-webkit-scrollbar {
+.ingredients-list::-webkit-scrollbar,
+.search-input-enhanced .searchable-select-dropdown::-webkit-scrollbar {
   width: 6px;
 }
 
-.ingredients-list::-webkit-scrollbar-track {
+.ingredients-list::-webkit-scrollbar-track,
+.search-input-enhanced .searchable-select-dropdown::-webkit-scrollbar-track {
   background: #f3f4f6; /* gray-100 */
 }
 
-.ingredients-list::-webkit-scrollbar-thumb {
+.ingredients-list::-webkit-scrollbar-thumb,
+.search-input-enhanced .searchable-select-dropdown::-webkit-scrollbar-thumb {
   background: #d1d5db; /* gray-300 */
   border-radius: 3px;
 }
 
-.ingredients-list::-webkit-scrollbar-thumb:hover {
+.ingredients-list::-webkit-scrollbar-thumb:hover,
+.search-input-enhanced .searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
   background: #9ca3af; /* gray-400 */
+}
+
+/* ==========================================================================
+   SEARCH RESULT ENHANCEMENTS
+   ========================================================================== */
+
+/* No results state for SearchableSelect */
+.search-input-enhanced .searchable-select-no-results {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280; /* gray-500 */
+  font-style: italic;
+  background-color: #f9fafb; /* gray-50 */
+}
+
+/* Loading state for search */
+.search-input-enhanced .searchable-select-loading {
+  padding: 1rem;
+  text-align: center;
+  color: #d97706; /* amber-600 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.search-input-enhanced .searchable-select-loading::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #d97706;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Search helper text */
+.search-help {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  font-style: italic;
+}
+
+/* Enhanced focus states for search */
+.search-input-enhanced .searchable-select-input-container:focus-within {
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+  border-radius: 0.375rem;
+}
+
+/* Search dropdown positioning */
+.search-input-enhanced .searchable-select-dropdown {
+  z-index: 50;
+  position: absolute;
+  width: 100%;
+  margin-top: 1px;
+}
+
+/* Better visual separation for search options */
+.search-input-enhanced .searchable-select-option:last-child {
+  border-bottom: none;
+}
+
+/* Search option badges within dropdown */
+.search-input-enhanced .searchable-select-option .type-badge {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.5rem;
+  margin-left: 0.5rem;
+}
+
+/* Search query highlighting improvements */
+.search-input-enhanced .search-highlight {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Status indicators in search results */
+.search-input-enhanced .searchable-select-option .status-indicator {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background-color: #f3f4f6;
+  color: #374151;
+  margin-left: auto;
+}
+
+/* Mobile-specific search enhancements */
+@media (max-width: 640px) {
+  .search-input-enhanced .searchable-select-dropdown {
+    position: fixed;
+    top: auto;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    width: auto;
+    max-height: 50vh;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .search-input-enhanced .searchable-select-option {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  .search-input-enhanced .searchable-select-option .option-name {
+    font-size: 1rem;
+  }
+
+  .search-input-enhanced .searchable-select-option .option-description {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* Search performance optimizations */
+.search-input-enhanced .searchable-select-option {
+  contain: layout style;
+}
+
+.search-input-enhanced .searchable-select-dropdown {
+  will-change: scroll-position;
+}
+
+/* Better keyboard navigation styling */
+.search-input-enhanced .searchable-select-option[aria-selected="true"] {
+  background-color: #f59e0b; /* amber-500 */
+  color: white;
+}
+
+.search-input-enhanced .searchable-select-option[aria-selected="true"] .option-description,
+.search-input-enhanced .searchable-select-option[aria-selected="true"] .option-manufacturer {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Clear button improvements */
+.search-clear-btn:hover {
+  background-color: #e5e7eb; /* gray-200 */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-clear-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
