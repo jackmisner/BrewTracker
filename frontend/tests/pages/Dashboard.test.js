@@ -242,20 +242,6 @@ describe("Dashboard", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/recipes/new");
   });
 
-  test("navigates to brew session creation", async () => {
-    ApiService.recipes.getAll.mockResolvedValue(mockRecipesResponse);
-    ApiService.brewSessions.getAll.mockResolvedValue(mockSessionsResponse);
-
-    renderWithRouter(<Dashboard />);
-
-    await waitFor(() => {
-      expect(screen.getByText("+ New Session")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByText("+ New Session"));
-    expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions/new");
-  });
-
   test("navigates to recipe view when View button clicked", async () => {
     ApiService.recipes.getAll.mockResolvedValue(mockRecipesResponse);
     ApiService.brewSessions.getAll.mockResolvedValue(mockSessionsResponse);

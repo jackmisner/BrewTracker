@@ -261,12 +261,6 @@ function Dashboard() {
         <div className="dashboard-section">
           <div className="section-header">
             <h2 className="section-title">Recent Brew Sessions</h2>
-            <button
-              onClick={() => navigate("/brew-sessions/new")}
-              className="primary-button"
-            >
-              + New Session
-            </button>
           </div>
 
           <div className="cards-container">

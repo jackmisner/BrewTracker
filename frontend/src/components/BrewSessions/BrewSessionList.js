@@ -54,9 +54,6 @@ const BrewSessionList = () => {
     <div className="container">
       <div className="brew-sessions-header">
         <h1 className="page-title">Brew Sessions</h1>
-        <Link to="/brew-sessions/new" className="btn btn-primary">
-          New Brew Session
-        </Link>
       </div>
 
       <div className="brew-sessions-filter">
@@ -86,9 +83,9 @@ const BrewSessionList = () => {
       {!loading && !error && filteredSessions.length === 0 && (
         <div className="brew-sessions-empty">
           <p>No brew sessions found.</p>
-          <Link to="/brew-sessions/new" className="btn btn-primary">
+          {/* <Link to="/brew-sessions/new" className="btn btn-primary">
             Create your first brew session
-          </Link>
+          </Link> */}
         </div>
       )}
 

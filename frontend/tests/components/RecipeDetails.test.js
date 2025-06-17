@@ -5,6 +5,20 @@ import "@testing-library/jest-dom";
 import RecipeDetails from "../../src/components/RecipeBuilder/RecipeDetails";
 import { UnitProvider } from "../../src/contexts/UnitContext";
 
+// Suppress console errors and traces during tests
+const originalConsoleError = console.error;
+const originalConsoleTrace = console.trace;
+
+beforeAll(() => {
+  console.error = jest.fn();
+  console.trace = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+  console.trace = originalConsoleTrace;
+});
+
 // Mock the UserSettingsService that UnitContext depends on
 jest.mock("../../src/services/UserSettingsService", () => ({
   getUserSettings: jest.fn().mockResolvedValue({
