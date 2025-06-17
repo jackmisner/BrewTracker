@@ -2015,3 +2015,296 @@
   padding-bottom: 0.5rem;
   margin-bottom: 1.5rem;
 }
+
+/* ==========================================================================
+   SPECIAL STATES
+   ========================================================================== */
+.match-item.processing {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.match-item.processing::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #3b82f6;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ingredient-card.updating {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   CONFIDENCE INDICATORS
+   ========================================================================== */
+.confidence-high {
+  color: #10b981;
+}
+
+.confidence-medium {
+  color: #f59e0b;
+}
+
+.confidence-low {
+  color: #ef4444;
+}
+
+.confidence-badge.high .confidence-dot {
+  background-color: #10b981;
+}
+
+.confidence-badge.medium .confidence-dot {
+  background-color: #f59e0b;
+}
+
+.confidence-badge.low .confidence-dot {
+  background-color: #ef4444;
+}
+
+/* ==========================================================================
+   RECIPE BUILDER SPECIFIC STYLES
+   ========================================================================== */
+
+/* Loading container */
+.loading-container {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #d97706;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Header styling */
+.recipe-builder-header {
+  margin-bottom: 1.5rem;
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.beerxml-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Button styles */
+.btn-outline {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--color-amber-500);
+  border: 1px solid var(--color-amber-500);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-amber-600);
+  border-color: var(--color-amber-600);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* BeerXML panel */
+.beerxml-panel {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 8px 8px 0 0;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.panel-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.panel-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.panel-content {
+  padding: 0;
+}
+
+/* Status indicators */
+.status-indicator.importing {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+}
+
+.status-indicator.success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+/* Spinner for status indicators */
+.status-indicator .spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Button spinner */
+.button-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Responsive design for Recipe Builder */
+@media (max-width: 768px) {
+  .header-main {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .beerxml-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .recipe-builder-layout {
+    flex-direction: column;
+  }
+
+  .recipe-builder-sidebar {
+    order: -1;
+    min-width: unset;
+    max-width: unset;
+  }
+
+  .sticky-metrics-wrapper {
+    position: static;
+  }
+
+  .panel-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .panel-header h3 {
+    font-size: 1rem;
+  }
+
+  .beerxml-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .recipe-builder-header {
+    margin-bottom: 1rem;
+  }
+
+  .beerxml-actions {
+    justify-content: stretch;
+  }
+
+  .btn-outline,
+  .btn-secondary {
+    flex: 1;
+    text-align: center;
+  }
+
+  .loading-container {
+    padding: 2rem 1rem;
+  }
+}

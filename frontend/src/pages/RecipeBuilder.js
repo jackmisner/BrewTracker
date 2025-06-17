@@ -1,17 +1,26 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useRecipeBuilder } from "../hooks/useRecipeBuilder";
-import "../styles/RecipeBuilder.css";
-
-// Import components
+import BeerXMLImportExport from "../components/BeerXML/BeerXMLImportExport";
+import beerXMLService from "../services/BeerXML/BeerXMLService";
 import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
+import "../styles/RecipeBuilder.css";
 
 function RecipeBuilder() {
   const { recipeId } = useParams();
   const navigate = useNavigate();
+
+  // BeerXML state
+  const [beerXMLState, setBeerXMLState] = useState({
+    showImportExport: false,
+    importing: false,
+    exporting: false,
+    importSuccess: false,
+    exportSuccess: false,
+  });
 
   // Use custom hook to manage recipe builder state and logic
   const {
@@ -28,12 +37,12 @@ function RecipeBuilder() {
     hasUnsavedChanges,
     calculatingMetrics,
     addingIngredient,
-    updatingIngredient, // NEW STATE
+    updatingIngredient,
 
     // Actions
     updateRecipe,
     addIngredient,
-    updateIngredient, // NEW ACTION
+    updateIngredient,
     removeIngredient,
     scaleRecipe,
     saveRecipe,
@@ -44,6 +53,106 @@ function RecipeBuilder() {
     canSave,
     recipeDisplayName,
   } = useRecipeBuilder(recipeId);
+
+  /**
+   * Handle BeerXML import
+   */
+  const handleBeerXMLImport = async (importData) => {
+    setBeerXMLState((prev) => ({ ...prev, importing: true }));
+
+    try {
+      // Clear existing recipe if this is a new recipe
+      if (!isEditing) {
+        // Update recipe details
+        Object.keys(importData.recipe).forEach((key) => {
+          updateRecipe(key, importData.recipe[key]);
+        });
+
+        // Add ingredients one by one
+        for (const ingredient of importData.ingredients) {
+          await addIngredient(ingredient.type, {
+            ingredient_id: ingredient.ingredient_id,
+            amount: ingredient.amount,
+            unit: ingredient.unit,
+            use: ingredient.use,
+            time: ingredient.time,
+            alpha_acid: ingredient.alpha_acid,
+            color: ingredient.color,
+          });
+        }
+
+        setBeerXMLState((prev) => ({
+          ...prev,
+          importing: false,
+          showImportExport: false,
+          importSuccess: true,
+        }));
+
+        // Show success message
+        setTimeout(() => {
+          setBeerXMLState((prev) => ({ ...prev, importSuccess: false }));
+        }, 3000);
+      } else {
+        // For existing recipes, navigate to new recipe with imported data
+        navigate("/recipes/new", {
+          state: {
+            importedData: importData,
+            source: "BeerXML Import",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error importing BeerXML:", error);
+      setBeerXMLState((prev) => ({ ...prev, importing: false }));
+      // Error handling is done by the component
+    }
+  };
+
+  /**
+   * Handle BeerXML export
+   */
+  const handleBeerXMLExport = async () => {
+    if (!recipe || !ingredients.length) {
+      alert("Please save your recipe before exporting");
+      return;
+    }
+
+    setBeerXMLState((prev) => ({ ...prev, exporting: true }));
+
+    try {
+      if (!recipe.recipe_id) {
+        // Save recipe first
+        const savedRecipe = await saveRecipe();
+        if (!savedRecipe) {
+          throw new Error("Failed to save recipe before export");
+        }
+      }
+
+      // Export using backend service
+      const exportResult = await beerXMLService.exportRecipe(recipe.recipe_id);
+
+      // Download the file
+      beerXMLService.downloadBeerXML(
+        exportResult.xmlContent,
+        exportResult.filename
+      );
+
+      setBeerXMLState((prev) => ({
+        ...prev,
+        exporting: false,
+        exportSuccess: true,
+      }));
+
+      // Show success message
+      setTimeout(() => {
+        setBeerXMLState((prev) => ({ ...prev, exportSuccess: false }));
+      }, 3000);
+    } catch (error) {
+      console.error("Error exporting BeerXML:", error);
+      setBeerXMLState((prev) => ({ ...prev, exporting: false }));
+      alert(`Failed to export recipe: ${error.message}`);
+    }
+  };
 
   // Handle form cancellation with unsaved changes warning
   const handleCancel = () => {
@@ -78,7 +187,7 @@ function RecipeBuilder() {
   if (loading) {
     return (
       <div className="container">
-        <div className="text-center py-10">
+        <div className="loading-container">
           <div className="loading-spinner"></div>
           <p>Loading recipe builder...</p>
         </div>
@@ -88,22 +197,61 @@ function RecipeBuilder() {
 
   return (
     <div id="recipe-builder" className="container">
-      {/* Header with title and status indicators */}
+      {/* Header with title, status indicators, and BeerXML actions */}
       <div className="recipe-builder-header">
-        <h1 className="page-title">
-          {isEditing
-            ? `Edit Recipe: ${recipeDisplayName}`
-            : "Create New Recipe"}
-          {hasUnsavedChanges && (
-            <span
-              className="unsaved-indicator"
-              title="You have unsaved changes"
+        <div className="header-main">
+          <h1 className="page-title">
+            {isEditing
+              ? `Edit Recipe: ${recipeDisplayName}`
+              : "Create New Recipe"}
+            {hasUnsavedChanges && (
+              <span
+                className="unsaved-indicator"
+                title="You have unsaved changes"
+              >
+                {" "}
+                *
+              </span>
+            )}
+          </h1>
+
+          {/* BeerXML Actions */}
+          <div className="beerxml-actions">
+            <button
+              onClick={() =>
+                setBeerXMLState((prev) => ({
+                  ...prev,
+                  showImportExport: !prev.showImportExport,
+                }))
+              }
+              className="btn btn-outline"
+              disabled={
+                saving || beerXMLState.importing || beerXMLState.exporting
+              }
             >
-              {" "}
-              *
-            </span>
-          )}
-        </h1>
+              📄 BeerXML
+            </button>
+
+            {/* Quick export button for existing recipes */}
+            {isEditing && recipe.recipe_id && (
+              <button
+                onClick={handleBeerXMLExport}
+                disabled={beerXMLState.exporting || !canSave}
+                className="btn btn-secondary"
+                title="Export to BeerXML"
+              >
+                {beerXMLState.exporting ? (
+                  <>
+                    <span className="button-spinner"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  "📤 Export"
+                )}
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Status indicators */}
         <div className="status-indicators">
@@ -134,6 +282,25 @@ function RecipeBuilder() {
               Saving recipe...
             </div>
           )}
+
+          {beerXMLState.importing && (
+            <div className="status-indicator importing">
+              <span className="spinner"></span>
+              Importing BeerXML...
+            </div>
+          )}
+
+          {beerXMLState.importSuccess && (
+            <div className="status-indicator success">
+              ✅ BeerXML imported successfully
+            </div>
+          )}
+
+          {beerXMLState.exportSuccess && (
+            <div className="status-indicator success">
+              ✅ BeerXML exported successfully
+            </div>
+          )}
         </div>
       </div>
 
@@ -154,7 +321,38 @@ function RecipeBuilder() {
         </div>
       )}
 
-      {/* New layout structure for sticky metrics */}
+      {/* BeerXML Import/Export Panel */}
+      {beerXMLState.showImportExport && (
+        <div className="beerxml-panel">
+          <div className="panel-header">
+            <h3>BeerXML Import/Export</h3>
+            <button
+              onClick={() =>
+                setBeerXMLState((prev) => ({
+                  ...prev,
+                  showImportExport: false,
+                }))
+              }
+              className="panel-close"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="panel-content">
+            <BeerXMLImportExport
+              recipe={recipe}
+              ingredients={ingredients}
+              availableIngredients={availableIngredients}
+              onImport={handleBeerXMLImport}
+              onExport={handleBeerXMLExport}
+              mode="both"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main layout structure for sticky metrics */}
       <div className="recipe-builder-layout">
         <div className="recipe-builder-main">
           {/* Recipe Details Form */}
@@ -175,11 +373,11 @@ function RecipeBuilder() {
               <h2 className="section-title">Ingredients</h2>
             </div>
 
-            {/* Ingredients List - NOW WITH UPDATE SUPPORT */}
+            {/* Ingredients List */}
             <IngredientsList
               ingredients={ingredients}
               onRemove={removeIngredient}
-              onUpdate={updateIngredient} // NEW PROP
+              onUpdate={updateIngredient}
               isEditing={true}
             />
 
@@ -187,7 +385,7 @@ function RecipeBuilder() {
             <IngredientInputsContainer
               ingredients={availableIngredients}
               addIngredient={addIngredient}
-              disabled={addingIngredient || updatingIngredient || saving} // Include updatingIngredient
+              disabled={addingIngredient || updatingIngredient || saving}
             />
           </div>
         </div>
