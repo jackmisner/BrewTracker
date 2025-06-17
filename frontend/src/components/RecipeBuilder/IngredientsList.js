@@ -469,7 +469,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
               >
                 {isEditing && (
                   <td className="ingredient-type">
-                    <span className={`type-badge ${ingredient.type}-badge`}>
+                    <span className={`type-badge ${ingredient.type}`}>
                       {ingredient.type}
                     </span>
                   </td>

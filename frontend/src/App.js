@@ -17,6 +17,7 @@ import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
 import UserSettings from "./pages/UserSettings";
+import IngredientManager from "./pages/IngredientManager";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -105,6 +106,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserSettings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/ingredients/manage"
+              element={
+                <ProtectedRoute>
+                  <IngredientManager />
                 </ProtectedRoute>
               }
             />
