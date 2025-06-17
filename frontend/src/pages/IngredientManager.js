@@ -406,9 +406,6 @@ const IngredientManager = () => {
       {/* Header */}
       <div className="ingredient-manager-header">
         <h1 className="page-title">Ingredient Manager</h1>
-        <p className="page-subtitle">
-          Add new ingredients to your database for use in recipes
-        </p>
       </div>
 
       <div className="ingredient-manager-layout">
@@ -813,11 +810,9 @@ const IngredientManager = () => {
                                 )}
                                 {ingredient.potential && (
                                   <span>
-                                    Potential: 1.
-                                    {String(ingredient.potential).padStart(
-                                      3,
-                                      "0"
-                                    )}
+                                    Potential:
+                                    {String(" " + ingredient.potential)} ppg
+                                    (points per pound per gallon)
                                   </span>
                                 )}
                                 {ingredient.attenuation && (
