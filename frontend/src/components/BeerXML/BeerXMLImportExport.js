@@ -127,16 +127,21 @@ const BeerXMLImportExport = ({
   };
 
   /**
-   * Complete the import process
+   * Complete the import process - UPDATED to handle new structure
    */
-  const completeImport = async (finalizedIngredients) => {
+  const completeImport = async (importResult) => {
     if (!importState.selectedRecipe || !onImport) return;
 
     try {
+      // Handle both old and new structure for backwards compatibility
+      const finalizedIngredients = importResult.ingredients || importResult;
+      const createdIngredients = importResult.createdIngredients || [];
+
       await onImport({
         recipe: importState.selectedRecipe.recipe,
         ingredients: finalizedIngredients,
         metadata: importState.selectedRecipe.metadata,
+        createdIngredients: createdIngredients, // Pass created ingredients for cache update
       });
 
       // Reset import state

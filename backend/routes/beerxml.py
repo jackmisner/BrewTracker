@@ -98,7 +98,9 @@ def match_ingredients():
                     "best_match": matches[0] if matches else None,
                     "confidence": matches[0]["confidence"] if matches else 0,
                     "requires_new": len(matches) == 0 or matches[0]["confidence"] < 0.7,
-                    "suggested_data": generate_new_ingredient_data(imported_ing),
+                    "suggestedIngredientData": generate_new_ingredient_data(
+                        imported_ing
+                    ),
                 }
             )
 

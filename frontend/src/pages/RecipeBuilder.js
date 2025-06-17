@@ -7,6 +7,7 @@ import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
+import Services from "../services";
 import "../styles/RecipeBuilder.css";
 
 function RecipeBuilder() {
@@ -47,6 +48,7 @@ function RecipeBuilder() {
     scaleRecipe,
     saveRecipe,
     clearError,
+    refreshAvailableIngredients, // NEW - destructure this
 
     // Computed properties
     isEditing,
@@ -55,12 +57,22 @@ function RecipeBuilder() {
   } = useRecipeBuilder(recipeId);
 
   /**
-   * Handle BeerXML import
+   * Handle BeerXML import - UPDATED to handle cache invalidation
    */
   const handleBeerXMLImport = async (importData) => {
     setBeerXMLState((prev) => ({ ...prev, importing: true }));
 
     try {
+      // Handle created ingredients first - refresh available ingredients cache
+      if (
+        importData.createdIngredients &&
+        importData.createdIngredients.length > 0
+      ) {
+        // Clear the ingredient service cache and refresh in the hook
+        Services.ingredient.clearCache();
+        await refreshAvailableIngredients();
+      }
+
       // Clear existing recipe if this is a new recipe
       if (!isEditing) {
         // Update recipe details
@@ -78,6 +90,10 @@ function RecipeBuilder() {
             time: ingredient.time,
             alpha_acid: ingredient.alpha_acid,
             color: ingredient.color,
+            // Include additional properties for complete ingredient data
+            potential: ingredient.potential,
+            grain_type: ingredient.grain_type,
+            attenuation: ingredient.attenuation,
           });
         }
 

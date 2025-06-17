@@ -69,18 +69,37 @@ class IngredientService {
 
   /**
    * Create a new recipe ingredient with proper ID and metadata
+   * Updated to handle newly created ingredients that might not be in cache
    */
   createRecipeIngredient(type, ingredientData, availableIngredients) {
-    const baseData = this.getIngredientMetadata(
+    // Try to get metadata from available ingredients first
+    let baseData = this.getIngredientMetadata(
       ingredientData.ingredient_id,
       type,
       availableIngredients
     );
-    const ingredientName = this.getIngredientName(
+
+    let ingredientName = this.getIngredientName(
       ingredientData.ingredient_id,
       type,
       availableIngredients
     );
+
+    // If ingredient not found in cache (e.g., newly created), use provided data
+    if (ingredientName === "Unknown" && ingredientData.name) {
+      ingredientName = ingredientData.name;
+    }
+
+    // If no metadata found in cache, use provided ingredient data
+    if (Object.keys(baseData).length === 0) {
+      baseData = {
+        potential: ingredientData.potential || null,
+        color: ingredientData.color || null,
+        grain_type: ingredientData.grain_type || null,
+        alpha_acid: ingredientData.alpha_acid || null,
+        attenuation: ingredientData.attenuation || null,
+      };
+    }
 
     const newIngredient = {
       id: this.generateIngredientId(),
@@ -96,13 +115,25 @@ class IngredientService {
       ...baseData,
     };
 
-    // Override with custom values if provided
+    // Override with custom values if provided (for newly created ingredients)
     if (type === "hop" && ingredientData.alpha_acid) {
       newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid);
     }
 
     if (type === "grain" && ingredientData.color) {
       newIngredient.color = parseFloat(ingredientData.color);
+    }
+
+    if (type === "grain" && ingredientData.potential) {
+      newIngredient.potential = parseFloat(ingredientData.potential);
+    }
+
+    if (type === "grain" && ingredientData.grain_type) {
+      newIngredient.grain_type = ingredientData.grain_type;
+    }
+
+    if (type === "yeast" && ingredientData.attenuation) {
+      newIngredient.attenuation = parseFloat(ingredientData.attenuation);
     }
 
     return newIngredient;

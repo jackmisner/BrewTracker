@@ -22,9 +22,9 @@ const IngredientMatchingReview = ({
     // Initialize decisions array and calculate summary
     const decisions = matchingResults.map((result) => ({
       imported: result.imported,
-      action: result.bestMatch ? "use_existing" : "create_new",
-      selectedMatch: result.bestMatch?.ingredient || null,
-      newIngredientData: result.suggestedIngredientData,
+      action: result.best_match ? "use_existing" : "create_new", // Fixed: use best_match instead of bestMatch
+      selectedMatch: result.best_match?.ingredient || null, // Fixed: use best_match instead of bestMatch
+      newIngredientData: result.suggestedIngredientData, // This should now work with backend fix
       confidence: result.confidence,
     }));
 
@@ -90,10 +90,11 @@ const IngredientMatchingReview = ({
 
     try {
       const finalizedIngredients = [];
+      const createdIngredients = []; // Track newly created ingredients
 
       for (const decision of reviewState.decisions) {
         if (decision.action === "use_existing" && decision.selectedMatch) {
-          // Use existing ingredient
+          // Use existing ingredient - fixed structure
           finalizedIngredients.push({
             id: `existing-${decision.selectedMatch.ingredient_id}`,
             ingredient_id: decision.selectedMatch.ingredient_id,
@@ -118,7 +119,9 @@ const IngredientMatchingReview = ({
           const newIngredient = await createNewIngredient(
             decision.newIngredientData
           );
+          createdIngredients.push(newIngredient); // Track for cache update
 
+          // Add to finalized ingredients with complete structure
           finalizedIngredients.push({
             id: `new-${newIngredient.ingredient_id}`,
             ingredient_id: newIngredient.ingredient_id,
@@ -138,7 +141,11 @@ const IngredientMatchingReview = ({
         }
       }
 
-      await onComplete(finalizedIngredients);
+      // Pass both ingredients and created ingredients for cache updating
+      await onComplete({
+        ingredients: finalizedIngredients,
+        createdIngredients: createdIngredients,
+      });
     } catch (error) {
       console.error("Error completing review:", error);
       setReviewState((prev) => ({
@@ -307,7 +314,7 @@ const IngredientMatchingReview = ({
                   onChange={() =>
                     updateDecision(
                       "use_existing",
-                      currentResult.bestMatch?.ingredient
+                      currentResult.best_match?.ingredient // Fixed: use best_match
                     )
                   }
                 />
@@ -389,45 +396,70 @@ const IngredientMatchingReview = ({
               <label htmlFor="create-new">Create New Ingredient</label>
             </div>
 
-            {currentDecision.action === "create_new" && (
-              <div className="new-ingredient-preview">
-                <div className="preview-header">
-                  <span>
-                    New ingredient will be created with these properties:
-                  </span>
-                </div>
-                <div className="preview-details">
-                  <div className="detail-item">
-                    <span className="label">Name:</span>
-                    <span className="value">
-                      {currentDecision.newIngredientData?.name}
+            {currentDecision.action === "create_new" &&
+              currentDecision.newIngredientData && (
+                <div className="new-ingredient-preview">
+                  <div className="preview-header">
+                    <span>
+                      New ingredient will be created with these properties:
                     </span>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">Type:</span>
-                    <span className="value">
-                      {currentDecision.newIngredientData?.type}
-                    </span>
+                  <div className="preview-details">
+                    <div className="detail-item">
+                      <span className="label">Name:</span>
+                      <span className="value">
+                        {currentDecision.newIngredientData?.name}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Type:</span>
+                      <span className="value">
+                        {currentDecision.newIngredientData?.type}
+                      </span>
+                    </div>
+                    {currentDecision.newIngredientData?.alpha_acid && (
+                      <div className="detail-item">
+                        <span className="label">Alpha Acid:</span>
+                        <span className="value">
+                          {currentDecision.newIngredientData.alpha_acid}%
+                        </span>
+                      </div>
+                    )}
+                    {currentDecision.newIngredientData?.color && (
+                      <div className="detail-item">
+                        <span className="label">Color:</span>
+                        <span className="value">
+                          {currentDecision.newIngredientData.color}°L
+                        </span>
+                      </div>
+                    )}
+                    {currentDecision.newIngredientData?.attenuation && (
+                      <div className="detail-item">
+                        <span className="label">Attenuation:</span>
+                        <span className="value">
+                          {currentDecision.newIngredientData.attenuation}%
+                        </span>
+                      </div>
+                    )}
+                    {currentDecision.newIngredientData?.grain_type && (
+                      <div className="detail-item">
+                        <span className="label">Grain Type:</span>
+                        <span className="value">
+                          {currentDecision.newIngredientData.grain_type}
+                        </span>
+                      </div>
+                    )}
+                    {currentDecision.newIngredientData?.manufacturer && (
+                      <div className="detail-item">
+                        <span className="label">Manufacturer:</span>
+                        <span className="value">
+                          {currentDecision.newIngredientData.manufacturer}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  {currentDecision.newIngredientData?.alpha_acid && (
-                    <div className="detail-item">
-                      <span className="label">Alpha Acid:</span>
-                      <span className="value">
-                        {currentDecision.newIngredientData.alpha_acid}%
-                      </span>
-                    </div>
-                  )}
-                  {currentDecision.newIngredientData?.color && (
-                    <div className="detail-item">
-                      <span className="label">Color:</span>
-                      <span className="value">
-                        {currentDecision.newIngredientData.color}°L
-                      </span>
-                    </div>
-                  )}
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>

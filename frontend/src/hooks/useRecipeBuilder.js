@@ -596,7 +596,18 @@ export function useRecipeBuilder(recipeId) {
   const getRecipeAnalysis = useCallback(() => {
     return Services.metrics.getRecipeAnalysis(state.metrics, state.recipe);
   }, [state.metrics, state.recipe]);
-
+  const refreshAvailableIngredients = useCallback(async () => {
+    try {
+      const updatedAvailableIngredients =
+        await Services.ingredient.fetchIngredients();
+      setState((prev) => ({
+        ...prev,
+        availableIngredients: updatedAvailableIngredients,
+      }));
+    } catch (error) {
+      console.error("Error refreshing available ingredients:", error);
+    }
+  }, []);
   // Return interface
   return {
     // Core data
@@ -617,7 +628,7 @@ export function useRecipeBuilder(recipeId) {
     // Core actions
     updateRecipe,
     addIngredient,
-    updateIngredient, // NEW ACTION
+    updateIngredient,
     removeIngredient,
     scaleRecipe,
     saveRecipe,
@@ -627,6 +638,7 @@ export function useRecipeBuilder(recipeId) {
     clearError,
     cancelOperation,
     getRecipeAnalysis,
+    refreshAvailableIngredients, // NEW
 
     // Computed properties
     isEditing: Boolean(recipeId),
