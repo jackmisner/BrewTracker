@@ -45,6 +45,7 @@ function RecipeBuilder() {
     addIngredient,
     updateIngredient,
     removeIngredient,
+    importIngredients,
     scaleRecipe,
     saveRecipe,
     clearError,
@@ -57,7 +58,7 @@ function RecipeBuilder() {
   } = useRecipeBuilder(recipeId);
 
   /**
-   * Handle BeerXML import - UPDATED to handle cache invalidation
+   * Handle BeerXML import - UPDATED to handle cache invalidation and avoid race conditions
    */
   const handleBeerXMLImport = async (importData) => {
     setBeerXMLState((prev) => ({ ...prev, importing: true }));
@@ -73,29 +74,15 @@ function RecipeBuilder() {
         await refreshAvailableIngredients();
       }
 
-      // Clear existing recipe if this is a new recipe
+      // For new recipes, replace current recipe with imported data
       if (!isEditing) {
-        // Update recipe details
+        // Update recipe details first
         Object.keys(importData.recipe).forEach((key) => {
           updateRecipe(key, importData.recipe[key]);
         });
 
-        // Add ingredients one by one
-        for (const ingredient of importData.ingredients) {
-          await addIngredient(ingredient.type, {
-            ingredient_id: ingredient.ingredient_id,
-            amount: ingredient.amount,
-            unit: ingredient.unit,
-            use: ingredient.use,
-            time: ingredient.time,
-            alpha_acid: ingredient.alpha_acid,
-            color: ingredient.color,
-            // Include additional properties for complete ingredient data
-            potential: ingredient.potential,
-            grain_type: ingredient.grain_type,
-            attenuation: ingredient.attenuation,
-          });
-        }
+        // Add ALL ingredients at once instead of one by one to avoid race conditions
+        await importIngredients(importData.ingredients);
 
         setBeerXMLState((prev) => ({
           ...prev,

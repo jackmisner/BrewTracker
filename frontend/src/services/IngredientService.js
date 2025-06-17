@@ -69,26 +69,29 @@ class IngredientService {
 
   /**
    * Create a new recipe ingredient with proper ID and metadata
-   * Updated to handle newly created ingredients that might not be in cache
+   * Updated to handle newly created ingredients and prioritize provided name
    */
   createRecipeIngredient(type, ingredientData, availableIngredients) {
-    // Try to get metadata from available ingredients first
+    // Prioritize provided name over cache lookup
+    let ingredientName =
+      ingredientData.name ||
+      this.getIngredientName(
+        ingredientData.ingredient_id,
+        type,
+        availableIngredients
+      );
+
+    // If still no name found, use a fallback
+    if (!ingredientName || ingredientName === "Unknown") {
+      ingredientName = ingredientData.name || `Unknown ${type}`;
+    }
+
+    // Try to get metadata from available ingredients
     let baseData = this.getIngredientMetadata(
       ingredientData.ingredient_id,
       type,
       availableIngredients
     );
-
-    let ingredientName = this.getIngredientName(
-      ingredientData.ingredient_id,
-      type,
-      availableIngredients
-    );
-
-    // If ingredient not found in cache (e.g., newly created), use provided data
-    if (ingredientName === "Unknown" && ingredientData.name) {
-      ingredientName = ingredientData.name;
-    }
 
     // If no metadata found in cache, use provided ingredient data
     if (Object.keys(baseData).length === 0) {
@@ -116,15 +119,15 @@ class IngredientService {
     };
 
     // Override with custom values if provided (for newly created ingredients)
-    if (type === "hop" && ingredientData.alpha_acid) {
+    if (type === "hop" && ingredientData.alpha_acid !== undefined) {
       newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid);
     }
 
-    if (type === "grain" && ingredientData.color) {
+    if (type === "grain" && ingredientData.color !== undefined) {
       newIngredient.color = parseFloat(ingredientData.color);
     }
 
-    if (type === "grain" && ingredientData.potential) {
+    if (type === "grain" && ingredientData.potential !== undefined) {
       newIngredient.potential = parseFloat(ingredientData.potential);
     }
 
@@ -132,7 +135,7 @@ class IngredientService {
       newIngredient.grain_type = ingredientData.grain_type;
     }
 
-    if (type === "yeast" && ingredientData.attenuation) {
+    if (type === "yeast" && ingredientData.attenuation !== undefined) {
       newIngredient.attenuation = parseFloat(ingredientData.attenuation);
     }
 
