@@ -11,6 +11,7 @@ from routes.recipes import recipes_bp
 from routes.ingredients import ingredients_bp
 from routes.brew_sessions import brew_sessions_bp
 from routes.user_settings import user_settings_bp
+from routes.beerxml import beerxml_bp
 from models.mongo_models import Ingredient
 
 
@@ -49,12 +50,17 @@ def create_app(config_class=None):
     app.register_blueprint(ingredients_bp, url_prefix="/api/ingredients")
     app.register_blueprint(brew_sessions_bp, url_prefix="/api/brew-sessions")
     app.register_blueprint(user_settings_bp, url_prefix="/api/user")
+    app.register_blueprint(beerxml_bp, url_prefix="/api/beerxml")
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
         return (
             jsonify(
-                {"status": "healthy", "message": "Homebrew Tracker API is running"}
+                {
+                    "status": "healthy",
+                    "message": "Homebrew Tracker API is running",
+                    "features": ["beerxml_import", "beerxml_export"],
+                }
             ),
             200,
         )
