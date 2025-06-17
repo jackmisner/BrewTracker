@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import IngredientsList from "../../src/components/RecipeBuilder/IngredientsList";
 import { Services } from "../../src/services/index";
@@ -45,6 +45,7 @@ const renderWithUnitProvider = (component) => {
 
 describe("IngredientsList", () => {
   const mockOnRemove = jest.fn();
+  const mockOnUpdate = jest.fn();
 
   const sampleIngredients = [
     {
@@ -57,16 +58,19 @@ describe("IngredientsList", () => {
       use: "mash",
       time: 60,
       time_unit: "min",
+      color: 2.5,
     },
     {
       id: 2,
-      type: "hop", // Changed from "hops" to "hop" to match expected format
+      type: "hop",
       name: "Cascade",
       amount: 1,
       unit: "oz",
       use: "boil",
       time: 15,
       time_unit: "min",
+      alpha_acid: 5.5,
+      origin: "USA",
     },
     {
       id: 3,
@@ -79,10 +83,30 @@ describe("IngredientsList", () => {
       time: null,
       time_unit: null,
     },
+    {
+      id: 4,
+      type: "yeast",
+      name: "Safale US-05",
+      amount: 1,
+      unit: "packet",
+      manufacturer: "Fermentis",
+      attenuation: 81,
+    },
+    {
+      id: 5,
+      type: "other",
+      name: "Irish Moss",
+      amount: 1,
+      unit: "tsp",
+      use: "boil",
+      time: 15,
+      time_unit: "min",
+    },
   ];
 
   beforeEach(() => {
     mockOnRemove.mockClear();
+    mockOnUpdate.mockClear();
     Services.ingredient.sortIngredients.mockClear();
     Services.ingredient.sortIngredients.mockReturnValue(sampleIngredients);
   });
@@ -179,10 +203,8 @@ describe("IngredientsList", () => {
         />
       );
 
-      // "Mash" appears in table rows only (2 times)
       expect(screen.getAllByText("Mash")).toHaveLength(2);
-      // "Boil" appears in table row only (1 time)
-      expect(screen.getAllByText("Boil")).toHaveLength(1);
+      expect(screen.getAllByText("Boil")).toHaveLength(2);
     });
 
     it("displays time information correctly", () => {
@@ -195,8 +217,9 @@ describe("IngredientsList", () => {
       );
 
       expect(screen.getByText("60 min")).toBeInTheDocument();
-      expect(screen.getByText("15 min")).toBeInTheDocument();
-      expect(screen.getAllByText("-")).toHaveLength(1); // For Crystal 40L with no time
+      expect(screen.getAllByText("15 min")).toHaveLength(2);
+      // Check for dashes in time columns specifically - should be 3 total (Crystal grain, yeast, and one other)
+      expect(screen.getAllByText("-")).toHaveLength(3);
     });
 
     it("shows dash for missing use field", () => {
@@ -268,10 +291,31 @@ describe("IngredientsList", () => {
         />
       );
 
-      // When grain_type is null, no subtype div is rendered, so we just check the ingredient name is there
       expect(screen.getByText("Pale Malt")).toBeInTheDocument();
-      // No "Unknown" text should be displayed
       expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
+    });
+
+    it("maps all grain types correctly", () => {
+      const allGrainTypes = [
+        { ...sampleIngredients[0], grain_type: "specialty_malt" },
+        { ...sampleIngredients[0], grain_type: "adjunct_grain", id: 2 },
+        { ...sampleIngredients[0], grain_type: "roasted", id: 3 },
+        { ...sampleIngredients[0], grain_type: "smoked", id: 4 },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(allGrainTypes);
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={allGrainTypes}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("Specialty Malt")).toBeInTheDocument();
+      expect(screen.getByText("Adjunct")).toBeInTheDocument();
+      expect(screen.getByText("Roasted")).toBeInTheDocument();
+      expect(screen.getByText("Smoked")).toBeInTheDocument();
     });
   });
 
@@ -281,6 +325,7 @@ describe("IngredientsList", () => {
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
           isEditing={true}
         />
       );
@@ -295,12 +340,15 @@ describe("IngredientsList", () => {
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
           isEditing={true}
         />
       );
 
       expect(screen.getAllByText("grain")).toHaveLength(2);
       expect(screen.getByText("hop")).toBeInTheDocument();
+      expect(screen.getByText("yeast")).toBeInTheDocument();
+      expect(screen.getByText("other")).toBeInTheDocument();
     });
 
     it("shows remove buttons when editing", () => {
@@ -308,12 +356,13 @@ describe("IngredientsList", () => {
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
           isEditing={true}
         />
       );
 
       const removeButtons = screen.getAllByText("Remove");
-      expect(removeButtons).toHaveLength(3);
+      expect(removeButtons).toHaveLength(5);
     });
 
     it("calls onRemove when remove button is clicked", () => {
@@ -321,6 +370,7 @@ describe("IngredientsList", () => {
         <IngredientsList
           ingredients={sampleIngredients}
           onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
           isEditing={true}
         />
       );
@@ -344,6 +394,545 @@ describe("IngredientsList", () => {
       expect(screen.queryByText("Actions")).not.toBeInTheDocument();
       expect(screen.queryByText("Remove")).not.toBeInTheDocument();
     });
+
+    it("shows editing help text when editing", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText(/Editable fields:/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Press Enter to save, Escape to cancel/)
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("Inline editing functionality", () => {
+    beforeEach(() => {
+      // Ensure clean state for each test
+      jest.clearAllMocks();
+    });
+
+    it("starts editing when clicking on editable amount field", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      expect(screen.getByDisplayValue("10")).toBeInTheDocument();
+    });
+
+    it("does not start editing when not in editing mode", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={false}
+        />
+      );
+
+      const amountText = screen.getByText("10 lb");
+      fireEvent.click(amountText);
+
+      expect(screen.queryByDisplayValue("10")).not.toBeInTheDocument();
+    });
+
+    it("cancels editing when pressing Escape", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "15" } });
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      await waitFor(() => {
+        expect(screen.queryByDisplayValue("15")).not.toBeInTheDocument();
+      });
+      expect(screen.getByText("10 lb")).toBeInTheDocument();
+    });
+
+    it("saves editing when pressing Enter with valid value", async () => {
+      mockOnUpdate.mockResolvedValue({});
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "15" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({
+            amount: 15,
+          })
+        );
+      });
+    });
+
+    it("saves editing when input loses focus", async () => {
+      mockOnUpdate.mockResolvedValue({});
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "12" } });
+      fireEvent.blur(input);
+
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({
+            amount: 12,
+          })
+        );
+      });
+    });
+
+    it("shows validation error for invalid amount", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "-5" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Amount must be greater than 0")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("handles editing time field", async () => {
+      mockOnUpdate.mockResolvedValue({});
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      // Find a hop row with editable time
+      const hopRows = screen.getAllByText("hop");
+      const hopRow = hopRows[0].closest("tr");
+      const timeCell = hopRow.querySelector(".ingredient-time .editable-cell");
+
+      fireEvent.click(timeCell);
+
+      const input = screen.getByDisplayValue("15");
+      fireEvent.change(input, { target: { value: "30" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          2,
+          expect.objectContaining({
+            time: 30,
+          })
+        );
+      });
+    });
+  });
+
+  describe("Field validation", () => {
+    it("validates excessive hop amounts in ounces", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const hopAmountCell = screen
+        .getByText("1 oz")
+        .closest(".ingredient-amount");
+      const editableSpan = hopAmountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("1");
+      fireEvent.change(input, { target: { value: "15" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("More than 10 oz seems high for hops")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("validates excessive hop boil time", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const hopRows = screen.getAllByText("hop");
+      const hopRow = hopRows[0].closest("tr");
+      const timeCell = hopRow.querySelector(".ingredient-time .editable-cell");
+
+      fireEvent.click(timeCell);
+
+      const input = screen.getByDisplayValue("15");
+      fireEvent.change(input, { target: { value: "150" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Boil time over 120 minutes is unusual")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("validates grain color field", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      // Find the first grain row and its color field in the details column
+      const grainRows = screen.getAllByText("grain");
+      const grainRow = grainRows[0].closest("tr");
+      const detailsCell = grainRow.querySelector(".ingredient-details");
+      const colorContainer = Array.from(
+        detailsCell.querySelectorAll(".detail-item")
+      ).find((item) => item.textContent.includes("Color:"));
+
+      expect(colorContainer).toBeInTheDocument();
+
+      const editableSpan = colorContainer.querySelector(".editable-cell");
+      expect(editableSpan).toBeInTheDocument();
+
+      fireEvent.click(editableSpan);
+
+      // Find the input that should appear
+      const input = colorContainer.querySelector("input");
+      expect(input).toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: "700" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Color over 600°L seems unusually high")
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe("Dropdown functionality", () => {
+      it("shows correct options in hop use dropdown", async () => {
+        renderWithUnitProvider(
+          <IngredientsList
+            ingredients={sampleIngredients}
+            onRemove={mockOnRemove}
+            onUpdate={mockOnUpdate}
+            isEditing={true}
+          />
+        );
+
+        const hopRows = screen.getAllByText("hop");
+        const hopRow = hopRows[0].closest("tr");
+        const useCell = hopRow.querySelector(".ingredient-use .editable-cell");
+
+        fireEvent.click(useCell);
+
+        // Check that the select element exists and has the correct options
+        const select = hopRow.querySelector("select");
+        expect(select).toBeInTheDocument();
+
+        const options = Array.from(select.querySelectorAll("option")).map(
+          (option) => option.value
+        );
+        expect(options).toEqual(["boil", "whirlpool", "dry-hop"]);
+
+        // Verify option text content within the select element specifically
+        const optionTexts = Array.from(select.querySelectorAll("option")).map(
+          (option) => option.textContent
+        );
+        expect(optionTexts).toEqual(["Boil", "Whirlpool", "Dry hop"]);
+      });
+
+      it("shows correct options for other ingredient use dropdown", async () => {
+        renderWithUnitProvider(
+          <IngredientsList
+            ingredients={sampleIngredients}
+            onRemove={mockOnRemove}
+            onUpdate={mockOnUpdate}
+            isEditing={true}
+          />
+        );
+
+        const otherRows = screen.getAllByText("other");
+        const otherRow = otherRows[0].closest("tr");
+        const useCell = otherRow.querySelector(
+          ".ingredient-use .editable-cell"
+        );
+
+        fireEvent.click(useCell);
+
+        const select = otherRow.querySelector("select");
+        expect(select).toBeInTheDocument();
+
+        const options = Array.from(select.querySelectorAll("option")).map(
+          (option) => option.value
+        );
+        expect(options).toEqual([
+          "boil",
+          "whirlpool",
+          "fermentation",
+          "secondary",
+          "packaging",
+          "mash",
+        ]);
+      });
+    });
+
+    it("handles zero time values correctly", async () => {
+      mockOnUpdate.mockResolvedValue({});
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const hopRows = screen.getAllByText("hop");
+      const hopRow = hopRows[0].closest("tr");
+      const timeCell = hopRow.querySelector(".ingredient-time .editable-cell");
+
+      fireEvent.click(timeCell);
+
+      const input = screen.getByDisplayValue("15");
+      fireEvent.change(input, { target: { value: "0" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          2,
+          expect.objectContaining({
+            time: 0,
+          })
+        );
+      });
+    });
+  });
+
+  describe("Field editability", () => {
+    it("allows editing amount for all ingredient types", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      // All amount fields should be editable
+      const amountCells = screen
+        .getAllByText(/lb|oz|packet|tsp/)
+        .map((el) =>
+          el.closest(".ingredient-amount")?.querySelector(".editable-cell")
+        )
+        .filter(Boolean);
+
+      expect(amountCells.length).toBeGreaterThan(0);
+    });
+
+    it("does not allow editing grain use field", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      // Find grain rows - they should have non-editable use fields
+      const grainRows = screen.getAllByText("grain");
+      const grainRow = grainRows[0].closest("tr");
+      const useCell = grainRow.querySelector(
+        ".ingredient-use .non-editable-cell"
+      );
+
+      expect(useCell).toBeInTheDocument();
+    });
+
+    it("does not allow editing yeast time field", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const yeastRow = screen.getByText("yeast").closest("tr");
+      const timeCell = yeastRow.querySelector(
+        ".ingredient-time .non-editable-cell"
+      );
+
+      expect(timeCell).toBeInTheDocument();
+    });
+  });
+
+  describe("Error handling", () => {
+    it("handles onUpdate failure gracefully", async () => {
+      mockOnUpdate.mockRejectedValue(new Error("Update failed"));
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "15" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Failed to update ingredient")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("handles onUpdate being called on non-existent ingredient", async () => {
+      // Mock onUpdate to simulate trying to update an ingredient that doesn't exist
+      mockOnUpdate.mockImplementation((ingredientId, updatedIngredient) => {
+        if (ingredientId === 999) {
+          // Simulate ingredient not found scenario
+          return Promise.resolve();
+        }
+        return Promise.resolve();
+      });
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      const input = screen.getByDisplayValue("10");
+      fireEvent.change(input, { target: { value: "15" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({
+            amount: 15,
+          })
+        );
+      });
+
+      // The editing should complete successfully even if the backend doesn't find the ingredient
+      await waitFor(() => {
+        expect(screen.queryByDisplayValue("15")).not.toBeInTheDocument();
+      });
+    });
   });
 
   describe("Table structure", () => {
@@ -359,6 +948,8 @@ describe("IngredientsList", () => {
       expect(document.getElementById("ingredient-row-1")).toBeInTheDocument();
       expect(document.getElementById("ingredient-row-2")).toBeInTheDocument();
       expect(document.getElementById("ingredient-row-3")).toBeInTheDocument();
+      expect(document.getElementById("ingredient-row-4")).toBeInTheDocument();
+      expect(document.getElementById("ingredient-row-5")).toBeInTheDocument();
     });
 
     it("applies correct CSS classes", () => {
@@ -378,6 +969,48 @@ describe("IngredientsList", () => {
       dataRows.forEach((row) => {
         expect(row).toHaveClass("ingredient-row");
       });
+    });
+
+    it("applies ingredient type specific CSS classes", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      const rows = screen.getAllByRole("row");
+      const dataRows = rows.slice(1); // Skip header row
+
+      expect(dataRows[0]).toHaveClass("grain-row");
+      expect(dataRows[0]).toHaveClass("base-malt-row");
+      expect(dataRows[1]).toHaveClass("hop-row");
+      expect(dataRows[2]).toHaveClass("grain-row");
+      expect(dataRows[3]).toHaveClass("yeast-row");
+      expect(dataRows[4]).toHaveClass("other-row");
+    });
+
+    it("applies dry hop specific class", () => {
+      const dryHopIngredient = [
+        {
+          ...sampleIngredients[1],
+          use: "dry-hop",
+        },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(dryHopIngredient);
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={dryHopIngredient}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      const rows = screen.getAllByRole("row");
+      const dataRow = rows[1]; // Skip header row
+      expect(dataRow).toHaveClass("dry-hop-row");
     });
   });
 
@@ -410,7 +1043,7 @@ describe("IngredientsList", () => {
       // Rerender with different ingredients
       const newIngredients = [
         ...sampleIngredients,
-        { id: 4, name: "New Ingredient", type: "yeast" },
+        { id: 6, name: "New Ingredient", type: "yeast" },
       ];
       rerender(
         <UnitProvider>
@@ -428,62 +1061,7 @@ describe("IngredientsList", () => {
   });
 
   describe("Enhanced ingredient display", () => {
-    it("shows ingredient details for hops", () => {
-      const hopWithAlphaAcid = [
-        {
-          id: 2,
-          type: "hop",
-          name: "Cascade",
-          amount: 1,
-          unit: "oz",
-          use: "boil",
-          time: 15,
-          time_unit: "min",
-          alpha_acid: 5.5,
-        },
-      ];
-
-      Services.ingredient.sortIngredients.mockReturnValue(hopWithAlphaAcid);
-
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={hopWithAlphaAcid}
-          onRemove={mockOnRemove}
-          isEditing={true}
-        />
-      );
-
-      expect(screen.getByText("5.5%")).toBeInTheDocument();
-    });
-
-    it("shows ingredient details for grains", () => {
-      const grainWithColor = [
-        {
-          id: 1,
-          type: "grain",
-          grain_type: "base_malt",
-          name: "Pale Malt",
-          amount: 10,
-          unit: "lb",
-          use: "mash",
-          color: 2.5,
-        },
-      ];
-
-      Services.ingredient.sortIngredients.mockReturnValue(grainWithColor);
-
-      renderWithUnitProvider(
-        <IngredientsList
-          ingredients={grainWithColor}
-          onRemove={mockOnRemove}
-          isEditing={true}
-        />
-      );
-
-      expect(screen.getByText("2.5°L")).toBeInTheDocument();
-    });
-
-    it("applies ingredient type specific CSS classes", () => {
+    it("shows hop origin information", () => {
       renderWithUnitProvider(
         <IngredientsList
           ingredients={sampleIngredients}
@@ -492,13 +1070,174 @@ describe("IngredientsList", () => {
         />
       );
 
-      const rows = screen.getAllByRole("row");
-      const dataRows = rows.slice(1); // Skip header row
+      expect(screen.getByText("USA")).toBeInTheDocument();
+    });
 
-      // Check that rows have appropriate classes
-      expect(dataRows[0]).toHaveClass("grain-row");
-      expect(dataRows[1]).toHaveClass("hop-row");
-      expect(dataRows[2]).toHaveClass("grain-row");
+    it("shows yeast manufacturer information", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("Fermentis")).toBeInTheDocument();
+    });
+
+    it("shows yeast attenuation in editing mode", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText("81%")).toBeInTheDocument();
+    });
+
+    it("shows ingredient details for hops in editing mode", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText("5.5%")).toBeInTheDocument();
+    });
+
+    it("shows ingredient details for grains in editing mode", () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      expect(screen.getByText("2.5°L")).toBeInTheDocument();
+    });
+  });
+
+  describe("Format functions", () => {
+    it("formats time with zero value as dash", () => {
+      const zeroTimeIngredient = [
+        {
+          ...sampleIngredients[0],
+          time: 0,
+        },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(zeroTimeIngredient);
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={zeroTimeIngredient}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("-")).toBeInTheDocument();
+    });
+
+    it("formats usage with proper capitalization", () => {
+      const specialUsageIngredients = [
+        { ...sampleIngredients[1], use: "dry-hop", id: 10 },
+        { ...sampleIngredients[1], use: "whirlpool", id: 11 },
+        { ...sampleIngredients[4], use: "fermentation", id: 12 },
+        { ...sampleIngredients[4], use: "secondary", id: 13 },
+        { ...sampleIngredients[4], use: "packaging", id: 14 },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(
+        specialUsageIngredients
+      );
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={specialUsageIngredients}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("Dry Hop")).toBeInTheDocument();
+      expect(screen.getByText("Whirlpool")).toBeInTheDocument();
+      expect(screen.getByText("Fermentation")).toBeInTheDocument();
+      expect(screen.getByText("Secondary")).toBeInTheDocument();
+      expect(screen.getByText("Packaging")).toBeInTheDocument();
+    });
+
+    it("handles invalid amounts gracefully", () => {
+      const invalidAmountIngredient = [
+        {
+          ...sampleIngredients[0],
+          amount: "invalid",
+        },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(
+        invalidAmountIngredient
+      );
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={invalidAmountIngredient}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("0 lb")).toBeInTheDocument();
+    });
+
+    it("handles singular time units correctly", () => {
+      const oneMinuteIngredient = [
+        {
+          ...sampleIngredients[1],
+          time: 1,
+          time_unit: "minutes",
+        },
+      ];
+      Services.ingredient.sortIngredients.mockReturnValue(oneMinuteIngredient);
+
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={oneMinuteIngredient}
+          onRemove={mockOnRemove}
+          isEditing={false}
+        />
+      );
+
+      expect(screen.getByText("1 min")).toBeInTheDocument();
+    });
+  });
+
+  describe("Focus management", () => {
+    it("focuses input when editing starts", async () => {
+      renderWithUnitProvider(
+        <IngredientsList
+          ingredients={sampleIngredients}
+          onRemove={mockOnRemove}
+          onUpdate={mockOnUpdate}
+          isEditing={true}
+        />
+      );
+
+      const amountCell = screen
+        .getByText("10 lb")
+        .closest(".ingredient-amount");
+      const editableSpan = amountCell.querySelector(".editable-cell");
+      fireEvent.click(editableSpan);
+
+      await waitFor(() => {
+        const input = screen.getByDisplayValue("10");
+        expect(input).toHaveFocus();
+      });
     });
   });
 });
