@@ -1,0 +1,725 @@
+/* ==========================================================================
+   IngredientMatchingReview.css - Ingredient Matching Review Component Styles
+   ========================================================================== */
+
+/* ==========================================================================
+   MAIN CONTAINER
+   ========================================================================== */
+.ingredient-matching-review {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* ==========================================================================
+   HEADER & PROGRESS
+   ========================================================================== */
+.review-header {
+  margin-bottom: 2rem;
+}
+
+.review-title h2 {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.review-title p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.progress-info {
+  margin-top: 1rem;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+/* ==========================================================================
+   SUMMARY STATISTICS
+   ========================================================================== */
+.matching-summary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* ==========================================================================
+   MAIN CONTENT LAYOUT
+   ========================================================================== */
+.review-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.imported-ingredient h3,
+.matching-options h3 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   INGREDIENT CARDS
+   ========================================================================== */
+.ingredient-card {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.ingredient-card.imported {
+  border-color: #3b82f6;
+  background: #f8faff;
+}
+
+.ingredient-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-badge.grain {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.type-badge.hop {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.type-badge.yeast {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.type-badge.other {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.ingredient-header h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.ingredient-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.detail-item .label {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.detail-item .value {
+  color: #374151;
+}
+
+/* ==========================================================================
+   MATCHING OPTIONS
+   ========================================================================== */
+.option-section {
+  margin-bottom: 1.5rem;
+}
+
+.option-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.option-header input[type="radio"] {
+  margin: 0;
+}
+
+.option-header label {
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.match-item {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.match-item:hover {
+  border-color: #3b82f6;
+  background: #f8faff;
+}
+
+.match-item.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.match-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+.confidence-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.confidence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.match-details {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.match-details .detail {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.match-reasons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reason-tag {
+  padding: 0.125rem 0.375rem;
+  background: #e0e7ff;
+  color: #3730a3;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   NEW INGREDIENT PREVIEW
+   ========================================================================== */
+.new-ingredient-preview {
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+}
+
+.preview-header {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.preview-details .detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.preview-details .detail-item .label {
+  color: #065f46;
+  font-weight: 500;
+}
+
+.preview-details .detail-item .value {
+  color: #047857;
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+.review-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ingredient-navigator {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-dot.matched {
+  background: #10b981;
+}
+
+.nav-dot.new {
+  background: #f59e0b;
+}
+
+.nav-dot.active {
+  transform: scale(1.5);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   ERROR MESSAGES
+   ========================================================================== */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 768px) {
+  .ingredient-matching-review {
+    padding: 1rem;
+  }
+
+  .review-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .matching-summary {
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .summary-stat {
+    min-width: 80px;
+  }
+
+  .review-navigation {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .nav-buttons {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .action-buttons {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .match-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .match-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ingredient-navigator {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .ingredient-matching-review {
+    padding: 0.75rem;
+  }
+
+  .review-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .review-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .matching-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .summary-stat {
+    padding: 0.75rem;
+  }
+
+  .ingredient-card {
+    padding: 0.75rem;
+  }
+
+  .match-item {
+    padding: 0.75rem;
+  }
+
+  .option-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+.btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.match-item:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.nav-dot:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.option-header input[type="radio"]:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+  .ingredient-card {
+    border-width: 2px;
+  }
+  
+  .match-item {
+    border-width: 2px;
+  }
+  
+  .type-badge {
+    border: 1px solid currentColor;
+  }
+  
+  .confidence-dot {
+    border: 1px solid currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .match-item,
+  .btn,
+  .nav-dot,
+  .progress-fill,
+  .button-spinner {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   LOADING STATES
+   ========================================================================== */
+.ingredient-matching-review.loading {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.matches-list.loading {
+  opacity: 0.6;
+}
+
+.matches-list.loading::after {
+  content: 'Loading matches...';
+  display: block;
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ==========================================================================
+   SUCCESS STATES
+   ========================================================================== */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  color: #166534;
+}
+
+.success-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.success-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   SPECIAL STATES
+   ========================================================================== */
+.match-item.processing {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.match-item.processing::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #3b82f6;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ingredient-card.updating {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   CONFIDENCE INDICATORS
+   ========================================================================== */
+.confidence-high {
+  color: #10b981;
+}
+
+.confidence-medium {
+  color: #f59e0b;
+}
+
+.confidence-low {
+  color: #ef4444;
+}
+
+.confidence-badge.high .confidence-dot {
+  background-color: #10b981;
+}
+
+.confidence-badge.medium .confidence-dot {
+  background-color: #f59e0b;
+}
+
+.confidence-badge.low .confidence-dot {
+  background-color: #ef4444;
+}
