@@ -5,6 +5,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "../src/App";
 import ApiService from "../src/services/api";
 
+// Suppress console errors and traces during tests
+const originalConsoleError = console.error;
+const originalConsoleTrace = console.trace;
+const originalConsoleWarn = console.warn;
+
+beforeAll(() => {
+  console.error = jest.fn();
+  console.trace = jest.fn();
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+  console.trace = originalConsoleTrace;
+  console.warn = originalConsoleWarn;
+});
+
 // Mock the API service
 jest.mock("../src/services/api");
 
@@ -186,8 +203,6 @@ describe("App", () => {
       global.mockLocalStorage.getItem.mockReturnValue("invalid-token");
       ApiService.auth.getProfile.mockRejectedValue(new Error("Token expired"));
 
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-
       renderApp();
 
       await waitFor(() => {
@@ -200,8 +215,6 @@ describe("App", () => {
         );
         expect(screen.getByTestId("login-page")).toBeInTheDocument();
       });
-
-      consoleSpy.mockRestore();
     });
   });
 
@@ -328,9 +341,6 @@ describe("App", () => {
       global.mockLocalStorage.getItem.mockReturnValue("valid-token");
       ApiService.auth.getProfile.mockRejectedValue(new Error("Network Error"));
 
-      // Mock console.error to avoid noise in test output
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-
       renderApp();
 
       await waitFor(() => {
@@ -338,7 +348,7 @@ describe("App", () => {
       });
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
+        expect(console.error).toHaveBeenCalledWith(
           "Failed to get user profile:",
           expect.any(Error)
         );
@@ -347,8 +357,6 @@ describe("App", () => {
         );
         expect(screen.getByTestId("login-page")).toBeInTheDocument();
       });
-
-      consoleSpy.mockRestore();
     });
 
     it("handles API response without user data", async () => {

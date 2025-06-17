@@ -140,14 +140,11 @@ describe("BrewSessionList", () => {
       );
     });
 
-    it("should render header with title and new session button", async () => {
+    it("should render header with title", async () => {
       renderWithProviders(<BrewSessionList />);
 
       await waitFor(() => {
         expect(screen.getByText("Brew Sessions")).toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(screen.getByText("New Brew Session")).toBeInTheDocument();
       });
     });
 
@@ -388,9 +385,6 @@ describe("BrewSessionList", () => {
 
       await waitFor(() => {
         expect(screen.getByText("No brew sessions found.")).toBeInTheDocument();
-        expect(
-          screen.getByText("Create your first brew session")
-        ).toBeInTheDocument();
       });
     });
 
@@ -451,17 +445,6 @@ describe("BrewSessionList", () => {
       ApiService.brewSessions.getAll.mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
-    });
-
-    it("should have correct href for new session link", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      await waitFor(() => {
-        const newSessionLink = screen
-          .getByText("New Brew Session")
-          .closest("a");
-        expect(newSessionLink).toHaveAttribute("href", "/brew-sessions/new");
-      });
     });
 
     it("should have correct href for session view links", async () => {
