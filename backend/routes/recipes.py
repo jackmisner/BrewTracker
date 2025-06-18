@@ -444,6 +444,11 @@ def get_public_recipes():
         else:
             filters["__raw__"] = search_conditions.to_query(Recipe)
 
+        if "$or" in query:
+            # Combine with existing OR conditions
+            query = {"$and": [{"$or": query["$or"]}, {"$or": search_conditions}]}
+        else:
+            query["$or"] = search_conditions
     # Calculate pagination
     skip = (page - 1) * per_page
 

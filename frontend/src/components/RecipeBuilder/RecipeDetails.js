@@ -136,6 +136,9 @@ function RecipeDetails({
               onChange("style", styleName)
             } // NEW: Handle suggestion selection
           />
+          <small className="form-help-text">
+            Select a recognized beer style or enter a custom style name
+          </small>
         </div>
         <div className="form-row">
           <div className="form-group">
