@@ -271,6 +271,79 @@ class Recipe(Document):
         "indexes": ["user_id", "name", "style", ("user_id", "is_public"), "created_at"],
     }
 
+    def suggest_matching_styles(self):
+        """Find beer styles that match this recipe's specifications"""
+        if not all(
+            [
+                self.estimated_og,
+                self.estimated_fg,
+                self.estimated_abv,
+                self.estimated_ibu,
+                self.estimated_srm,
+            ]
+        ):
+            return []
+
+        recipe_specs = {
+            "estimated_og": self.estimated_og,
+            "estimated_fg": self.estimated_fg,
+            "estimated_abv": self.estimated_abv,
+            "estimated_ibu": self.estimated_ibu,
+            "estimated_srm": self.estimated_srm,
+        }
+
+        matching_styles = []
+        for style in BeerStyleGuide.objects():
+            match_result = style.matches_recipe_specs(recipe_specs)
+            if match_result["match_percentage"] >= 60:  # At least 60% match
+                matching_styles.append(
+                    {
+                        "style": style,
+                        "match_percentage": match_result["match_percentage"],
+                        "matches": match_result["matches"],
+                    }
+                )
+
+        # Sort by match percentage
+        matching_styles.sort(key=lambda x: x["match_percentage"], reverse=True)
+        return matching_styles[:5]  # Return top 5 matches
+
+    def get_style_analysis(self):
+        """Get detailed style analysis for this recipe"""
+        if not self.style:
+            return None
+
+        # Try to find the declared style
+        declared_style = BeerStyleGuide.objects(name__icontains=self.style).first()
+        if not declared_style:
+            # Try finding by partial match
+            declared_style = BeerStyleGuide.objects(
+                Q(name__icontains=self.style.split()[0])
+                | Q(tags__icontains=self.style.lower())
+            ).first()
+
+        if not declared_style:
+            return {"declared_style": self.style, "found": False}
+
+        # Analyze recipe against declared style
+        recipe_specs = {
+            "estimated_og": self.estimated_og,
+            "estimated_fg": self.estimated_fg,
+            "estimated_abv": self.estimated_abv,
+            "estimated_ibu": self.estimated_ibu,
+            "estimated_srm": self.estimated_srm,
+        }
+
+        match_result = declared_style.matches_recipe_specs(recipe_specs)
+
+        return {
+            "declared_style": self.style,
+            "found": True,
+            "style_guide": declared_style,
+            "match_result": match_result,
+            "suggestions": declared_style.get_style_targets(),
+        }
+
     def to_dict(self):
         return {
             "recipe_id": str(self.id),
@@ -306,6 +379,219 @@ class Recipe(Document):
             "notes": self.notes,
             "ingredients": [ingredient.to_dict() for ingredient in self.ingredients],
         }
+
+
+# Range value embedded document for style specifications
+class StyleRange(EmbeddedDocument):
+    """Embedded document for handling min/max ranges with units"""
+
+    minimum = FloatField(required=True)
+    maximum = FloatField(required=True)
+    unit = StringField(required=True, max_length=10)  # sg, IBUs, %, SRM, etc.
+
+    def to_dict(self):
+        return {
+            "minimum": {"unit": self.unit, "value": self.minimum},
+            "maximum": {"unit": self.unit, "value": self.maximum},
+        }
+
+    def is_in_range(self, value):
+        """Check if a value falls within this range"""
+        return self.minimum <= value <= self.maximum
+
+    def get_midpoint(self):
+        """Get the midpoint of the range"""
+        return (self.minimum + self.maximum) / 2
+
+
+# Beer Style Guide model
+class BeerStyleGuide(Document):
+    """Model for storing beer style information following BeerJSON specification"""
+
+    # Basic identification
+    name = StringField(required=True, max_length=100, unique=True)
+    category = StringField(required=True, max_length=100)
+    category_id = StringField(required=True, max_length=10)
+    style_id = StringField(required=True, max_length=10, unique=True)
+
+    # Descriptions
+    category_description = StringField()
+    overall_impression = StringField()
+    aroma = StringField()
+    appearance = StringField()
+    flavor = StringField()
+    mouthfeel = StringField()
+    comments = StringField()
+    history = StringField()
+    style_comparison = StringField()
+
+    # Tags for categorization and search
+    tags = ListField(StringField(max_length=50))
+
+    # Style specifications with ranges
+    original_gravity = EmbeddedDocumentField(StyleRange)
+    international_bitterness_units = EmbeddedDocumentField(StyleRange)
+    final_gravity = EmbeddedDocumentField(StyleRange)
+    alcohol_by_volume = EmbeddedDocumentField(StyleRange)
+    color = EmbeddedDocumentField(StyleRange)
+
+    # Additional information
+    ingredients = StringField()
+    examples = StringField()  # Commercial examples
+
+    # Metadata
+    style_guide = StringField(default="BJCP2021", max_length=50)
+    type = StringField(default="beer", max_length=20)
+    version = FloatField(default=2.01)
+
+    # Timestamps
+    created_at = DateTimeField(default=lambda: datetime.now(UTC))
+    updated_at = DateTimeField(default=lambda: datetime.now(UTC))
+
+    meta = {
+        "collection": "beer_style_guides",
+        "indexes": [
+            "style_id",
+            "category_id",
+            "name",
+            "category",
+            "tags",
+            ("category_id", "style_id"),
+        ],
+    }
+
+    def clean(self):
+        """Validate the document before saving"""
+        self.updated_at = datetime.now(UTC)
+
+        # Ensure tags are lowercase for consistent searching
+        if self.tags:
+            self.tags = [tag.lower().strip() for tag in self.tags if tag.strip()]
+
+    def matches_recipe_specs(self, recipe_data):
+        """Check if a recipe's calculated specs match this style"""
+        matches = {}
+        total_specs = 0
+        matching_specs = 0
+
+        if recipe_data.get("estimated_og") and self.original_gravity:
+            total_specs += 1
+            matches["og"] = self.original_gravity.is_in_range(
+                recipe_data["estimated_og"]
+            )
+            if matches["og"]:
+                matching_specs += 1
+
+        if recipe_data.get("estimated_fg") and self.final_gravity:
+            total_specs += 1
+            matches["fg"] = self.final_gravity.is_in_range(recipe_data["estimated_fg"])
+            if matches["fg"]:
+                matching_specs += 1
+
+        if recipe_data.get("estimated_abv") and self.alcohol_by_volume:
+            total_specs += 1
+            matches["abv"] = self.alcohol_by_volume.is_in_range(
+                recipe_data["estimated_abv"]
+            )
+            if matches["abv"]:
+                matching_specs += 1
+
+        if recipe_data.get("estimated_ibu") and self.international_bitterness_units:
+            total_specs += 1
+            matches["ibu"] = self.international_bitterness_units.is_in_range(
+                recipe_data["estimated_ibu"]
+            )
+            if matches["ibu"]:
+                matching_specs += 1
+
+        if recipe_data.get("estimated_srm") and self.color:
+            total_specs += 1
+            matches["srm"] = self.color.is_in_range(recipe_data["estimated_srm"])
+            if matches["srm"]:
+                matching_specs += 1
+
+        # Calculate match percentage
+        match_percentage = (
+            (matching_specs / total_specs * 100) if total_specs > 0 else 0
+        )
+
+        return {
+            "matches": matches,
+            "match_percentage": match_percentage,
+            "matching_specs": matching_specs,
+            "total_specs": total_specs,
+        }
+
+    def get_style_targets(self):
+        """Get target values (midpoints) for recipe formulation"""
+        targets = {}
+
+        if self.original_gravity:
+            targets["og"] = self.original_gravity.get_midpoint()
+
+        if self.final_gravity:
+            targets["fg"] = self.final_gravity.get_midpoint()
+
+        if self.alcohol_by_volume:
+            targets["abv"] = self.alcohol_by_volume.get_midpoint()
+
+        if self.international_bitterness_units:
+            targets["ibu"] = self.international_bitterness_units.get_midpoint()
+
+        if self.color:
+            targets["srm"] = self.color.get_midpoint()
+
+        return targets
+
+    def to_dict(self):
+        """Convert to dictionary for JSON serialization"""
+        base_dict = {
+            "style_guide_id": str(self.id),
+            "name": self.name,
+            "category": self.category,
+            "category_id": self.category_id,
+            "style_id": self.style_id,
+            "category_description": self.category_description,
+            "overall_impression": self.overall_impression,
+            "aroma": self.aroma,
+            "appearance": self.appearance,
+            "flavor": self.flavor,
+            "mouthfeel": self.mouthfeel,
+            "comments": self.comments,
+            "history": self.history,
+            "style_comparison": self.style_comparison,
+            "tags": self.tags,
+            "ingredients": self.ingredients,
+            "examples": self.examples,
+            "style_guide": self.style_guide,
+            "type": self.type,
+            "version": self.version,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+        # Add ranges if they exist
+        if self.original_gravity:
+            base_dict["original_gravity"] = self.original_gravity.to_dict()
+
+        if self.international_bitterness_units:
+            base_dict["international_bitterness_units"] = (
+                self.international_bitterness_units.to_dict()
+            )
+
+        if self.final_gravity:
+            base_dict["final_gravity"] = self.final_gravity.to_dict()
+
+        if self.alcohol_by_volume:
+            base_dict["alcohol_by_volume"] = self.alcohol_by_volume.to_dict()
+
+        if self.color:
+            base_dict["color"] = self.color.to_dict()
+
+        return base_dict
+
+    def __str__(self):
+        return f"{self.style_id} - {self.name}"
 
 
 # Fermentation entry embedded document
