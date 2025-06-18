@@ -326,20 +326,37 @@ def get_public_recipes():
     per_page = int(request.args.get("per_page", 10))
     style_filter = request.args.get("style", None)
     search_query = request.args.get("search", None)
+    category_filter = request.args.get("category", None)
 
     # Build query
     query = {"is_public": True}
 
     if style_filter:
-        query["style__icontains"] = style_filter
-
-    if search_query:
-        # Search in name and description
+        # Enhanced style filtering - check for exact matches and partial matches
         query["$or"] = [
-            {"name__icontains": search_query},
-            {"description__icontains": search_query},
+            {"style__iexact": style_filter},
+            {"style__icontains": style_filter},
         ]
 
+    if category_filter:
+        # Filter by beer category
+        style_keywords = get_category_keywords(category_filter)
+        if style_keywords:
+            query["style__in"] = style_keywords
+
+    if search_query:
+        # Enhanced search in name, description, and style
+        search_conditions = [
+            {"name__icontains": search_query},
+            {"description__icontains": search_query},
+            {"style__icontains": search_query},
+        ]
+
+        if "$or" in query:
+            # Combine with existing OR conditions
+            query = {"$and": [{"$or": query["$or"]}, {"$or": search_conditions}]}
+        else:
+            query["$or"] = search_conditions
     # Calculate pagination
     skip = (page - 1) * per_page
 
@@ -347,14 +364,23 @@ def get_public_recipes():
     recipes = Recipe.objects(**query).order_by("-created_at").skip(skip).limit(per_page)
     total = Recipe.objects(**query).count()
 
-    # Include username for each recipe
-    recipes_with_users = []
+    # Include username and enhanced metadata for each recipe
+    recipes_with_metadata = []
     for recipe in recipes:
         recipe_dict = recipe.to_dict()
+
         # Get the username
         user = User.objects(id=recipe.user_id).first()
         recipe_dict["username"] = user.username if user else "Unknown"
-        recipes_with_users.append(recipe_dict)
+
+        # Add style analysis if metrics are available
+        if all([recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
+            recipe_dict["has_metrics"] = True
+            recipe_dict["style_category"] = (
+                classify_beer_style(recipe.style) if recipe.style else None
+            )
+        else:
+            recipe_dict["has_metrics"] = False
 
     # Calculate pagination metadata
     total_pages = (total + per_page - 1) // per_page
@@ -362,7 +388,7 @@ def get_public_recipes():
     return (
         jsonify(
             {
-                "recipes": recipes_with_users,
+                "recipes": recipes_with_metadata,
                 "pagination": {
                     "page": page,
                     "pages": total_pages,
@@ -377,3 +403,37 @@ def get_public_recipes():
         ),
         200,
     )
+
+
+def classify_beer_style(style_name):
+    """Basic beer style classification"""
+    if not style_name:
+        return None
+
+    style_lower = style_name.lower()
+
+    if any(word in style_lower for word in ["ipa", "pale ale", "amber", "brown ale"]):
+        return "ale"
+    elif any(word in style_lower for word in ["lager", "pilsner", "märzen", "bock"]):
+        return "lager"
+    elif any(word in style_lower for word in ["stout", "porter"]):
+        return "dark"
+    elif any(word in style_lower for word in ["wheat", "weizen", "wit"]):
+        return "wheat"
+    elif any(word in style_lower for word in ["sour", "lambic", "gose"]):
+        return "sour"
+    else:
+        return "other"
+
+
+def get_category_keywords(category):
+    """Get style keywords for a category"""
+    categories = {
+        "ale": ["IPA", "Pale Ale", "Amber Ale", "Brown Ale", "ESB", "Barleywine"],
+        "lager": ["Pilsner", "Lager", "Märzen", "Bock", "Schwarzbier"],
+        "dark": ["Stout", "Porter", "Black IPA"],
+        "wheat": ["Wheat Beer", "Weizen", "Witbier", "Hefeweizen"],
+        "sour": ["Sour", "Lambic", "Gose", "Berliner Weisse"],
+    }
+
+    return categories.get(category.lower(), [])

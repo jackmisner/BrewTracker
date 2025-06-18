@@ -87,3 +87,30 @@ def get_recipe_style_analysis(recipe_id):
     except Exception as e:
         print(f"Error getting style analysis: {e}")
         return jsonify({"error": "Failed to get style analysis"}), 500
+
+
+@beer_styles_bp.route("/match-metrics", methods=["POST"])
+def match_styles_to_metrics():
+    """Find styles matching provided metrics (for frontend-calculated metrics)"""
+    data = request.get_json()
+
+    # Validate required metrics
+    required_fields = ["og", "fg", "abv", "ibu", "srm"]
+    metrics = {}
+
+    for field in required_fields:
+        if field in data:
+            try:
+                metrics[f"estimated_{field}"] = float(data[field])
+            except (ValueError, TypeError):
+                return jsonify({"error": f"Invalid {field} value"}), 400
+
+    if not metrics:
+        return jsonify({"error": "At least one metric is required"}), 400
+
+    try:
+        matches = MongoDBService.find_matching_styles_by_metrics(metrics)
+        return jsonify({"matches": matches}), 200
+    except Exception as e:
+        print(f"Error matching styles to metrics: {e}")
+        return jsonify({"error": "Failed to find matching styles"}), 500

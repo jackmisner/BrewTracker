@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "../services";
 import { useUnits } from "../contexts/UnitContext";
+import beerStyleServiceInstance from "../services/BeerStyleService";
 
 /**
  * Unified hook for recipe builder functionality
@@ -303,7 +304,7 @@ export function useRecipeBuilder(recipeId) {
     [state.recipe, state.ingredients, state.availableIngredients]
   );
 
-  // Update ingredient - NEW FUNCTION
+  // Update ingredient
   const updateIngredient = useCallback(
     async (ingredientId, updatedIngredientData) => {
       try {
@@ -613,17 +614,6 @@ export function useRecipeBuilder(recipeId) {
   const importIngredients = useCallback(
     async (ingredientsToImport) => {
       try {
-        console.log("🍺 Starting BeerXML ingredient import", {
-          ingredientCount: ingredientsToImport.length,
-          ingredients: ingredientsToImport.map((ing) => ({
-            name: ing.name,
-            type: ing.type,
-            amount: ing.amount,
-            unit: ing.unit,
-            ingredient_id: ing.ingredient_id,
-          })),
-        });
-
         setState((prev) => ({
           ...prev,
           addingIngredient: true,
@@ -634,10 +624,6 @@ export function useRecipeBuilder(recipeId) {
 
         // Process each ingredient with complete data including name
         for (const importIngredient of ingredientsToImport) {
-          console.log(
-            `🔍 Processing ingredient: ${importIngredient.name} (${importIngredient.type})`
-          );
-
           // Create ingredient data object with all properties including name
           const ingredientData = {
             ingredient_id: importIngredient.ingredient_id,
@@ -653,8 +639,6 @@ export function useRecipeBuilder(recipeId) {
             attenuation: importIngredient.attenuation,
           };
 
-          console.log(`📊 Ingredient data:`, ingredientData);
-
           // Validate ingredient data
           const validation = Services.ingredient.validateIngredientData(
             importIngredient.type,
@@ -662,7 +646,7 @@ export function useRecipeBuilder(recipeId) {
           );
           if (!validation.isValid) {
             console.error(
-              `❌ Validation failed for ${importIngredient.name}:`,
+              `Validation failed for ${importIngredient.name}:`,
               validation.errors
             );
             throw new Error(
@@ -677,33 +661,12 @@ export function useRecipeBuilder(recipeId) {
             state.availableIngredients
           );
 
-          console.log(`✅ Created recipe ingredient:`, {
-            id: newIngredient.id,
-            name: newIngredient.name,
-            type: newIngredient.type,
-            amount: newIngredient.amount,
-            unit: newIngredient.unit,
-          });
-
           processedIngredients.push(newIngredient);
         }
-
-        console.log(
-          `🎯 Total processed ingredients: ${processedIngredients.length}`
-        );
 
         // Sort all ingredients together
         const sortedIngredients =
           Services.ingredient.sortIngredients(processedIngredients);
-
-        console.log(
-          `📝 Sorted ingredients:`,
-          sortedIngredients.map((ing) => ({
-            name: ing.name,
-            type: ing.type,
-            amount: ing.amount,
-          }))
-        );
 
         // Update state with all ingredients at once
         setState((prev) => ({
@@ -713,8 +676,6 @@ export function useRecipeBuilder(recipeId) {
           addingIngredient: false,
           calculatingMetrics: true,
         }));
-
-        console.log("🏁 Import completed successfully");
 
         // Recalculate metrics with all ingredients
         const metrics = await Services.metrics.calculateMetricsDebounced(
@@ -729,7 +690,7 @@ export function useRecipeBuilder(recipeId) {
           calculatingMetrics: false,
         }));
       } catch (error) {
-        console.error("💥 Error importing ingredients:", error);
+        console.error("Error importing ingredients:", error);
         setState((prev) => ({
           ...prev,
           error: error.message || "Failed to import ingredients",
@@ -741,7 +702,48 @@ export function useRecipeBuilder(recipeId) {
     },
     [state.recipe, state.availableIngredients]
   );
+  const [styleAnalysis, setStyleAnalysis] = useState(null);
+  const [styleSuggestions, setStyleSuggestions] = useState([]);
 
+  const updateRecipeStyle = useCallback(
+    async (styleName) => {
+      await updateRecipe("style", styleName);
+
+      // Refresh style analysis after style change
+      if (state.recipe.recipe_id) {
+        try {
+          const analysis =
+            await beerStyleServiceInstance.getRecipeStyleAnalysis(
+              state.recipe.recipe_id
+            );
+          setStyleAnalysis(analysis);
+        } catch (error) {
+          console.error("Error updating style analysis:", error);
+        }
+      }
+    },
+    [updateRecipe, state.recipe.recipe_id]
+  );
+
+  const refreshStyleAnalysis = useCallback(async () => {
+    if (!state.recipe.recipe_id || !state.metrics) return;
+
+    try {
+      const [analysis, suggestions] = await Promise.all([
+        beerStyleServiceInstance
+          .getRecipeStyleAnalysis(state.recipe.recipe_id)
+          .catch(() => null),
+        beerStyleServiceInstance
+          .findMatchingStyles(state.metrics)
+          .catch(() => []),
+      ]);
+
+      setStyleAnalysis(analysis);
+      setStyleSuggestions(suggestions.slice(0, 5));
+    } catch (error) {
+      console.error("Error refreshing style analysis:", error);
+    }
+  }, [state.recipe.recipe_id, state.metrics]);
   // Return interface
   return {
     // Core data
@@ -773,7 +775,13 @@ export function useRecipeBuilder(recipeId) {
     clearError,
     cancelOperation,
     getRecipeAnalysis,
-    refreshAvailableIngredients, // NEW
+    refreshAvailableIngredients,
+
+    // Beer style analysis
+    styleAnalysis,
+    styleSuggestions,
+    updateRecipeStyle,
+    refreshStyleAnalysis,
 
     // Computed properties
     isEditing: Boolean(recipeId),

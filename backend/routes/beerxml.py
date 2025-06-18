@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
-from models.mongo_models import Recipe, Ingredient, User
+from models.mongo_models import Recipe, Ingredient, User, BeerStyleGuide
 from services.mongodb_service import MongoDBService
 from utils.unit_conversions import UnitConverter
 import xml.etree.ElementTree as ET
@@ -314,9 +314,21 @@ def parse_recipe_element(recipe_elem):
     """Parse a single recipe element"""
     try:
         # Basic recipe info
+        # Parse style information if present
+        style_elem = recipe_elem.find("STYLE")
+        style_name = ""
+        if style_elem is not None:
+            style_name = get_text_content(style_elem, "NAME")
+            if not style_name:
+                # Fallback to basic style field
+                style_name = get_text_content(recipe_elem, "STYLE") or ""
+        else:
+            # Check for basic style field
+            style_name = get_text_content(recipe_elem, "STYLE") or ""
+
         recipe = {
             "name": get_text_content(recipe_elem, "NAME") or "Unnamed Recipe",
-            "style": get_text_content(recipe_elem, "STYLE") or "",
+            "style": style_name,
             "description": get_text_content(recipe_elem, "NOTES") or "",
             "notes": get_text_content(recipe_elem, "TASTE_NOTES") or "",
             "boil_time": int(get_text_content(recipe_elem, "BOIL_TIME") or 60),
@@ -342,6 +354,17 @@ def parse_recipe_element(recipe_elem):
             "metadata": {
                 "source": "BeerXML Import",
                 "imported_at": datetime.now(UTC).isoformat(),
+                "style_info": {
+                    "declared_style": style_name,
+                    "style_guide": (
+                        get_text_content(style_elem, "STYLE_GUIDE")
+                        if style_elem
+                        else None
+                    ),
+                    "category": (
+                        get_text_content(style_elem, "CATEGORY") if style_elem else None
+                    ),
+                },
             },
         }
 
@@ -818,3 +841,104 @@ def map_xml_use_to_misc(xml_use):
         "Bottling": "packaging",
     }
     return use_map.get(xml_use, "boil")
+
+
+def export_recipe_with_style_beerxml(recipe):
+    """Enhanced BeerXML export with style information"""
+    # Get the existing XML generation
+    xml_content = generate_beerxml(recipe)
+
+    # If recipe has a style, try to find it in the style guide
+    if recipe.style:
+        style_guide = BeerStyleGuide.objects(name__icontains=recipe.style).first()
+        if style_guide:
+            # Parse existing XML to add style info
+            root = ET.fromstring(xml_content)
+            recipe_elem = root.find(".//RECIPE")
+
+            if recipe_elem is not None:
+                # Add style information
+                style_elem = ET.SubElement(recipe_elem, "STYLE")
+                add_text_element(style_elem, "NAME", style_guide.name)
+                add_text_element(style_elem, "VERSION", "1")
+                add_text_element(style_elem, "CATEGORY", style_guide.category)
+                add_text_element(style_elem, "CATEGORY_NUMBER", style_guide.category_id)
+                add_text_element(
+                    style_elem,
+                    "STYLE_LETTER",
+                    (
+                        style_guide.style_id.split(style_guide.category_id)[-1]
+                        if style_guide.style_id.startswith(style_guide.category_id)
+                        else ""
+                    ),
+                )
+                add_text_element(style_elem, "STYLE_GUIDE", style_guide.style_guide)
+                add_text_element(
+                    style_elem,
+                    "TYPE",
+                    "Lager" if "lager" in style_guide.name.lower() else "Ale",
+                )
+
+                # Add style ranges
+                if style_guide.original_gravity:
+                    add_text_element(
+                        style_elem, "OG_MIN", str(style_guide.original_gravity.minimum)
+                    )
+                    add_text_element(
+                        style_elem, "OG_MAX", str(style_guide.original_gravity.maximum)
+                    )
+
+                if style_guide.final_gravity:
+                    add_text_element(
+                        style_elem, "FG_MIN", str(style_guide.final_gravity.minimum)
+                    )
+                    add_text_element(
+                        style_elem, "FG_MAX", str(style_guide.final_gravity.maximum)
+                    )
+
+                if style_guide.international_bitterness_units:
+                    add_text_element(
+                        style_elem,
+                        "IBU_MIN",
+                        str(style_guide.international_bitterness_units.minimum),
+                    )
+                    add_text_element(
+                        style_elem,
+                        "IBU_MAX",
+                        str(style_guide.international_bitterness_units.maximum),
+                    )
+
+                if style_guide.color:
+                    add_text_element(
+                        style_elem, "COLOR_MIN", str(style_guide.color.minimum)
+                    )
+                    add_text_element(
+                        style_elem, "COLOR_MAX", str(style_guide.color.maximum)
+                    )
+
+                if style_guide.alcohol_by_volume:
+                    add_text_element(
+                        style_elem,
+                        "ABV_MIN",
+                        str(style_guide.alcohol_by_volume.minimum),
+                    )
+                    add_text_element(
+                        style_elem,
+                        "ABV_MAX",
+                        str(style_guide.alcohol_by_volume.maximum),
+                    )
+
+                # Add descriptions
+                if style_guide.overall_impression:
+                    add_text_element(
+                        style_elem, "NOTES", style_guide.overall_impression
+                    )
+                if style_guide.ingredients:
+                    add_text_element(style_elem, "INGREDIENTS", style_guide.ingredients)
+                if style_guide.examples:
+                    add_text_element(style_elem, "EXAMPLES", style_guide.examples)
+
+            # Convert back to string
+            return ET.tostring(root, encoding="unicode")
+
+    return xml_content

@@ -7,6 +7,7 @@ import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
+import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
 import Services from "../services";
 import "../styles/RecipeBuilder.css";
 
@@ -402,6 +403,16 @@ function RecipeBuilder() {
               calculating={calculatingMetrics}
               recipe={recipe}
             />
+            {/* Add Style Analysis */}
+            {recipe && metrics && (
+              <StyleAnalysis
+                recipe={recipe}
+                metrics={metrics}
+                onStyleSuggestionSelect={(styleName) =>
+                  updateRecipe("style", styleName)
+                }
+              />
+            )}
           </div>
         </div>
       </div>
