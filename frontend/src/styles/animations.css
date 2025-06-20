@@ -1,0 +1,632 @@
+/* ==========================================================================
+   Animations, Transitions, and Interactive Effects
+   ========================================================================== */
+
+/* ==========================================================================
+   Core Animations
+   ========================================================================== */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes highlight {
+  0% { background-color: var(--color-amber-100); }
+  100% { background-color: transparent; }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes expandDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 1000px;
+    opacity: 1;
+  }
+}
+
+@keyframes collapseUp {
+  from {
+    max-height: 1000px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes ingredientUpdate {
+  0% { 
+    background-color: #dbeafe;
+    transform: scale(1.01);
+  }
+  50% { 
+    background-color: #bfdbfe;
+  }
+  100% { 
+    background-color: #f0f9ff;
+    transform: scale(1);
+  }
+}
+
+@keyframes ingredientUpdated {
+  0% { 
+    background-color: #dcfce7;
+    transform: scale(1.01);
+  }
+  100% { 
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   Applied Animation Classes
+   ========================================================================== */
+
+/* Loading and Processing States */
+.loading-spinner,
+.status-indicator .spinner,
+.loading-indicator .spinner {
+  animation: spin 1s linear infinite;
+}
+
+.button-spinner {
+  animation: spin 1s linear infinite;
+}
+
+.unsaved-indicator {
+  animation: pulse 2s infinite;
+}
+
+.highlight {
+  animation: highlight 1.5s ease;
+}
+
+/* Component Animations */
+.style-specs-with-match,
+.current-vs-target,
+.style-suggestions {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.style-analysis-expanded .style-match-result {
+  animation: expandDown 0.3s ease-out;
+}
+
+/* Ingredient Table States */
+.ingredient-row {
+  transition: background-color var(--transition-normal);
+}
+
+.ingredient-row.updating {
+  background-color: #f0f9ff;
+  animation: ingredientUpdate 1s ease;
+}
+
+.ingredient-row.updated {
+  animation: ingredientUpdated 0.5s ease;
+}
+
+.ingredient-row.error {
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  animation: shake 0.5s ease;
+}
+
+/* Special Processing States */
+.match-item.processing {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.match-item.processing::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #3b82f6;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ingredient-card.updating {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+/* Loading/saving states for edit cells */
+.edit-cell-container.saving .edit-cell-input {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.edit-cell-container.saving::after {
+  content: '';
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-amber-300);
+  border-top: 2px solid var(--color-amber-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Hover and Interactive Effects
+   ========================================================================== */
+
+/* Recipe Card Hover Effects */
+.recipe-card {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.recipe-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Hover Effects */
+.recipe-card-button {
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast);
+}
+
+.ingredient-add-button {
+  transition: background-color var(--transition-normal), transform var(--transition-fast);
+}
+
+.ingredient-add-button:active {
+  transform: translateY(1px);
+}
+
+/* Table Row Hover Effects */
+.ingredients-table tr {
+  transition: background-color var(--transition-normal);
+}
+
+.ingredients-table tr:hover {
+  background-color: var(--color-amber-100);
+}
+
+/* Style Option Hover Effects */
+.style-option {
+  transition: background-color var(--transition-normal);
+}
+
+.style-option:hover {
+  background-color: var(--color-amber-50);
+}
+
+/* Suggestion Item Hover Effects */
+.suggestion-item {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.suggestion-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Metric Indicator Hover Effects */
+.metric-indicator {
+  transition: all var(--transition-normal);
+}
+
+.metric-indicator:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced hover effects for better interactivity */
+.style-analysis-compact:hover .metric-indicator.in-spec {
+  background-color: #bbf7d0;
+  color: #15803d;
+}
+
+.style-analysis-compact:hover .metric-indicator.out-of-spec {
+  background-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Expand/Collapse Indicators */
+.expand-indicator,
+.collapse-indicator {
+  transition: transform var(--transition-normal);
+}
+
+.style-analysis-compact:hover .expand-indicator {
+  color: var(--color-amber-600);
+  transform: scale(1.1);
+}
+
+.expanded-header:hover .collapse-indicator {
+  color: var(--color-amber-600);
+  transform: scale(1.1);
+}
+
+/* ==========================================================================
+   Form and Input Transitions
+   ========================================================================== */
+
+/* Input Focus Transitions */
+.form-control,
+.input-control,
+.amount-input,
+.color-input,
+.alpha-input,
+.time-input,
+.adjunct-time-input {
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.editable-cell {
+  transition: background-color var(--transition-normal);
+}
+
+.edit-cell-input {
+  transition: border-color var(--transition-normal);
+}
+
+/* Clear Button Transitions */
+.clear-button {
+  transition: color var(--transition-normal), background-color var(--transition-normal);
+}
+
+.clear-button:hover {
+  color: var(--color-gray-600);
+  background-color: var(--color-gray-100);
+}
+
+/* Balance Meter Animation */
+.balance-meter-progress {
+  transition: width var(--transition-slow) ease;
+}
+
+/* ==========================================================================
+   Container and Layout Transitions
+   ========================================================================== */
+
+/* Style Analysis Container Transitions */
+.style-analysis-container {
+  transition: all var(--transition-normal);
+  transition: height var(--transition-normal) ease-out;
+}
+
+.style-analysis-container:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.style-analysis-compact {
+  transition: background-color var(--transition-normal);
+}
+
+.style-analysis-compact:hover {
+  background-color: var(--color-gray-50);
+}
+
+.expanded-header {
+  transition: background-color var(--transition-normal);
+}
+
+.expanded-header:hover {
+  background-color: var(--color-gray-100);
+}
+
+/* Panel Close Button Transitions */
+.panel-close {
+  transition: all 0.2s;
+}
+
+.panel-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Error Dismiss Button Transitions */
+.error-dismiss {
+  transition: background-color var(--transition-normal);
+}
+
+.error-dismiss:hover {
+  background-color: var(--color-red-100);
+}
+
+/* ==========================================================================
+   Loading States with Overlays
+   ========================================================================== */
+
+/* Ingredients Table Loading State */
+.ingredients-table.updating {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.ingredients-table.updating::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  border-radius: var(--border-radius);
+}
+
+.ingredients-table.updating::after {
+  content: 'Updating...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  background-color: white;
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: var(--color-amber-700);
+}
+
+/* Compact Loading State */
+.style-analysis-compact.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.style-analysis-compact.loading::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-gray-300);
+  border-top: 2px solid var(--color-amber-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Status Indicator Animations
+   ========================================================================== */
+
+/* Spinner for status indicators */
+.status-indicator .spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Confidence Indicators
+   ========================================================================== */
+.confidence-high {
+  color: #10b981;
+}
+
+.confidence-medium {
+  color: #f59e0b;
+}
+
+.confidence-low {
+  color: #ef4444;
+}
+
+.confidence-badge.high .confidence-dot {
+  background-color: #10b981;
+}
+
+.confidence-badge.medium .confidence-dot {
+  background-color: #f59e0b;
+}
+
+.confidence-badge.low .confidence-dot {
+  background-color: #ef4444;
+}
+
+/* ==========================================================================
+   Reduced Motion Support
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Specifically disable common animations */
+  .loading-spinner,
+  .status-indicator .spinner,
+  .loading-indicator .spinner,
+  .button-spinner {
+    animation: none;
+  }
+  
+  /* Disable transform animations */
+  .recipe-card:hover,
+  .suggestion-item:hover,
+  .metric-indicator:hover,
+  .style-analysis-compact:hover .expand-indicator,
+  .expanded-header:hover .collapse-indicator,
+  .ingredient-add-button:active {
+    transform: none;
+  }
+  
+  /* Remove complex animations */
+  .style-specs-with-match,
+  .current-vs-target,
+  .style-suggestions,
+  .style-analysis-expanded .style-match-result {
+    animation: none;
+  }
+  
+  /* Remove shake and highlight effects */
+  .ingredient-row.updating,
+  .ingredient-row.updated,
+  .ingredient-row.error,
+  .highlight {
+    animation: none;
+  }
+  
+  /* Simplify transitions */
+  .ingredient-row,
+  .ingredients-table tr,
+  .style-option,
+  .suggestion-item,
+  .metric-indicator,
+  .style-analysis-compact,
+  .expanded-header,
+  .clear-button,
+  .panel-close,
+  .error-dismiss,
+  .balance-meter-progress,
+  .style-analysis-container,
+  .form-control,
+  .input-control,
+  .amount-input,
+  .color-input,
+  .alpha-input,
+  .time-input,
+  .adjunct-time-input,
+  .editable-cell,
+  .edit-cell-input,
+  .expand-indicator,
+  .collapse-indicator {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Print Styles (No Animations)
+   ========================================================================== */
+@media print {
+  /* Remove all animations and transitions for print */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Hide loading indicators */
+  .loading-spinner,
+  .status-indicator .spinner,
+  .loading-indicator .spinner,
+  .button-spinner {
+    display: none;
+  }
+  
+  /* Remove hover effects */
+  .recipe-card:hover,
+  .suggestion-item:hover,
+  .metric-indicator:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Simplify colors for better print contrast */
+  .metric-indicator.in-spec {
+    background-color: #f0f0f0;
+    border: 1px solid #000;
+  }
+  
+  .metric-indicator.out-of-spec {
+    background-color: #e0e0e0;
+    border: 1px solid #000;
+  }
+}
+
+/* ==========================================================================
+   High Contrast Mode (No Complex Animations)
+   ========================================================================== */
+@media (prefers-contrast: high) {
+  /* Simplify animations for high contrast */
+  .loading-spinner,
+  .status-indicator .spinner,
+  .loading-indicator .spinner {
+    border-width: 3px;
+  }
+  
+  /* Enhance focus indicators */
+  .recipe-card:focus,
+  .suggestion-item:focus,
+  .style-analysis-compact:focus,
+  .expanded-header:focus {
+    outline: 3px solid var(--color-amber-600);
+    outline-offset: 3px;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Optimizations
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .recipe-card:hover,
+  .suggestion-item:hover,
+  .metric-indicator:hover,
+  .style-analysis-compact:hover .expand-indicator,
+  .expanded-header:hover .collapse-indicator {
+    transform: none;
+    background-color: inherit;
+    color: inherit;
+  }
+  
+  /* Increase touch targets */
+  .clear-button,
+  .panel-close,
+  .error-dismiss {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Simplify transitions for better performance */
+  .recipe-card,
+  .suggestion-item,
+  .metric-indicator {
+    transition: none;
+  }
+}

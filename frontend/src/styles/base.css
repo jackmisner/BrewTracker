@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Base Styles, Typography, and Utilities
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Layout and Typography
+   ========================================================================== */
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xl);
+  color: #333;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 2rem 0 var(--spacing-lg);
+  color: #333;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+.loading-container {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #d97706;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--color-gray-600);
+}
+
+.loading-indicator .spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-gray-300);
+  border-top: 2px solid var(--color-amber-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+/* Margin utilities */
+.mb-1 { margin-bottom: var(--spacing-xs); }
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mb-3 { margin-bottom: var(--spacing-md); }
+.mb-4 { margin-bottom: var(--spacing-lg); }
+.mb-6 { margin-bottom: var(--spacing-xl); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mt-4 { margin-top: var(--spacing-lg); }
+.mt-6 { margin-top: var(--spacing-xl); }
+
+/* ==========================================================================
+   Error and Status States
+   ========================================================================== */
+.error-banner {
+  background-color: var(--color-red-50);
+  border: 1px solid var(--color-red-200);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
+  color: var(--color-red-700);
+  font-weight: 500;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-red-500);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.error-dismiss:hover {
+  background-color: var(--color-red-100);
+}
+
+/* ==========================================================================
+   Search and Highlighting
+   ========================================================================== */
+.search-highlight {
+  background-color: var(--color-amber-200);
+  color: var(--color-amber-800);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   SRM Beer Colors
+   ========================================================================== */
+
+/* Very Light - Pale Straw */
+.srm-1 { background-color: #f8f6e8; }
+.srm-2 { background-color: #f5f2d4; }
+
+/* Light - Straw to Pale Gold */
+.srm-3 { background-color: #f2edc0; }
+.srm-4 { background-color: #ede8ac; }
+
+/* Gold */
+.srm-5 { background-color: #e8e298; }
+.srm-6 { background-color: #e3dd84; }
+
+/* Deep Gold to Light Amber */
+.srm-7 { background-color: #ded870; }
+.srm-8 { background-color: #d9d35c; }
+
+/* Amber */
+.srm-9 { background-color: #d4ce48; }
+.srm-10 { background-color: #cfc934; }
+
+/* Deep Amber to Light Copper */
+.srm-11 { background-color: #c4b82e; }
+.srm-12 { background-color: #b8a728; }
+
+/* Copper */
+.srm-13 { background-color: #ac9622; }
+.srm-14 { background-color: #a0851c; }
+
+/* Deep Copper to Light Brown */
+.srm-15 { background-color: #947416; }
+.srm-16 { background-color: #886310; }
+
+/* Light to Medium Brown */
+.srm-17 { background-color: #7c520a; }
+.srm-18 { background-color: #704108; }
+.srm-19 { background-color: #643006; }
+.srm-20 { background-color: #581f04; }
+
+/* Dark Brown */
+.srm-21 { background-color: #4c1e04; }
+.srm-22 { background-color: #451b03; }
+.srm-23 { background-color: #3e1803; }
+.srm-24 { background-color: #371503; }
+.srm-25 { background-color: #301202; }
+
+/* Very Dark Brown */
+.srm-26 { background-color: #290f02; }
+.srm-27 { background-color: #220c02; }
+.srm-28 { background-color: #1b0901; }
+.srm-29 { background-color: #140601; }
+.srm-30 { background-color: #0d0301; }
+
+/* Nearly Black */
+.srm-31 { background-color: #0b0201; }
+.srm-32 { background-color: #090201; }
+.srm-33 { background-color: #070101; }
+.srm-34 { background-color: #050101; }
+.srm-35 { background-color: #030000; }
+
+/* Black */
+.srm-36 { background-color: #020000; }
+.srm-37 { background-color: #010000; }
+.srm-38 { background-color: #000000; }
+.srm-39 { background-color: #000000; }
+.srm-40 { background-color: #000000; }
