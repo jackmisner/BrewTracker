@@ -1,6 +1,7 @@
 import React from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Link } from "react-router";
+import BeerStyleSelector from "./BeerStyles/BeerStyleSelector";
 
 function RecipeDetails({
   recipe,
@@ -11,6 +12,7 @@ function RecipeDetails({
   saving,
   canSave,
   hasUnsavedChanges,
+  metrics,
 }) {
   const {
     unitSystem,
@@ -119,16 +121,20 @@ function RecipeDetails({
           />
         </div>
         <div className="form-group">
-          <label htmlFor="style">Beer Style</label>
-          <input
-            type="text"
-            id="style"
-            name="style"
-            value={recipe.style || ""}
-            onChange={handleChange}
-            className="form-control"
-            placeholder="e.g. American IPA, Stout, Wheat Beer"
+          <label htmlFor="style" className="form-label">
+            Beer Style
+          </label>
+          <BeerStyleSelector
+            value={recipe.style}
+            onChange={(value) => onChange("style", value)}
+            placeholder="Select or search beer style..."
+            showStyleInfo={true}
             disabled={saving}
+            metrics={metrics} // NEW: Pass current recipe metrics
+            showSuggestions={true} // NEW: Show style suggestions when no style selected
+            onStyleSuggestionSelect={(styleName) =>
+              onChange("style", styleName)
+            } // NEW: Handle suggestion selection
           />
         </div>
         <div className="form-row">

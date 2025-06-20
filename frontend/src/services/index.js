@@ -7,6 +7,7 @@ import ingredientServiceInstance from "./IngredientService";
 import recipeServiceInstance from "./RecipeService";
 import metricServiceInstance from "./MetricService";
 import brewSessionServiceInstance from "./BrewSessionService";
+import BeerStyleService from "./BeerStyleService";
 
 // Export individual services
 export {
@@ -22,6 +23,7 @@ export const Services = {
   recipe: recipeServiceInstance,
   metrics: metricServiceInstance,
   brewSession: brewSessionServiceInstance,
+  beerStyle: BeerStyleService,
 };
 
 // Export service utilities

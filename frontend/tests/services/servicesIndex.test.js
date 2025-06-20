@@ -6,12 +6,14 @@ import {
   Services,
   ServiceUtils,
 } from "../../src/services/index";
+import BeerStyleService from "../../src/services/BeerStyleService";
 
 // Mock all the service instances
 jest.mock("../../src/services/IngredientService");
 jest.mock("../../src/services/RecipeService");
 jest.mock("../../src/services/MetricService");
 jest.mock("../../src/services/BrewSessionService");
+jest.mock("../../src/services/BeerStyleService");
 
 describe("Services Index", () => {
   let consoleErrorSpy;
@@ -39,6 +41,7 @@ describe("Services Index", () => {
         recipe: recipeServiceInstance,
         metrics: metricServiceInstance,
         brewSession: brewSessionServiceInstance,
+        beerStyle: BeerStyleService,
       });
     });
 
@@ -213,6 +216,7 @@ describe("Services Index", () => {
       expect(Services.recipe).toBe(recipeServiceInstance);
       expect(Services.metrics).toBe(metricServiceInstance);
       expect(Services.brewSession).toBe(brewSessionServiceInstance);
+      expect(Services.beerStyle).toBe(BeerStyleService);
     });
 
     test("individual exports match Services object exports", () => {

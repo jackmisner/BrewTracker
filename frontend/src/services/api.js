@@ -89,6 +89,16 @@ const ApiService = {
       return api.get(`/recipes/public?${params}`);
     },
   },
+  beerStyles: {
+    getAll: () => api.get("/beer-styles"),
+    search: (query) =>
+      api.get(`/beer-styles/search?q=${encodeURIComponent(query)}`),
+    getById: (styleId) => api.get(`/beer-styles/${styleId}`),
+    getStyleSuggestions: (recipeId) =>
+      api.get(`/beer-styles/suggestions/${recipeId}`),
+    getRecipeStyleAnalysis: (recipeId) =>
+      api.get(`/beer-styles/analysis/${recipeId}`),
+  },
 
   // Ingredient endpoints
   ingredients: {

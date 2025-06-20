@@ -942,3 +942,129 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error: {e}")
             return None, str(e)
+
+    ###########################################################
+    #                   Beer Style Methods                    #
+    ###########################################################
+
+    @staticmethod
+    def get_all_beer_styles():
+        """Get all beer styles grouped by category"""
+        try:
+            from models.mongo_models import BeerStyleGuide
+
+            # Get all styles ordered by category and style_id
+            styles = BeerStyleGuide.objects().order_by("category_id", "style_id")
+
+            # Group by category
+            categories = {}
+            for style in styles:
+                category_key = style.category_id
+                if category_key not in categories:
+                    categories[category_key] = {
+                        "category": style.category,
+                        "category_id": style.category_id,
+                        "description": style.category_description,
+                        "styles": [],
+                    }
+
+                categories[category_key]["styles"].append(style.to_dict())
+
+            return categories
+        except Exception as e:
+            print(f"Database error: {e}")
+            return {}
+
+    @staticmethod
+    def search_beer_styles(query):
+        """Search beer styles by name, category, or tags"""
+        try:
+            from models.mongo_models import BeerStyleGuide
+            from mongoengine.queryset.visitor import Q
+
+            if not query or len(query.strip()) < 2:
+                return []
+
+            query_term = query.strip().lower()
+
+            # Search in multiple fields
+            search_query = (
+                Q(name__icontains=query_term)
+                | Q(category__icontains=query_term)
+                | Q(style_id__icontains=query_term)
+                | Q(tags__icontains=query_term)
+                | Q(overall_impression__icontains=query_term)
+            )
+
+            styles = BeerStyleGuide.objects(search_query).order_by("style_id").limit(20)
+
+            return [style.to_dict() for style in styles]
+        except Exception as e:
+            print(f"Database error: {e}")
+            return []
+
+    @staticmethod
+    def get_style_suggestions_for_recipe(recipe_id):
+        """Get style suggestions based on recipe metrics"""
+        try:
+            from models.mongo_models import Recipe
+
+            recipe = Recipe.objects(id=recipe_id).first()
+            if not recipe:
+                return []
+
+            # Use the Recipe model's built-in suggestion method
+            suggestions = recipe.suggest_matching_styles()
+
+            return suggestions
+        except Exception as e:
+            print(f"Database error: {e}")
+            return []
+
+    @staticmethod
+    def get_recipe_style_analysis(recipe_id):
+        """Get detailed style analysis for a recipe"""
+        try:
+            from models.mongo_models import Recipe
+
+            recipe = Recipe.objects(id=recipe_id).first()
+            if not recipe:
+                return None
+
+            # Use the Recipe model's built-in analysis method
+            analysis = recipe.get_style_analysis()
+
+            return analysis
+        except Exception as e:
+            print(f"Database error: {e}")
+            return None
+
+    @staticmethod
+    def find_matching_styles_by_metrics(metrics):
+        """Find styles matching given metrics (for frontend-calculated metrics)"""
+        try:
+            from models.mongo_models import BeerStyleGuide
+
+            matches = []
+
+            # Get all styles and test against metrics
+            styles = BeerStyleGuide.objects()
+
+            for style in styles:
+                match_result = style.matches_recipe_specs(metrics)
+                if match_result["match_percentage"] >= 50:  # At least 50% match
+                    matches.append(
+                        {
+                            "style": style.to_dict(),
+                            "match_percentage": match_result["match_percentage"],
+                            "matches": match_result["matches"],
+                        }
+                    )
+
+            # Sort by match percentage
+            matches.sort(key=lambda x: x["match_percentage"], reverse=True)
+            return matches[:10]  # Return top 10 matches
+
+        except Exception as e:
+            print(f"Database error: {e}")
+            return []

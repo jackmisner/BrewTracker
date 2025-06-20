@@ -12,7 +12,8 @@ from routes.ingredients import ingredients_bp
 from routes.brew_sessions import brew_sessions_bp
 from routes.user_settings import user_settings_bp
 from routes.beerxml import beerxml_bp
-from models.mongo_models import Ingredient
+from routes.beer_styles import beer_styles_bp
+from models.mongo_models import Ingredient, BeerStyleGuide
 
 
 def create_app(config_class=None):
@@ -51,6 +52,7 @@ def create_app(config_class=None):
     app.register_blueprint(brew_sessions_bp, url_prefix="/api/brew-sessions")
     app.register_blueprint(user_settings_bp, url_prefix="/api/user")
     app.register_blueprint(beerxml_bp, url_prefix="/api/beerxml")
+    app.register_blueprint(beer_styles_bp, url_prefix="/api/beer-styles")
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
@@ -59,17 +61,24 @@ def create_app(config_class=None):
                 {
                     "status": "healthy",
                     "message": "Homebrew Tracker API is running",
-                    "features": ["beerxml_import", "beerxml_export"],
+                    "features": [
+                        "beerxml_import",
+                        "beerxml_export",
+                        "beer_style_guides",
+                    ],
                 }
             ),
             200,
         )
 
-    # Only seed ingredients if not in testing and if no ingredients exist
+    # Only seed data if not in testing and if data doesn't exist
     if not app.config.get("TESTING", False):
         try:
+            # Seed ingredients
             if Ingredient.objects.count() == 0:
-                print("No ingredients found in database. Running seed operation...")
+                print(
+                    "No ingredients found in database. Running ingredient seed operation..."
+                )
                 from seed_ingredients import seed_ingredients
 
                 json_file_path = (
@@ -81,10 +90,30 @@ def create_app(config_class=None):
                 seed_ingredients(mongo_uri, json_file_path)
             else:
                 print(
-                    "Ingredients already exist in the database. Skipping seed operation."
+                    "Ingredients already exist in the database. Skipping ingredient seed operation."
                 )
+
+            # Seed beer styles
+            if BeerStyleGuide.objects.count() == 0:
+                print(
+                    "No beer styles found in database. Running beer style seed operation..."
+                )
+                from seed_beer_styles import seed_beer_styles
+
+                json_file_path = (
+                    Path(__file__).parent / "data" / "beer_style_guides.json"
+                )
+                mongo_uri = os.environ.get(
+                    "MONGO_URI", "mongodb://localhost:27017/brewtracker"
+                )
+                seed_beer_styles(mongo_uri, json_file_path)
+            else:
+                print(
+                    "Beer styles already exist in the database. Skipping beer style seed operation."
+                )
+
         except Exception as e:
-            print(f"Warning: Could not check/seed ingredients: {e}")
+            print(f"Warning: Could not check/seed data: {e}")
 
     return app
 
