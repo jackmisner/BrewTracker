@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
+from bson.errors import InvalidId
 from mongoengine.queryset.visitor import Q
+from mongoengine.errors import ValidationError
 from models.mongo_models import Recipe, User
 from services.mongodb_service import MongoDBService
 from utils.recipe_api_calculator import calculate_all_metrics_preview
@@ -100,6 +102,12 @@ def get_recipe_defaults():
 def get_recipe(recipe_id):
     user_id = get_jwt_identity()
 
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
+
     # Use unit-aware method
     recipe_data = MongoDBService.get_recipe_for_user(recipe_id, user_id)
 
@@ -128,8 +136,12 @@ def create_recipe():
     try:
         # Get user's current unit system preference
         user = User.objects(id=user_id).first()
-        unit_system = user.get_preferred_units() if user else "imperial"
-        data["unit_system"] = unit_system
+        user_preferred_units = user.get_preferred_units() if user else "imperial"
+
+        # Use explicit unit system from data if provided, otherwise use user preference
+        if "unit_system" not in data:
+            data["unit_system"] = user_preferred_units
+
         # Create recipe with unit system
         recipe = MongoDBService.create_recipe(data, user_id)
 
@@ -154,21 +166,31 @@ def update_recipe(recipe_id):
     user_id = get_jwt_identity()
     data = request.get_json()
 
-    # Check if recipe exists and belongs to user
-    recipe = Recipe.objects(id=recipe_id).first()
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
-    if str(recipe.user_id) != user_id:
-        return jsonify({"error": "Access denied"}), 403
+    try:
+        # Check if recipe exists and belongs to user
+        recipe = Recipe.objects(id=recipe_id).first()
+        if not recipe:
+            return jsonify({"error": "Recipe not found"}), 404
 
-    # Update recipe
-    updated_recipe, message = MongoDBService.update_recipe(recipe_id, data)
+        if str(recipe.user_id) != user_id:
+            return jsonify({"error": "Access denied"}), 403
 
-    if updated_recipe:
-        return jsonify(updated_recipe.to_dict()), 200
-    else:
-        return jsonify({"error": message}), 400
+        # Update recipe
+        updated_recipe, message = MongoDBService.update_recipe(recipe_id, data)
+
+        if updated_recipe:
+            return jsonify(updated_recipe.to_dict()), 200
+        else:
+            return jsonify({"error": message}), 400
+    except ValidationError as e:
+        print(f"Database error: {e}")
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
 
 @recipes_bp.route("/<recipe_id>", methods=["DELETE"])
@@ -176,18 +198,28 @@ def update_recipe(recipe_id):
 def delete_recipe(recipe_id):
     user_id = get_jwt_identity()
 
-    # Check if recipe exists and belongs to user
-    recipe = Recipe.objects(id=recipe_id).first()
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
-    if str(recipe.user_id) != user_id:
-        return jsonify({"error": "Access denied"}), 403
+    try:
+        # Check if recipe exists and belongs to user
+        recipe = Recipe.objects(id=recipe_id).first()
+        if not recipe:
+            return jsonify({"error": "Recipe not found"}), 404
 
-    # Delete recipe
-    recipe.delete()
+        if str(recipe.user_id) != user_id:
+            return jsonify({"error": "Access denied"}), 403
 
-    return jsonify({"message": "Recipe deleted successfully"}), 200
+        # Delete recipe
+        recipe.delete()
+
+        return jsonify({"message": "Recipe deleted successfully"}), 200
+    except ValidationError as e:
+        print(f"Database error: {e}")
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
 
 @recipes_bp.route("/<recipe_id>/brew-sessions", methods=["GET"])
@@ -195,6 +227,12 @@ def delete_recipe(recipe_id):
 def get_recipe_brew_sessions(recipe_id):
     """Get all brew sessions for a specific recipe"""
     user_id = get_jwt_identity()
+
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
     try:
         # First verify the recipe exists and user has access
@@ -229,13 +267,20 @@ def get_recipe_brew_sessions(recipe_id):
 @recipes_bp.route("/<recipe_id>/metrics", methods=["GET"])
 @jwt_required()
 def get_recipe_metrics(recipe_id):
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
+
     # Calculate recipe statistics
     stats = MongoDBService.calculate_recipe_stats(recipe_id)
 
-    if stats:
-        return jsonify(stats), 200
-    else:
+    # Check if stats is None, empty dict, or has no meaningful data
+    if not stats or (isinstance(stats, dict) and not any(stats.values())):
         return jsonify({"message": "No completed brew sessions for this recipe"}), 404
+    else:
+        return jsonify(stats), 200
 
 
 @recipes_bp.route("/calculate-metrics-preview", methods=["POST"])
@@ -245,8 +290,31 @@ def calculate_metrics_preview():
     try:
         data = request.get_json()
 
+        # Validate required fields and types
+        if not isinstance(data.get("batch_size"), (int, float)):
+            return (
+                jsonify(
+                    {
+                        "error": "Failed to calculate metrics: batch_size must be a number"
+                    }
+                ),
+                400,
+            )
+
+        if not isinstance(data.get("ingredients", []), list):
+            return (
+                jsonify(
+                    {"error": "Failed to calculate metrics: ingredients must be a list"}
+                ),
+                400,
+            )
+
         # Calculate metrics
         metrics = calculate_all_metrics_preview(data)
+
+        # Check if metrics calculation failed (returned None or empty)
+        if metrics is None:
+            return jsonify({"error": "Failed to calculate metrics"}), 400
 
         return jsonify(metrics), 200
     except Exception as e:
@@ -258,6 +326,12 @@ def calculate_metrics_preview():
 @jwt_required()
 def clone_recipe(recipe_id):
     user_id = get_jwt_identity()
+
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
     # Clone the recipe
     cloned_recipe, message = MongoDBService.clone_recipe(recipe_id, user_id)
@@ -272,6 +346,12 @@ def clone_recipe(recipe_id):
 @jwt_required()
 def get_recipe_versions(recipe_id):
     user_id = get_jwt_identity()
+
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
 
     # Get the recipe
     recipe = Recipe.objects(id=recipe_id).first()
@@ -322,87 +402,115 @@ def get_recipe_versions(recipe_id):
 @recipes_bp.route("/public", methods=["GET"])
 def get_public_recipes():
     """Get all public recipes from all users"""
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 10))
+    page = max(int(request.args.get("page", 1)), 1)  # Ensure page is at least 1
+    per_page = max(
+        int(request.args.get("per_page", 10)), 1
+    )  # Ensure per_page is at least 1
     style_filter = request.args.get("style", None)
     search_query = request.args.get("search", None)
     category_filter = request.args.get("category", None)
 
-    # Build query
-    query = {"is_public": True}
+    # Build query filters for mongoengine
+    filters = {"is_public": True}
 
     if style_filter:
-        # Enhanced style filtering - check for exact matches and partial matches
-        query["$or"] = [
-            {"style__iexact": style_filter},
-            {"style__icontains": style_filter},
-        ]
+        # Use mongoengine Q objects for OR conditions
+        style_conditions = Q(style__iexact=style_filter) | Q(
+            style__icontains=style_filter
+        )
+        filters.update({"__raw__": style_conditions.to_query(Recipe)})
 
     if category_filter:
         # Filter by beer category
         style_keywords = get_category_keywords(category_filter)
         if style_keywords:
-            query["style__in"] = style_keywords
+            filters["style__in"] = style_keywords
 
     if search_query:
         # Enhanced search in name, description, and style
-        search_conditions = [
-            {"name__icontains": search_query},
-            {"description__icontains": search_query},
-            {"style__icontains": search_query},
-        ]
+        search_conditions = (
+            Q(name__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(style__icontains=search_query)
+        )
 
-        if "$or" in query:
-            # Combine with existing OR conditions
-            query = {"$and": [{"$or": query["$or"]}, {"$or": search_conditions}]}
+        if "__raw__" in filters:
+            # Combine with existing conditions
+            existing_query = filters["__raw__"]
+            combined_query = {
+                "$and": [existing_query, search_conditions.to_query(Recipe)]
+            }
+            filters["__raw__"] = combined_query
         else:
-            query["$or"] = search_conditions
+            filters["__raw__"] = search_conditions.to_query(Recipe)
+
     # Calculate pagination
     skip = (page - 1) * per_page
 
-    # Get public recipes
-    recipes = Recipe.objects(**query).order_by("-created_at").skip(skip).limit(per_page)
-    total = Recipe.objects(**query).count()
-
-    # Include username and enhanced metadata for each recipe
-    recipes_with_metadata = []
-    for recipe in recipes:
-        recipe_dict = recipe.to_dict()
-
-        # Get the username
-        user = User.objects(id=recipe.user_id).first()
-        recipe_dict["username"] = user.username if user else "Unknown"
-
-        # Add style analysis if metrics are available
-        if all([recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
-            recipe_dict["has_metrics"] = True
-            recipe_dict["style_category"] = (
-                classify_beer_style(recipe.style) if recipe.style else None
+    try:
+        # Get public recipes
+        if "__raw__" in filters:
+            raw_query = filters.pop("__raw__")
+            recipes = (
+                Recipe.objects(__raw__=raw_query, **filters)
+                .order_by("-created_at")
+                .skip(skip)
+                .limit(per_page)
             )
+            total = Recipe.objects(__raw__=raw_query, **filters).count()
         else:
-            recipe_dict["has_metrics"] = False
+            recipes = (
+                Recipe.objects(**filters)
+                .order_by("-created_at")
+                .skip(skip)
+                .limit(per_page)
+            )
+            total = Recipe.objects(**filters).count()
 
-    # Calculate pagination metadata
-    total_pages = (total + per_page - 1) // per_page
+        # Include username and enhanced metadata for each recipe
+        recipes_with_metadata = []
+        for recipe in recipes:
+            recipe_dict = recipe.to_dict()
 
-    return (
-        jsonify(
-            {
-                "recipes": recipes_with_metadata,
-                "pagination": {
-                    "page": page,
-                    "pages": total_pages,
-                    "per_page": per_page,
-                    "total": total,
-                    "has_next": page < total_pages,
-                    "has_prev": page > 1,
-                    "next_num": page + 1 if page < total_pages else None,
-                    "prev_num": page - 1 if page > 1 else None,
-                },
-            }
-        ),
-        200,
-    )
+            # Get the username
+            user = User.objects(id=recipe.user_id).first()
+            recipe_dict["username"] = user.username if user else "Unknown"
+
+            # Add style analysis if metrics are available
+            if all([recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
+                recipe_dict["has_metrics"] = True
+                recipe_dict["style_category"] = (
+                    classify_beer_style(recipe.style) if recipe.style else None
+                )
+            else:
+                recipe_dict["has_metrics"] = False
+
+            recipes_with_metadata.append(recipe_dict)
+
+        # Calculate pagination metadata
+        total_pages = (total + per_page - 1) // per_page
+
+        return (
+            jsonify(
+                {
+                    "recipes": recipes_with_metadata,
+                    "pagination": {
+                        "page": page,
+                        "pages": total_pages,
+                        "per_page": per_page,
+                        "total": total,
+                        "has_next": page < total_pages,
+                        "has_prev": page > 1,
+                        "next_num": page + 1 if page < total_pages else None,
+                        "prev_num": page - 1 if page > 1 else None,
+                    },
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        print(f"Error in get_public_recipes: {e}")
+        return jsonify({"error": "Failed to fetch public recipes"}), 500
 
 
 def classify_beer_style(style_name):

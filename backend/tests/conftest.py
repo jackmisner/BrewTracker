@@ -34,6 +34,9 @@ def app():
     from routes.recipes import recipes_bp
     from routes.ingredients import ingredients_bp
     from routes.brew_sessions import brew_sessions_bp
+    from routes.user_settings import user_settings_bp
+    from routes.beerxml import beerxml_bp
+    from routes.beer_styles import beer_styles_bp
 
     app = Flask(__name__)
     app.config.from_object(config.TestConfig)
@@ -47,6 +50,9 @@ def app():
     app.register_blueprint(recipes_bp, url_prefix="/api/recipes")
     app.register_blueprint(ingredients_bp, url_prefix="/api/ingredients")
     app.register_blueprint(brew_sessions_bp, url_prefix="/api/brew-sessions")
+    app.register_blueprint(user_settings_bp, url_prefix="/api/user")
+    app.register_blueprint(beerxml_bp, url_prefix="/api/beerxml")
+    app.register_blueprint(beer_styles_bp, url_prefix="/api/beer-styles")
 
     with app.app_context():
         yield app
@@ -61,7 +67,13 @@ def client(app):
 @pytest.fixture(autouse=True)
 def clean_db():
     """Clean the test database before each test"""
-    from models.mongo_models import User, Recipe, Ingredient, BrewSession
+    from models.mongo_models import (
+        User,
+        Recipe,
+        Ingredient,
+        BrewSession,
+        BeerStyleGuide,
+    )
 
     # Clean up all collections before each test
     try:
@@ -81,6 +93,11 @@ def clean_db():
 
     try:
         BrewSession.drop_collection()
+    except:
+        pass
+
+    try:
+        BeerStyleGuide.drop_collection()
     except:
         pass
 

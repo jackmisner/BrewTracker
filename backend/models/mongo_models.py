@@ -10,6 +10,7 @@ from mongoengine import (
     ObjectIdField,
 )
 from mongoengine import DateField, connect, CASCADE
+from mongoengine.queryset.visitor import Q  # Add this import
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -103,6 +104,14 @@ class User(Document):
         if self.settings and hasattr(self.settings, "preferred_units"):
             return self.settings.preferred_units
         return "imperial"  # Default
+
+    def get_default_batch_size(self):
+        """Get user's default batch size"""
+        if self.settings and hasattr(self.settings, "default_batch_size"):
+            return self.settings.default_batch_size
+        # Return appropriate default based on unit system
+        unit_system = self.get_preferred_units()
+        return 19.0 if unit_system == "metric" else 5.0
 
     def get_unit_preferences(self):
         """Get detailed unit preferences for the user"""
@@ -298,7 +307,7 @@ class Recipe(Document):
             if match_result["match_percentage"] >= 60:  # At least 60% match
                 matching_styles.append(
                     {
-                        "style": style,
+                        "style": style.to_dict(),  # FIX: Convert to dict for JSON serialization
                         "match_percentage": match_result["match_percentage"],
                         "matches": match_result["matches"],
                     }
@@ -339,7 +348,7 @@ class Recipe(Document):
         return {
             "declared_style": self.style,
             "found": True,
-            "style_guide": declared_style,
+            "style_guide": declared_style.to_dict(),  # FIX: Convert to dict for JSON serialization
             "match_result": match_result,
             "suggestions": declared_style.get_style_targets(),
         }

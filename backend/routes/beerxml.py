@@ -313,11 +313,10 @@ def parse_beerxml_content(xml_content):
 def parse_recipe_element(recipe_elem):
     """Parse a single recipe element"""
     try:
-        # Basic recipe info
         # Parse style information if present
         style_elem = recipe_elem.find("STYLE")
         style_name = ""
-        if style_elem is not None:
+        if style_elem is not None:  # Fixed: use 'is not None' instead of truthiness
             style_name = get_text_content(style_elem, "NAME")
             if not style_name:
                 # Fallback to basic style field
@@ -359,10 +358,14 @@ def parse_recipe_element(recipe_elem):
                     "style_guide": (
                         get_text_content(style_elem, "STYLE_GUIDE")
                         if style_elem
+                        is not None  # Fixed: use 'is not None' instead of truthiness
                         else None
                     ),
                     "category": (
-                        get_text_content(style_elem, "CATEGORY") if style_elem else None
+                        get_text_content(style_elem, "CATEGORY")
+                        if style_elem
+                        is not None  # Fixed: use 'is not None' instead of truthiness
+                        else None
                     ),
                 },
             },
@@ -526,6 +529,19 @@ def parse_misc(recipe_elem):
             continue
 
     return misc_ingredients
+
+
+def get_available_ingredients_grouped():
+    """Get all available ingredients grouped by type"""
+    ingredients = Ingredient.objects.all()
+    grouped = {"grain": [], "hop": [], "yeast": [], "other": []}
+
+    for ingredient in ingredients:
+        ing_type = "other" if ingredient.type == "adjunct" else ingredient.type
+        if ing_type in grouped:
+            grouped[ing_type].append(ingredient.to_dict())
+
+    return grouped
 
 
 def find_ingredient_matches(imported_ingredient, available_ingredients):
@@ -715,19 +731,6 @@ def generate_new_ingredient_data(imported_ingredient):
         )
 
     return base_data
-
-
-def get_available_ingredients_grouped():
-    """Get all available ingredients grouped by type"""
-    ingredients = Ingredient.objects.all()
-    grouped = {"grain": [], "hop": [], "yeast": [], "other": []}
-
-    for ingredient in ingredients:
-        ing_type = "other" if ingredient.type == "adjunct" else ingredient.type
-        if ing_type in grouped:
-            grouped[ing_type].append(ingredient.to_dict())
-
-    return grouped
 
 
 def validate_ingredient_data(ing_data):
