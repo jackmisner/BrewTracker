@@ -50,7 +50,7 @@ function RecipeBuilder() {
     scaleRecipe,
     saveRecipe,
     clearError,
-    refreshAvailableIngredients, // NEW - destructure this
+    refreshAvailableIngredients,
 
     // Computed properties
     isEditing,
@@ -158,7 +158,6 @@ function RecipeBuilder() {
     }
   };
 
-  // Handle form cancellation with unsaved changes warning
   const handleCancel = () => {
     if (hasUnsavedChanges) {
       const confirmLeave = window.confirm(
@@ -359,7 +358,7 @@ function RecipeBuilder() {
       {/* Main layout structure for sticky metrics */}
       <div className="recipe-builder-layout">
         <div className="recipe-builder-main">
-          {/* Recipe Details Form */}
+          {/* Recipe Details Form - UPDATED: Pass metrics to RecipeDetails */}
           <RecipeDetails
             recipe={recipe}
             onChange={updateRecipe}
@@ -369,6 +368,7 @@ function RecipeBuilder() {
             saving={saving}
             canSave={canSave}
             hasUnsavedChanges={hasUnsavedChanges}
+            metrics={metrics} // NEW: Pass metrics for style selector
           />
 
           {/* Ingredients Section */}
@@ -403,16 +403,15 @@ function RecipeBuilder() {
               calculating={calculatingMetrics}
               recipe={recipe}
             />
-            {/* Add Style Analysis */}
-            {recipe && metrics && (
-              <StyleAnalysis
-                recipe={recipe}
-                metrics={metrics}
-                onStyleSuggestionSelect={(styleName) =>
-                  updateRecipe("style", styleName)
-                }
-              />
-            )}
+
+            {/* UPDATED: Enhanced Style Analysis with real-time capabilities */}
+            <StyleAnalysis
+              recipe={recipe}
+              metrics={metrics}
+              onStyleSuggestionSelect={(styleName) =>
+                updateRecipe("style", styleName)
+              }
+            />
           </div>
         </div>
       </div>

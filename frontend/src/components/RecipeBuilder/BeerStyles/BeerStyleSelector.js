@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
 import BeerStyleService from "../../../services/BeerStyleService";
+import StyleRangeIndicator from "./StyleRangeIndicator";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+} from "../../../utils/formatUtils";
 
 function BeerStyleSelector({
   value,
@@ -10,6 +17,9 @@ function BeerStyleSelector({
   disabled = false,
   maxResults = 50,
   minQueryLength = 0,
+  metrics = null, // NEW: Add metrics prop for real-time analysis
+  showSuggestions = false, // NEW: Show style suggestions when no style selected
+  onStyleSuggestionSelect = null, // NEW: Callback for selecting suggested styles
 }) {
   const [styles, setStyles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +28,7 @@ function BeerStyleSelector({
   const [selectedStyle, setSelectedStyle] = useState(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [error, setError] = useState(null);
+  const [suggestions, setSuggestions] = useState([]); // NEW: Style suggestions
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -31,30 +42,30 @@ function BeerStyleSelector({
       keys: [
         {
           name: "name",
-          weight: 1.0, // Primary search field
+          weight: 1.0,
         },
         {
           name: "style_id",
-          weight: 0.8, // Style ID is important
+          weight: 0.8,
         },
         {
           name: "category_name",
-          weight: 0.6, // Category matching
+          weight: 0.6,
         },
         {
           name: "overall_impression",
-          weight: 0.4, // Description matching
+          weight: 0.4,
         },
         {
           name: "tags",
-          weight: 0.3, // Tag matching
+          weight: 0.3,
         },
       ],
-      threshold: 0.4, // 0.0 = exact match, 1.0 = match anything
+      threshold: 0.4,
       distance: 100,
       minMatchCharLength: 1,
       includeScore: false,
-      includeMatches: true, // For highlighting
+      includeMatches: true,
       ignoreLocation: true,
       useExtendedSearch: false,
     };
@@ -99,16 +110,35 @@ function BeerStyleSelector({
     loadStyles();
   }, [value]);
 
+  // NEW: Load style suggestions when no style is selected but metrics are available
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      if (showSuggestions && metrics && !selectedStyle) {
+        try {
+          const suggestionsResult = await BeerStyleService.findMatchingStyles(
+            metrics
+          );
+          setSuggestions(suggestionsResult.slice(0, 5));
+        } catch (error) {
+          console.error("Error loading style suggestions:", error);
+          setSuggestions([]);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    };
+
+    loadSuggestions();
+  }, [showSuggestions, metrics, selectedStyle]);
+
   // Filter styles based on search term
   const filteredStyles = useMemo(() => {
     if (!fuse || loading) return [];
 
     if (!searchTerm || searchTerm.length < minQueryLength) {
-      // Show top styles when no search query
       return styles.slice(0, maxResults);
     }
 
-    // Use Fuse.js for fuzzy search
     const results = fuse.search(searchTerm);
     return results.slice(0, maxResults).map((result) => ({
       ...result.item,
@@ -116,11 +146,16 @@ function BeerStyleSelector({
     }));
   }, [fuse, searchTerm, styles, loading, minQueryLength, maxResults]);
 
+  // NEW: Calculate style match for selected style and current metrics
+  const styleMatch = useMemo(() => {
+    if (!selectedStyle || !metrics) return null;
+    return BeerStyleService.calculateStyleMatch(selectedStyle, metrics);
+  }, [selectedStyle, metrics]);
+
   // Highlight matches in text
   const highlightMatches = (text, matches = []) => {
     if (!matches.length || !searchTerm) return text;
 
-    // Simple approach: highlight the search term if it appears
     const searchTerms = searchTerm
       .toLowerCase()
       .split(/\s+/)
@@ -156,19 +191,17 @@ function BeerStyleSelector({
     setIsOpen(true);
     setHighlightedIndex(-1);
 
-    // If cleared, reset selection
     if (!newValue) {
       setSelectedStyle(null);
       onChange("");
     } else {
-      // Check for direct match
       const directMatch = styles.find(
         (style) => style.name.toLowerCase() === newValue.toLowerCase()
       );
       if (directMatch) {
         setSelectedStyle(directMatch);
       } else {
-        onChange(newValue); // Allow custom input
+        onChange(newValue);
       }
     }
   };
@@ -178,7 +211,6 @@ function BeerStyleSelector({
   };
 
   const handleInputBlur = () => {
-    // Delay closing to allow clicks
     setTimeout(() => setIsOpen(false), 200);
   };
 
@@ -250,6 +282,18 @@ function BeerStyleSelector({
       });
     }
   }, [highlightedIndex]);
+
+  // NEW: Helper function to get match status color
+  const getMatchStatusColor = (matches) => {
+    if (!matches) return "neutral";
+    const matchCount = Object.values(matches).filter(Boolean).length;
+    const totalSpecs = Object.keys(matches).length;
+    const percentage = totalSpecs > 0 ? (matchCount / totalSpecs) * 100 : 0;
+
+    if (percentage >= 80) return "success";
+    if (percentage >= 60) return "warning";
+    return "danger";
+  };
 
   if (loading) {
     return (
@@ -381,52 +425,176 @@ function BeerStyleSelector({
             </p>
           )}
 
-          <div className="style-specs">
-            {selectedStyle.original_gravity && (
-              <span className="spec">
-                OG:{" "}
-                {BeerStyleService.formatStyleRange(
-                  selectedStyle.original_gravity,
-                  3
+          {/* NEW: Enhanced spec display with visual range indicators */}
+          {metrics && styleMatch ? (
+            <div className="style-specs-with-ranges">
+              <div className="specs-header">
+                <span className="specs-title">Style Analysis</span>
+                <span
+                  className={`match-indicator ${getMatchStatusColor(
+                    styleMatch.matches
+                  )}`}
+                >
+                  {Math.round(styleMatch.percentage)}% match
+                </span>
+              </div>
+
+              <div className="range-indicators">
+                {selectedStyle.original_gravity && (
+                  <StyleRangeIndicator
+                    metricType="og"
+                    currentValue={metrics.og}
+                    styleRange={selectedStyle.original_gravity}
+                    label="Original Gravity"
+                  />
                 )}
-              </span>
-            )}
-            {selectedStyle.final_gravity && (
-              <span className="spec">
-                FG:{" "}
-                {BeerStyleService.formatStyleRange(
-                  selectedStyle.final_gravity,
-                  3
+
+                {selectedStyle.final_gravity && (
+                  <StyleRangeIndicator
+                    metricType="fg"
+                    currentValue={metrics.fg}
+                    styleRange={selectedStyle.final_gravity}
+                    label="Final Gravity"
+                  />
                 )}
-              </span>
-            )}
-            {selectedStyle.alcohol_by_volume && (
-              <span className="spec">
-                ABV:{" "}
-                {BeerStyleService.formatStyleRange(
-                  selectedStyle.alcohol_by_volume,
-                  1
+
+                {selectedStyle.alcohol_by_volume && (
+                  <StyleRangeIndicator
+                    metricType="abv"
+                    currentValue={metrics.abv}
+                    styleRange={selectedStyle.alcohol_by_volume}
+                    label="Alcohol by Volume"
+                    unit="%"
+                  />
                 )}
-                %
-              </span>
-            )}
-            {selectedStyle.international_bitterness_units && (
-              <span className="spec">
-                IBU:{" "}
-                {BeerStyleService.formatStyleRange(
-                  selectedStyle.international_bitterness_units,
-                  0
+
+                {selectedStyle.international_bitterness_units && (
+                  <StyleRangeIndicator
+                    metricType="ibu"
+                    currentValue={metrics.ibu}
+                    styleRange={selectedStyle.international_bitterness_units}
+                    label="International Bitterness Units"
+                  />
                 )}
-              </span>
-            )}
-            {selectedStyle.color && (
-              <span className="spec">
-                SRM: {BeerStyleService.formatStyleRange(selectedStyle.color, 1)}
-              </span>
-            )}
-          </div>
+
+                {selectedStyle.color && (
+                  <StyleRangeIndicator
+                    metricType="srm"
+                    currentValue={metrics.srm}
+                    styleRange={selectedStyle.color}
+                    label="Color (SRM)"
+                    showColorSwatch={true}
+                  />
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Fallback to simple specs display when no metrics */
+            <div className="style-specs">
+              {selectedStyle.original_gravity && (
+                <span className="spec">
+                  OG:{" "}
+                  {BeerStyleService.formatStyleRange(
+                    selectedStyle.original_gravity,
+                    3
+                  )}
+                </span>
+              )}
+              {selectedStyle.final_gravity && (
+                <span className="spec">
+                  FG:{" "}
+                  {BeerStyleService.formatStyleRange(
+                    selectedStyle.final_gravity,
+                    3
+                  )}
+                </span>
+              )}
+              {selectedStyle.alcohol_by_volume && (
+                <span className="spec">
+                  ABV:{" "}
+                  {BeerStyleService.formatStyleRange(
+                    selectedStyle.alcohol_by_volume,
+                    1
+                  )}
+                  %
+                </span>
+              )}
+              {selectedStyle.international_bitterness_units && (
+                <span className="spec">
+                  IBU:{" "}
+                  {BeerStyleService.formatStyleRange(
+                    selectedStyle.international_bitterness_units,
+                    0
+                  )}
+                </span>
+              )}
+              {selectedStyle.color && (
+                <span className="spec">
+                  SRM:{" "}
+                  {BeerStyleService.formatStyleRange(selectedStyle.color, 1)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
+
+      {/* NEW: Style suggestions when no style is selected */}
+      {showSuggestions &&
+        !selectedStyle &&
+        suggestions.length > 0 &&
+        metrics && (
+          <div className="style-suggestions">
+            <h4>Suggested Styles Based on Current Recipe</h4>
+            <div className="suggestions-list">
+              {suggestions.slice(0, 3).map((suggestion, index) => (
+                <div key={index} className="suggestion-item">
+                  <div className="suggestion-header">
+                    <div className="style-info">
+                      <span className="style-id">
+                        {suggestion.style.style_id}
+                      </span>
+                      <span className="style-name">
+                        {suggestion.style.name}
+                      </span>
+                    </div>
+                    <div className="suggestion-actions">
+                      <span className="match-score">
+                        {Math.round(suggestion.match.percentage)}% match
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (onStyleSuggestionSelect) {
+                            onStyleSuggestionSelect(suggestion.style.name);
+                          } else {
+                            handleStyleSelect(suggestion.style);
+                          }
+                        }}
+                        className="select-style-btn"
+                      >
+                        Select
+                      </button>
+                    </div>
+                  </div>
+                  <div className="match-breakdown">
+                    {Object.entries(suggestion.match.matches).map(
+                      ([spec, matches]) => (
+                        <span
+                          key={spec}
+                          className={`spec-indicator ${
+                            matches ? "match" : "no-match"
+                          }`}
+                        >
+                          {spec.toUpperCase()}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
     </div>
   );
 }

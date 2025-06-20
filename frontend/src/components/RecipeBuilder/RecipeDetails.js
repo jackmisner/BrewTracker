@@ -12,6 +12,7 @@ function RecipeDetails({
   saving,
   canSave,
   hasUnsavedChanges,
+  metrics,
 }) {
   const {
     unitSystem,
@@ -120,16 +121,21 @@ function RecipeDetails({
           />
         </div>
         <div className="form-group">
-          <label htmlFor="style">Beer Style</label>
+          <label htmlFor="style" className="form-label">
+            Beer Style
+          </label>
           <BeerStyleSelector
-            value={recipe.style || ""}
-            onChange={(styleName) => onChange("style", styleName)}
-            placeholder="Select or search beer style (optional)"
+            value={recipe.style}
+            onChange={(value) => onChange("style", value)}
+            placeholder="Select or search beer style..."
+            showStyleInfo={true}
             disabled={saving}
+            metrics={metrics} // NEW: Pass current recipe metrics
+            showSuggestions={true} // NEW: Show style suggestions when no style selected
+            onStyleSuggestionSelect={(styleName) =>
+              onChange("style", styleName)
+            } // NEW: Handle suggestion selection
           />
-          <small className="form-help-text">
-            Select a recognized beer style or enter a custom style name
-          </small>
         </div>
         <div className="form-row">
           <div className="form-group">
