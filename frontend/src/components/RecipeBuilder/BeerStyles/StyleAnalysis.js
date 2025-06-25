@@ -13,7 +13,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false); // NEW: Collapse/expand state
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (metrics && recipe?.style) {
@@ -106,12 +106,10 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     return `${matchCount}/${totalSpecs} specs match`;
   };
 
-  // NEW: Toggle expand/collapse
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
 
-  // NEW: Render compact single-line view
   const renderCompactAnalysis = () => {
     if (!analysis?.found || !analysis.match_result) return null;
 
@@ -139,60 +137,25 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
           >
             {Math.round(percentage)}% match
           </span>
-          <div className="compact-metrics">
-            {analysis.style.original_gravity && (
-              <span
-                className={`metric-indicator ${
-                  matches.og ? "in-spec" : "out-of-spec"
-                }`}
-              >
-                OG
-              </span>
-            )}
-            {analysis.style.final_gravity && (
-              <span
-                className={`metric-indicator ${
-                  matches.fg ? "in-spec" : "out-of-spec"
-                }`}
-              >
-                FG
-              </span>
-            )}
-            {analysis.style.alcohol_by_volume && (
-              <span
-                className={`metric-indicator ${
-                  matches.abv ? "in-spec" : "out-of-spec"
-                }`}
-              >
-                ABV
-              </span>
-            )}
-            {analysis.style.international_bitterness_units && (
-              <span
-                className={`metric-indicator ${
-                  matches.ibu ? "in-spec" : "out-of-spec"
-                }`}
-              >
-                IBU
-              </span>
-            )}
-            {analysis.style.color && (
-              <span
-                className={`metric-indicator ${
-                  matches.srm ? "in-spec" : "out-of-spec"
-                }`}
-              >
-                SRM
-              </span>
+          <span className="expand-indicator">{isExpanded ? "▼" : "▶"}</span>
+          <div className="spec-breakdown">
+            {Object.entries(analysis.match_result.matches).map(
+              ([spec, matches]) => (
+                <div
+                  key={spec}
+                  className={`spec-match ${matches ? "match" : "no-match"}`}
+                >
+                  <span className="spec-name">{spec.toUpperCase()}</span>
+                  <span className="match-indicator">{matches ? "✓" : "✗"}</span>
+                </div>
+              )
             )}
           </div>
-          <span className="expand-indicator">{isExpanded ? "▼" : "▶"}</span>
         </div>
       </div>
     );
   };
 
-  // NEW: Render expanded detailed view
   const renderExpandedAnalysis = () => {
     if (!analysis?.found || !analysis.match_result) return null;
 

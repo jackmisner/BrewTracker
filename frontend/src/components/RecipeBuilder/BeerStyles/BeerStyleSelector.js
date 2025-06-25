@@ -8,6 +8,7 @@ import {
   formatIbu,
   formatSrm,
 } from "../../../utils/formatUtils";
+import StyleAnalysis from "./StyleAnalysis";
 
 function BeerStyleSelector({
   value,
@@ -15,11 +16,12 @@ function BeerStyleSelector({
   placeholder = "Select or search beer style...",
   showStyleInfo = true,
   disabled = false,
+  recipe,
   maxResults = 50,
   minQueryLength = 0,
-  metrics = null, // NEW: Add metrics prop for real-time analysis
-  showSuggestions = false, // NEW: Show style suggestions when no style selected
-  onStyleSuggestionSelect = null, // NEW: Callback for selecting suggested styles
+  metrics = null,
+  showSuggestions = false,
+  onStyleSuggestionSelect = null,
 }) {
   const [styles, setStyles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ function BeerStyleSelector({
   const [selectedStyle, setSelectedStyle] = useState(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [error, setError] = useState(null);
-  const [suggestions, setSuggestions] = useState([]); // NEW: Style suggestions
+  const [suggestions, setSuggestions] = useState([]);
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -110,7 +112,6 @@ function BeerStyleSelector({
     loadStyles();
   }, [value]);
 
-  // NEW: Load style suggestions when no style is selected but metrics are available
   useEffect(() => {
     const loadSuggestions = async () => {
       if (showSuggestions && metrics && !selectedStyle) {
@@ -146,7 +147,6 @@ function BeerStyleSelector({
     }));
   }, [fuse, searchTerm, styles, loading, minQueryLength, maxResults]);
 
-  // NEW: Calculate style match for selected style and current metrics
   const styleMatch = useMemo(() => {
     if (!selectedStyle || !metrics) return null;
     return BeerStyleService.calculateStyleMatch(selectedStyle, metrics);
@@ -424,118 +424,7 @@ function BeerStyleSelector({
               {selectedStyle.overall_impression}
             </p>
           )}
-
-          {/* NEW: Enhanced spec display with visual range indicators */}
-          {metrics && styleMatch ? (
-            <div className="style-specs-with-ranges">
-              <div className="specs-header">
-                <span className="specs-title">Style Analysis</span>
-                <span
-                  className={`match-indicator ${getMatchStatusColor(
-                    styleMatch.matches
-                  )}`}
-                >
-                  {Math.round(styleMatch.percentage)}% match
-                </span>
-              </div>
-
-              <div className="range-indicators">
-                {selectedStyle.original_gravity && (
-                  <StyleRangeIndicator
-                    metricType="og"
-                    currentValue={metrics.og}
-                    styleRange={selectedStyle.original_gravity}
-                    label="Original Gravity"
-                  />
-                )}
-
-                {selectedStyle.final_gravity && (
-                  <StyleRangeIndicator
-                    metricType="fg"
-                    currentValue={metrics.fg}
-                    styleRange={selectedStyle.final_gravity}
-                    label="Final Gravity"
-                  />
-                )}
-
-                {selectedStyle.alcohol_by_volume && (
-                  <StyleRangeIndicator
-                    metricType="abv"
-                    currentValue={metrics.abv}
-                    styleRange={selectedStyle.alcohol_by_volume}
-                    label="Alcohol by Volume"
-                    unit="%"
-                  />
-                )}
-
-                {selectedStyle.international_bitterness_units && (
-                  <StyleRangeIndicator
-                    metricType="ibu"
-                    currentValue={metrics.ibu}
-                    styleRange={selectedStyle.international_bitterness_units}
-                    label="International Bitterness Units"
-                  />
-                )}
-
-                {selectedStyle.color && (
-                  <StyleRangeIndicator
-                    metricType="srm"
-                    currentValue={metrics.srm}
-                    styleRange={selectedStyle.color}
-                    label="Color (SRM)"
-                    showColorSwatch={true}
-                  />
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Fallback to simple specs display when no metrics */
-            <div className="style-specs">
-              {selectedStyle.original_gravity && (
-                <span className="spec">
-                  OG:{" "}
-                  {BeerStyleService.formatStyleRange(
-                    selectedStyle.original_gravity,
-                    3
-                  )}
-                </span>
-              )}
-              {selectedStyle.final_gravity && (
-                <span className="spec">
-                  FG:{" "}
-                  {BeerStyleService.formatStyleRange(
-                    selectedStyle.final_gravity,
-                    3
-                  )}
-                </span>
-              )}
-              {selectedStyle.alcohol_by_volume && (
-                <span className="spec">
-                  ABV:{" "}
-                  {BeerStyleService.formatStyleRange(
-                    selectedStyle.alcohol_by_volume,
-                    1
-                  )}
-                  %
-                </span>
-              )}
-              {selectedStyle.international_bitterness_units && (
-                <span className="spec">
-                  IBU:{" "}
-                  {BeerStyleService.formatStyleRange(
-                    selectedStyle.international_bitterness_units,
-                    0
-                  )}
-                </span>
-              )}
-              {selectedStyle.color && (
-                <span className="spec">
-                  SRM:{" "}
-                  {BeerStyleService.formatStyleRange(selectedStyle.color, 1)}
-                </span>
-              )}
-            </div>
-          )}
+          <StyleAnalysis recipe={recipe} metrics={metrics} />
         </div>
       )}
 

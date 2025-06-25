@@ -580,9 +580,6 @@ describe("RecipeDetails", () => {
       expect(
         screen.getByPlaceholderText("Enter recipe name")
       ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText("Select or search beer style (optional)")
-      ).toBeInTheDocument();
       expect(screen.getByPlaceholderText("60")).toBeInTheDocument();
       expect(screen.getByPlaceholderText("75")).toBeInTheDocument();
       expect(

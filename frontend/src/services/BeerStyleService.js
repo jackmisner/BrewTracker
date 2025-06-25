@@ -146,48 +146,55 @@ class BeerStyleService {
    */
   calculateStyleMatch(style, metrics) {
     const matches = {};
-    let totalSpecs = 0;
+    let totalSpecs = 5;
     let matchingSpecs = 0;
 
     // Check OG
-    if (metrics.og && style.original_gravity) {
-      totalSpecs++;
-      matches.og = this.isInRange(metrics.og, style.original_gravity);
+    if (style.original_gravity) {
+      matches.og =
+        metrics.og && metrics.og > 0
+          ? this.isInRange(metrics.og, style.original_gravity)
+          : false;
       if (matches.og) matchingSpecs++;
     }
 
     // Check FG
-    if (metrics.fg && style.final_gravity) {
-      totalSpecs++;
-      matches.fg = this.isInRange(metrics.fg, style.final_gravity);
+    if (style.final_gravity) {
+      matches.fg =
+        metrics.fg && metrics.fg > 0
+          ? this.isInRange(metrics.fg, style.final_gravity)
+          : false;
       if (matches.fg) matchingSpecs++;
     }
 
     // Check ABV
-    if (metrics.abv && style.alcohol_by_volume) {
-      totalSpecs++;
-      matches.abv = this.isInRange(metrics.abv, style.alcohol_by_volume);
+    if (style.alcohol_by_volume) {
+      matches.abv =
+        metrics.abv && metrics.abv > 0
+          ? this.isInRange(metrics.abv, style.alcohol_by_volume)
+          : false;
       if (matches.abv) matchingSpecs++;
     }
 
     // Check IBU
-    if (metrics.ibu && style.international_bitterness_units) {
-      totalSpecs++;
-      matches.ibu = this.isInRange(
-        metrics.ibu,
-        style.international_bitterness_units
-      );
+    if (style.international_bitterness_units) {
+      matches.ibu =
+        metrics.ibu && metrics.ibu > 0
+          ? this.isInRange(metrics.ibu, style.international_bitterness_units)
+          : false;
       if (matches.ibu) matchingSpecs++;
     }
 
     // Check SRM
-    if (metrics.srm && style.color) {
-      totalSpecs++;
-      matches.srm = this.isInRange(metrics.srm, style.color);
+    if (style.color) {
+      matches.srm =
+        metrics.srm && metrics.srm > 0
+          ? this.isInRange(metrics.srm, style.color)
+          : false;
       if (matches.srm) matchingSpecs++;
     }
 
-    const percentage = totalSpecs > 0 ? (matchingSpecs / totalSpecs) * 100 : 0;
+    const percentage = (matchingSpecs / totalSpecs) * 100;
 
     return {
       matches,

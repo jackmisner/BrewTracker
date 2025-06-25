@@ -126,15 +126,16 @@ function RecipeDetails({
           </label>
           <BeerStyleSelector
             value={recipe.style}
+            recipe={recipe}
             onChange={(value) => onChange("style", value)}
             placeholder="Select or search beer style..."
             showStyleInfo={true}
             disabled={saving}
-            metrics={metrics} // NEW: Pass current recipe metrics
-            showSuggestions={true} // NEW: Show style suggestions when no style selected
+            metrics={metrics}
+            showSuggestions={true}
             onStyleSuggestionSelect={(styleName) =>
               onChange("style", styleName)
-            } // NEW: Handle suggestion selection
+            }
           />
         </div>
         <div className="form-row">

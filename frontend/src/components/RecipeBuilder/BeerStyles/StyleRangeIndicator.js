@@ -68,14 +68,6 @@ function StyleRangeIndicator({
     }
   };
 
-  // Special handling for SRM color display
-  const getCurrentSrmColor = () => {
-    if (metricType === "srm") {
-      return getSrmColour(currentValue);
-    }
-    return getIndicatorColor();
-  };
-
   return (
     <div className="style-range-indicator">
       <div className="range-header">
@@ -108,10 +100,7 @@ function StyleRangeIndicator({
             className="range-bar-indicator"
             style={{
               left: `${clampedPosition}%`,
-              backgroundColor:
-                metricType === "srm"
-                  ? getCurrentSrmColor()
-                  : getIndicatorColor(),
+              backgroundColor: getIndicatorColor(),
               borderColor: isInRange ? "#10b981" : "#ef4444",
             }}
           >
@@ -129,36 +118,6 @@ function StyleRangeIndicator({
           <span className="range-max">{formatValue(maxValue)}</span>
         </div>
       </div>
-
-      {/* Status indicator */}
-      <div
-        className={`range-status ${isInRange ? "in-range" : "out-of-range"}`}
-      >
-        <span className="status-icon">{isInRange ? "✓" : "✗"}</span>
-        <span className="status-text">
-          {isInRange
-            ? "Within style guidelines"
-            : position < 0
-            ? `${Math.abs(position).toFixed(1)}% below minimum`
-            : position > 100
-            ? `${(position - 100).toFixed(1)}% above maximum`
-            : "Out of range"}
-        </span>
-      </div>
-
-      {/* Optional color swatch for SRM */}
-      {showColorSwatch && metricType === "srm" && (
-        <div className="srm-color-comparison">
-          <div className="color-swatch-container">
-            <div
-              className="color-swatch current"
-              style={{ backgroundColor: getCurrentSrmColor() }}
-              title={`Current: ${formatValue(currentValue)} SRM`}
-            />
-            <span className="swatch-label">Current</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
