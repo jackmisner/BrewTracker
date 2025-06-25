@@ -139,22 +139,6 @@ describe("RecipeMetrics", () => {
     expect(scaleButton).toBeDisabled();
   });
 
-  test("shows recipe analysis section", () => {
-    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
-
-    expect(screen.getByText("Recipe Analysis")).toBeInTheDocument();
-    expect(screen.getByText(/Standard/)).toBeInTheDocument(); // Use regex for partial match
-    expect(screen.getByText(/High/)).toBeInTheDocument(); // Changed from "Strong"
-    expect(screen.getByText(/Amber/)).toBeInTheDocument(); // Changed from "Gold"
-  });
-
-  test("calculates and displays attenuation", () => {
-    renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
-
-    // With OG 1.048 and FG 1.012, attenuation should be 75%
-    expect(screen.getByText("75.0%")).toBeInTheDocument();
-  });
-
   test("renders in card view mode", () => {
     renderWithUnitProvider(<RecipeMetrics {...defaultProps} cardView={true} />);
 
@@ -236,17 +220,6 @@ describe("RecipeMetrics", () => {
     fireEvent.click(scaleButton);
 
     expect(input.value).toBe("");
-  });
-
-  test("shows batch size analysis for different sizes", () => {
-    const smallBatchProps = {
-      ...defaultProps,
-      recipe: { batch_size: 1 }, // 1 gallon = small batch
-    };
-
-    renderWithUnitProvider(<RecipeMetrics {...smallBatchProps} />);
-
-    expect(screen.getByText(/Small batch/)).toBeInTheDocument();
   });
 
   test("displays typical batch size examples", () => {

@@ -17,6 +17,8 @@
 @import './recipe-metrics.css';
 @import './ingredients.css';
 @import './beer-styles.css';
+@import './StyleRangeIndicator.css';
+
 
 /* Utilities and Effects */
 @import './animations.css';

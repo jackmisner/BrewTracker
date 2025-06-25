@@ -38,6 +38,33 @@ jest.mock("react-router", () => ({
   ),
 }));
 
+// Mock BeerStyleSelector component
+jest.mock(
+  "../../src/components/RecipeBuilder/BeerStyles/BeerStyleSelector",
+  () => {
+    return function MockBeerStyleSelector({
+      value,
+      onChange,
+      placeholder,
+      disabled,
+    }) {
+      return (
+        <input
+          type="text"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="form-control"
+          id="style"
+          name="style"
+          aria-label="Beer Style"
+        />
+      );
+    };
+  }
+);
+
 // Helper function to render with UnitProvider
 const renderWithUnitProvider = (component) => {
   return render(<UnitProvider>{component}</UnitProvider>);
@@ -158,9 +185,7 @@ describe("RecipeDetails", () => {
       );
 
       expect(screen.getByDisplayValue("Test Recipe")).toBeInTheDocument();
-      expect(screen.getByRole("textbox", { name: /beer style/i })).toHaveValue(
-        ""
-      );
+      expect(screen.getByLabelText("Beer Style")).toHaveValue("");
       expect(
         screen.getByRole("spinbutton", { name: /boil time/i })
       ).toHaveValue(null);
@@ -279,9 +304,9 @@ describe("RecipeDetails", () => {
     it("calls onChange with correct string values for text inputs", () => {
       renderWithUnitProvider(<RecipeDetails {...defaultProps} />);
 
-      const styleInput = screen.getByRole("textbox", { name: /beer style/i });
+      const styleInput = screen.getByLabelText("Beer Style");
       fireEvent.change(styleInput, {
-        target: { name: "style", value: "American Pale Ale", type: "text" },
+        target: { value: "American Pale Ale" },
       });
 
       expect(mockOnChange).toHaveBeenCalledWith("style", "American Pale Ale");
@@ -430,9 +455,7 @@ describe("RecipeDetails", () => {
       expect(
         screen.getByRole("textbox", { name: /recipe name/i })
       ).toBeDisabled();
-      expect(
-        screen.getByRole("textbox", { name: /beer style/i })
-      ).toBeDisabled();
+      expect(screen.getByLabelText("Beer Style")).toBeDisabled();
       expect(
         screen.getByRole("spinbutton", { name: /batch size/i })
       ).toBeDisabled();
@@ -556,9 +579,6 @@ describe("RecipeDetails", () => {
 
       expect(
         screen.getByPlaceholderText("Enter recipe name")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText("e.g. American IPA, Stout, Wheat Beer")
       ).toBeInTheDocument();
       expect(screen.getByPlaceholderText("60")).toBeInTheDocument();
       expect(screen.getByPlaceholderText("75")).toBeInTheDocument();

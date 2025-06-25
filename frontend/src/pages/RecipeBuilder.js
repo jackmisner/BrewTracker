@@ -7,6 +7,7 @@ import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
+import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
 import Services from "../services";
 import "../styles/RecipeBuilder.css";
 
@@ -49,7 +50,7 @@ function RecipeBuilder() {
     scaleRecipe,
     saveRecipe,
     clearError,
-    refreshAvailableIngredients, // NEW - destructure this
+    refreshAvailableIngredients,
 
     // Computed properties
     isEditing,
@@ -157,7 +158,6 @@ function RecipeBuilder() {
     }
   };
 
-  // Handle form cancellation with unsaved changes warning
   const handleCancel = () => {
     if (hasUnsavedChanges) {
       const confirmLeave = window.confirm(
@@ -358,7 +358,7 @@ function RecipeBuilder() {
       {/* Main layout structure for sticky metrics */}
       <div className="recipe-builder-layout">
         <div className="recipe-builder-main">
-          {/* Recipe Details Form */}
+          {/* Recipe Details Form - UPDATED: Pass metrics to RecipeDetails */}
           <RecipeDetails
             recipe={recipe}
             onChange={updateRecipe}
@@ -368,6 +368,7 @@ function RecipeBuilder() {
             saving={saving}
             canSave={canSave}
             hasUnsavedChanges={hasUnsavedChanges}
+            metrics={metrics} // NEW: Pass metrics for style selector
           />
 
           {/* Ingredients Section */}
@@ -401,6 +402,15 @@ function RecipeBuilder() {
               onScale={scaleRecipe}
               calculating={calculatingMetrics}
               recipe={recipe}
+            />
+
+            {/* UPDATED: Enhanced Style Analysis with real-time capabilities */}
+            <StyleAnalysis
+              recipe={recipe}
+              metrics={metrics}
+              onStyleSuggestionSelect={(styleName) =>
+                updateRecipe("style", styleName)
+              }
             />
           </div>
         </div>
