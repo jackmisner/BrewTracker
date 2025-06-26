@@ -65,7 +65,15 @@
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.4",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/testing-library__jest-dom": "^5.14.9",
+    "@types/testing-library__react": "^10.0.1",
+    "@types/testing-library__user-event": "^4.1.1",
     "identity-obj-proxy": "^3.0.0",
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "typescript": "^4.9.5"
   }
 }
