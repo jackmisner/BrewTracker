@@ -581,7 +581,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }));
 
         const savedRecipe = await Services.recipe.saveRecipe(
-          recipeId,
+          recipeId || null,
           state.recipe,
           state.ingredients,
           state.metrics
