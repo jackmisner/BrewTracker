@@ -87,6 +87,7 @@ export interface RecipeMetrics {
 export interface Recipe extends BaseEntity {
   recipe_id: ID;
   user_id?: ID;
+  username?: string; // Added for public recipe listings
   name: string;
   style?: string;
   batch_size: number;
