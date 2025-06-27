@@ -8,6 +8,29 @@ export type YeastType = 'ale' | 'lager' | 'wild' | 'bacteria';
 export type IngredientUnit = 'oz' | 'lb' | 'g' | 'kg' | 'pkg' | 'tsp' | 'tbsp' | 'ml' | 'l';
 export type BatchSizeUnit = 'gal' | 'l';
 
+// Ingredient creation data interface
+export interface CreateRecipeIngredientData {
+  ingredient_id?: ID;
+  name?: string;
+  amount?: number | string;
+  unit?: IngredientUnit | string;
+  use?: string;
+  time?: number;
+  alpha_acid?: number;
+  color?: number;
+  potential?: number;
+  grain_type?: GrainType;
+  attenuation?: number;
+}
+
+// Ingredients organized by type for UI
+export interface IngredientsByType {
+  grain: Ingredient[];
+  hop: Ingredient[];
+  yeast: Ingredient[];
+  other: Ingredient[];
+}
+
 // Base ingredient interface (from ingredients collection)
 export interface Ingredient extends BaseEntity {
   ingredient_id: ID;
