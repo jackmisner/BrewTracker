@@ -1,13 +1,15 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 from bson import ObjectId
 from pymongo.errors import PyMongoError
+
 from models.mongo_models import (
-    User,
-    Recipe,
-    Ingredient,
     BrewSession,
-    RecipeIngredient,
     FermentationEntry,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    User,
 )
 
 
@@ -979,8 +981,9 @@ class MongoDBService:
     def search_beer_styles(query):
         """Search beer styles by name, category, or tags"""
         try:
-            from models.mongo_models import BeerStyleGuide
             from mongoengine.queryset.visitor import Q
+
+            from models.mongo_models import BeerStyleGuide
 
             if not query or len(query.strip()) < 2:
                 return []

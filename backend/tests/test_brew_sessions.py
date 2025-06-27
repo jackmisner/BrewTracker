@@ -1,7 +1,9 @@
-import pytest
 import json
-from datetime import datetime, date, UTC
-from models.mongo_models import User, Recipe, BrewSession, Ingredient
+from datetime import UTC, date, datetime
+
+import pytest
+
+from models.mongo_models import BrewSession, Ingredient, Recipe, User
 
 
 class TestBrewSessionEndpoints:

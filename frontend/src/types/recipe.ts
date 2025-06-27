@@ -2,7 +2,7 @@ import { ID, BaseEntity } from './common';
 
 // Enums for better type safety
 export type IngredientType = 'grain' | 'hop' | 'yeast' | 'other';
-export type GrainType = 'base_malt' | 'roasted' | 'caramel_crystal' | 'smoked' | 'adjunct_grain';
+export type GrainType = 'base_malt' | 'roasted' | 'caramel_crystal' | 'smoked' | 'adjunct_grain' | 'specialty_malt';
 export type HopUse = 'mash' | 'first_wort' | 'boil' | 'whirlpool' | 'dry_hop' | 'hop_back';
 export type YeastType = 'ale' | 'lager' | 'wild' | 'bacteria';
 export type IngredientUnit = 'oz' | 'lb' | 'g' | 'kg' | 'pkg' | 'tsp' | 'tbsp' | 'ml' | 'l';

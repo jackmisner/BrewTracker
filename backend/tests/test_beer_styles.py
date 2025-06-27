@@ -1,13 +1,15 @@
-import pytest
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
+import pytest
 from bson import ObjectId
+
 from models.mongo_models import (
-    User,
-    Recipe,
     BeerStyleGuide,
-    StyleRange,
+    Recipe,
     RecipeIngredient,
+    StyleRange,
+    User,
 )
 
 

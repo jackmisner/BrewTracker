@@ -342,11 +342,11 @@ class IngredientMatchingService {
       }
     }
 
-    // Bonus for matching origin
-    if ((imported as any).beerxml_data?.origin && existing.origin) {
+    // Bonus for matching origin (if both have manufacturer data)
+    if ((imported as any).beerxml_data?.origin && existing.manufacturer) {
       if (
         (imported as any).beerxml_data.origin.toLowerCase() ===
-        existing.origin.toLowerCase()
+        existing.manufacturer.toLowerCase()
       ) {
         score += 0.1;
       }

@@ -1,6 +1,8 @@
-import pytest
 import xml.etree.ElementTree as ET
-from models.mongo_models import User, Recipe, Ingredient
+
+import pytest
+
+from models.mongo_models import Ingredient, Recipe, User
 
 
 class TestBeerXMLEndpoints:

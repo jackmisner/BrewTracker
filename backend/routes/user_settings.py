@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from werkzeug.security import check_password_hash
-from models.mongo_models import User
 import re
+
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from werkzeug.security import check_password_hash
+
+from models.mongo_models import User
 
 user_settings_bp = Blueprint("user_settings", __name__)
 

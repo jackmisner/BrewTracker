@@ -1,14 +1,16 @@
+from datetime import UTC, date, datetime
+
 import pytest
-from datetime import datetime, date, UTC
 from bson import ObjectId
+
 from models.mongo_models import (
-    User,
-    UserSettings,
-    Recipe,
-    Ingredient,
-    RecipeIngredient,
     BrewSession,
     FermentationEntry,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    User,
+    UserSettings,
 )
 
 

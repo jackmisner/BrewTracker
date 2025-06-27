@@ -1,6 +1,8 @@
-import pytest
 import json
-from models.mongo_models import User, Recipe, Ingredient, BrewSession
+
+import pytest
+
+from models.mongo_models import BrewSession, Ingredient, Recipe, User
 
 
 class TestRecipeEndpointsExtended:

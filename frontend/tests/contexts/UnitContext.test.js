@@ -583,8 +583,8 @@ describe("UnitContext", () => {
       );
 
       expect(result).toEqual([
-        { name: "Pale Malt", amount: "10.00", unit: "lb" },
-        { name: "Crystal Malt", amount: "2.00", unit: "lb" },
+        { name: "Pale Malt", amount: 10, unit: "lb" },
+        { name: "Crystal Malt", amount: 2, unit: "lb" },
       ]);
     });
 
