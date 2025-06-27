@@ -22,12 +22,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "npx jest",
-    "coverage": "npx jest --coverage --collectCoverageFrom='src/**/*.{js,jsx}' --collectCoverageFrom='!src/**/*.test.{js,jsx}' --collectCoverageFrom='!src/**/*.spec.{js,jsx}' --collectCoverageFrom='!src/index.js' --collectCoverageFrom='!src/reportWebVitals.js' --watchAll=false",
+    "coverage": "npx jest --coverage --watchAll=false",
     "eject": "react-scripts eject"
   },
   "jest": {
+    "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest"
+      "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!(axios)/)"
@@ -37,12 +38,33 @@
       "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.js"
     },
     "testMatch": [
-      "**/tests/**/*.test.js"
+      "<rootDir>/tests/**/*.test.js"
     ],
-    "testEnvironment": "jsdom",
     "setupFilesAfterEnv": [
       "<rootDir>/tests/setupTests.js"
-    ]
+    ],
+    "moduleFileExtensions": ["js", "jsx", "ts", "tsx", "json", "node"],
+    "moduleDirectories": ["node_modules", "src"],
+    "extensionsToTreatAsEsm": [],
+    "resolver": null,
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.test.{js,jsx,ts,tsx}",
+      "!src/**/*.spec.{js,jsx,ts,tsx}",
+      "!src/index.{js,ts}",
+      "!src/reportWebVitals.{js,ts}",
+      "!src/**/*.d.ts"
+    ],
+    "coverageReporters": ["text", "lcov", "html"],
+    "coverageDirectory": "coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -64,8 +86,17 @@
   },
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.27.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.4",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/testing-library__jest-dom": "^5.14.9",
+    "@types/testing-library__react": "^10.0.1",
+    "@types/testing-library__user-event": "^4.1.1",
     "identity-obj-proxy": "^3.0.0",
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "typescript": "^4.9.5"
   }
 }

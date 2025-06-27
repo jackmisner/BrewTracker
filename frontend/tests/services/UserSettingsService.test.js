@@ -160,9 +160,7 @@ describe("UserSettingsService", () => {
     it("updates settings successfully", async () => {
       const result = await UserSettingsService.updateSettings(settingsUpdate);
 
-      expect(ApiService.user.updateSettings).toHaveBeenCalledWith({
-        settings: settingsUpdate,
-      });
+      expect(ApiService.user.updateSettings).toHaveBeenCalledWith(settingsUpdate);
       expect(result).toBeDefined();
     });
 

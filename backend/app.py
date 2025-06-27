@@ -1,19 +1,21 @@
+import os
+from pathlib import Path
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
-from mongoengine.connection import get_connection, ConnectionFailure
-import os
-from pathlib import Path
+from mongoengine.connection import ConnectionFailure, get_connection
+
 import config
+from models.mongo_models import BeerStyleGuide, Ingredient
 from routes.auth import auth_bp
-from routes.recipes import recipes_bp
-from routes.ingredients import ingredients_bp
-from routes.brew_sessions import brew_sessions_bp
-from routes.user_settings import user_settings_bp
-from routes.beerxml import beerxml_bp
 from routes.beer_styles import beer_styles_bp
-from models.mongo_models import Ingredient, BeerStyleGuide
+from routes.beerxml import beerxml_bp
+from routes.brew_sessions import brew_sessions_bp
+from routes.ingredients import ingredients_bp
+from routes.recipes import recipes_bp
+from routes.user_settings import user_settings_bp
 
 
 def create_app(config_class=None):

@@ -1,22 +1,28 @@
-from datetime import datetime, UTC
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, ListField
+from datetime import UTC, datetime
+
 from mongoengine import (
-    StringField,
+    CASCADE,
+    BooleanField,
+    DateField,
+    DateTimeField,
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentField,
     FloatField,
     IntField,
-    BooleanField,
-    DateTimeField,
-    ReferenceField,
+    ListField,
     ObjectIdField,
+    ReferenceField,
+    StringField,
+    connect,
 )
-from mongoengine import DateField, connect, CASCADE
 from mongoengine.queryset.visitor import Q  # Add this import
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 def initialize_db(mongo_uri):
     """Initialize database connection only if not already connected"""
-    from mongoengine.connection import get_connection, ConnectionFailure
+    from mongoengine.connection import ConnectionFailure, get_connection
 
     try:
         # Check if connection already exists

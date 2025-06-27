@@ -1,12 +1,14 @@
+from datetime import UTC, date, datetime
+
 import pytest
-from datetime import datetime, date, UTC
+
 from models.mongo_models import (
-    User,
-    Recipe,
     BrewSession,
-    Ingredient,
-    RecipeIngredient,
     FermentationEntry,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    User,
 )
 from services.mongodb_service import MongoDBService
 

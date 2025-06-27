@@ -410,7 +410,7 @@ describe("BeerStyleService", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].style.style_id).toBe("2A");
-      expect(result[0].match.percentage).toBe(100);
+      expect(result[0].match_percentage).toBe(100);
     });
 
     test("excludes styles with low match percentage", async () => {
@@ -474,8 +474,8 @@ describe("BeerStyleService", () => {
       expect(result.length).toBeGreaterThanOrEqual(2);
       // Should be sorted by match percentage (highest first)
       if (result.length > 1) {
-        expect(result[0].match.percentage).toBeGreaterThanOrEqual(
-          result[1].match.percentage
+        expect(result[0].match_percentage).toBeGreaterThanOrEqual(
+          result[1].match_percentage
         );
       }
     });

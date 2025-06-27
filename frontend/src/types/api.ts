@@ -1,0 +1,229 @@
+import { Recipe, RecipeMetrics, RecipeFormData, Ingredient, RecipeSearchFilters } from './recipe';
+import { BeerStyleGuide, StyleAnalysis, StyleSuggestion } from './beer-styles';
+import { BrewSession, FermentationEntry } from './brew-session';
+import { User, UserSettings } from './user';
+import { ApiResponse, PaginatedResponse, ID } from './common';
+
+// Authentication API types
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  user: User;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
+}
+
+export interface ProfileResponse {
+  user: User;
+}
+
+// User API types
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface DeleteAccountRequest {
+  password: string;
+  confirmation: string;
+}
+
+export interface UserSettingsResponse {
+  settings: UserSettings;
+}
+
+export interface UpdateSettingsRequest extends Partial<UserSettings> {}
+
+export interface UpdateProfileRequest {
+  username?: string;
+  email?: string;
+}
+
+// Recipe API types
+export interface RecipeResponse extends ApiResponse<Recipe> {}
+
+export interface RecipesListResponse extends PaginatedResponse<Recipe> {}
+
+export interface CreateRecipeRequest extends RecipeFormData {}
+
+export interface UpdateRecipeRequest extends Partial<RecipeFormData> {}
+
+export interface CloneRecipeResponse extends ApiResponse<Recipe> {}
+
+export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {}
+
+export interface CalculateMetricsPreviewRequest {
+  recipe: Omit<Recipe, 'recipe_id' | 'created_at' | 'updated_at'>;
+  ingredients: Recipe['ingredients'];
+}
+
+export interface CalculateMetricsPreviewResponse extends ApiResponse<RecipeMetrics> {}
+
+export interface RecipeVersionHistoryResponse extends ApiResponse<Recipe[]> {}
+
+export interface PublicRecipesResponse extends PaginatedResponse<Recipe> {}
+
+// Ingredient API types
+export interface IngredientsResponse extends ApiResponse<Ingredient[]> {}
+
+export interface IngredientResponse extends ApiResponse<Ingredient> {}
+
+export interface CreateIngredientRequest extends Omit<Ingredient, 'ingredient_id' | 'created_at' | 'updated_at'> {}
+
+export interface UpdateIngredientRequest extends Partial<CreateIngredientRequest> {}
+
+export interface IngredientRecipesResponse extends PaginatedResponse<Recipe> {}
+
+// Beer Style API types
+export interface BeerStylesResponse extends ApiResponse<BeerStyleGuide[]> {}
+
+export interface BeerStyleResponse extends ApiResponse<BeerStyleGuide> {}
+
+export interface StyleSuggestionsResponse extends ApiResponse<StyleSuggestion[]> {}
+
+export interface StyleAnalysisResponse extends ApiResponse<StyleAnalysis> {}
+
+export interface BeerStyleSearchResponse extends ApiResponse<BeerStyleGuide[]> {}
+
+// Brew Session API types
+export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {}
+
+export interface BrewSessionResponse extends ApiResponse<BrewSession> {}
+
+export interface CreateBrewSessionRequest extends Omit<BrewSession, 'session_id' | 'created_at' | 'updated_at'> {}
+
+export interface UpdateBrewSessionRequest extends Partial<CreateBrewSessionRequest> {}
+
+export interface FermentationDataResponse extends ApiResponse<FermentationEntry[]> {}
+
+export interface AddFermentationEntryRequest extends Omit<FermentationEntry, 'entry_date'> {}
+
+export interface UpdateFermentationEntryRequest extends Partial<FermentationEntry> {}
+
+export interface FermentationStatsResponse extends ApiResponse<{
+  duration_days: number;
+  gravity_drop: number;
+  average_temperature: number;
+  current_attenuation: number;
+  projected_fg: number;
+}> {}
+
+// BeerXML API types
+export interface BeerXMLExportResponse extends ApiResponse<{
+  xml_content: string;
+  filename: string;
+}> {}
+
+export interface BeerXMLParseRequest {
+  xml_content: string;
+}
+
+export interface BeerXMLParseResponse extends ApiResponse<{
+  recipes: Recipe[];
+  ingredients: {
+    matched: Ingredient[];
+    unmatched: Array<{
+      name: string;
+      type: string;
+      suggestions: Ingredient[];
+    }>;
+  };
+}> {}
+
+export interface BeerXMLMatchIngredientsRequest {
+  unmatched_ingredients: Array<{
+    name: string;
+    type: string;
+    selected_match?: ID;
+  }>;
+}
+
+export interface BeerXMLMatchIngredientsResponse extends ApiResponse<{
+  matched_ingredients: Record<string, Ingredient>;
+}> {}
+
+export interface BeerXMLCreateIngredientsRequest {
+  ingredients: Array<Omit<Ingredient, 'ingredient_id' | 'created_at' | 'updated_at'>>;
+}
+
+export interface BeerXMLCreateIngredientsResponse extends ApiResponse<{
+  created_ingredients: Ingredient[];
+}> {}
+
+// Dashboard API types
+export interface DashboardData {
+  stats: {
+    total_recipes: number;
+    public_recipes: number;
+    total_brews: number;
+    active_brews: number;
+  };
+  recent_recipes: Recipe[];
+  recent_brews: BrewSession[];
+  brewing_calendar: Array<{
+    date: string;
+    sessions: BrewSession[];
+  }>;
+}
+
+export interface DashboardResponse extends ApiResponse<DashboardData> {}
+
+// Search API types
+export interface RecipeSearchRequest extends RecipeSearchFilters {
+  q?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface RecipeSearchResponse extends PaginatedResponse<Recipe> {}
+
+// Generic API query parameters
+export interface PaginationParams {
+  page?: number;
+  per_page?: number;
+}
+
+export interface SearchParams extends PaginationParams {
+  q?: string;
+}
+
+// API Error types
+export interface ApiError {
+  error: string;
+  message?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ValidationError extends ApiError {
+  field_errors?: Record<string, string[]>;
+}
+
+// HTTP methods for API calls
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+// API endpoint configuration
+export interface ApiEndpoint {
+  method: HttpMethod;
+  url: string;
+  requiresAuth?: boolean;
+}
+
+// Generic API call options
+export interface ApiCallOptions {
+  timeout?: number;
+  retries?: number;
+  signal?: AbortSignal;
+}

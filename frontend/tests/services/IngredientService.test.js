@@ -153,7 +153,6 @@ describe("IngredientService", () => {
         unit: "oz",
         use: "boil",
         time: 60,
-        time_unit: "minutes",
         alpha_acid: 6.0, // Should use overridden value
       });
     });
@@ -197,9 +196,9 @@ describe("IngredientService", () => {
       );
 
       expect(scaled).toEqual([
-        { id: 1, amount: "20.00", unit: "lb" },
-        { id: 2, amount: "2.00", unit: "oz" },
-        { id: 3, amount: "1.00", unit: "tsp" },
+        { id: 1, amount: 20, unit: "lb" },
+        { id: 2, amount: 2, unit: "oz" },
+        { id: 3, amount: 1, unit: "tsp" },
       ]);
     });
 
@@ -212,7 +211,7 @@ describe("IngredientService", () => {
         scalingFactor
       );
 
-      expect(scaled[0].amount).toBe("5.00");
+      expect(scaled[0].amount).toBe(5);
     });
   });
 

@@ -120,6 +120,8 @@ describe("useRecipeBuilder", () => {
       });
 
       expect(result.current.recipe).toEqual({
+        id: "",
+        recipe_id: "",
         name: "",
         style: "",
         batch_size: 5,
@@ -129,6 +131,9 @@ describe("useRecipeBuilder", () => {
         efficiency: 75,
         is_public: false,
         notes: "",
+        ingredients: [],
+        created_at: "",
+        updated_at: "",
       });
       expect(result.current.ingredients).toEqual([]);
       expect(result.current.availableIngredients).toEqual(

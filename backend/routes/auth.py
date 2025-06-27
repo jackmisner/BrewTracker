@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
+
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+
 from models.mongo_models import User
 
 auth_bp = Blueprint("auth", __name__)

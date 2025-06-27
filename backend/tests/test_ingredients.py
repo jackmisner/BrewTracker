@@ -1,5 +1,6 @@
 import pytest
-from models.mongo_models import User, Ingredient, Recipe
+
+from models.mongo_models import Ingredient, Recipe, User
 
 
 class TestIngredientEndpoints:

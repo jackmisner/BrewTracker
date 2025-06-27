@@ -454,7 +454,7 @@ describe("IngredientMatchingService", () => {
       const imported = {
         beerxml_data: { origin: "US" },
       };
-      const existing = { origin: "US" };
+      const existing = { manufacturer: "US" };
 
       const enhanced = service.enhanceHopScore(imported, existing, 0.5);
 

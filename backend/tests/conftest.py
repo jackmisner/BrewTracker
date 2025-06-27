@@ -1,7 +1,8 @@
 import pytest
-from app import create_app
 from mongoengine import connect, disconnect
+
 import config
+from app import create_app
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -30,13 +31,14 @@ def app():
     from flask import Flask
     from flask_cors import CORS
     from flask_jwt_extended import JWTManager
+
     from routes.auth import auth_bp
-    from routes.recipes import recipes_bp
-    from routes.ingredients import ingredients_bp
-    from routes.brew_sessions import brew_sessions_bp
-    from routes.user_settings import user_settings_bp
-    from routes.beerxml import beerxml_bp
     from routes.beer_styles import beer_styles_bp
+    from routes.beerxml import beerxml_bp
+    from routes.brew_sessions import brew_sessions_bp
+    from routes.ingredients import ingredients_bp
+    from routes.recipes import recipes_bp
+    from routes.user_settings import user_settings_bp
 
     app = Flask(__name__)
     app.config.from_object(config.TestConfig)
@@ -68,11 +70,11 @@ def client(app):
 def clean_db():
     """Clean the test database before each test"""
     from models.mongo_models import (
-        User,
-        Recipe,
-        Ingredient,
-        BrewSession,
         BeerStyleGuide,
+        BrewSession,
+        Ingredient,
+        Recipe,
+        User,
     )
 
     # Clean up all collections before each test

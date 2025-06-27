@@ -1,6 +1,8 @@
 import json
+
 from mongoengine import connect, disconnect
-from mongoengine.connection import get_connection, ConnectionFailure
+from mongoengine.connection import ConnectionFailure, get_connection
+
 from models.mongo_models import BeerStyleGuide, StyleRange
 
 

@@ -430,6 +430,7 @@ describe("RecipeService", () => {
         estimated_abv: 5.6,
         estimated_ibu: 35,
         estimated_srm: 4,
+        id: "",
         ingredients: [
           {
             ingredient_id: 1,
@@ -464,9 +465,11 @@ describe("RecipeService", () => {
         batch_size_unit: "gal",
         description: "",
         is_public: false,
-        boil_time: null,
-        efficiency: null,
+        boil_time: undefined,
+        efficiency: undefined,
         notes: "",
+        id: "",
+        ingredients: [],
       });
     });
   });
@@ -543,8 +546,9 @@ describe("RecipeService", () => {
     });
 
     test("handles null recipe", () => {
-      const result = recipeService.processRecipeData(null);
-      expect(result).toBeNull();
+      expect(() => {
+        recipeService.processRecipeData(null);
+      }).toThrow("No recipe data provided");
     });
   });
 
@@ -712,8 +716,9 @@ describe("RecipeService", () => {
     test("handles malformed API responses gracefully", async () => {
       ApiService.recipes.getById.mockResolvedValue({ data: null });
 
-      const result = await recipeService.fetchRecipe("recipe-1");
-      expect(result).toBeNull();
+      await expect(recipeService.fetchRecipe("recipe-1")).rejects.toThrow(
+        "Failed to load recipe: No recipe data provided"
+      );
     });
 
     test("handles empty ingredients array in formatRecipeForApi", () => {
@@ -724,7 +729,7 @@ describe("RecipeService", () => {
 
       const result = recipeService.formatRecipeForApi(recipeData, null);
 
-      expect(result.ingredients).toBeUndefined();
+      expect(result.ingredients).toEqual([]);
     });
 
     test("handles numeric conversion edge cases", () => {
