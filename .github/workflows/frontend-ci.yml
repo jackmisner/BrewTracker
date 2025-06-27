@@ -31,15 +31,17 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: TypeScript type checking
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
       - name: Run tests with coverage
         working-directory: ./frontend
         env:
           REACT_APP_API_URL: "http://localhost:5000/api"
           CI: true
           NODE_ENV: test
-        run: |
-          # Run Jest directly with coverage and threshold check
-          npx jest --coverage --watchAll=false --ci --forceExit --detectOpenHandles --maxWorkers=2 --coverageThreshold='{"global":{"lines":70,"functions":70,"branches":70,"statements":70}}'
+        run: npm run coverage
 
       - name: Build application
         working-directory: ./frontend

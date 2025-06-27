@@ -261,8 +261,8 @@ describe("MetricService", () => {
           potential: 1.037,
           color: 2,
           grain_type: "base_malt",
-          alpha_acid: null,
-          attenuation: null,
+          alpha_acid: undefined,
+          attenuation: undefined,
         },
         {
           ingredient_id: 2,
@@ -272,11 +272,11 @@ describe("MetricService", () => {
           unit: "oz",
           use: "boil",
           time: 60,
-          potential: null,
-          color: null,
-          grain_type: null,
+          potential: undefined,
+          color: undefined,
+          grain_type: undefined,
           alpha_acid: 5.5,
-          attenuation: null,
+          attenuation: undefined,
         },
       ]);
     });
@@ -299,16 +299,16 @@ describe("MetricService", () => {
       expect(result[0]).toEqual({
         ingredient_id: 1,
         name: "",
-        type: "",
+        type: "other",
         amount: 0,
-        unit: "",
+        unit: "oz",
         use: "",
         time: 0,
-        potential: null,
-        color: null,
-        grain_type: null,
-        alpha_acid: null,
-        attenuation: null,
+        potential: undefined,
+        color: undefined,
+        grain_type: undefined,
+        alpha_acid: undefined,
+        attenuation: undefined,
       });
     });
   });

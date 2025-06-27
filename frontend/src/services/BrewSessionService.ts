@@ -386,16 +386,16 @@ class BrewSessionService {
 
     const processedSession: ProcessedBrewSession = {
       ...session,
-      brew_date: session.brew_date ? session.brew_date : undefined,
+      brew_date: session.brew_date ? new Date(session.brew_date) : null,
       fermentation_start_date: session.fermentation_start_date
-        ? session.fermentation_start_date
-        : undefined,
+        ? new Date(session.fermentation_start_date)
+        : null,
       fermentation_end_date: session.fermentation_end_date
-        ? session.fermentation_end_date
-        : undefined,
+        ? new Date(session.fermentation_end_date)
+        : null,
       packaging_date: session.packaging_date
-        ? session.packaging_date
-        : undefined,
+        ? new Date(session.packaging_date)
+        : null,
       // Add computed fields
       displayName: this.getSessionDisplayName(session),
       formattedStatus: this.formatStatus(session.status),

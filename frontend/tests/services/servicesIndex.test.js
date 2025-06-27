@@ -3,10 +3,15 @@ import {
   recipeServiceInstance,
   metricServiceInstance,
   brewSessionServiceInstance,
+  BeerStyleService,
+  BeerXMLService,
+  IngredientMatchingService,
+  CacheManager,
+  RecipeDefaultsService,
+  UserSettingsService,
   Services,
   ServiceUtils,
 } from "../../src/services/index";
-import BeerStyleService from "../../src/services/BeerStyleService";
 
 // Mock all the service instances
 jest.mock("../../src/services/IngredientService");
@@ -42,6 +47,11 @@ describe("Services Index", () => {
         metrics: metricServiceInstance,
         brewSession: brewSessionServiceInstance,
         beerStyle: BeerStyleService,
+        beerXML: BeerXMLService,
+        ingredientMatching: IngredientMatchingService,
+        cache: CacheManager,
+        recipeDefaults: RecipeDefaultsService,
+        userSettings: UserSettingsService,
       });
     });
 
@@ -58,12 +68,18 @@ describe("Services Index", () => {
       ingredientServiceInstance.clearCache = jest.fn();
       metricServiceInstance.clearCache = jest.fn();
       brewSessionServiceInstance.clearCache = jest.fn();
+      IngredientMatchingService.clearCache = jest.fn();
+      UserSettingsService.clearCache = jest.fn();
+      CacheManager.clearAllCaches = jest.fn();
 
       ServiceUtils.clearAllCaches();
 
       expect(ingredientServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(metricServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(brewSessionServiceInstance.clearCache).toHaveBeenCalledTimes(1);
+      expect(IngredientMatchingService.clearCache).toHaveBeenCalledTimes(1);
+      expect(UserSettingsService.clearCache).toHaveBeenCalledTimes(1);
+      expect(CacheManager.clearAllCaches).toHaveBeenCalledTimes(1);
     });
 
     test("handles missing clearCache methods gracefully", () => {
@@ -71,12 +87,18 @@ describe("Services Index", () => {
       ingredientServiceInstance.clearCache = undefined;
       metricServiceInstance.clearCache = jest.fn();
       brewSessionServiceInstance.clearCache = jest.fn();
+      IngredientMatchingService.clearCache = jest.fn();
+      UserSettingsService.clearCache = jest.fn();
+      CacheManager.clearAllCaches = jest.fn();
 
       // Should not throw
       expect(() => ServiceUtils.clearAllCaches()).not.toThrow();
 
       expect(metricServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(brewSessionServiceInstance.clearCache).toHaveBeenCalledTimes(1);
+      expect(IngredientMatchingService.clearCache).toHaveBeenCalledTimes(1);
+      expect(UserSettingsService.clearCache).toHaveBeenCalledTimes(1);
+      expect(CacheManager.clearAllCaches).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -217,6 +239,11 @@ describe("Services Index", () => {
       expect(Services.metrics).toBe(metricServiceInstance);
       expect(Services.brewSession).toBe(brewSessionServiceInstance);
       expect(Services.beerStyle).toBe(BeerStyleService);
+      expect(Services.beerXML).toBe(BeerXMLService);
+      expect(Services.ingredientMatching).toBe(IngredientMatchingService);
+      expect(Services.cache).toBe(CacheManager);
+      expect(Services.recipeDefaults).toBe(RecipeDefaultsService);
+      expect(Services.userSettings).toBe(UserSettingsService);
     });
 
     test("individual exports match Services object exports", () => {

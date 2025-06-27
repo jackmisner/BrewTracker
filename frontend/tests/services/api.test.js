@@ -145,7 +145,7 @@ describe("ApiService", () => {
       ApiService.recipes.search("test query");
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/search/recipes?q=test query&page=1&per_page=10"
+        "/search/recipes?q=test%20query&page=1&per_page=10"
       );
     });
 
@@ -153,7 +153,7 @@ describe("ApiService", () => {
       ApiService.recipes.search("test query", 2, 20);
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/search/recipes?q=test query&page=2&per_page=20"
+        "/search/recipes?q=test%20query&page=2&per_page=20"
       );
     });
 
@@ -220,7 +220,7 @@ describe("ApiService", () => {
       ApiService.ingredients.getAll(null, "pale malt");
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/ingredients?search=pale malt"
+        "/ingredients?search=pale%20malt"
       );
     });
 
@@ -228,7 +228,7 @@ describe("ApiService", () => {
       ApiService.ingredients.getAll("grain", "pale malt");
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/ingredients?type=grain&search=pale malt"
+        "/ingredients?type=grain&search=pale%20malt"
       );
     });
 
@@ -473,7 +473,7 @@ describe("ApiService", () => {
       ApiService.recipes.search("test with spaces");
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/search/recipes?q=test with spaces&page=1&per_page=10"
+        "/search/recipes?q=test%20with%20spaces&page=1&per_page=10"
       );
     });
 

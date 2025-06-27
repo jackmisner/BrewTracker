@@ -142,6 +142,7 @@ class IngredientService {
       unit: ingredientData.unit as any, // Type assertion for unit compatibility
       use: ingredientData.use || "",
       time: parseInt((ingredientData.time || 0).toString()),
+      time_unit: "minutes", // Default time unit for hops
       // Include calculation-specific fields
       ...baseData,
     };
@@ -176,7 +177,7 @@ class IngredientService {
   scaleIngredients(ingredients: RecipeIngredient[], scalingFactor: number): RecipeIngredient[] {
     return ingredients.map((ingredient) => ({
       ...ingredient,
-      amount: parseFloat((parseFloat(ingredient.amount.toString()) * scalingFactor).toFixed(2)),
+      amount: (parseFloat(ingredient.amount.toString()) * scalingFactor).toFixed(2),
     }));
   }
 

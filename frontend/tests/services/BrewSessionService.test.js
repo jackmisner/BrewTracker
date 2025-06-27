@@ -496,8 +496,9 @@ describe("BrewSessionService", () => {
     });
 
     test("handles null session", () => {
-      const result = brewSessionService.processBrewSessionData(null);
-      expect(result).toBeNull();
+      expect(() => {
+        brewSessionService.processBrewSessionData(null);
+      }).toThrow("No session data provided");
     });
 
     test("handles session without dates", () => {

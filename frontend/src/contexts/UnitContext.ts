@@ -359,7 +359,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
 
       return {
         ...ingredient,
-        amount: parseFloat(convertedAmount.toFixed(2)),
+        amount: convertedAmount.toFixed(2),
         unit: convertedUnit,
       };
     });

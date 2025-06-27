@@ -159,7 +159,7 @@ class MetricService {
       ingredient_id: ing.ingredient_id,
       name: ing.name || "",
       type: ing.type || "other",
-      amount: parseFloat(ing.amount.toString()) || 0,
+      amount: parseFloat((ing.amount || 0).toString()) || 0,
       unit: ing.unit || "oz",
       use: ing.use || "",
       time: parseInt((ing.time || 0).toString()),
