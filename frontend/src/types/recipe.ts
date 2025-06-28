@@ -23,6 +23,17 @@ export interface CreateRecipeIngredientData {
   attenuation?: number;
 }
 
+// Form data for adding ingredients to recipes
+export interface IngredientFormData {
+  ingredient_id: string;
+  amount: string;
+  unit: string;
+  use?: string;
+  time?: number | string;
+  alpha_acid?: string;
+  color?: string;
+}
+
 // Ingredients organized by type for UI
 export interface IngredientsByType {
   grain: Ingredient[];
@@ -66,6 +77,7 @@ export interface RecipeIngredient {
   unit: IngredientUnit;
   use?: string;
   time?: number; // Time in minutes (boil time, steep time, etc.)
+  time_unit?: string;
   
   // Denormalized fields from base ingredient
   potential?: number;

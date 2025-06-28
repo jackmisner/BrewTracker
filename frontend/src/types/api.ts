@@ -63,7 +63,10 @@ export interface CreateRecipeRequest extends RecipeFormData {}
 
 export interface UpdateRecipeRequest extends Partial<RecipeFormData> {}
 
-export interface CloneRecipeResponse extends ApiResponse<Recipe> {}
+export interface CloneRecipeResponse extends ApiResponse<Recipe> {
+
+  
+}
 
 export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {
   data: RecipeMetrics & {
@@ -123,6 +126,16 @@ export interface BeerStyleSearchResponse extends ApiResponse<BeerStyleGuide[]> {
 // Brew Session API types
 export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {
   brew_sessions: BrewSession[];
+  pagination: {
+    page: number;
+    pages: number;
+    per_page: number;
+    total: number;
+    has_prev: boolean;
+    has_next: boolean;
+    prev_num?: number;
+    next_num?: number;
+  };
 }
 
 export interface BrewSessionResponse extends ApiResponse<BrewSession> {}

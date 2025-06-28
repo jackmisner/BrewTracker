@@ -88,10 +88,10 @@ export interface UpdateBrewSessionFormData extends Partial<CreateBrewSessionForm
 
 // Fermentation entry form data
 export interface FermentationEntryFormData {
-  temperature?: number;
-  gravity?: number;
-  ph?: number;
-  notes?: string;
+  temperature?: number | null;
+  gravity?: number | null;
+  ph?: number | null;
+  notes?: string | null;
 }
 
 // Brew session with populated recipe data
