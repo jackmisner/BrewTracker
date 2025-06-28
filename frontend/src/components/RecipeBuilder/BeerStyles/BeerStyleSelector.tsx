@@ -176,10 +176,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     }));
   }, [fuse, searchTerm, styles, loading, minQueryLength, maxResults]);
 
-  const styleMatch = useMemo(() => {
-    if (!selectedStyle || !metrics) return null;
-    return BeerStyleService.calculateStyleMatch(selectedStyle, metrics);
-  }, [selectedStyle, metrics]);
+
 
   // Highlight matches in text
   const highlightMatches = (text: string, matches: any[] = []): string => {
@@ -312,17 +309,6 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     }
   }, [highlightedIndex]);
 
-  // Helper function to get match status color
-  const getMatchStatusColor = (matches: Record<string, boolean>): string => {
-    if (!matches) return "neutral";
-    const matchCount = Object.values(matches).filter(Boolean).length;
-    const totalSpecs = Object.keys(matches).length;
-    const percentage = totalSpecs > 0 ? (matchCount / totalSpecs) * 100 : 0;
-
-    if (percentage >= 80) return "success";
-    if (percentage >= 60) return "warning";
-    return "danger";
-  };
 
   if (loading) {
     return (
@@ -394,7 +380,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
             {filteredStyles.map((style, index) => (
               <div
                 key={style.style_guide_id || style.style_id}
-                ref={(el) => (optionRefs.current[index] = el)}
+                ref={(el) => { optionRefs.current[index] = el; }}
                 className={`style-option ${
                   index === highlightedIndex ? "highlighted" : ""
                 }`}
@@ -455,7 +441,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
           )}
           <StyleAnalysis 
             recipe={recipe} 
-            metrics={metrics} 
+            metrics={metrics ?? undefined} 
             onStyleSuggestionSelect={() => {}} 
           />
         </div>
