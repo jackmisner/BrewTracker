@@ -21,77 +21,99 @@ This repository contains two applications:
 ```
 homebrew-tracker/
 ├── backend/
-│   ├── app.py                            # Main Flask application entry point
-│   ├── config.py                         # Configuration settings
-│   ├── data/                             # Seed data for Ingredients
-│   ├── models/                           # Database models
+│   ├── app.py                                      # Flask application factory with auto-seeding, CORS, and blueprint registration
+│   ├── config.py                                   # Environment-specific configuration classes (development, testing, production)
+│   ├── data/                                       # Static JSON data files for ingredients and beer style guides
+│   ├── models/                                     # Database models
 │   │   ├── __init__.py
-│   │   └── mongo_models.py               # MongoDB models for users, recipes, ingredients, and brew sessions
-│   ├── routes/                           # Backend routes for handling incoming HTTP requests
+│   │   └── mongo_models.py                         # MongoEngine ODM models with validation, relationships, and business logic
+│   ├── routes/                                     # Flask blueprints for API endpoints
 │   │   ├── __init__.py
-│   │   ├── auth.py                       # Authentication routes
-│   │   ├── brew_sessions.py              # Brewing session management
-│   │   ├── ingredients.py                # Ingredient management
-│   │   ├── recipes.py                    # Recipe CRUD operations
-│   │   └── user_settings.py              # User Settings management
-│   ├── seed_ingredients.py               # Script that gets called on first run if database has no ingredients in it to add the ingredients data to DB
-│   ├── services/                         # Business logic layer
+│   │   ├── auth.py                                 # User authentication and authorization endpoints
+│   │   ├── beer_styles.py                          # Beer style guide and analysis endpoints
+│   │   ├── beerxml.py                              # BeerXML import/export functionality endpoints
+│   │   ├── brew_sessions.py                        # Brew session tracking and fermentation management endpoints
+│   │   ├── ingredients.py                          # Ingredient CRUD operations and search endpoints
+│   │   ├── recipes.py                              # Recipe CRUD operations and calculation endpoints
+│   │   └── user_settings.py                        # User preferences and account management endpoints
+│   ├── seeds/                                      # Database seeding scripts
+│   │   ├── seed_ingredients.py                     # Seeds ingredients from JSON data
+│   │   └── seed_beer_styles.py                     # Seeds beer style guides from JSON data
+│   ├── services/                                   # Business logic layer
 │   │   ├── __init__.py
-│   │   └── mongodb_service.py            # Provides methods for interacting with MongoDB
-│   ├── tests/                            # Backend tests
-│   ├── utils/                            # Utility functions
+│   │   └── mongodb_service.py                      # Database abstraction layer with connection management and query utilities
+│   ├── tests/                                      # pytest test suite for backend functionality
+│   ├── utils/                                      # Utility functions
 │   │   ├── __init__.py
-│   │   ├── brewing_calculation_core.py   # Core brewing calculation formulae
-│   │   ├── recipe_orm_calculator.py      # Calculations for database models
-│   │   ├── recipe_api_calculator.py      # Calculations for API preview requests
-│   │   └── unit_conversions.py           # Core functions for converting between units (metric/imperial)
-│   ├── requirements.txt                  # Backend requirements
-│   └── .env                              # Environment variables for setting database locations
+│   │   ├── brewing_calculation_core.py             # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations)
+│   │   ├── recipe_orm_calculator.py                # Recipe calculations integrated with MongoDB models and validation
+│   │   ├── recipe_api_calculator.py                # Real-time recipe calculations for API endpoints without database persistence
+│   │   └── unit_conversions.py                     # Metric/imperial conversion utilities for weight, volume, and temperature
+│   ├── requirements.txt                            # Python package dependencies for backend
+│   └── .env                                        # Environment variables for database URI, JWT secrets, and Flask configuration
 ├── frontend/
 │   ├── public/
-│   │   ├── index.html
+│   │   ├── index.html                              # Main HTML template for React application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── BrewSessions/             # Components used for Brew Sessions ("Brewing" a recipe and tracking fermentation stats)
-│   │   │   ├── Header/                   # Website header component with navigation buttons
-│   │   │   ├── RecipeBuilder/            # Components used for creating recipes
-│   │   │   ├── RecipeCard.js
-│   │   │   ├── RecipeCardContainer.js
-│   │   │   ├── RecipeActions.js
-│   │   │   └── SearchableSelect.js       # Fuse.js based component for searching through ingredients (allows partial and "closest" matches)
+│   │   │   ├── BeerXML/                            # BeerXML import/export components with ingredient matching and validation
+│   │   │   ├── BrewSessions/                       # Brew session management with fermentation tracking and progress monitoring
+│   │   │   ├── Header/                             # Application header with responsive navigation and user authentication status
+│   │   │   ├── RecipeBuilder/                      # Complex recipe creation interface with real-time calculations and ingredient management
+│   │   │   ├── RecipeActions.tsx                   # Action buttons for recipe operations (edit, delete, clone, share)
+│   │   │   ├── RecipeCard.tsx                      # Individual recipe display card component
+│   │   │   ├── RecipeCardContainer.tsx             # Container component for managing recipe card layout and state
+│   │   │   └── SearchableSelect.ts                 # Fuzzy search component with Fuse.js for intelligent ingredient matching and suggestions
 │   │   ├── contexts/
-│   │   │   └── UnitContext.js            # Custom wrapper for the entire app frontend to control which units are displayed based on user preferences (metric/imperial)
-│   │   ├── hooks/                        # Custom ReactJS hook implementations
-│   │   ├── images/
+│   │   │   └── UnitContext.ts                      # React context for global metric/imperial unit preference management
+│   │   ├── hooks/                                  # Custom React hooks for state management and business logic
+│   │   │   ├── index.ts                            # Central export for all custom hooks
+│   │   │   └── useRecipeBuilder.ts                 # Recipe builder state management and validation logic
+│   │   ├── images/                                 # Static image assets (logos, icons, placeholders)
 │   │   ├── pages/
-│   │   │   ├── AllRecipes.js             # View all of your recipes
-│   │   │   ├── Dashboard.js              # Homepage when logged in
-│   │   │   ├── IngredientManager.js      # Add ingredients to database
-│   │   │   ├── Login.js
-│   │   │   ├── PublicRecipes.js          # View all recipes tagged as "Public"
-│   │   │   ├── RecipeBuilder.js          # Create a recipe
-│   │   │   ├── Register.js
-│   │   │   ├── UserSettings.js           # Adjust your user settings
-│   │   │   └── ViewRecipe.js             # View a single recipe
-│   │   ├── services/
-|   |   |   └── api.js                    # Low-level API client, Handles core HTTP functionality & Provides a centralized point for API configuration
-│   │   │   ├── index.js                  # Central export for all business logic services, provides a clean interface for importing services throughout the application
-│   │   │   ├── BrewSessionService.js     # Higher-level abstraction specifically for brewing-session-related operations
-│   │   │   ├── CacheManager.js           # Higher-level abstraction specifically for cache-management operations
-│   │   │   ├── IngredientService.js      # Higher-level abstraction specifically for ingredient-related operations
-│   │   │   ├── MetricService.js          # Higher-level abstraction specifically for metric-calculation operations
-│   │   │   ├── RecipeDefaultsService.js  # Service to provide appropriate default values for new recipes based on user's unit preferences
-│   │   │   ├── RecipeService.js          # Higher-level abstraction specifically for recipe-related operations
-|   |   |   └── UserSettingsService.js    # Higher-level abstraction specifically for managing user settings and account management
-│   │   ├── styles/                       # CSS for various frontend components
+│   │   │   ├── AllRecipes.tsx                      # Personal recipe library with search, filtering, and management tools
+│   │   │   ├── Dashboard.tsx                       # User dashboard with recent activity, quick stats, and navigation shortcuts
+│   │   │   ├── IngredientManager.tsx               # Ingredient database management with creation, editing, and bulk operations
+│   │   │   ├── Login.tsx                           # User authentication login page
+│   │   │   ├── PublicRecipes.tsx                   # Community recipe sharing with search and style filtering
+│   │   │   ├── RecipeBuilder.tsx                   # Create and edit recipes with ingredient management
+│   │   │   ├── Register.tsx                        # User registration page with account creation form
+│   │   │   ├── UserSettings.tsx                    # User preferences for units, account details, and application settings
+│   │   │   └── ViewRecipe.tsx                      # Detailed recipe view with calculations, brew sessions, and sharing options
+│   │   ├── services/                               # TypeScript service layer for API communication and business logic
+│   │   │   ├── BeerXML/                            # BeerXML format handling services
+│   │   │   │   ├── BeerXMLService.ts               # BeerXML import/export and format conversion
+│   │   │   │   └── IngredientMatchingService.ts    # Ingredient mapping and matching for BeerXML imports
+│   │   │   ├── api.ts                              # Low-level HTTP client with authentication and error handling
+│   │   │   ├── index.ts                            # Central export hub for all service modules
+│   │   │   ├── BeerStyleService.ts                 # Beer style matching and analysis against BJCP guidelines
+│   │   │   ├── BrewSessionService.ts               # Brew session tracking and fermentation data management
+│   │   │   ├── CacheManager.ts                     # Client-side caching for improved performance
+│   │   │   ├── IngredientService.ts                # Ingredient search, CRUD operations, and database management
+│   │   │   ├── MetricService.ts                    # Recipe calculations (OG, FG, ABV, IBU, SRM) and analysis
+│   │   │   ├── RecipeDefaultsService.ts            # Default value generation based on user preferences and recipe type
+│   │   │   ├── RecipeService.ts                    # Recipe CRUD operations, cloning, and sharing functionality
+│   │   │   └── UserSettingsService.ts              # User preferences, account management, and settings persistence
+│   │   ├── styles/                                 # CSS for various frontend components
+│   │   ├── types/                                  # Comprehensive TypeScript type definitions for BrewTracker
+│   │   │   ├── api.ts                              # API request/response interface definitions
+│   │   │   ├── beer-styles.ts                      # Beer style guide and analysis type definitions
+│   │   │   ├── brew-session.ts                     # Brew session and fermentation tracking types
+│   │   │   ├── common.ts                           # Shared utility types and common interfaces
+│   │   │   ├── globals.d.ts                        # Global TypeScript declarations and module augmentations
+│   │   │   ├── index.ts                            # Central export for all type definitions
+│   │   │   ├── metrics.ts                          # Brewing calculation and measurement types
+│   │   │   ├── recipe.ts                           # Recipe, ingredient, and calculation type definitions
+│   │   │   ├── units.ts                            # Unit system and conversion type definitions
+│   │   │   └── user.ts                             # User account and settings type definitions
 │   │   ├── utils/
-|   |   |   └── formatUtils.js            # Utility functions for formatting units for displaying to the end user
-│   │   ├── App.js
-│   │   └── index.js
-│   ├── tests/                            # Frontend tests
-│   ├── package.json                      # Frontend requirements
-│   └── .env                              # Environment variable for linking frontend to backend
-└── README.md                             # The document you are currently reading!
+│   │   │   └── formatUtils.ts                      # Utility functions for unit formatting and display
+│   │   ├── App.tsx                                 # Main React application component with routing and global providers
+│   │   └── index.tsx                               # React application entry point and DOM rendering
+│   ├── tests/                                      # Jest tests for React components and utilities
+│   ├── package.json                                # Node.js dependencies, scripts, and project configuration
+│   └── .env                                        # Environment variables for API URLs and frontend configuration
+└── README.md                                       # The document you are currently reading!
 ```
 
 ## 📋 Requirements
@@ -99,6 +121,7 @@ homebrew-tracker/
 - Node.js (v22+)
 - Python (v3.13+)
 - MongoDB (v7.0+)
+- TypeScript (v4.9+) - automatically installed with frontend dependencies
 
 ## 🚀 Quickstart
 
@@ -147,7 +170,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Start MongoDB:
+3. Verify TypeScript setup:
+
+```bash
+# Check TypeScript compilation (from frontend directory)
+cd frontend
+npx tsc --noEmit
+```
+
+4. Start MongoDB:
 
 ```bash
 brew services start mongodb-community
@@ -181,7 +212,8 @@ When you first start the application:
 
 1. MongoDB will automatically create the database and collections as needed
 2. The application will check if ingredient data exists
-3. If no ingredients are found, it will automatically seed the database with initial ingredient data from `backend/data/brewtracker.ingredients.json`
+3. If no ingredients are found, it will automatically seed the database with initial ingredient data from `backend/data/brewtracker.ingredients.json` using `backend/seeds/seed_ingredients.py`
+4. Similarly, beer style guides will be seeded from `backend/data/beer_style_guides.json` using `backend/seeds/seed_beer_styles.py`
 
 To manually verify your MongoDB setup:
 
@@ -241,10 +273,12 @@ Visit `http://localhost:3000` to access the application.
 
 - Frontend:
 
-  - React
+  - React 19 with TypeScript
   - React Router
   - Axios
   - Fuse.js for fuzzy searching
+  - TypeScript for type safety
+  - Jest for testing
 
 - Backend:
   - Flask
@@ -252,6 +286,43 @@ Visit `http://localhost:3000` to access the application.
   - JWT Authentication
   - MongoDB
 
+## 🧪 Development & Testing
+
+### Frontend Testing
+
+```bash
+cd frontend
+
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run coverage
+
+# TypeScript type checking
+npx tsc --noEmit
+```
+
+### Backend Testing
+
+```bash
+cd backend
+source venv/bin/activate
+
+# Run all tests
+pytest
+
+# Run tests with coverage
+pytest --cov
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Guidelines
+
+- All new frontend code should be written in TypeScript
+- Maintain test coverage above 70%
+- Run type checking before committing: `npx tsc --noEmit`
+- Follow existing code conventions and patterns
