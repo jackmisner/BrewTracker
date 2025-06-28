@@ -1,16 +1,45 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
 import BeerStyleService from "../../../services/BeerStyleService";
-import StyleRangeIndicator from "./StyleRangeIndicator";
-import {
-  formatGravity,
-  formatAbv,
-  formatIbu,
-  formatSrm,
-} from "../../../utils/formatUtils";
 import StyleAnalysis from "./StyleAnalysis";
+import { Recipe, RecipeMetrics } from "../../../types";
+import { BeerStyleGuide, StyleSuggestion } from "../../../types/beer-styles";
 
-function BeerStyleSelector({
+interface EnhancedBeerStyle extends BeerStyleGuide {
+  display_name: string;
+  category_name: string;
+  matches?: any[];
+}
+
+interface FuseOptions {
+  keys: Array<{
+    name: string;
+    weight: number;
+  }>;
+  threshold: number;
+  distance: number;
+  minMatchCharLength: number;
+  includeScore: boolean;
+  includeMatches: boolean;
+  ignoreLocation: boolean;
+  useExtendedSearch: boolean;
+}
+
+interface BeerStyleSelectorProps {
+  value?: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  showStyleInfo?: boolean;
+  disabled?: boolean;
+  recipe?: Recipe;
+  maxResults?: number;
+  minQueryLength?: number;
+  metrics?: RecipeMetrics | null;
+  showSuggestions?: boolean;
+  onStyleSuggestionSelect?: ((styleName: string) => void) | null;
+}
+
+const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
   value,
   onChange,
   placeholder = "Select or search beer style...",
@@ -22,25 +51,25 @@ function BeerStyleSelector({
   metrics = null,
   showSuggestions = false,
   onStyleSuggestionSelect = null,
-}) {
-  const [styles, setStyles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(value || "");
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState(null);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [error, setError] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
+}) => {
+  const [styles, setStyles] = useState<EnhancedBeerStyle[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>(value || "");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [selectedStyle, setSelectedStyle] = useState<EnhancedBeerStyle | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
 
-  const inputRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const optionRefs = useRef([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Create Fuse instance for fuzzy search
   const fuse = useMemo(() => {
     if (styles.length === 0) return null;
 
-    const fuseOptions = {
+    const fuseOptions: FuseOptions = {
       keys: [
         {
           name: "name",
@@ -77,7 +106,7 @@ function BeerStyleSelector({
 
   // Load styles on mount
   useEffect(() => {
-    const loadStyles = async () => {
+    const loadStyles = async (): Promise<void> => {
       try {
         setLoading(true);
         setError(null);
@@ -98,10 +127,10 @@ function BeerStyleSelector({
                 style.name.toLowerCase() === value.toLowerCase() ||
                 style.display_name.toLowerCase().includes(value.toLowerCase())
             );
-            setSelectedStyle(currentStyle);
+            setSelectedStyle(currentStyle || null);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error loading beer styles:", error);
         setError("Failed to load beer styles. Please try again later.");
       } finally {
@@ -113,14 +142,14 @@ function BeerStyleSelector({
   }, [value]);
 
   useEffect(() => {
-    const loadSuggestions = async () => {
+    const loadSuggestions = async (): Promise<void> => {
       if (showSuggestions && metrics && !selectedStyle) {
         try {
           const suggestionsResult = await BeerStyleService.findMatchingStyles(
             metrics
           );
           setSuggestions(suggestionsResult.slice(0, 5));
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error loading style suggestions:", error);
           setSuggestions([]);
         }
@@ -141,7 +170,7 @@ function BeerStyleSelector({
     }
 
     const results = fuse.search(searchTerm);
-    return results.slice(0, maxResults).map((result) => ({
+    return results.slice(0, maxResults).map((result: any) => ({
       ...result.item,
       matches: result.matches || [],
     }));
@@ -153,7 +182,7 @@ function BeerStyleSelector({
   }, [selectedStyle, metrics]);
 
   // Highlight matches in text
-  const highlightMatches = (text, matches = []) => {
+  const highlightMatches = (text: string, matches: any[] = []): string => {
     if (!matches.length || !searchTerm) return text;
 
     const searchTerms = searchTerm
@@ -177,7 +206,7 @@ function BeerStyleSelector({
     return highlightedText;
   };
 
-  const handleStyleSelect = (style) => {
+  const handleStyleSelect = (style: EnhancedBeerStyle): void => {
     setSelectedStyle(style);
     setSearchTerm(style.name);
     setIsOpen(false);
@@ -185,7 +214,7 @@ function BeerStyleSelector({
     onChange(style.name);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
     setIsOpen(true);
@@ -206,15 +235,15 @@ function BeerStyleSelector({
     }
   };
 
-  const handleInputFocus = () => {
+  const handleInputFocus = (): void => {
     setIsOpen(true);
   };
 
-  const handleInputBlur = () => {
+  const handleInputBlur = (): void => {
     setTimeout(() => setIsOpen(false), 200);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (!isOpen) {
       if (e.key === "ArrowDown" || e.key === "Enter") {
         setIsOpen(true);
@@ -258,12 +287,12 @@ function BeerStyleSelector({
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent): void => {
       if (
         inputRef.current &&
-        !inputRef.current.contains(event.target) &&
+        !inputRef.current.contains(event.target as Node) &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
+        !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setHighlightedIndex(-1);
@@ -277,14 +306,14 @@ function BeerStyleSelector({
   // Scroll highlighted option into view
   useEffect(() => {
     if (highlightedIndex >= 0 && optionRefs.current[highlightedIndex]) {
-      optionRefs.current[highlightedIndex].scrollIntoView({
+      optionRefs.current[highlightedIndex]?.scrollIntoView({
         block: "nearest",
       });
     }
   }, [highlightedIndex]);
 
-  // NEW: Helper function to get match status color
-  const getMatchStatusColor = (matches) => {
+  // Helper function to get match status color
+  const getMatchStatusColor = (matches: Record<string, boolean>): string => {
     if (!matches) return "neutral";
     const matchCount = Object.values(matches).filter(Boolean).length;
     const totalSpecs = Object.keys(matches).length;
@@ -424,11 +453,15 @@ function BeerStyleSelector({
               {selectedStyle.overall_impression}
             </p>
           )}
-          <StyleAnalysis recipe={recipe} metrics={metrics} />
+          <StyleAnalysis 
+            recipe={recipe} 
+            metrics={metrics} 
+            onStyleSuggestionSelect={() => {}} 
+          />
         </div>
       )}
 
-      {/* NEW: Style suggestions when no style is selected */}
+      {/* Style suggestions when no style is selected */}
       {showSuggestions &&
         !selectedStyle &&
         suggestions.length > 0 &&
@@ -449,14 +482,14 @@ function BeerStyleSelector({
                     </div>
                     <div className="suggestion-actions">
                       <span className="match-score">
-                        {Math.round(suggestion.match.percentage)}% match
+                        {Math.round(suggestion.match_percentage)}% match
                       </span>
                       <button
                         onClick={() => {
                           if (onStyleSuggestionSelect) {
                             onStyleSuggestionSelect(suggestion.style.name);
                           } else {
-                            handleStyleSelect(suggestion.style);
+                            handleStyleSelect(suggestion.style as EnhancedBeerStyle);
                           }
                         }}
                         className="select-style-btn"
@@ -466,7 +499,7 @@ function BeerStyleSelector({
                     </div>
                   </div>
                   <div className="match-breakdown">
-                    {Object.entries(suggestion.match.matches).map(
+                    {Object.entries(suggestion.matches).map(
                       ([spec, matches]) => (
                         <span
                           key={spec}
@@ -486,6 +519,6 @@ function BeerStyleSelector({
         )}
     </div>
   );
-}
+};
 
 export default BeerStyleSelector;

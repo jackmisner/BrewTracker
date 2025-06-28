@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from "react";
 import BeerStyleService from "../../../services/BeerStyleService";
 import StyleRangeIndicator from "./StyleRangeIndicator";
-import {
-  formatGravity,
-  formatAbv,
-  formatIbu,
-  formatSrm,
-} from "../../../utils/formatUtils";
+import { Recipe, RecipeMetrics } from "../../../types";
+import { BeerStyleGuide, StyleSuggestion as BeerStyleSuggestion } from "../../../types/beer-styles";
 
-function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
-  const [analysis, setAnalysis] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+interface StyleMatch {
+  matches: Record<string, boolean>;
+  percentage: number;
+}
+
+
+interface StyleAnalysisResult {
+  found: boolean;
+  style?: BeerStyleGuide;
+  match_result?: StyleMatch;
+  declared_style?: string;
+}
+
+interface StyleAnalysisProps {
+  recipe?: Recipe;
+  metrics?: RecipeMetrics;
+  onStyleSuggestionSelect: (styleName: string) => void;
+}
+
+const StyleAnalysis: React.FC<StyleAnalysisProps> = ({ 
+  recipe, 
+  metrics, 
+  onStyleSuggestionSelect 
+}) => {
+  const [analysis, setAnalysis] = useState<StyleAnalysisResult | null>(null);
+  const [suggestions, setSuggestions] = useState<BeerStyleSuggestion[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     if (metrics && recipe?.style) {
@@ -25,7 +44,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     }
   }, [recipe?.style, metrics]);
 
-  const loadRealtimeStyleAnalysis = async () => {
+  const loadRealtimeStyleAnalysis = async (): Promise<void> => {
     if (!recipe?.style || !metrics) return;
 
     try {
@@ -35,9 +54,9 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
       // Get all styles to find the matching one
       const allStyles = await BeerStyleService.getAllStylesList();
       const selectedStyle = allStyles.find(
-        (style) =>
-          style.name.toLowerCase() === recipe.style.toLowerCase() ||
-          style.display_name.toLowerCase() === recipe.style.toLowerCase()
+        (style: any) =>
+          style.name.toLowerCase() === recipe.style!.toLowerCase() ||
+          style.display_name.toLowerCase() === recipe.style!.toLowerCase()
       );
 
       if (selectedStyle) {
@@ -64,7 +83,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
         metrics
       );
       setSuggestions(suggestionsResult.slice(0, 5));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading real-time style analysis:", error);
       setError("Failed to load style analysis");
     } finally {
@@ -72,17 +91,17 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     }
   };
 
-  const loadStyleSuggestionsOnly = async () => {
+  const loadStyleSuggestionsOnly = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
 
       const suggestionsResult = await BeerStyleService.findMatchingStyles(
-        metrics
+        metrics!
       );
       setSuggestions(suggestionsResult.slice(0, 5));
       setAnalysis(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading style suggestions:", error);
       setError("Failed to load style suggestions");
     } finally {
@@ -90,7 +109,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     }
   };
 
-  const getMatchStatusColor = (matches) => {
+  const getMatchStatusColor = (matches: Record<string, boolean>): string => {
     const matchCount = Object.values(matches).filter(Boolean).length;
     const totalSpecs = Object.keys(matches).length;
     const percentage = totalSpecs > 0 ? (matchCount / totalSpecs) * 100 : 0;
@@ -100,17 +119,17 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     return "danger";
   };
 
-  const getMatchStatusText = (matches) => {
+  const getMatchStatusText = (matches: Record<string, boolean>): string => {
     const matchCount = Object.values(matches).filter(Boolean).length;
     const totalSpecs = Object.keys(matches).length;
     return `${matchCount}/${totalSpecs} specs match`;
   };
 
-  const toggleExpanded = () => {
+  const toggleExpanded = (): void => {
     setIsExpanded(!isExpanded);
   };
 
-  const renderCompactAnalysis = () => {
+  const renderCompactAnalysis = (): React.ReactElement | null => {
     if (!analysis?.found || !analysis.match_result) return null;
 
     const { matches, percentage } = analysis.match_result;
@@ -129,7 +148,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
         }}
       >
         <div className="compact-content">
-          <span className="compact-style-name">{recipe.style}</span>
+          <span className="compact-style-name">{recipe?.style}</span>
           <span
             className={`compact-match-percentage ${getMatchStatusColor(
               matches
@@ -156,7 +175,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
     );
   };
 
-  const renderExpandedAnalysis = () => {
+  const renderExpandedAnalysis = (): React.ReactElement | null => {
     if (!analysis?.found || !analysis.match_result) return null;
 
     return (
@@ -173,7 +192,7 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
             }
           }}
         >
-          <h4>Style Analysis: {recipe.style}</h4>
+          <h4>Style Analysis: {recipe?.style}</h4>
           <span className="collapse-indicator">▲</span>
         </div>
 
@@ -206,57 +225,58 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
           </div>
 
           {/* Visual range indicators for detailed analysis */}
-          <div className="detailed-style-analysis">
-            <h5>Detailed Style Compliance</h5>
-            <div className="range-indicators">
-              {analysis.style.original_gravity && (
-                <StyleRangeIndicator
-                  metricType="og"
-                  currentValue={metrics.og}
-                  styleRange={analysis.style.original_gravity}
-                  label="Original Gravity"
-                />
-              )}
+          {analysis.style && metrics && (
+            <div className="detailed-style-analysis">
+              <h5>Detailed Style Compliance</h5>
+              <div className="range-indicators">
+                {analysis.style.original_gravity && (
+                  <StyleRangeIndicator
+                    metricType="og"
+                    currentValue={metrics.og}
+                    styleRange={analysis.style.original_gravity}
+                    label="Original Gravity"
+                  />
+                )}
 
-              {analysis.style.final_gravity && (
-                <StyleRangeIndicator
-                  metricType="fg"
-                  currentValue={metrics.fg}
-                  styleRange={analysis.style.final_gravity}
-                  label="Final Gravity"
-                />
-              )}
+                {analysis.style.final_gravity && (
+                  <StyleRangeIndicator
+                    metricType="fg"
+                    currentValue={metrics.fg}
+                    styleRange={analysis.style.final_gravity}
+                    label="Final Gravity"
+                  />
+                )}
 
-              {analysis.style.alcohol_by_volume && (
-                <StyleRangeIndicator
-                  metricType="abv"
-                  currentValue={metrics.abv}
-                  styleRange={analysis.style.alcohol_by_volume}
-                  label="Alcohol by Volume"
-                  unit="%"
-                />
-              )}
+                {analysis.style.alcohol_by_volume && (
+                  <StyleRangeIndicator
+                    metricType="abv"
+                    currentValue={metrics.abv}
+                    styleRange={analysis.style.alcohol_by_volume}
+                    label="Alcohol by Volume"
+                    unit="%"
+                  />
+                )}
 
-              {analysis.style.international_bitterness_units && (
-                <StyleRangeIndicator
-                  metricType="ibu"
-                  currentValue={metrics.ibu}
-                  styleRange={analysis.style.international_bitterness_units}
-                  label="International Bitterness Units"
-                />
-              )}
+                {analysis.style.international_bitterness_units && (
+                  <StyleRangeIndicator
+                    metricType="ibu"
+                    currentValue={metrics.ibu}
+                    styleRange={analysis.style.international_bitterness_units}
+                    label="International Bitterness Units"
+                  />
+                )}
 
-              {analysis.style.color && (
-                <StyleRangeIndicator
-                  metricType="srm"
-                  currentValue={metrics.srm}
-                  styleRange={analysis.style.color}
-                  label="Color (SRM)"
-                  showColorSwatch={true}
-                />
-              )}
+                {analysis.style.color && (
+                  <StyleRangeIndicator
+                    metricType="srm"
+                    currentValue={metrics.srm}
+                    styleRange={analysis.style.color}
+                    label="Color (SRM)"
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -350,12 +370,12 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
                     </button>
                   </div>
                   <span className="match-score">
-                    {Math.round(suggestion.match.percentage)}% match
+                    {Math.round(suggestion.match_percentage)}% match
                   </span>
                 </div>
                 <div className="suggestion-details">
                   <div className="match-breakdown">
-                    {Object.entries(suggestion.match.matches).map(
+                    {Object.entries(suggestion.matches).map(
                       ([spec, matches]) => (
                         <span
                           key={spec}
@@ -389,6 +409,6 @@ function StyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }) {
       )}
     </div>
   );
-}
+};
 
 export default StyleAnalysis;

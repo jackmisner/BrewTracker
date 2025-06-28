@@ -4,20 +4,33 @@ import {
   formatAbv,
   formatIbu,
   formatSrm,
-  getSrmColour,
 } from "../../../utils/formatUtils";
 
-function StyleRangeIndicator({
+interface StyleRange {
+  minimum?: { value: number };
+  maximum?: { value: number };
+  min?: number;
+  max?: number;
+}
+
+interface StyleRangeIndicatorProps {
+  metricType: "og" | "fg" | "abv" | "ibu" | "srm";
+  currentValue: number;
+  styleRange: StyleRange;
+  label: string;
+  unit?: string;
+}
+
+const StyleRangeIndicator: React.FC<StyleRangeIndicatorProps> = ({
   metricType,
   currentValue,
   styleRange,
   label,
   unit = "",
-  showColorSwatch = false,
-}) {
-  // Extract min and max from style range
-  const minValue = styleRange?.minimum?.value;
-  const maxValue = styleRange?.maximum?.value;
+}) => {
+  // Extract min and max from style range (handle both formats)
+  const minValue = styleRange?.minimum?.value ?? styleRange?.min;
+  const maxValue = styleRange?.maximum?.value ?? styleRange?.max;
 
   // Return early if we don't have valid range data
   if (!minValue || !maxValue || minValue >= maxValue) {
@@ -35,7 +48,7 @@ function StyleRangeIndicator({
   const clampedPosition = Math.max(0, Math.min(100, position));
 
   // Format values based on metric type
-  const formatValue = (value) => {
+  const formatValue = (value: number): string => {
     switch (metricType) {
       case "og":
       case "fg":
@@ -52,7 +65,7 @@ function StyleRangeIndicator({
   };
 
   // Get appropriate colors based on whether value is in range
-  const getIndicatorColor = () => {
+  const getIndicatorColor = (): string => {
     if (isInRange) {
       return "#10b981"; // Green
     } else {
@@ -60,7 +73,7 @@ function StyleRangeIndicator({
     }
   };
 
-  const getRangeBarColor = () => {
+  const getRangeBarColor = (): string => {
     if (isInRange) {
       return "#d1fae5"; // Light green
     } else {
@@ -120,6 +133,6 @@ function StyleRangeIndicator({
       </div>
     </div>
   );
-}
+};
 
 export default StyleRangeIndicator;
