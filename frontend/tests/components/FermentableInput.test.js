@@ -242,7 +242,7 @@ describe("FermentableInput", () => {
         ingredient_id: "grain-1",
         amount: "8",
         unit: "lb",
-        color: "2",
+        color: 2,
       });
     });
   });

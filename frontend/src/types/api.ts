@@ -55,15 +55,31 @@ export interface UpdateProfileRequest {
 // Recipe API types
 export interface RecipeResponse extends ApiResponse<Recipe> {}
 
-export interface RecipesListResponse extends PaginatedResponse<Recipe> {}
+export interface RecipesListResponse extends PaginatedResponse<Recipe> {
+  recipes: Recipe[];
+}
 
 export interface CreateRecipeRequest extends RecipeFormData {}
 
 export interface UpdateRecipeRequest extends Partial<RecipeFormData> {}
 
-export interface CloneRecipeResponse extends ApiResponse<Recipe> {}
+export interface CloneRecipeResponse extends ApiResponse<Recipe> {
 
-export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {}
+  
+}
+
+export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {
+  data: RecipeMetrics & {
+    og?: number;
+    avg_og?: number;
+    fg?: number;
+    avg_fg?: number;
+    abv?: number;
+    avg_abv?: number;
+    ibu?: number;
+    srm?: number;
+  };
+}
 
 export interface CalculateMetricsPreviewRequest {
   recipe: Omit<Recipe, 'recipe_id' | 'created_at' | 'updated_at'>;
@@ -74,7 +90,16 @@ export interface CalculateMetricsPreviewResponse extends ApiResponse<RecipeMetri
 
 export interface RecipeVersionHistoryResponse extends ApiResponse<Recipe[]> {}
 
-export interface PublicRecipesResponse extends PaginatedResponse<Recipe> {}
+export interface PublicRecipesResponse extends PaginatedResponse<Recipe> {
+  recipes: Recipe[];
+  pagination: {
+    page: number;
+    pages: number;
+    has_prev: boolean;
+    has_next: boolean;
+    total: number;
+  };
+}
 
 // Ingredient API types
 export interface IngredientsResponse extends ApiResponse<Ingredient[]> {}
@@ -99,7 +124,19 @@ export interface StyleAnalysisResponse extends ApiResponse<StyleAnalysis> {}
 export interface BeerStyleSearchResponse extends ApiResponse<BeerStyleGuide[]> {}
 
 // Brew Session API types
-export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {}
+export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {
+  brew_sessions: BrewSession[];
+  pagination: {
+    page: number;
+    pages: number;
+    per_page: number;
+    total: number;
+    has_prev: boolean;
+    has_next: boolean;
+    prev_num?: number;
+    next_num?: number;
+  };
+}
 
 export interface BrewSessionResponse extends ApiResponse<BrewSession> {}
 

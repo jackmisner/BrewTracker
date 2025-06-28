@@ -83,123 +83,97 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 - **Ingredients**: Auto-seeded from `backend/data/brewtracker.ingredients.json` on first run
 - **Beer styles**: Auto-seeded from `backend/data/beer_style_guides.json` on first run
 
-## TypeScript Migration Progress
+## CI/CD and Quality Assurance
 
-### Overview
+### Frontend CI Pipeline (`.github/workflows/frontend-ci.yml`)
 
-The frontend is being gradually migrated from JavaScript to TypeScript for better type safety and developer experience. Migration strategy uses backward-compatible wrappers to ensure no breaking changes during the transition.
+- **Node.js 22** with npm caching
+- **TypeScript Compilation**: `npx tsc --noEmit` for type checking
+- **Testing**: Jest with React Testing Library (1,314 tests)
+- **Coverage**: 70% threshold with TypeScript file inclusion
+- **Build Verification**: Production build testing
+- **Codecov Integration**: Automated coverage reporting
 
-### Completed Phases
+### Backend CI Pipeline (`.github/workflows/backend-ci.yml`)
 
-#### ✅ Phase 1: Foundation Setup (COMPLETED)
+- **Python 3.13** with pip caching and MongoDB 7.0 service
+- **Code Quality Checks**:
+  - **Black**: Code formatting verification
+  - **isort**: Import sorting with Black-compatible configuration (`.isort.cfg`)
+  - **flake8**: Critical linting (syntax errors, undefined names)
+- **Testing**: pytest with mongomock (271 tests)
+- **Coverage**: 70% threshold with comprehensive reporting
+- **Codecov Integration**: Automated coverage reporting
 
-- **TypeScript Configuration**: `frontend/tsconfig.json` with strict settings and path mapping
-- **Comprehensive Type Definitions**: 8 type definition files covering the entire domain
-  - `frontend/src/types/recipe.ts` - Recipe and ingredient interfaces (15+ types)
-  - `frontend/src/types/api.ts` - Complete API request/response types
-  - `frontend/src/types/beer-styles.ts` - Beer style guide and analysis types
-  - `frontend/src/types/units.ts` - Unit system and conversion types
-  - `frontend/src/types/user.ts` - User account and authentication types
-  - `frontend/src/types/brew-session.ts` - Fermentation tracking types
-  - `frontend/src/types/metrics.ts` - Recipe calculation types
-  - `frontend/src/types/common.ts` - Base interfaces and utilities
+### Quality Tooling
 
-#### ✅ Phase 2A: API Service Migration (COMPLETED)
+- **TypeScript**: Strict configuration with comprehensive type checking
+- **Jest**: Modern testing framework with React Testing Library
+- **Black + isort**: Automated Python code formatting and import organization
+- **ESLint**: JavaScript/TypeScript linting (React app configuration)
+- **Git Hooks**: Pre-commit quality checks (when configured)
 
-- **File**: `frontend/src/services/api.js` → `frontend/src/services/api.ts`
-- **Result**: Fully typed API service with type-safe request/response handling
-- **Features**: Axios integration with TypeScript, JWT token management, error handling
+### Branch Strategy
 
-#### ✅ Phase 2B: Utility Functions Migration (COMPLETED)
+- **Main Branch**: Production-ready code
+- **Develop Branch**: Integration branch for features
+- **CI Triggers**: Push and PR events for both main and develop branches
+- **Path-based Triggers**: Frontend/backend CI only runs when relevant files change
 
-- **File**: `frontend/src/utils/formatUtils.js` → `frontend/src/utils/formatUtils-ts.ts`
-- **Result**: Type-safe formatting and unit conversion utilities
-- **Features**: Proper null/undefined handling, backward compatibility wrapper
+## Development Best Practices
 
-#### ✅ Phase 2C: Context Migration (COMPLETED)
+### Code Quality Standards
 
-- **File**: `frontend/src/contexts/UnitContext.js` → `frontend/src/contexts/UnitContext.ts`
-- **Result**: Fully typed unit conversion context with comprehensive interfaces
-- **Features**: Type-safe unit conversions, measurement types, batch scaling
+- **TypeScript**: Use strict type checking for all new frontend code
+- **Testing**: Maintain test coverage above 70% threshold
+- **Formatting**: Backend code must pass Black, isort, and flake8 checks
+- **Type Safety**: All new services should have comprehensive TypeScript interfaces
 
-#### ✅ Phase 2D: Core Hooks Migration (COMPLETED)
+### Git Workflow
 
-- **File**: `frontend/src/hooks/useRecipeBuilder.js` → `frontend/src/hooks/useRecipeBuilder.ts`
-- **Result**: Complex recipe state management hook with full type safety
-- **Features**: Async operations, ingredient management, metric calculations, beer style analysis
+- **Branch Protection**: All code must pass CI checks before merging
+- **Quality Gates**: TypeScript compilation, test coverage, and linting must pass
+- **Semantic Commits**: Use descriptive commit messages
+- **PR Requirements**: All changes require passing frontend and backend CI
 
-#### ✅ Phase 2E: Utility Components Migration (COMPLETED)
+### New Feature Development
 
-- **File**: `frontend/src/components/SearchableSelect.js` → `frontend/src/components/SearchableSelect.ts`
-- **Result**: Type-safe fuzzy search component with Fuse.js integration
-- **Features**: Generic component, keyboard navigation, search highlighting, accessibility
+1. **Frontend**: Create TypeScript files (.ts/.tsx) for new components/services
+2. **Backend**: Follow Black/isort formatting standards
+3. **Testing**: Add comprehensive tests for new functionality
+4. **Types**: Define proper TypeScript interfaces before implementation
+5. **Documentation**: Update CLAUDE.md for significant architectural changes
 
-#### ✅ Phase 2F: Complex Pages Migration (COMPLETED)
+# Important Instruction Reminders
 
-- **File**: `frontend/src/pages/RecipeBuilder.js` → `frontend/src/pages/RecipeBuilder.tsx`
-- **Result**: Main recipe building page with full type safety and hook integration
-- **Features**: BeerXML import/export, complex UI orchestration, service integration
+## Core Principles
 
-#### ✅ Phase 2G: Complete Service Layer Migration (COMPLETED)
+- Do what has been asked; nothing more, nothing less
+- NEVER create files unless they're absolutely necessary for achieving your goal
+- ALWAYS prefer editing an existing file to creating a new one
+- NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User
 
-- **All Services Migrated**: Complete TypeScript migration of entire service layer
-- **Core Services**: IngredientService, RecipeService, MetricService, BrewSessionService, BeerStyleService
-- **BeerXML Services**: BeerXMLService, IngredientMatchingService
-- **Utility Services**: CacheManager, RecipeDefaultsService, UserSettingsService
-- **Service Index**: Centralized service exports with health checking
-- **Features**: Full type safety, backward compatibility, enhanced business logic, singleton patterns
+## Test Failure Resolution Protocol
 
-### Critical Issues Resolved
+When tests are failing, systematically analyze each failure and apply this decision framework:
 
-1. **Authentication Fix**: Changed API URL from `localhost:5000` to `127.0.0.1:5000` to avoid Apple AirTunes port conflicts
-2. **TypeScript Compatibility**: Downgraded TypeScript to 4.9.5 for React Scripts 5.0.1 compatibility
-3. **Circular Import Fix**: Corrected API service wrapper import path from `'./api'` to `'./api.ts'`
+### 1. Determine Root Cause
 
-### Current Status
+- **Mock Data Issues**: Check if test mocks match actual API response structure
+- **Type Mismatches**: Verify data types align between component and test expectations
+- **Component Behavior**: Assess if component logic matches test assumptions
 
-- ✅ **Working**: React app compiles and runs successfully
-- ✅ **Authentication**: Login/logout functionality working properly
-- ✅ **Type Safety**: All migrated components have full TypeScript coverage
-- ✅ **Backward Compatibility**: JavaScript components continue working with TypeScript services
+### 2. Apply Fix Strategy
 
-### Next Phases (READY TO START)
+- **Update Tests When**: Component behavior is correct but tests have outdated expectations
+- **Fix Implementation When**: Tests represent better design patterns or API standards
+- **Examples of Implementation Fixes**:
+  - Filtering out empty form fields instead of sending `undefined` values
+  - Using `null` vs `undefined` for consistent API communication
+  - Proper data transformation and validation
 
-- **Phase 3A**: Component Migration Phase
-  - 🔄 High-priority components: RecipeCard, Dashboard, BrewSessions
-  - 🔄 Form components: RecipeForm, IngredientForm, UserSettingsForm
-  - 🔄 Layout components: Navigation, Header, Footer
-- **Phase 3B**: Page Migration Phase
-  - 🔄 User pages: Dashboard, Profile, Settings
-  - 🔄 Recipe pages: RecipeList, RecipeDetail, PublicRecipes
-  - 🔄 Session pages: BrewSessions, SessionDetail
-- **Phase 4**: Polish and optimization phase
-  - Remove remaining JavaScript wrappers
-  - Optimize type definitions
-  - Add stricter typing where beneficial
-  - Performance optimizations
+### 3. Ensure Consistency
 
-### Environment Setup for TypeScript Migration
-
-When resuming TypeScript migration work:
-
-1. **Start React app**: `cd frontend && REACT_APP_API_URL=http://127.0.0.1:5000/api npm start`
-   - **Important**: Use `127.0.0.1` instead of `localhost` to avoid AirTunes conflicts
-2. **Start backend**: `cd backend && flask run`
-
-### Migration Pattern
-
-Each file follows this pattern:
-
-1. Create TypeScript version with `.ts` extension
-2. Add comprehensive type definitions using existing types
-3. Update JavaScript file to re-export from TypeScript version
-4. Test compilation and runtime functionality
-5. Ensure backward compatibility maintained
-
-### Key Technical Decisions
-
-- **TypeScript Version**: 4.9.5 (React Scripts compatibility)
-- **Migration Strategy**: Gradual with backward compatibility wrappers
-- **Type Coverage**: Comprehensive interfaces for all business logic
-- **Path Mapping**: Clean imports using `@/components`, `@/types`, etc.
-- **API Integration**: Fully typed axios service layer
+- Apply similar patterns across related components for uniformity
+- Maintain backward compatibility when possible
+- Document significant behavior changes in commit messages

@@ -82,6 +82,7 @@ describe("RecipeCard", () => {
     averageRating: 4.2,
     mostRelevant: {
       session_id: "session-123",
+      status: "fermenting",
       formattedStatus: "Fermenting",
       statusColor: "#f59e0b",
       brew_date: new Date("2024-02-01"),
@@ -215,7 +216,7 @@ describe("RecipeCard", () => {
       expect(screen.getByText("1 active")).toBeInTheDocument();
       expect(screen.getByText("4.2★")).toBeInTheDocument();
       expect(screen.getByText("Latest:")).toBeInTheDocument();
-      expect(screen.getByText("Fermenting")).toBeInTheDocument();
+      expect(screen.getByText("FERMENTING")).toBeInTheDocument();
     });
   });
 

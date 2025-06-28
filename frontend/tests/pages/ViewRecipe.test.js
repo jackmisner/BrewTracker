@@ -655,7 +655,10 @@ describe("ViewRecipe", () => {
         renderWithProviders(<ViewRecipe />);
       });
 
-      expect(RecipeService.fetchRecipe).toHaveBeenCalledWith(undefined);
+      // Should not call fetchRecipe when recipeId is missing
+      expect(RecipeService.fetchRecipe).not.toHaveBeenCalled();
+      // Should show loading state indefinitely or navigate away
+      expect(screen.getByText("Loading recipe...")).toBeInTheDocument();
     });
 
     it("handles brew session date formatting edge cases", async () => {

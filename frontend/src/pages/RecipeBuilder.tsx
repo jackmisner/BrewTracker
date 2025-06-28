@@ -396,7 +396,6 @@ function RecipeBuilder(): React.ReactElement {
           React.createElement(BeerXMLImportExport, {
             recipe: recipe,
             ingredients: ingredients,
-            availableIngredients: availableIngredients,
             onImport: handleBeerXMLImport,
             onExport: handleBeerXMLExport,
             mode: "both" as const,

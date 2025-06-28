@@ -88,10 +88,10 @@ export interface UpdateBrewSessionFormData extends Partial<CreateBrewSessionForm
 
 // Fermentation entry form data
 export interface FermentationEntryFormData {
-  temperature?: number;
-  gravity?: number;
-  ph?: number;
-  notes?: string;
+  temperature?: number | null;
+  gravity?: number | null;
+  ph?: number | null;
+  notes?: string | null;
 }
 
 // Brew session with populated recipe data
@@ -210,6 +210,33 @@ export interface BrewSessionFilters {
   };
   has_notes?: boolean;
   has_fermentation_data?: boolean;
+}
+
+// Brew session summary (for recipe cards and dashboard)
+export interface BrewSessionSummary {
+  total: number;
+  active: number;
+  completed: number;
+  mostRecent: BrewSession | null;
+  mostRelevant: BrewSession | null;
+  averageRating: number | null;
+  averageABV: number | null;
+  successRate: number | null;
+}
+
+// Extended brew session with computed display properties
+export interface ProcessedBrewSession extends BrewSession {
+  displayName: string;
+  formattedStatus: string;
+  statusColor: string;
+  duration: number | null;
+  isActive: boolean;
+}
+
+// Extension to BrewSession for UI display properties
+export interface BrewSessionWithDisplay extends BrewSession {
+  statusColor?: string;
+  formattedStatus?: string;
 }
 
 // Brew session statistics for dashboard
