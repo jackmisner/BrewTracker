@@ -1,18 +1,42 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Services } from "../../services";
+import { RecipeIngredient, IngredientType } from "../../types";
 
-function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
-  const { unitSystem, formatValue, convertForDisplay } = useUnits();
+interface IngredientsListProps {
+  ingredients: RecipeIngredient[];
+  onRemove: (ingredientId: string) => void;
+  onUpdate: (ingredientId: string, updatedIngredient: RecipeIngredient) => Promise<void>;
+  isEditing: boolean;
+}
+
+interface EditingCell {
+  ingredientId: string | null;
+  field: string | null;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  value?: any;
+}
+
+const IngredientsList: React.FC<IngredientsListProps> = ({ 
+  ingredients, 
+  onRemove, 
+  onUpdate, 
+  isEditing 
+}) => {
+  const { formatValue } = useUnits();
 
   // State for tracking which cell is being edited
-  const [editingCell, setEditingCell] = useState({
+  const [editingCell, setEditingCell] = useState<EditingCell>({
     ingredientId: null,
     field: null,
   });
-  const [editValue, setEditValue] = useState("");
-  const [validationError, setValidationError] = useState("");
-  const inputRef = useRef(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [validationError, setValidationError] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
 
   // Sort ingredients using the centralized service method
   const sortedIngredients = useMemo(() => {
@@ -25,7 +49,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     if (editingCell.ingredientId && inputRef.current) {
       inputRef.current.focus();
       // Only call select() on input elements that support it
-      if (typeof inputRef.current.select === "function") {
+      if (inputRef.current instanceof HTMLInputElement && typeof inputRef.current.select === "function") {
         inputRef.current.select();
       }
     }
@@ -41,8 +65,8 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   }
 
   // Determine if a field should be editable for a given ingredient type
-  const isFieldEditable = (ingredientType, field) => {
-    const editableFields = {
+  const isFieldEditable = (ingredientType: IngredientType, field: string): boolean => {
+    const editableFields: Record<IngredientType | "adjunct", string[]> = {
       grain: ["amount", "color"],
       hop: ["amount", "use", "time", "alpha_acid"],
       yeast: ["amount"],
@@ -54,8 +78,8 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Start editing a cell
-  const startEdit = (ingredientId, field, currentValue) => {
-    if (!isEditing) return; // Only allow editing when in edit mode
+  const startEdit = (ingredientId: string, field: string, currentValue: any): void => {
+    if (!isEditing || !ingredientId) return; // Only allow editing when in edit mode and ID exists
 
     // Find the ingredient to check if field is editable
     const ingredient = ingredients.find((ing) => ing.id === ingredientId);
@@ -64,20 +88,22 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     }
 
     setEditingCell({ ingredientId, field });
-    setEditValue(currentValue);
+    setEditValue(currentValue?.toString() || "");
     setValidationError("");
   };
 
   // Cancel editing
-  const cancelEdit = () => {
+  const cancelEdit = (): void => {
     setEditingCell({ ingredientId: null, field: null });
     setEditValue("");
     setValidationError("");
   };
 
   // Save the edited value
-  const saveEdit = async () => {
+  const saveEdit = async (): Promise<void> => {
     const { ingredientId, field } = editingCell;
+    if (!ingredientId || !field) return;
+    
     const ingredient = ingredients.find((ing) => ing.id === ingredientId);
 
     if (!ingredient) {
@@ -88,12 +114,12 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     // Validate the new value
     const validation = validateField(field, editValue, ingredient);
     if (!validation.isValid) {
-      setValidationError(validation.error);
+      setValidationError(validation.error || "Invalid value");
       return;
     }
 
     // Prepare updated ingredient
-    const updatedIngredient = {
+    const updatedIngredient: RecipeIngredient = {
       ...ingredient,
       [field]: validation.value,
     };
@@ -107,7 +133,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Validate field value based on type
-  const validateField = (field, value, ingredient) => {
+  const validateField = (field: string, value: string, ingredient: RecipeIngredient): ValidationResult => {
     // Check if this field should be editable for this ingredient type
     if (!isFieldEditable(ingredient.type, field)) {
       return {
@@ -212,7 +238,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
         return { isValid: true, value: color };
 
       case "use":
-        const validUses = {
+        const validUses: Record<string, string[]> = {
           hop: ["boil", "whirlpool", "dry-hop"],
           other: [
             "boil",
@@ -239,7 +265,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Handle key press in edit input
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent): void => {
     if (e.key === "Enter") {
       saveEdit();
     } else if (e.key === "Escape") {
@@ -249,16 +275,16 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
 
   // Render editable cell
   const renderEditableCell = (
-    ingredient,
-    field,
-    currentValue,
-    displayValue
-  ) => {
-    const isEditing =
-      editingCell.ingredientId === ingredient.id && editingCell.field === field;
+    ingredient: RecipeIngredient,
+    field: string,
+    currentValue: any,
+    displayValue: React.ReactNode
+  ): React.ReactNode => {
+    const isEditingThisCell =
+      editingCell.ingredientId === ingredient.id && editingCell.field === field && ingredient.id;
     const fieldIsEditable = isFieldEditable(ingredient.type, field);
 
-    if (!isEditing) {
+    if (!isEditingThisCell) {
       if (!fieldIsEditable) {
         // Return non-editable display for fields that shouldn't be editable
         return <span className="non-editable-cell">{displayValue}</span>;
@@ -267,7 +293,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
       return (
         <span
           className="editable-cell"
-          onClick={() => startEdit(ingredient.id, field, currentValue)}
+          onClick={() => ingredient.id && startEdit(ingredient.id, field, currentValue)}
           title="Click to edit"
         >
           {displayValue}
@@ -292,7 +318,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
       return (
         <div className="edit-cell-container">
           <select
-            ref={inputRef}
+            ref={inputRef as React.RefObject<HTMLSelectElement>}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={saveEdit}
@@ -322,7 +348,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     return (
       <div className="edit-cell-container">
         <input
-          ref={inputRef}
+          ref={inputRef as React.RefObject<HTMLInputElement>}
           type={inputType}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
@@ -337,7 +363,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     );
   };
 
-  const mapGrainType = (type) => {
+  const mapGrainType = (type: string): string => {
     if (!type) return "Unknown";
     switch (type) {
       case "base_malt":
@@ -358,8 +384,8 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Format ingredient amount with unit-aware display
-  const formatIngredientAmount = (ingredient) => {
-    const amount = parseFloat(ingredient.amount);
+  const formatIngredientAmount = (ingredient: RecipeIngredient): string => {
+    const amount = parseFloat(ingredient.amount.toString());
     const unit = ingredient.unit;
 
     if (isNaN(amount)) return "0 " + unit;
@@ -368,18 +394,18 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
     let measurementType = "weight";
     if (ingredient.type === "hop") {
       measurementType = "hop_weight";
-    } else if (ingredient.type === "other" || ingredient.type === "adjunct") {
+    } else if (ingredient.type === "other" ) {
       measurementType = "other";
     }
 
-    return formatValue(amount, unit, measurementType);
+    return formatValue(amount, unit, measurementType as any);
   };
 
   // Format time display with appropriate units
-  const formatTime = (ingredient) => {
+  const formatTime = (ingredient: RecipeIngredient): string => {
     if (!ingredient.time) return "-";
 
-    const time = parseInt(ingredient.time);
+    const time = parseInt(ingredient.time.toString());
     const timeUnit = ingredient.time_unit || "min";
 
     if (time === 0) return "-";
@@ -396,7 +422,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Get usage display text
-  const formatUsage = (ingredient) => {
+  const formatUsage = (ingredient: RecipeIngredient): string => {
     if (!ingredient.use) return "-";
 
     const use = ingredient.use.toLowerCase();
@@ -421,12 +447,12 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
   };
 
   // Get row styling based on ingredient type
-  const getRowClass = (ingredient) => {
+  const getRowClass = (ingredient: RecipeIngredient): string => {
     let baseClass = "ingredient-row";
 
     if (ingredient.type === "grain") {
       baseClass += " grain-row";
-      if (ingredient.grain_type === "base_malt") {
+      if ((ingredient as any).grain_type === "base_malt") {
         baseClass += " base-malt-row";
       }
     } else if (ingredient.type === "hop") {
@@ -478,19 +504,19 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                 <td className="ingredient-name">
                   <div className="ingredient-name-container">
                     <strong>{ingredient.name}</strong>
-                    {ingredient.type === "grain" && ingredient.grain_type && (
+                    {ingredient.type === "grain" && (ingredient as any).grain_type && (
                       <div className="ingredient-subtype">
-                        {mapGrainType(ingredient.grain_type)}
+                        {mapGrainType((ingredient as any).grain_type)}
                       </div>
                     )}
-                    {ingredient.type === "hop" && ingredient.origin && (
+                    {ingredient.type === "hop" && (ingredient as any).origin && (
                       <div className="ingredient-origin">
-                        {ingredient.origin}
+                        {(ingredient as any).origin}
                       </div>
                     )}
-                    {ingredient.type === "yeast" && ingredient.manufacturer && (
+                    {ingredient.type === "yeast" && (ingredient as any).manufacturer && (
                       <div className="ingredient-manufacturer">
-                        {ingredient.manufacturer}
+                        {(ingredient as any).manufacturer}
                       </div>
                     )}
                   </div>
@@ -549,14 +575,14 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                             renderEditableCell(
                               ingredient,
                               "alpha_acid",
-                              ingredient.alpha_acid || "",
+                              (ingredient as any).alpha_acid || "",
                               <span className="detail-value">
-                                {ingredient.alpha_acid || "-"}%
+                                {(ingredient as any).alpha_acid || "-"}%
                               </span>
                             )
                           ) : (
                             <span className="detail-value">
-                              {ingredient.alpha_acid || "-"}%
+                              {(ingredient as any).alpha_acid || "-"}%
                             </span>
                           )}
                         </div>
@@ -568,24 +594,24 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                             renderEditableCell(
                               ingredient,
                               "color",
-                              ingredient.color || "",
+                              (ingredient as any).color || "",
                               <span className="detail-value">
-                                {ingredient.color || "-"}°L
+                                {(ingredient as any).color || "-"}°L
                               </span>
                             )
                           ) : (
                             <span className="detail-value">
-                              {ingredient.color || "-"}°L
+                              {(ingredient as any).color || "-"}°L
                             </span>
                           )}
                         </div>
                       )}
                       {ingredient.type === "yeast" &&
-                        ingredient.attenuation && (
+                        (ingredient as any).attenuation && (
                           <div className="detail-item">
                             <span className="detail-label">Attenuation:</span>
                             <span className="detail-value">
-                              {ingredient.attenuation}%
+                              {(ingredient as any).attenuation}%
                             </span>
                           </div>
                         )}
@@ -598,7 +624,7 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
                     <button
                       type="button"
                       className="ingredient-action remove-action"
-                      onClick={() => onRemove(ingredient.id)}
+                      onClick={() => ingredient.id && onRemove(ingredient.id)}
                       title="Remove ingredient"
                     >
                       Remove
@@ -624,6 +650,6 @@ function IngredientsList({ ingredients, onRemove, onUpdate, isEditing }) {
       )}
     </div>
   );
-}
+};
 
 export default IngredientsList;

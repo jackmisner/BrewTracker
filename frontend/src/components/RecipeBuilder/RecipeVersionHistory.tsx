@@ -1,21 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import ApiService from "../../services/api";
+import { ID } from "../../types";
 
-const RecipeVersionHistory = ({ recipeId, version, parentRecipeId }) => {
-  const [versionHistory, setVersionHistory] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface RecipeVersionHistoryProps {
+  recipeId: ID;
+  version: number;
+  parentRecipeId?: ID | null;
+}
+
+interface VersionHistoryData {
+  parent_recipe?: {
+    recipe_id: ID;
+    name: string;
+    version: number;
+  };
+  child_versions?: Array<{
+    recipe_id: ID;
+    name: string;
+    version: number;
+  }>;
+}
+
+const RecipeVersionHistory: React.FC<RecipeVersionHistoryProps> = ({ 
+  recipeId, 
+  version, 
+  parentRecipeId 
+}) => {
+  const [versionHistory, setVersionHistory] = useState<VersionHistoryData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!recipeId) return;
 
-    const fetchVersionHistory = async () => {
+    const fetchVersionHistory = async (): Promise<void> => {
       try {
         setLoading(true);
         const response = await ApiService.recipes.getVersionHistory(recipeId);
-        setVersionHistory(response.data);
-      } catch (err) {
+        setVersionHistory(response.data as VersionHistoryData);
+      } catch (err: any) {
         console.error("Error fetching version history:", err);
         setError("Failed to load version history");
       } finally {

@@ -2,8 +2,31 @@ import React from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Link } from "react-router";
 import BeerStyleSelector from "./BeerStyles/BeerStyleSelector";
+import { Recipe, RecipeMetrics } from "../../types";
 
-function RecipeDetails({
+interface RecipeDetailsProps {
+  recipe: Recipe;
+  onChange: (name: keyof Recipe, value: any) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onCancel: () => void;
+  isEditing: boolean;
+  saving: boolean;
+  canSave: boolean;
+  hasUnsavedChanges: boolean;
+  metrics?: RecipeMetrics;
+}
+
+interface BatchSizeProps {
+  unit: string;
+  abbrev: string;
+  min: string;
+  max: string;
+  step: string;
+  placeholder: string;
+  typical: string;
+}
+
+const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   recipe,
   onChange,
   onSubmit,
@@ -13,23 +36,22 @@ function RecipeDetails({
   canSave,
   hasUnsavedChanges,
   metrics,
-}) {
+}) => {
   const {
     unitSystem,
-    formatValue,
     getUnitSystemLabel,
     getUnitSystemIcon,
-    getTypicalBatchSizes,
   } = useUnits();
 
   if (!recipe) {
     return <div>Loading recipe details...</div>;
   }
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
-    let newValue;
+    let newValue: any;
     if (type === "checkbox") {
       newValue = checked;
     } else if (type === "number") {
@@ -39,10 +61,10 @@ function RecipeDetails({
     }
 
     // Call onChange with field name and new value
-    onChange(name, newValue);
+    onChange(name as keyof Recipe, newValue);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     onSubmit(e);
   };
@@ -57,7 +79,7 @@ function RecipeDetails({
   const recipeUnitSystem = batchSizeUnit === "l" ? "metric" : "imperial";
 
   // Get unit-specific properties based on the recipe's original unit system
-  const getBatchSizeProps = () => {
+  const getBatchSizeProps = (): BatchSizeProps => {
     if (batchSizeUnit === "l") {
       return {
         unit: "liters",
@@ -84,12 +106,12 @@ function RecipeDetails({
   const batchSizeProps = getBatchSizeProps();
 
   // Get efficiency guidance based on common practices
-  const getEfficiencyGuidance = () => {
+  const getEfficiencyGuidance = (): string => {
     return "Typical efficiency: 70-80% for all-grain, 85-90% for extract";
   };
 
   // Get boil time guidance
-  const getBoilTimeGuidance = () => {
+  const getBoilTimeGuidance = (): string => {
     return "Standard boil: 60 min, Short boil: 30 min, Extended: 90-120 min";
   };
 
@@ -127,14 +149,14 @@ function RecipeDetails({
           <BeerStyleSelector
             value={recipe.style}
             recipe={recipe}
-            onChange={(value) => onChange("style", value)}
+            onChange={(value: string) => onChange("style" as keyof Recipe, value)}
             placeholder="Select or search beer style..."
             showStyleInfo={true}
             disabled={saving}
-            metrics={metrics}
+            metrics={metrics || undefined}
             showSuggestions={true}
-            onStyleSuggestionSelect={(styleName) =>
-              onChange("style", styleName)
+            onStyleSuggestionSelect={(styleName: string) =>
+              onChange("style" as keyof Recipe, styleName)
             }
           />
         </div>
@@ -156,7 +178,7 @@ function RecipeDetails({
                 handleChange(e);
                 // Also update the batch_size_unit if needed
                 if (!recipe.batch_size_unit) {
-                  onChange("batch_size_unit", batchSizeUnit);
+                  onChange("batch_size_unit" as keyof Recipe, batchSizeUnit);
                 }
               }}
               className="form-control"
@@ -222,7 +244,7 @@ function RecipeDetails({
             value={recipe.description || ""}
             onChange={handleChange}
             className="form-control form-textarea"
-            rows="3"
+            rows={3}
             placeholder="Describe your recipe, inspiration, or other relevant details"
             disabled={saving}
           />
@@ -235,7 +257,7 @@ function RecipeDetails({
             value={recipe.notes || ""}
             onChange={handleChange}
             className="form-control form-textarea"
-            rows="3"
+            rows={3}
             placeholder="Special instructions, tips, or modifications"
             disabled={saving}
           />
@@ -324,6 +346,6 @@ function RecipeDetails({
       </form>
     </div>
   );
-}
+};
 
 export default RecipeDetails;

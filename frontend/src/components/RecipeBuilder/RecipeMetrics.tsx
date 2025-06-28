@@ -6,26 +6,41 @@ import {
   formatIbu,
   formatSrm,
   getSrmColour,
-  formatBatchSize,
 } from "../../utils/formatUtils";
+import { Recipe, RecipeMetrics as RecipeMetricsType } from "../../types";
 
-function RecipeMetrics({
+interface RecipeMetricsProps {
+  metrics: RecipeMetricsType;
+  onScale?: (volume: number) => void;
+  calculating?: boolean;
+  recipe: Recipe;
+  cardView?: boolean;
+}
+
+interface ScaleInputProps {
+  placeholder: string;
+  step: string;
+  min: string;
+  max: string;
+  unit: string;
+}
+
+const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
   metrics,
   onScale,
   calculating = false,
   recipe,
   cardView = false,
-}) {
-  const { unitSystem, formatValue, convertForDisplay, convertUnit } =
-    useUnits();
-  const [scaleVolume, setScaleVolume] = useState("");
+}) => {
+  const { unitSystem, formatValue, convertForDisplay, convertUnit } = useUnits();
+  const [scaleVolume, setScaleVolume] = useState<string>("");
 
-  const getBalanceRatio = () => {
+  const getBalanceRatio = (): number => {
     if (metrics.ibu === 0) return 0;
     return metrics.ibu / ((metrics.og - 1) * 1000) / 2;
   };
 
-  const getBalanceDescription = () => {
+  const getBalanceDescription = (): string => {
     const ratio = metrics.ibu / ((metrics.og - 1) * 1000);
 
     if (metrics.ibu === 0) return "Not calculated";
@@ -38,8 +53,8 @@ function RecipeMetrics({
     return "Very Hoppy";
   };
 
-  const handleScaleSubmit = () => {
-    if (scaleVolume && !isNaN(scaleVolume) && parseFloat(scaleVolume) > 0) {
+  const handleScaleSubmit = (): void => {
+    if (scaleVolume && !isNaN(Number(scaleVolume)) && parseFloat(scaleVolume) > 0 && onScale) {
       const enteredUnit = unitSystem === "metric" ? "l" : "gal";
       const recipeUnit = recipe.batch_size_unit || "gal";
 
@@ -82,7 +97,7 @@ function RecipeMetrics({
     : "balance-meter-container";
 
   // Get unit-specific placeholders and limits
-  const getScaleInputProps = () => {
+  const getScaleInputProps = (): ScaleInputProps => {
     if (unitSystem === "metric") {
       return {
         placeholder: "New batch size (L)",
@@ -105,7 +120,7 @@ function RecipeMetrics({
   const scaleInputProps = getScaleInputProps();
 
   // Get current batch size display
-  const getCurrentBatchDisplay = () => {
+  const getCurrentBatchDisplay = (): string => {
     if (!displayBatchSize) {
       return unitSystem === "metric" ? "19 L" : "5 gal";
     }
@@ -113,7 +128,7 @@ function RecipeMetrics({
   };
 
   // Get typical batch size examples
-  const getTypicalBatchSizes = () => {
+  const getTypicalBatchSizes = (): string => {
     if (unitSystem === "metric") {
       return "Typical: 10L (Small batch), 19L, 38L (Large batch)";
     } else {
@@ -251,5 +266,6 @@ function RecipeMetrics({
       )}
     </div>
   );
-}
+};
+
 export default RecipeMetrics;
