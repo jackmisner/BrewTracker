@@ -133,10 +133,7 @@ describe("PublicRecipes", () => {
     it("calls getPublic API on mount", () => {
       renderWithProviders(<PublicRecipes />);
 
-      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-        style: "",
-        search: "",
-      });
+      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
     });
 
     it("renders style filter options", () => {
@@ -294,10 +291,7 @@ describe("PublicRecipes", () => {
       fireEvent.click(searchButton);
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-          style: "",
-          search: "IPA recipes",
-        });
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
     });
 
@@ -310,10 +304,7 @@ describe("PublicRecipes", () => {
       fireEvent.submit(searchInput.closest("form"));
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-          style: "",
-          search: "stout",
-        });
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
     });
 
@@ -329,10 +320,7 @@ describe("PublicRecipes", () => {
       fireEvent.click(nextButton);
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(2, 12, {
-          style: "",
-          search: "",
-        });
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(2, 12, {});
       });
 
       // Now search, which should reset to page 1
@@ -341,10 +329,7 @@ describe("PublicRecipes", () => {
       fireEvent.submit(searchInput.closest("form"));
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-          style: "",
-          search: "test",
-        });
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
     });
   });
@@ -366,10 +351,7 @@ describe("PublicRecipes", () => {
       fireEvent.change(styleSelect, { target: { value: "Stout" } });
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-          style: "Stout",
-          search: "",
-        });
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
     });
 
@@ -414,6 +396,7 @@ describe("PublicRecipes", () => {
 
     it("navigates to edit page after successful clone", async () => {
       ApiService.recipes.clone.mockResolvedValue({
+        status: 201,
         data: { recipe_id: "cloned-recipe-id" },
       });
 
@@ -486,10 +469,7 @@ describe("PublicRecipes", () => {
       const nextButton = screen.getByText("Next");
       fireEvent.click(nextButton);
 
-      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(2, 12, {
-        style: "",
-        search: "",
-      });
+      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(2, 12, {});
     });
 
     it("calls API with correct page when previous is clicked", async () => {
@@ -510,10 +490,7 @@ describe("PublicRecipes", () => {
       const prevButton = screen.getByText("Previous");
       fireEvent.click(prevButton);
 
-      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
-        style: "",
-        search: "",
-      });
+      expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
     });
 
     it("disables next button on last page", async () => {

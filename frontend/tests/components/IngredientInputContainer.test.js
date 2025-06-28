@@ -227,7 +227,10 @@ describe("IngredientInputsContainer", () => {
     addButton.click();
 
     expect(defaultProps.addIngredient).toHaveBeenCalledWith("grain", {
-      test: "data",
+      ingredient_id: undefined,
+      amount: undefined,
+      unit: undefined,
+      color: undefined,
     });
   });
 
@@ -238,7 +241,12 @@ describe("IngredientInputsContainer", () => {
     addButton.click();
 
     expect(defaultProps.addIngredient).toHaveBeenCalledWith("hop", {
-      test: "data",
+      ingredient_id: undefined,
+      amount: undefined,
+      unit: undefined,
+      use: undefined,
+      time: undefined,
+      alpha_acid: undefined,
     });
   });
 
@@ -249,7 +257,9 @@ describe("IngredientInputsContainer", () => {
     addButton.click();
 
     expect(defaultProps.addIngredient).toHaveBeenCalledWith("yeast", {
-      test: "data",
+      ingredient_id: undefined,
+      amount: undefined,
+      unit: undefined,
     });
   });
 
@@ -260,7 +270,9 @@ describe("IngredientInputsContainer", () => {
     addButton.click();
 
     expect(defaultProps.addIngredient).toHaveBeenCalledWith("other", {
-      test: "data",
+      ingredient_id: undefined,
+      amount: undefined,
+      unit: undefined,
     });
   });
 

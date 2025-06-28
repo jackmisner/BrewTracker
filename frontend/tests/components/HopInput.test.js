@@ -319,9 +319,9 @@ describe("HopInput", () => {
         ingredient_id: "hop-1",
         amount: "1",
         unit: "oz",
-        alpha_acid: 5.5,
+        alpha_acid: "5.5",
         use: "boil",
-        time: "60",
+        time: 60,
         time_unit: "minutes",
       });
     });

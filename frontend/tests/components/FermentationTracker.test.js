@@ -2,7 +2,7 @@ import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import FermentationTracker from "../../src/components/BrewSessions/FermentationTracker";
 import ApiService from "../../src/services/api";
-import { renderWithProviders, mockData } from "../testUtils";
+import { renderWithProviders } from "../testUtils";
 
 // Mock the CSS import
 jest.mock("../../src/styles/BrewSessions.css", () => ({}));
@@ -128,10 +128,10 @@ describe("FermentationTracker", () => {
 
     // Default successful API responses
     ApiService.brewSessions.getFermentationData.mockResolvedValue({
-      data: mockFermentationData,
+      data: { data: mockFermentationData },
     });
     ApiService.brewSessions.getFermentationStats.mockResolvedValue({
-      data: mockStats,
+      data: { data: mockStats },
     });
     ApiService.brewSessions.addFermentationEntry.mockResolvedValue({
       data: { success: true },
@@ -873,7 +873,7 @@ describe("FermentationTracker", () => {
     it("should calculate and set FG when gravity stabilizes", async () => {
       // Mock data with two entries where the last one is close to what we'll add
       ApiService.brewSessions.getFermentationData.mockResolvedValue({
-        data: [
+        data: { data: [
           {
             entry_date: "2024-06-01T10:00:00Z",
             gravity: 1.055, // Initial OG
@@ -888,7 +888,7 @@ describe("FermentationTracker", () => {
             ph: 4.0,
             notes: "Previous reading",
           },
-        ],
+        ] },
       });
 
       // Mock a successful add that returns updated data
@@ -1007,7 +1007,7 @@ describe("FermentationTracker", () => {
       ];
 
       ApiService.brewSessions.getFermentationData.mockResolvedValue({
-        data: sparseData,
+        data: { data: sparseData },
       });
 
       renderWithProviders(<FermentationTracker {...defaultProps} />);
@@ -1079,9 +1079,9 @@ describe("FermentationTracker", () => {
           "test-session-id",
           expect.objectContaining({
             gravity: 1.05,
-            temperature: null,
-            ph: null,
-            notes: null,
+            temperature: undefined,
+            ph: undefined,
+            notes: undefined,
             entry_date: expect.any(String),
           })
         );
@@ -1146,6 +1146,18 @@ describe("FermentationTracker", () => {
     });
 
     it("should refresh data after successful deletion", async () => {
+      // Reset mocks specifically for this test
+      jest.clearAllMocks();
+      ApiService.brewSessions.getFermentationData.mockResolvedValue({
+        data: { data: mockFermentationData },
+      });
+      ApiService.brewSessions.getFermentationStats.mockResolvedValue({
+        data: { data: mockStats },
+      });
+      ApiService.brewSessions.deleteFermentationEntry.mockResolvedValue({
+        data: { success: true },
+      });
+      
       renderWithProviders(<FermentationTracker {...defaultProps} />);
 
       // Wait for initial load and verify data table is shown
@@ -1154,6 +1166,11 @@ describe("FermentationTracker", () => {
           ApiService.brewSessions.getFermentationData
         ).toHaveBeenCalledTimes(1);
         expect(screen.getByText("Fermentation Data Log")).toBeInTheDocument();
+      });
+
+      // Wait for data to be loaded and table to be rendered
+      await waitFor(() => {
+        expect(screen.getByText("Initial reading")).toBeInTheDocument();
       });
 
       // Delete entry

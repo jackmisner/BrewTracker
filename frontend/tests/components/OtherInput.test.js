@@ -298,7 +298,7 @@ describe("OtherInput", () => {
         amount: "1",
         unit: "oz",
         use: "boil",
-        time: "15",
+        time: 15,
       });
     });
   });
