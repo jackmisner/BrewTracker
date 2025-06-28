@@ -10,31 +10,82 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ApiService from "../../services/api";
+import { 
+  FermentationEntry, 
+  BrewSession, 
+  Recipe,
+  ID 
+} from "../../types";
 import "../../styles/BrewSessions.css";
 
-const FermentationTracker = ({
+interface FermentationTrackerProps {
+  sessionId: ID;
+  recipeData?: Partial<Recipe>;
+  sessionData?: Partial<BrewSession>;
+  onUpdateSession?: (updateData: Partial<BrewSession>) => void;
+}
+
+interface FormData {
+  gravity: string;
+  temperature: string;
+  ph: string;
+  notes: string;
+}
+
+interface ChartData {
+  date: string;
+  gravity: number | null;
+  temperature: number | null;
+  ph: number | null;
+}
+
+interface FermentationStatsWithDefaults {
+  duration_days?: number;
+  gravity_drop?: number;
+  average_temperature?: number;
+  current_attenuation?: number;
+  projected_fg?: number;
+  gravity?: {
+    initial: number | null;
+    current: number | null;
+    drop: number | null;
+    attenuation: number | null;
+  };
+  temperature?: {
+    min: number | null;
+    max: number | null;
+    avg: number | null;
+  };
+  ph?: {
+    min: number | null;
+    max: number | null;
+    avg: number | null;
+    data: number[];
+  };
+}
+
+const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   sessionId,
   recipeData = {},
   sessionData = {},
   onUpdateSession,
 }) => {
-  const [fermentationData, setFermentationData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [stats, setStats] = useState(null);
-  const [formData, setFormData] = useState({
+  const [fermentationData, setFermentationData] = useState<FermentationEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [stats, setStats] = useState<FermentationStatsWithDefaults | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     gravity: "",
     temperature: "",
     ph: "",
     notes: "",
   });
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [initialOGSet, setInitialOGSet] = useState(false);
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [initialOGSet, setInitialOGSet] = useState<boolean>(false);
 
   // Fetch fermentation data
-
-  const fetchFermentationData = useCallback(async () => {
+  const fetchFermentationData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(""); // Clear any existing errors
@@ -43,16 +94,21 @@ const FermentationTracker = ({
       const response = await ApiService.brewSessions.getFermentationData(
         sessionId
       );
-      setFermentationData(response.data || []);
+      setFermentationData(response.data.data || []);
 
       // Fetch fermentation statistics
       try {
         const statsResponse =
           await ApiService.brewSessions.getFermentationStats(sessionId);
-        if (statsResponse.data) {
-          setStats(statsResponse.data);
+        if (statsResponse.data.data) {
+          setStats(statsResponse.data.data);
         } else {
           setStats({
+            duration_days: 0,
+            gravity_drop: 0,
+            average_temperature: 0,
+            current_attenuation: 0,
+            projected_fg: 0,
             gravity: {
               initial: null,
               current: null,
@@ -76,6 +132,11 @@ const FermentationTracker = ({
         console.warn("Error fetching fermentation stats:", statsErr);
         // Don't set error for stats failure, just use default empty stats
         setStats({
+          duration_days: 0,
+          gravity_drop: 0,
+          average_temperature: 0,
+          current_attenuation: 0,
+          projected_fg: 0,
           gravity: {
             initial: null,
             current: null,
@@ -86,7 +147,7 @@ const FermentationTracker = ({
           ph: { min: null, max: null, avg: null, data: [] },
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching fermentation data:", err);
 
       // Handle different types of errors more gracefully
@@ -125,14 +186,14 @@ const FermentationTracker = ({
     ) {
       setFormData((prev) => ({
         ...prev,
-        gravity: sessionData.actual_og,
+        gravity: sessionData.actual_og!.toString(),
       }));
       setShowForm(true);
       setInitialOGSet(true);
     }
   }, [fermentationData, sessionData, initialOGSet, loading]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -140,25 +201,25 @@ const FermentationTracker = ({
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     try {
       setSubmitting(true);
 
-      // Format data for submission
+      // Format data for submission  
       const entry = {
-        gravity: formData.gravity ? parseFloat(formData.gravity) : null,
+        gravity: formData.gravity ? parseFloat(formData.gravity) : undefined,
         temperature: formData.temperature
           ? parseFloat(formData.temperature)
-          : null,
-        ph: formData.ph ? parseFloat(formData.ph) : null,
-        notes: formData.notes || null,
+          : undefined,
+        ph: formData.ph ? parseFloat(formData.ph) : undefined,
+        notes: formData.notes || undefined,
         entry_date: new Date().toISOString(),
       };
 
       // Submit data
-      const response = await ApiService.brewSessions.addFermentationEntry(
+      await ApiService.brewSessions.addFermentationEntry(
         sessionId,
         entry
       );
@@ -167,7 +228,7 @@ const FermentationTracker = ({
       if (fermentationData.length === 0 && entry.gravity) {
         // If this is the first entry and the session doesn't have an OG, update it
         if (!sessionData.actual_og) {
-          const sessionUpdateData = {
+          const sessionUpdateData: Partial<BrewSession> = {
             actual_og: entry.gravity,
           };
 
@@ -196,7 +257,7 @@ const FermentationTracker = ({
             lastEntry.gravity &&
             Math.abs(lastEntry.gravity - entry.gravity) <= 0.001
           ) {
-            const sessionUpdateData = {
+            const sessionUpdateData: Partial<BrewSession> = {
               actual_fg: entry.gravity,
               actual_abv: (sessionData.actual_og - entry.gravity) * 131.25,
             };
@@ -224,7 +285,7 @@ const FermentationTracker = ({
 
       // Hide form after submit
       setShowForm(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error adding fermentation entry:", err);
       setError("Failed to add fermentation entry");
     } finally {
@@ -232,12 +293,12 @@ const FermentationTracker = ({
     }
   };
 
-  const handleDelete = async (index) => {
+  const handleDelete = async (index: number): Promise<void> => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
         await ApiService.brewSessions.deleteFermentationEntry(sessionId, index);
         fetchFermentationData(); // Refresh data
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error deleting fermentation entry:", err);
         setError("Failed to delete fermentation entry");
       }
@@ -245,23 +306,23 @@ const FermentationTracker = ({
   };
 
   // Format data for the chart
-  const formatChartData = () => {
+  const formatChartData = (): ChartData[] => {
     if (!fermentationData || fermentationData.length === 0) {
       return [];
     }
 
     return fermentationData.map((entry) => ({
       date: new Date(entry.entry_date).toLocaleDateString(),
-      gravity: entry.gravity,
-      temperature: entry.temperature,
-      ph: entry.ph,
+      gravity: entry.gravity || null,
+      temperature: entry.temperature || null,
+      ph: entry.ph || null,
     }));
   };
 
   const chartData = formatChartData();
 
   // Calculate attenuation if possible
-  const calculateAttenuation = () => {
+  const calculateAttenuation = (): string | null => {
     if (fermentationData.length < 2) {
       return null;
     }
@@ -277,8 +338,8 @@ const FermentationTracker = ({
     }
 
     const attenuation =
-      ((firstReading.gravity - lastReading.gravity) /
-        (firstReading.gravity - 1.0)) *
+      ((firstReading.gravity! - lastReading.gravity!) /
+        (firstReading.gravity! - 1.0)) *
       100;
     return attenuation.toFixed(1);
   };
@@ -362,12 +423,12 @@ const FermentationTracker = ({
               <textarea
                 id="notes"
                 name="notes"
-                rows="2"
+                rows={2}
                 placeholder="Any observations about the fermentation"
                 value={formData.notes}
                 onChange={handleChange}
                 className="fermentation-textarea"
-              ></textarea>
+              />
             </div>
             <div className="fermentation-form-actions">
               <button
@@ -402,7 +463,7 @@ const FermentationTracker = ({
             <div className="fermentation-stats">
               <div className="fermentation-stat-card">
                 <h3 className="fermentation-stat-title">Gravity</h3>
-                {stats.gravity.initial && (
+                {stats.gravity?.initial && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Initial:</span>
                     <span className="fermentation-stat-value">
@@ -410,7 +471,7 @@ const FermentationTracker = ({
                     </span>
                   </div>
                 )}
-                {stats.gravity.current && (
+                {stats.gravity?.current && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Current:</span>
                     <span className="fermentation-stat-value">
@@ -418,7 +479,7 @@ const FermentationTracker = ({
                     </span>
                   </div>
                 )}
-                {stats.gravity.drop && (
+                {stats.gravity?.drop && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Drop:</span>
                     <span className="fermentation-stat-value">
@@ -426,7 +487,7 @@ const FermentationTracker = ({
                     </span>
                   </div>
                 )}
-                {stats.gravity.attenuation && (
+                {stats.gravity?.attenuation && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">
                       Attenuation:
@@ -440,7 +501,7 @@ const FermentationTracker = ({
 
               <div className="fermentation-stat-card">
                 <h3 className="fermentation-stat-title">Temperature</h3>
-                {stats.temperature.min !== null && (
+                {stats.temperature?.min !== null && stats.temperature?.min !== undefined && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Min:</span>
                     <span className="fermentation-stat-value">
@@ -448,7 +509,7 @@ const FermentationTracker = ({
                     </span>
                   </div>
                 )}
-                {stats.temperature.max !== null && (
+                {stats.temperature?.max !== null && stats.temperature?.max !== undefined && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Max:</span>
                     <span className="fermentation-stat-value">
@@ -456,7 +517,7 @@ const FermentationTracker = ({
                     </span>
                   </div>
                 )}
-                {stats.temperature.avg !== null && (
+                {stats.temperature?.avg !== null && stats.temperature?.avg !== undefined && (
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Avg:</span>
                     <span className="fermentation-stat-value">
@@ -466,10 +527,10 @@ const FermentationTracker = ({
                 )}
               </div>
 
-              {stats.ph.data.length > 0 && (
+              {stats.ph?.data && stats.ph.data.length > 0 && (
                 <div className="fermentation-stat-card">
                   <h3 className="fermentation-stat-title">pH</h3>
-                  {stats.ph.min !== null && (
+                  {stats.ph?.min !== null && stats.ph?.min !== undefined && (
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Min:</span>
                       <span className="fermentation-stat-value">
@@ -477,7 +538,7 @@ const FermentationTracker = ({
                       </span>
                     </div>
                   )}
-                  {stats.ph.max !== null && (
+                  {stats.ph?.max !== null && stats.ph?.max !== undefined && (
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Max:</span>
                       <span className="fermentation-stat-value">
@@ -485,7 +546,7 @@ const FermentationTracker = ({
                       </span>
                     </div>
                   )}
-                  {stats.ph.avg !== null && (
+                  {stats.ph?.avg !== null && stats.ph?.avg !== undefined && (
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Avg:</span>
                       <span className="fermentation-stat-value">
@@ -558,7 +619,7 @@ const FermentationTracker = ({
                         {fermentationData[fermentationData.length - 1].gravity
                           ? fermentationData[
                               fermentationData.length - 1
-                            ].gravity.toFixed(3)
+                            ].gravity!.toFixed(3)
                           : "-"}
                       </div>
                     </div>

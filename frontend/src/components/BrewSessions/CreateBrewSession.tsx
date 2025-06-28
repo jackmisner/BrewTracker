@@ -3,19 +3,28 @@ import { useNavigate, useLocation } from "react-router";
 import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
+import { Recipe } from "../../types";
 import "../../styles/BrewSessions.css";
 
-const CreateBrewSession = () => {
+interface CreateBrewSessionFormData {
+  recipe_id: string | null;
+  name: string;
+  brew_date: string;
+  status: "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
+  notes: string;
+}
+
+const CreateBrewSession: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const recipeId = queryParams.get("recipeId");
 
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
-  const [recipe, setRecipe] = useState(null);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState<boolean>(true);
+  const [creating, setCreating] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [formData, setFormData] = useState<CreateBrewSessionFormData>({
     recipe_id: recipeId,
     name: "",
     brew_date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
@@ -26,7 +35,7 @@ const CreateBrewSession = () => {
   useEffect(() => {
     // If recipeId is provided, fetch the recipe details
     if (recipeId) {
-      const fetchRecipeData = async () => {
+      const fetchRecipeData = async (): Promise<void> => {
         try {
           setLoading(true);
           const recipeData = await RecipeService.fetchRecipe(recipeId);
@@ -37,7 +46,7 @@ const CreateBrewSession = () => {
             ...prev,
             name: `${recipeData.name} - ${new Date().toLocaleDateString()}`,
           }));
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error fetching recipe:", err);
           setError("Failed to load recipe details");
         } finally {
@@ -51,7 +60,7 @@ const CreateBrewSession = () => {
     }
   }, [recipeId]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -59,15 +68,21 @@ const CreateBrewSession = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     try {
       setCreating(true);
       setError("");
 
+      // Convert form data to session data, ensuring recipe_id is not null
+      const sessionData = {
+        ...formData,
+        recipe_id: formData.recipe_id || undefined,
+      };
+
       // Create the brew session using the service
-      const newSession = await BrewSessionService.createBrewSession(formData);
+      const newSession = await BrewSessionService.createBrewSession(sessionData);
 
       // Invalidate caches to update all related components
       invalidateBrewSessionCaches.onCreated({
@@ -77,7 +92,7 @@ const CreateBrewSession = () => {
 
       // Navigate to the newly created brew session
       navigate(`/brew-sessions/${newSession.session_id}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error creating brew session:", err);
       setError(
         err.message ||
@@ -88,6 +103,10 @@ const CreateBrewSession = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleErrorDismiss = (): void => {
+    setError("");
   };
 
   if (loading) {
@@ -122,7 +141,7 @@ const CreateBrewSession = () => {
         >
           {error}
           <button
-            onClick={() => setError("")}
+            onClick={handleErrorDismiss}
             style={{
               background: "none",
               border: "none",
@@ -229,7 +248,7 @@ const CreateBrewSession = () => {
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            rows="4"
+            rows={4}
             className="brew-session-form-control brew-session-form-textarea"
             disabled={creating}
           ></textarea>

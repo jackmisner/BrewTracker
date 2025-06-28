@@ -2,19 +2,36 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import BrewSessionService from "../../services/BrewSessionService";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
+import { BrewSession, BrewSessionStatus, UpdateBrewSessionFormData } from "../../types";
 import "../../styles/BrewSessions.css";
 
-const EditBrewSession = () => {
-  const { sessionId } = useParams();
+interface EditBrewSessionFormData {
+  name: string;
+  status: BrewSessionStatus;
+  brew_date: string;
+  mash_temp: string;
+  actual_og: string;
+  actual_fg: string;
+  actual_abv: string;
+  actual_efficiency: string;
+  fermentation_start_date: string;
+  fermentation_end_date: string;
+  packaging_date: string;
+  tasting_notes: string;
+  batch_rating: string;
+}
+
+const EditBrewSession: React.FC = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
 
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [session, setSession] = useState<BrewSession | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [formData, setFormData] = useState<EditBrewSessionFormData>({
     name: "",
-    status: "",
+    status: "planned",
     brew_date: "",
     mash_temp: "",
     actual_og: "",
@@ -29,18 +46,22 @@ const EditBrewSession = () => {
   });
 
   useEffect(() => {
-    const fetchSession = async () => {
+    const fetchSession = async (): Promise<void> => {
+      if (!sessionId) {
+        setError("Session ID is required");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
 
-        const sessionData = await BrewSessionService.fetchBrewSession(
-          sessionId
-        );
+        const sessionData = await BrewSessionService.fetchBrewSession(sessionId);
         setSession(sessionData);
 
         // Helper function to safely format date or return empty string for form display
-        const formatDateForForm = (dateString) => {
+        const formatDateForForm = (dateString?: string): string => {
           if (!dateString) return "";
           const date = new Date(dateString);
           return date.toISOString().split("T")[0];
@@ -50,11 +71,11 @@ const EditBrewSession = () => {
           name: sessionData.name || "",
           status: sessionData.status || "planned",
           brew_date: formatDateForForm(sessionData.brew_date),
-          mash_temp: sessionData.mash_temp || "",
-          actual_og: sessionData.actual_og || "",
-          actual_fg: sessionData.actual_fg || "",
-          actual_abv: sessionData.actual_abv || "",
-          actual_efficiency: sessionData.actual_efficiency || "",
+          mash_temp: sessionData.mash_temp?.toString() || "",
+          actual_og: sessionData.actual_og?.toString() || "",
+          actual_fg: sessionData.actual_fg?.toString() || "",
+          actual_abv: sessionData.actual_abv?.toString() || "",
+          actual_efficiency: sessionData.actual_efficiency?.toString() || "",
           fermentation_start_date: formatDateForForm(
             sessionData.fermentation_start_date
           ),
@@ -63,9 +84,9 @@ const EditBrewSession = () => {
           ),
           packaging_date: formatDateForForm(sessionData.packaging_date),
           tasting_notes: sessionData.tasting_notes || "",
-          batch_rating: sessionData.batch_rating || "",
+          batch_rating: sessionData.batch_rating?.toString() || "",
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching brew session:", err);
         setError(err.message || "Failed to load brew session data");
 
@@ -84,7 +105,7 @@ const EditBrewSession = () => {
     fetchSession();
   }, [sessionId, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -92,45 +113,64 @@ const EditBrewSession = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
+    if (!sessionId) {
+      setError("Session ID is required");
+      return;
+    }
 
     try {
       setSubmitting(true);
       setError("");
 
-      // Prepare data for submission
-      const data = { ...formData };
+      // Prepare data for submission - convert to proper types and filter out empty values
+      const data: UpdateBrewSessionFormData = {
+        status: formData.status, // Status is always required
+      };
 
-      // Convert numeric fields from string to number
-      const numericFields = [
-        "mash_temp",
-        "actual_og",
-        "actual_fg",
-        "actual_abv",
-        "actual_efficiency",
-        "batch_rating",
-      ];
-      numericFields.forEach((field) => {
-        if (data[field]) {
-          data[field] = parseFloat(data[field]);
-        } else {
-          delete data[field]; // Remove empty fields to avoid setting them to null/0
-        }
-      });
+      // Only include non-empty string fields
+      if (formData.name?.trim()) {
+        data.name = formData.name;
+      }
+      if (formData.brew_date?.trim()) {
+        data.brew_date = formData.brew_date;
+      }
+      if (formData.tasting_notes?.trim()) {
+        data.tasting_notes = formData.tasting_notes;
+      }
 
-      // Handle date fields - remove empty strings to avoid validation errors
-      const dateFields = [
-        "brew_date",
-        "fermentation_start_date",
-        "fermentation_end_date",
-        "packaging_date",
-      ];
-      dateFields.forEach((field) => {
-        if (!data[field] || data[field] === "") {
-          delete data[field]; // Remove empty date fields
-        }
-      });
+      // Convert numeric fields from string to number (only if not empty)
+      if (formData.mash_temp?.trim()) {
+        data.mash_temp = parseFloat(formData.mash_temp);
+      }
+      if (formData.actual_og?.trim()) {
+        data.actual_og = parseFloat(formData.actual_og);
+      }
+      if (formData.actual_fg?.trim()) {
+        data.actual_fg = parseFloat(formData.actual_fg);
+      }
+      if (formData.actual_abv?.trim()) {
+        data.actual_abv = parseFloat(formData.actual_abv);
+      }
+      if (formData.actual_efficiency?.trim()) {
+        data.actual_efficiency = parseFloat(formData.actual_efficiency);
+      }
+      if (formData.batch_rating?.trim()) {
+        data.batch_rating = parseInt(formData.batch_rating);
+      }
+
+      // Handle date fields (only if not empty)
+      if (formData.fermentation_start_date?.trim()) {
+        data.fermentation_start_date = formData.fermentation_start_date;
+      }
+      if (formData.fermentation_end_date?.trim()) {
+        data.fermentation_end_date = formData.fermentation_end_date;
+      }
+      if (formData.packaging_date?.trim()) {
+        data.packaging_date = formData.packaging_date;
+      }
 
       // Submit update using BrewSessionService
       const updatedSession = await BrewSessionService.updateBrewSession(
@@ -147,7 +187,7 @@ const EditBrewSession = () => {
 
       // Navigate back to session view
       navigate(`/brew-sessions/${sessionId}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error updating brew session:", err);
       setError(
         err.message ||
@@ -418,12 +458,12 @@ const EditBrewSession = () => {
             <textarea
               id="tasting_notes"
               name="tasting_notes"
-              rows="4"
+              rows={4}
               value={formData.tasting_notes}
               onChange={handleChange}
               className="brew-session-form-control brew-session-form-textarea"
               disabled={submitting}
-            ></textarea>
+            />
           </div>
 
           <div className="brew-session-form-group">

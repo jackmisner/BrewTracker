@@ -4,44 +4,46 @@ import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
+import { Recipe, BrewSession } from "../../types";
 import "../../styles/BrewSessions.css";
 
-const ViewBrewSession = () => {
-  const { sessionId } = useParams();
+type BrewSessionStatus = "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
+type ActiveTab = "details" | "fermentation" | "notes";
+
+const ViewBrewSession: React.FC = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
 
-  const [session, setSession] = useState(null);
-  const [recipe, setRecipe] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("details");
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [session, setSession] = useState<BrewSession | null>(null);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("details");
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchSessionData = async () => {
+    if (!sessionId) return;
+
+    const fetchSessionData = async (): Promise<void> => {
       try {
         setLoading(true);
         setError("");
 
         // Fetch the brew session using BrewSessionService
-        const sessionData = await BrewSessionService.fetchBrewSession(
-          sessionId
-        );
+        const sessionData = await BrewSessionService.fetchBrewSession(sessionId);
         setSession(sessionData);
 
         // Fetch the related recipe if it exists
         if (sessionData.recipe_id) {
           try {
-            const recipeData = await RecipeService.fetchRecipe(
-              sessionData.recipe_id
-            );
+            const recipeData = await RecipeService.fetchRecipe(sessionData.recipe_id);
             setRecipe(recipeData);
-          } catch (recipeErr) {
+          } catch (recipeErr: any) {
             console.warn("Could not fetch associated recipe:", recipeErr);
             setRecipe(null);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching brew session:", err);
         setError(err.message || "Failed to load brew session data");
 
@@ -60,7 +62,9 @@ const ViewBrewSession = () => {
     fetchSessionData();
   }, [sessionId, navigate]);
 
-  const updateSessionStatus = async (newStatus) => {
+  const updateSessionStatus = async (newStatus: BrewSessionStatus): Promise<void> => {
+    if (!session || !sessionId) return;
+
     if (
       window.confirm(
         `Are you sure you want to update the status to "${newStatus}"?`
@@ -71,7 +75,7 @@ const ViewBrewSession = () => {
         setError("");
 
         // If moving to fermenting, set fermentation start date
-        let additionalData = {};
+        let additionalData: Partial<BrewSession> = {};
         if (newStatus === "fermenting" && !session.fermentation_start_date) {
           additionalData.fermentation_start_date = new Date()
             .toISOString()
@@ -109,7 +113,7 @@ const ViewBrewSession = () => {
           session_id: sessionId,
           recipe_id: updatedSession.recipe_id,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error updating brew session status:", err);
         setError(err.message || "Failed to update brew session status");
       } finally {
@@ -118,7 +122,9 @@ const ViewBrewSession = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
+    if (!session || !sessionId) return;
+
     if (
       window.confirm(
         "Are you sure you want to delete this brew session? This action cannot be undone."
@@ -139,11 +145,15 @@ const ViewBrewSession = () => {
         invalidateBrewSessionCaches.onDeleted(sessionDataForCache);
 
         navigate("/brew-sessions");
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error deleting brew session:", err);
         setError(err.message || "Failed to delete brew session");
       }
     }
+  };
+
+  const handleErrorDismiss = (): void => {
+    setError("");
   };
 
   if (loading) {
@@ -163,16 +173,16 @@ const ViewBrewSession = () => {
     );
   }
 
-  if (!session) {
+  if (!session || !sessionId) {
     return <div className="empty-message">Brew session not found</div>;
   }
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadgeClass = (status: string): string => {
     return `status-badge status-${status}`;
   };
 
   // Determine valid next statuses based on current status
-  const getNextStatuses = () => {
+  const getNextStatuses = (): BrewSessionStatus[] => {
     switch (session.status) {
       case "planned":
         return ["in-progress"];
@@ -199,7 +209,7 @@ const ViewBrewSession = () => {
         <div className="error-message" style={{ marginBottom: "1rem" }}>
           {error}
           <button
-            onClick={() => setError("")}
+            onClick={handleErrorDismiss}
             style={{
               background: "none",
               border: "none",
@@ -215,7 +225,7 @@ const ViewBrewSession = () => {
 
       <div className="brew-sessions-header">
         <h1 className="brew-session-title">
-          {session.displayName ||
+          {(session as any).displayName ||
             session.name ||
             `Brew Session #${sessionId.substring(0, 6)}`}
         </h1>
@@ -242,7 +252,7 @@ const ViewBrewSession = () => {
         <div className="brew-session-status-container">
           <span className="brew-session-status-label">Status: </span>
           <span className={getStatusBadgeClass(session.status)}>
-            {session.formattedStatus ||
+            {(session as any).formattedStatus ||
               session.status.charAt(0).toUpperCase() + session.status.slice(1)}
           </span>
         </div>
@@ -467,7 +477,7 @@ const ViewBrewSession = () => {
               actual_og: session.actual_og,
               actual_fg: session.actual_fg,
             }}
-            onUpdateSession={(updatedData) => {
+            onUpdateSession={(updatedData: Partial<BrewSession>) => {
               const updatedSession = { ...session, ...updatedData };
               setSession(updatedSession);
 
@@ -505,7 +515,7 @@ const ViewBrewSession = () => {
                     <svg
                       key={star}
                       className={`rating-star ${
-                        star <= session.batch_rating ? "filled" : ""
+                        star <= session.batch_rating! ? "filled" : ""
                       }`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -530,7 +540,7 @@ const ViewBrewSession = () => {
                       ((session.actual_og - session.actual_fg) /
                         (session.actual_og - 1.0)) *
                       100;
-                    let estimatedAttenuation = null;
+                    let estimatedAttenuation: number | null = null;
                     if (recipe && recipe.estimated_og && recipe.estimated_fg) {
                       estimatedAttenuation =
                         ((recipe.estimated_og - recipe.estimated_fg) /
