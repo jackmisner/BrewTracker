@@ -51,9 +51,10 @@
       "src/**/*.{js,jsx,ts,tsx}",
       "!src/**/*.test.{js,jsx,ts,tsx}",
       "!src/**/*.spec.{js,jsx,ts,tsx}",
-      "!src/index.{js,ts}",
+      "!src/index.{js,ts,tsx}",
       "!src/reportWebVitals.{js,ts}",
-      "!src/**/*.d.ts"
+      "!src/**/*.d.ts",
+      "!src/types/**/*"
     ],
     "coverageReporters": ["text", "lcov", "html"],
     "coverageDirectory": "coverage",
