@@ -1,23 +1,62 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
 
-function YeastInput({ yeasts, onAdd, disabled = false }) {
+interface UnitOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface YeastFormData {
+  ingredient_id: string;
+  amount: string;
+  unit: string;
+  selectedIngredient: Ingredient | null;
+}
+
+interface FormErrors {
+  ingredient_id?: string | null;
+  amount?: string | null;
+  submit?: string | null;
+}
+
+interface YeastInputProps {
+  yeasts: Ingredient[];
+  onAdd: (data: IngredientFormData) => Promise<void>;
+  disabled?: boolean;
+}
+
+interface YeastInfo {
+  attenuation?: number;
+  min_temperature?: number;
+  max_temperature?: number;
+  alcohol_tolerance?: number;
+  manufacturer?: string;
+  code?: string;
+}
+
+const YeastInput: React.FC<YeastInputProps> = ({ 
+  yeasts, 
+  onAdd, 
+  disabled = false 
+}) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-  const [yeastForm, setYeastForm] = useState({
+  const [yeastForm, setYeastForm] = useState<YeastFormData>({
     ingredient_id: "",
     amount: "",
     unit: getPreferredUnit("yeast") || "pkg", // Default to packages
     selectedIngredient: null,
   });
 
-  const [errors, setErrors] = useState({});
-  const [resetTrigger, setResetTrigger] = useState(0);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
 
   // Get available units (yeast units are fairly universal)
-  const getAvailableUnits = () => {
+  const getAvailableUnits = (): UnitOption[] => {
     return [
       { value: "pkg", label: "pkg", description: "Packages" },
       { value: "g", label: "g", description: "Grams" },
@@ -40,7 +79,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     distance: 20, // Keep matches close to beginning
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
     setYeastForm((prev) => ({
       ...prev,
@@ -48,7 +87,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }));
 
     // Clear related errors when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: null,
@@ -56,7 +95,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const handleYeastSelect = (selectedYeast) => {
+  const handleYeastSelect = (selectedYeast: Ingredient | null): void => {
     if (selectedYeast) {
       setYeastForm((prev) => ({
         ...prev,
@@ -81,8 +120,8 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!yeastForm.ingredient_id) {
       newErrors.ingredient_id = "Please select a yeast strain";
@@ -110,7 +149,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -127,7 +166,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
 
     try {
-      const formData = {
+      const formData: any = {
         ingredient_id: yeastForm.ingredient_id,
         amount: yeastForm.amount,
         unit: yeastForm.unit,
@@ -145,13 +184,13 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
 
       setErrors({});
       setResetTrigger((prev) => prev + 1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add yeast:", error);
       setErrors({ submit: "Failed to add yeast. Please try again." });
     }
   };
 
-  const getAmountPlaceholder = () => {
+  const getAmountPlaceholder = (): string => {
     switch (yeastForm.unit) {
       case "pkg":
         return "1";
@@ -164,7 +203,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const getAmountGuidance = () => {
+  const getAmountGuidance = (): string => {
     const batchSize = unitSystem === "metric" ? "19L" : "5 gal";
 
     switch (yeastForm.unit) {
@@ -179,7 +218,7 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const getBatchSizeGuidance = () => {
+  const getBatchSizeGuidance = (): string => {
     if (unitSystem === "metric") {
       return "Most 19-23L batches need 1-2 packages";
     } else {
@@ -187,28 +226,29 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
     }
   };
 
-  const getYeastTypeInfo = (yeast) => {
+  const getYeastTypeInfo = (yeast: Ingredient | null): string | null => {
     if (!yeast) return null;
 
-    const info = [];
+    const yeastInfo = yeast as Ingredient & YeastInfo;
+    const info: string[] = [];
 
-    if (yeast.attenuation) {
-      info.push(`${yeast.attenuation}% attenuation`);
+    if (yeastInfo.attenuation) {
+      info.push(`${yeastInfo.attenuation}% attenuation`);
     }
 
-    if (yeast.min_temperature && yeast.max_temperature) {
+    if (yeastInfo.min_temperature && yeastInfo.max_temperature) {
       // Show temperature in user's preferred units
       if (unitSystem === "metric") {
-        const minC = Math.round(((yeast.min_temperature - 32) * 5) / 9);
-        const maxC = Math.round(((yeast.max_temperature - 32) * 5) / 9);
+        const minC = Math.round(((yeastInfo.min_temperature - 32) * 5) / 9);
+        const maxC = Math.round(((yeastInfo.max_temperature - 32) * 5) / 9);
         info.push(`${minC}-${maxC}°C`);
       } else {
-        info.push(`${yeast.min_temperature}-${yeast.max_temperature}°F`);
+        info.push(`${yeastInfo.min_temperature}-${yeastInfo.max_temperature}°F`);
       }
     }
 
-    if (yeast.alcohol_tolerance) {
-      info.push(`${yeast.alcohol_tolerance}% alcohol tolerance`);
+    if (yeastInfo.alcohol_tolerance) {
+      info.push(`${yeastInfo.alcohol_tolerance}% alcohol tolerance`);
     }
 
     return info.length > 0 ? info.join(" • ") : null;
@@ -293,14 +333,14 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
               <strong className="ingredient-name">
                 {yeastForm.selectedIngredient.name}
               </strong>
-              {yeastForm.selectedIngredient.manufacturer && (
+              {(yeastForm.selectedIngredient as any).manufacturer && (
                 <span className="ingredient-badge">
-                  {yeastForm.selectedIngredient.manufacturer}
+                  {(yeastForm.selectedIngredient as any).manufacturer}
                 </span>
               )}
-              {yeastForm.selectedIngredient.code && (
+              {(yeastForm.selectedIngredient as any).code && (
                 <span className="ingredient-badge">
-                  {yeastForm.selectedIngredient.code}
+                  {(yeastForm.selectedIngredient as any).code}
                 </span>
               )}
             </div>
@@ -342,6 +382,6 @@ function YeastInput({ yeasts, onAdd, disabled = false }) {
       </div>
     </div>
   );
-}
+};
 
 export default YeastInput;

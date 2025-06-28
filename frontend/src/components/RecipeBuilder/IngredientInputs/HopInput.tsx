@@ -1,12 +1,48 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
 
-function HopInput({ hops, onAdd, disabled = false }) {
+interface UnitOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface HopFormData {
+  ingredient_id: string;
+  amount: string;
+  alpha_acid: string;
+  unit: string;
+  use: string;
+  time: string;
+  time_unit: string;
+  selectedIngredient: Ingredient | null;
+}
+
+interface FormErrors {
+  ingredient_id?: string | null;
+  amount?: string | null;
+  alpha_acid?: string | null;
+  time?: string | null;
+  submit?: string | null;
+}
+
+interface HopInputProps {
+  hops: Ingredient[];
+  onAdd: (data: IngredientFormData) => Promise<void>;
+  disabled?: boolean;
+}
+
+const HopInput: React.FC<HopInputProps> = ({ 
+  hops, 
+  onAdd, 
+  disabled = false 
+}) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-  const [hopForm, setHopForm] = useState({
+  const [hopForm, setHopForm] = useState<HopFormData>({
     ingredient_id: "",
     amount: "",
     alpha_acid: "",
@@ -17,11 +53,11 @@ function HopInput({ hops, onAdd, disabled = false }) {
     selectedIngredient: null,
   });
 
-  const [errors, setErrors] = useState({});
-  const [resetTrigger, setResetTrigger] = useState(0);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
 
   // Get available units based on unit system
-  const getAvailableUnits = () => {
+  const getAvailableUnits = (): UnitOption[] => {
     if (unitSystem === "metric") {
       return [
         { value: "g", label: "g", description: "Grams" },
@@ -49,11 +85,11 @@ function HopInput({ hops, onAdd, disabled = false }) {
     useExtendedSearch: true, // Allow OR searches like "cascade | centennial"
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
 
     // Create updated form data
-    let updatedForm = {
+    let updatedForm: HopFormData = {
       ...hopForm,
       [name]: value,
     };
@@ -75,7 +111,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
     setHopForm(updatedForm);
 
     // Clear related errors when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: null,
@@ -83,12 +119,12 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
   };
 
-  const handleHopSelect = (selectedHop) => {
+  const handleHopSelect = (selectedHop: Ingredient | null): void => {
     if (selectedHop) {
       setHopForm((prev) => ({
         ...prev,
         ingredient_id: selectedHop.ingredient_id,
-        alpha_acid: selectedHop.alpha_acid || "",
+        alpha_acid: selectedHop.alpha_acid?.toString() || "",
         selectedIngredient: selectedHop,
       }));
 
@@ -110,8 +146,8 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!hopForm.ingredient_id) {
       newErrors.ingredient_id = "Please select a hop variety";
@@ -174,7 +210,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -182,13 +218,13 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
 
     try {
-      const formData = {
+      const formData: any = {
         ingredient_id: hopForm.ingredient_id,
         amount: hopForm.amount,
         unit: hopForm.unit,
         alpha_acid: hopForm.alpha_acid,
         use: hopForm.use,
-        time: hopForm.time,
+        time: hopForm.time ? parseInt(hopForm.time) : undefined,
         time_unit: hopForm.time_unit,
       };
 
@@ -208,14 +244,14 @@ function HopInput({ hops, onAdd, disabled = false }) {
 
       setErrors({});
       setResetTrigger((prev) => prev + 1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add hop:", error);
       setErrors({ submit: "Failed to add hop. Please try again." });
     }
   };
 
   // Get placeholder text for time input based on use
-  const getTimePlaceholder = () => {
+  const getTimePlaceholder = (): string => {
     switch (hopForm.use) {
       case "boil":
         return "60";
@@ -229,7 +265,7 @@ function HopInput({ hops, onAdd, disabled = false }) {
   };
 
   // Get usage description
-  const getUsageDescription = () => {
+  const getUsageDescription = (): string => {
     switch (hopForm.use) {
       case "boil":
         return "Adds bitterness. Longer boil = more bitter.";
@@ -242,11 +278,11 @@ function HopInput({ hops, onAdd, disabled = false }) {
     }
   };
 
-  const getAmountPlaceholder = () => {
+  const getAmountPlaceholder = (): string => {
     return hopForm.unit === "oz" ? "1.0" : "28";
   };
 
-  const getAmountGuidance = () => {
+  const getAmountGuidance = (): string => {
     if (unitSystem === "metric") {
       return "Bittering hops: 14-56g, Aroma hops: 14-28g per 19L batch";
     } else {
@@ -396,9 +432,9 @@ function HopInput({ hops, onAdd, disabled = false }) {
               <strong className="ingredient-name">
                 {hopForm.selectedIngredient.name}
               </strong>
-              {hopForm.selectedIngredient.origin && (
+              {(hopForm.selectedIngredient as any).origin && (
                 <span className="ingredient-badge">
-                  {hopForm.selectedIngredient.origin}
+                  {(hopForm.selectedIngredient as any).origin}
                 </span>
               )}
             </div>
@@ -442,6 +478,6 @@ function HopInput({ hops, onAdd, disabled = false }) {
       </div>
     </div>
   );
-}
+};
 
 export default HopInput;

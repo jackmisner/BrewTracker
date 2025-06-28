@@ -1,12 +1,50 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
 
-function OtherInput({ others, onAdd, disabled = false }) {
+interface UnitOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface UsageOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface OtherFormData {
+  ingredient_id: string;
+  amount: string;
+  unit: string;
+  use: string;
+  time: string;
+  selectedIngredient: Ingredient | null;
+}
+
+interface FormErrors {
+  ingredient_id?: string | null;
+  amount?: string | null;
+  submit?: string | null;
+}
+
+interface OtherInputProps {
+  others: Ingredient[];
+  onAdd: (data: IngredientFormData) => Promise<void>;
+  disabled?: boolean;
+}
+
+const OtherInput: React.FC<OtherInputProps> = ({ 
+  others, 
+  onAdd, 
+  disabled = false 
+}) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-  const [otherForm, setOtherForm] = useState({
+  const [otherForm, setOtherForm] = useState<OtherFormData>({
     ingredient_id: "",
     amount: "",
     unit: getPreferredUnit("other") || (unitSystem === "metric" ? "g" : "oz"),
@@ -15,11 +53,11 @@ function OtherInput({ others, onAdd, disabled = false }) {
     selectedIngredient: null,
   });
 
-  const [errors, setErrors] = useState({});
-  const [resetTrigger, setResetTrigger] = useState(0);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
 
   // Get available units based on unit system preference
-  const getAvailableUnits = () => {
+  const getAvailableUnits = (): UnitOption[] => {
     if (unitSystem === "metric") {
       return [
         { value: "g", label: "g", description: "Grams" },
@@ -64,7 +102,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     useExtendedSearch: true, // Allow flexible searches
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
     setOtherForm((prev) => ({
       ...prev,
@@ -72,7 +110,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     }));
 
     // Clear related errors when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: null,
@@ -80,7 +118,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     }
   };
 
-  const handleOtherSelect = (selectedOther) => {
+  const handleOtherSelect = (selectedOther: Ingredient | null): void => {
     if (selectedOther) {
       setOtherForm((prev) => ({
         ...prev,
@@ -105,8 +143,8 @@ function OtherInput({ others, onAdd, disabled = false }) {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!otherForm.ingredient_id) {
       newErrors.ingredient_id = "Please select an ingredient";
@@ -150,7 +188,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -158,12 +196,12 @@ function OtherInput({ others, onAdd, disabled = false }) {
     }
 
     try {
-      const formData = {
+      const formData: any = {
         ingredient_id: otherForm.ingredient_id,
         amount: otherForm.amount,
         unit: otherForm.unit,
         use: otherForm.use,
-        time: otherForm.time || undefined,
+        time: otherForm.time ? parseInt(otherForm.time) : undefined,
       };
 
       await onAdd(formData);
@@ -181,13 +219,13 @@ function OtherInput({ others, onAdd, disabled = false }) {
 
       setErrors({});
       setResetTrigger((prev) => prev + 1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add other ingredient:", error);
       setErrors({ submit: "Failed to add ingredient. Please try again." });
     }
   };
 
-  const getUsageOptions = () => {
+  const getUsageOptions = (): UsageOption[] => {
     return [
       { value: "boil", label: "Boil", description: "Added during the boil" },
       {
@@ -214,7 +252,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     ];
   };
 
-  const getIngredientCategory = (ingredient) => {
+  const getIngredientCategory = (ingredient: Ingredient | null): string | null => {
     if (!ingredient) return null;
 
     const name = ingredient.name.toLowerCase();
@@ -255,7 +293,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     return "Other";
   };
 
-  const getAmountGuidance = () => {
+  const getAmountGuidance = (): string => {
     const category = getIngredientCategory(otherForm.selectedIngredient);
     const batchSize = unitSystem === "metric" ? "19L" : "5 gallons";
 
@@ -279,7 +317,7 @@ function OtherInput({ others, onAdd, disabled = false }) {
     }
   };
 
-  const getAmountPlaceholder = () => {
+  const getAmountPlaceholder = (): string => {
     const unit = otherForm.unit;
     switch (unit) {
       case "g":
@@ -467,6 +505,6 @@ function OtherInput({ others, onAdd, disabled = false }) {
       </div>
     </div>
   );
-}
+};
 
 export default OtherInput;

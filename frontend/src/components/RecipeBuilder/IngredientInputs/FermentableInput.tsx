@@ -1,12 +1,44 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
 
-function FermentableInput({ grains, onAdd, disabled = false }) {
+interface UnitOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface FermentableFormData {
+  ingredient_id: string;
+  color: string;
+  amount: string;
+  unit: string;
+  selectedIngredient: Ingredient | null;
+}
+
+interface FormErrors {
+  ingredient_id?: string | null;
+  amount?: string | null;
+  color?: string | null;
+  submit?: string | null;
+}
+
+interface FermentableInputProps {
+  grains: Ingredient[];
+  onAdd: (data: IngredientFormData) => Promise<void>;
+  disabled?: boolean;
+}
+
+const FermentableInput: React.FC<FermentableInputProps> = ({ 
+  grains, 
+  onAdd, 
+  disabled = false 
+}) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-  const [fermentableForm, setFermentableForm] = useState({
+  const [fermentableForm, setFermentableForm] = useState<FermentableFormData>({
     ingredient_id: "",
     color: "",
     amount: "",
@@ -14,11 +46,11 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     selectedIngredient: null,
   });
 
-  const [errors, setErrors] = useState({});
-  const [resetTrigger, setResetTrigger] = useState(0);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
 
   // Get available units based on unit system
-  const getAvailableUnits = () => {
+  const getAvailableUnits = (): UnitOption[] => {
     if (unitSystem === "metric") {
       return [
         { value: "kg", label: "kg", description: "Kilograms" },
@@ -45,7 +77,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     ignoreLocation: true,
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
     setFermentableForm((prev) => ({
       ...prev,
@@ -53,7 +85,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     }));
 
     // Clear related errors when user starts typing
-    if (errors[name]) {
+    if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: null,
@@ -61,12 +93,12 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     }
   };
 
-  const handleFermentableSelect = (selectedFermentable) => {
+  const handleFermentableSelect = (selectedFermentable: Ingredient | null): void => {
     if (selectedFermentable) {
       setFermentableForm((prev) => ({
         ...prev,
         ingredient_id: selectedFermentable.ingredient_id,
-        color: selectedFermentable.color || "",
+        color: selectedFermentable.color?.toString() || "",
         selectedIngredient: selectedFermentable,
       }));
 
@@ -88,8 +120,8 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!fermentableForm.ingredient_id) {
       newErrors.ingredient_id = "Please select a fermentable";
@@ -129,7 +161,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -137,11 +169,11 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     }
 
     try {
-      const formData = {
+      const formData: any = {
         ingredient_id: fermentableForm.ingredient_id,
         amount: fermentableForm.amount,
         unit: fermentableForm.unit,
-        color: fermentableForm.color || undefined,
+        color: fermentableForm.color ? parseFloat(fermentableForm.color) : undefined,
       };
 
       await onAdd(formData);
@@ -157,13 +189,13 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
 
       setErrors({});
       setResetTrigger((prev) => prev + 1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add fermentable:", error);
       setErrors({ submit: "Failed to add fermentable. Please try again." });
     }
   };
 
-  const getColorPreview = () => {
+  const getColorPreview = (): React.ReactElement | null => {
     const colorValue = parseFloat(fermentableForm.color);
     if (!colorValue || colorValue <= 0) return null;
 
@@ -186,7 +218,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     );
   };
 
-  const getAmountPlaceholder = () => {
+  const getAmountPlaceholder = (): string => {
     if (unitSystem === "metric") {
       return fermentableForm.unit === "kg" ? "1" : "1000";
     } else {
@@ -194,7 +226,7 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
     }
   };
 
-  const getAmountGuidance = () => {
+  const getAmountGuidance = (): string => {
     if (unitSystem === "metric") {
       return "Base malts: 2-6 kg, Specialty malts: 100-500g";
     } else {
@@ -339,6 +371,6 @@ function FermentableInput({ grains, onAdd, disabled = false }) {
       </div>
     </div>
   );
-}
+};
 
 export default FermentableInput;
