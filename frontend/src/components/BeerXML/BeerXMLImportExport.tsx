@@ -1,22 +1,48 @@
 import React, { useState, useRef } from "react";
 import beerXMLService from "../../services/BeerXML/BeerXMLService";
 import IngredientMatchingReview from "./IngredientMatchingReview";
-import { useUnits } from "../../contexts/UnitContext";
+import { Recipe } from "../../types";
 import "../../styles/BeerXMLImportExport.css";
 
-const BeerXMLImportExport = ({
+interface BeerXMLImportExportProps {
+  recipe?: Recipe;
+  ingredients?: any[]; // TODO: Define proper ingredient array type
+  onImport?: (importData: {
+    recipe: Recipe;
+    ingredients: any[];
+    metadata: any;
+    createdIngredients: any[];
+  }) => Promise<void>;
+  onExport?: (exportResult: { success: boolean; filename: string }) => void;
+  mode?: "import" | "export" | "both";
+}
+
+interface ImportState {
+  isImporting: boolean;
+  uploadedFile: File | null;
+  parsedRecipes: any[]; // TODO: Define proper parsed recipe type
+  selectedRecipe: any | null; // TODO: Define proper selected recipe type
+  matchingResults: any[];
+  showMatchingReview: boolean;
+  error: string | null;
+}
+
+interface ExportState {
+  isExporting: boolean;
+  error: string | null;
+}
+
+const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   recipe,
   ingredients,
-  availableIngredients,
   onImport,
   onExport,
-  mode = "both", // "import", "export", or "both"
+  mode = "both",
 }) => {
-  const { unitSystem } = useUnits();
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Import state
-  const [importState, setImportState] = useState({
+  const [importState, setImportState] = useState<ImportState>({
     isImporting: false,
     uploadedFile: null,
     parsedRecipes: [],
@@ -27,7 +53,7 @@ const BeerXMLImportExport = ({
   });
 
   // Export state
-  const [exportState, setExportState] = useState({
+  const [exportState, setExportState] = useState<ExportState>({
     isExporting: false,
     error: null,
   });
@@ -35,8 +61,8 @@ const BeerXMLImportExport = ({
   /**
    * Handle file selection for import
    */
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file using service
@@ -59,7 +85,7 @@ const BeerXMLImportExport = ({
   /**
    * Process uploaded BeerXML file
    */
-  const processBeerXMLFile = async () => {
+  const processBeerXMLFile = async (): Promise<void> => {
     if (!importState.uploadedFile) return;
 
     setImportState((prev) => ({
@@ -83,7 +109,7 @@ const BeerXMLImportExport = ({
         selectedRecipe: parsedRecipes[0] || null,
         isImporting: false,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error processing BeerXML file:", error);
       setImportState((prev) => ({
         ...prev,
@@ -96,7 +122,7 @@ const BeerXMLImportExport = ({
   /**
    * Start ingredient matching process
    */
-  const startIngredientMatching = async () => {
+  const startIngredientMatching = async (): Promise<void> => {
     if (!importState.selectedRecipe) return;
 
     setImportState((prev) => ({
@@ -116,7 +142,7 @@ const BeerXMLImportExport = ({
         showMatchingReview: true,
         isImporting: false,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error matching ingredients:", error);
       setImportState((prev) => ({
         ...prev,
@@ -129,7 +155,7 @@ const BeerXMLImportExport = ({
   /**
    * Complete the import process - UPDATED to handle new structure
    */
-  const completeImport = async (importResult) => {
+  const completeImport = async (importResult: any): Promise<void> => {
     if (!importState.selectedRecipe || !onImport) return;
 
     try {
@@ -159,7 +185,7 @@ const BeerXMLImportExport = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing import:", error);
       setImportState((prev) => ({
         ...prev,
@@ -171,7 +197,7 @@ const BeerXMLImportExport = ({
   /**
    * Export current recipe to BeerXML
    */
-  const exportToBeerXML = async () => {
+  const exportToBeerXML = async (): Promise<void> => {
     if (!recipe || !ingredients || !onExport) return;
 
     setExportState((prev) => ({
@@ -194,7 +220,7 @@ const BeerXMLImportExport = ({
         ...prev,
         isExporting: false,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error exporting to BeerXML:", error);
       setExportState((prev) => ({
         ...prev,
@@ -207,7 +233,7 @@ const BeerXMLImportExport = ({
   /**
    * Reset import state
    */
-  const resetImport = () => {
+  const resetImport = (): void => {
     setImportState({
       isImporting: false,
       uploadedFile: null,
@@ -228,7 +254,6 @@ const BeerXMLImportExport = ({
     return (
       <IngredientMatchingReview
         matchingResults={importState.matchingResults}
-        availableIngredients={availableIngredients}
         onComplete={completeImport}
         onCancel={() =>
           setImportState((prev) => ({ ...prev, showMatchingReview: false }))
@@ -382,7 +407,7 @@ const BeerXMLImportExport = ({
                       {["grain", "hop", "yeast", "other"].map((type) => {
                         const count =
                           importState.selectedRecipe.ingredients.filter(
-                            (ing) => ing.type === type
+                            (ing: any) => ing.type === type
                           ).length;
                         if (count === 0) return null;
 
@@ -447,7 +472,7 @@ const BeerXMLImportExport = ({
                   <strong>{recipe.name}</strong>
                 </div>
                 <div className="recipe-stats">
-                  {ingredients.length} ingredients • {recipe.batch_size}{" "}
+                  {ingredients?.length} ingredients • {recipe.batch_size}{" "}
                   {recipe.batch_size_unit || "gal"}
                 </div>
               </div>

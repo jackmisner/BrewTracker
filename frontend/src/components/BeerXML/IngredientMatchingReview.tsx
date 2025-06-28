@@ -1,26 +1,87 @@
 import React, { useState, useEffect } from "react";
 import ingredientMatchingService from "../../services/BeerXML/IngredientMatchingService";
 import ApiService from "../../services/api";
+import { IngredientType, IngredientUnit } from "../../types";
 import "../../styles/IngredientMatchingReview.css";
 
-const IngredientMatchingReview = ({
+interface MatchingResult {
+  imported: {
+    ingredient_id: string;
+    name: string;
+    type: IngredientType;
+    amount: number;
+    unit: IngredientUnit;
+    use?: string;
+    time?: number;
+    alpha_acid?: number;
+    color?: number;
+    attenuation?: number;
+  };
+  best_match?: {
+    ingredient: any; // TODO: Define proper ingredient type
+    confidence: number;
+  };
+  bestMatch?: {
+    ingredient: any; // TODO: Define proper ingredient type
+    confidence: number;
+  };
+  matches: Array<{
+    ingredient: any; // TODO: Define proper ingredient type
+    confidence: number;
+    reasons: string[];
+  }>;
+  confidence: number;
+  requiresNewIngredient?: boolean;
+  suggestedIngredientData?: any; // TODO: Define proper ingredient data type
+}
+
+interface Decision {
+  imported: MatchingResult['imported'];
+  action: "use_existing" | "create_new";
+  selectedMatch: any | null; // TODO: Define proper ingredient type
+  newIngredientData: any | null; // TODO: Define proper ingredient data type
+  confidence: number;
+}
+
+interface ReviewState {
+  currentIndex: number;
+  decisions: Decision[];
+  isCreatingIngredients: boolean;
+  error: string | null;
+}
+
+interface MatchingSummary {
+  matched: number;
+  newRequired: number;
+  highConfidence: number;
+}
+
+interface IngredientMatchingReviewProps {
+  matchingResults: MatchingResult[];
+  onComplete: (result: {
+    ingredients: any[];
+    createdIngredients: any[];
+  }) => Promise<void>;
+  onCancel: () => void;
+}
+
+const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
   matchingResults,
-  availableIngredients,
   onComplete,
   onCancel,
 }) => {
-  const [reviewState, setReviewState] = useState({
+  const [reviewState, setReviewState] = useState<ReviewState>({
     currentIndex: 0,
     decisions: [],
     isCreatingIngredients: false,
     error: null,
   });
 
-  const [matchingSummary, setMatchingSummary] = useState(null);
+  const [matchingSummary, setMatchingSummary] = useState<MatchingSummary | null>(null);
 
   useEffect(() => {
     // Initialize decisions array and calculate summary
-    const decisions = matchingResults.map((result) => ({
+    const decisions: Decision[] = matchingResults.map((result) => ({
       imported: result.imported,
       action: result.best_match ? "use_existing" : "create_new", // Fixed: use best_match instead of bestMatch
       selectedMatch: result.best_match?.ingredient || null, // Fixed: use best_match instead of bestMatch
@@ -30,7 +91,7 @@ const IngredientMatchingReview = ({
 
     setReviewState((prev) => ({ ...prev, decisions }));
     setMatchingSummary(
-      ingredientMatchingService.getMatchingSummary(matchingResults)
+      ingredientMatchingService.getMatchingSummary(matchingResults as any)
     );
   }, [matchingResults]);
 
@@ -38,10 +99,10 @@ const IngredientMatchingReview = ({
    * Update decision for current ingredient
    */
   const updateDecision = (
-    action,
-    selectedMatch = null,
-    newIngredientData = null
-  ) => {
+    action: "use_existing" | "create_new",
+    selectedMatch: any = null,
+    newIngredientData: any = null
+  ): void => {
     setReviewState((prev) => ({
       ...prev,
       decisions: prev.decisions.map((decision, index) =>
@@ -61,7 +122,7 @@ const IngredientMatchingReview = ({
   /**
    * Navigate to next ingredient
    */
-  const goToNext = () => {
+  const goToNext = (): void => {
     setReviewState((prev) => ({
       ...prev,
       currentIndex: Math.min(prev.currentIndex + 1, matchingResults.length - 1),
@@ -71,7 +132,7 @@ const IngredientMatchingReview = ({
   /**
    * Navigate to previous ingredient
    */
-  const goToPrevious = () => {
+  const goToPrevious = (): void => {
     setReviewState((prev) => ({
       ...prev,
       currentIndex: Math.max(prev.currentIndex - 1, 0),
@@ -81,7 +142,7 @@ const IngredientMatchingReview = ({
   /**
    * Complete the review process
    */
-  const completeReview = async () => {
+  const completeReview = async (): Promise<void> => {
     setReviewState((prev) => ({
       ...prev,
       isCreatingIngredients: true,
@@ -90,7 +151,7 @@ const IngredientMatchingReview = ({
 
     try {
       const finalizedIngredients = [];
-      const createdIngredients = []; // Track newly created ingredients
+      const createdIngredients: any[] = []; // Track newly created ingredients
 
       for (const decision of reviewState.decisions) {
         if (decision.action === "use_existing" && decision.selectedMatch) {
@@ -146,7 +207,7 @@ const IngredientMatchingReview = ({
         ingredients: finalizedIngredients,
         createdIngredients: createdIngredients,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing review:", error);
       setReviewState((prev) => ({
         ...prev,
@@ -159,11 +220,11 @@ const IngredientMatchingReview = ({
   /**
    * Create new ingredient via API
    */
-  const createNewIngredient = async (ingredientData) => {
+  const createNewIngredient = async (ingredientData: any): Promise<any> => {
     try {
       const response = await ApiService.ingredients.create(ingredientData);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating ingredient:", error);
       throw new Error(`Failed to create ingredient: ${ingredientData.name}`);
     }
@@ -172,14 +233,14 @@ const IngredientMatchingReview = ({
   /**
    * Skip to ingredient by index
    */
-  const goToIngredient = (index) => {
+  const goToIngredient = (index: number): void => {
     setReviewState((prev) => ({ ...prev, currentIndex: index }));
   };
 
   /**
    * Get confidence color class
    */
-  const getConfidenceClass = (confidence) => {
+  const getConfidenceClass = (confidence: number): string => {
     if (confidence > 0.8) return "confidence-high";
     if (confidence > 0.6) return "confidence-medium";
     return "confidence-low";
@@ -188,7 +249,7 @@ const IngredientMatchingReview = ({
   /**
    * Get confidence label
    */
-  const getConfidenceLabel = (confidence) => {
+  const getConfidenceLabel = (confidence: number): string => {
     if (confidence > 0.8) return "High";
     if (confidence > 0.6) return "Medium";
     return "Low";
