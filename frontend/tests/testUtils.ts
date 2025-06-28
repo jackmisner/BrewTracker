@@ -1,11 +1,16 @@
-import React from "react";
-import { render } from "@testing-library/react";
+import React, { ReactElement } from "react";
+import { render, RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  initialEntries?: string[];
+  queryClient?: QueryClient;
+}
+
 // Custom render function with providers
 export function renderWithProviders(
-  ui,
+  ui: ReactElement,
   {
     // Router options
     initialEntries = ["/"],
@@ -20,9 +25,9 @@ export function renderWithProviders(
 
     // Other options
     ...renderOptions
-  } = {}
+  }: CustomRenderOptions = {}
 ) {
-  function Wrapper({ children }) {
+  function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
@@ -37,7 +42,7 @@ export function renderWithProviders(
 
 // Mock data factories
 export const mockData = {
-  recipe: (overrides = {}) => ({
+  recipe: (overrides: Record<string, any> = {}) => ({
     recipe_id: "test-recipe-id",
     name: "Test Recipe",
     style: "IPA",
@@ -52,7 +57,7 @@ export const mockData = {
     ...overrides,
   }),
 
-  brewSession: (overrides = {}) => ({
+  brewSession: (overrides: Record<string, any> = {}) => ({
     session_id: "test-session-id",
     name: "Test Brew Session",
     recipe_id: "test-recipe-id",
@@ -64,7 +69,7 @@ export const mockData = {
     ...overrides,
   }),
 
-  ingredient: (type = "grain", overrides = {}) => ({
+  ingredient: (type: string = "grain", overrides: Record<string, any> = {}) => ({
     ingredient_id: 1,
     name: "Test Ingredient",
     type,
@@ -82,7 +87,7 @@ export const mockData = {
     ...overrides,
   }),
 
-  user: (overrides = {}) => ({
+  user: (overrides: Record<string, any> = {}) => ({
     user_id: "test-user-id",
     username: "testuser",
     email: "test@example.com",
@@ -96,16 +101,16 @@ export const scenarios = {
   loading: () => new Promise(() => {}),
 
   // Simulate successful API response
-  success: (data) => Promise.resolve({ data }),
+  success: (data: any) => Promise.resolve({ data }),
 
   // Simulate API error
-  error: (message = "API Error") => Promise.reject(new Error(message)),
+  error: (message: string = "API Error") => Promise.reject(new Error(message)),
 
   // Simulate network error
   networkError: () => Promise.reject(new Error("Network Error")),
 
   // Simulate validation error
-  validationError: (errors = ["Validation failed"]) =>
+  validationError: (errors: string[] = ["Validation failed"]) =>
     Promise.reject({
       response: {
         status: 400,

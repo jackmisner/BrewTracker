@@ -35,13 +35,13 @@
     ],
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-      "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.js"
+      "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.ts"
     },
     "testMatch": [
-      "<rootDir>/tests/**/*.test.js"
+      "<rootDir>/tests/**/*.test.{js,ts,tsx}"
     ],
     "setupFilesAfterEnv": [
-      "<rootDir>/tests/setupTests.js"
+      "<rootDir>/tests/setupTests.ts"
     ],
     "moduleFileExtensions": ["js", "jsx", "ts", "tsx", "json", "node"],
     "moduleDirectories": ["node_modules", "src"],

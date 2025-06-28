@@ -9,7 +9,7 @@ global.TextDecoder = TextDecoder;
 // Mock window.matchMedia (used by some UI libraries)
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: jest.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -48,14 +48,14 @@ global.cancelAnimationFrame = (id) => clearTimeout(id);
 
 // Create a functional localStorage mock that actually stores/retrieves values
 const createLocalStorageMock = () => {
-  let store = {};
+  let store: Record<string, string> = {};
 
   return {
-    getItem: jest.fn((key) => store[key] || null),
-    setItem: jest.fn((key, value) => {
+    getItem: jest.fn((key: string) => store[key] || null),
+    setItem: jest.fn((key: string, value: string) => {
       store[key] = value?.toString() || "";
     }),
-    removeItem: jest.fn((key) => {
+    removeItem: jest.fn((key: string) => {
       delete store[key];
     }),
     clear: jest.fn(() => {
@@ -64,13 +64,13 @@ const createLocalStorageMock = () => {
     get length() {
       return Object.keys(store).length;
     },
-    key: jest.fn((index) => {
+    key: jest.fn((index: number) => {
       const keys = Object.keys(store);
       return keys[index] || null;
     }),
     // Helper for tests to access the store
     _getStore: () => store,
-    _setStore: (newStore) => {
+    _setStore: (newStore: Record<string, string>) => {
       store = newStore;
     },
   };
@@ -113,7 +113,7 @@ afterEach(() => {
 
 // Custom matchers for testing
 expect.extend({
-  toBeWithinRange(received, floor, ceiling) {
+  toBeWithinRange(received: number, floor: number, ceiling: number) {
     const pass = received >= floor && received <= ceiling;
     if (pass) {
       return {
