@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import ApiService from "../services/api";
+import { Recipe, ID } from "../types";
 
-const RecipeActions = ({
+interface RecipeActionsProps {
+  recipe: Recipe;
+  onDelete?: (recipeId: ID) => void;
+  showViewButton?: boolean;
+  compact?: boolean;
+  refreshTrigger?: (() => void) | null;
+}
+
+const RecipeActions: React.FC<RecipeActionsProps> = ({
   recipe,
   onDelete,
   showViewButton = true,
@@ -10,18 +19,18 @@ const RecipeActions = ({
   refreshTrigger = null,
 }) => {
   const navigate = useNavigate();
-  const [isCloning, setIsCloning] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCloning, setIsCloning] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  const handleView = () => {
+  const handleView = (): void => {
     navigate(`/recipes/${recipe.recipe_id}`);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (): void => {
     navigate(`/recipes/${recipe.recipe_id}/edit`);
   };
 
-  const handleClone = async () => {
+  const handleClone = async (): Promise<void> => {
     setIsCloning(true);
     try {
       const response = await ApiService.recipes.clone(recipe.recipe_id);
@@ -35,9 +44,9 @@ const RecipeActions = ({
         }
 
         // Navigate to the new recipe
-        navigate(`/recipes/${response.data.recipe_id}/edit`);
+        navigate(`/recipes/${(response.data as any).recipe_id}/edit`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cloning recipe:", error);
       alert(
         `Failed to clone recipe: ${
@@ -49,7 +58,7 @@ const RecipeActions = ({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     if (window.confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
       setIsDeleting(true);
       try {
@@ -61,7 +70,7 @@ const RecipeActions = ({
         if (!compact) {
           navigate("/recipes");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error deleting recipe:", error);
         alert(
           `Failed to delete recipe: ${
@@ -74,7 +83,7 @@ const RecipeActions = ({
     }
   };
 
-  const handleBrew = () => {
+  const handleBrew = (): void => {
     // Navigate to create brew session page with recipe ID
     navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`);
   };
