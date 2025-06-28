@@ -12,8 +12,11 @@ export const HookUtils = {
   /**
    * Create a safe state setter that only updates if component is mounted
    */
-  createSafeStateSetter: (mounted, setState) => {
-    return (updater) => {
+  createSafeStateSetter: <T>(
+    mounted: React.MutableRefObject<boolean>,
+    setState: React.Dispatch<React.SetStateAction<T>>
+  ) => {
+    return (updater: React.SetStateAction<T>) => {
       if (mounted.current) {
         setState(updater);
       }
@@ -38,10 +41,13 @@ export const HookUtils = {
   /**
    * Create a debounced function for hooks
    */
-  createDebouncedFunction: (func, delay = 300) => {
-    let timeoutId;
+  createDebouncedFunction: <T extends (...args: any[]) => any>(
+    func: T,
+    delay: number = 300
+  ) => {
+    let timeoutId: NodeJS.Timeout;
 
-    return (...args) => {
+    return (...args: Parameters<T>) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
     };
@@ -58,13 +64,13 @@ export const HOOK_CONSTANTS = {
     METRICS_CALCULATION: 500,
     SEARCH: 300,
     VALIDATION: 200,
-  },
+  } as const,
 
   // Cache durations
   CACHE_DURATIONS: {
     INGREDIENTS: 5 * 60 * 1000, // 5 minutes
     RECIPES: 2 * 60 * 1000, // 2 minutes
-  },
+  } as const,
 
   // Error types
   ERROR_TYPES: {
@@ -72,17 +78,23 @@ export const HOOK_CONSTANTS = {
     NETWORK: "network",
     BUSINESS: "business",
     SYSTEM: "system",
-  },
-};
+  } as const,
+} as const;
 
 // ============================================================================
 // HOOK COMPOSITION HELPERS
 // ============================================================================
 
+interface HookWithError {
+  error?: string | null;
+  loading?: boolean;
+  clearError?: () => void;
+}
+
 /**
  * Compose multiple hooks with shared error handling
  */
-export function useComposedHooks(hooks) {
+export function useComposedHooks(hooks: HookWithError[]) {
   const errors = hooks.map((hook) => hook.error).filter(Boolean);
   const loading = hooks.some((hook) => hook.loading);
 
@@ -104,8 +116,8 @@ export function useComposedHooks(hooks) {
 /**
  * Create a hook with automatic error boundary reporting
  */
-export function useErrorBoundaryReporting(hookName) {
-  return (error) => {
+export function useErrorBoundaryReporting(hookName: string) {
+  return (error: Error | string) => {
     console.error(`Error in hook ${hookName}:`, error);
 
     // You could integrate with error reporting services here
@@ -121,11 +133,18 @@ export function useErrorBoundaryReporting(hookName) {
 // HOOK TESTING UTILITIES
 // ============================================================================
 
+interface MockHookReturn {
+  loading: boolean;
+  error: string | null;
+  data: any;
+  [key: string]: any;
+}
+
 export const HookTestUtils = {
   /**
    * Mock hook return values for testing
    */
-  createMockHookReturn: (overrides = {}) => ({
+  createMockHookReturn: (overrides: Partial<MockHookReturn> = {}): MockHookReturn => ({
     loading: false,
     error: null,
     data: null,
@@ -135,8 +154,8 @@ export const HookTestUtils = {
   /**
    * Create test props for hooks that need them
    */
-  createTestProps: (hookName, customProps = {}) => {
-    const baseProps = {
+  createTestProps: (hookName: string, customProps: Record<string, any> = {}) => {
+    const baseProps: Record<string, any> = {
       useRecipeBuilder: { recipeId: "test-recipe-id" },
       useRecipeState: { recipeId: "test-recipe-id" },
       useIngredientsState: {},

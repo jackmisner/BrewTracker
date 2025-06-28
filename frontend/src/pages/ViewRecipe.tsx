@@ -428,7 +428,7 @@ const ViewRecipe: React.FC = () => {
           {((recipe.version && recipe.version > 1) || recipe.parent_recipe_id) && (
             <RecipeVersionHistory
               recipeId={recipe.recipe_id}
-              version={recipe.version}
+              version={recipe.version ?? 1}
               parentRecipeId={recipe.parent_recipe_id}
             />
           )}

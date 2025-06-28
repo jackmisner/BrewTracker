@@ -65,7 +65,8 @@ const PublicRecipes: React.FC = () => {
   const handleCloneRecipe = async (recipeId: ID): Promise<void> => {
     try {
       const response = await ApiService.recipes.clone(recipeId);
-      navigate(`/recipes/${response.data.data.recipe_id}/edit`);
+
+      navigate(`/recipes/${(response.data as any).recipe_id}/edit`);
     } catch (err: any) {
       alert("Failed to clone recipe: " + err.message);
     }
