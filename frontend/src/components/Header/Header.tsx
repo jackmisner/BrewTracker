@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { User } from "../../types";
-import "./Header.css";
+import "../../styles/Header.css";
 import logo from "../../images/mugOfBeer512.png";
 
 interface HeaderProps {

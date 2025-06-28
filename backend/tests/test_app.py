@@ -227,7 +227,7 @@ class TestIngredientSeeding:
 
         return NonTestingConfig
 
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_seeding_when_empty_non_testing(
         self, mock_ingredient, mock_seed_ingredients, non_testing_config
@@ -249,7 +249,7 @@ class TestIngredientSeeding:
         assert "brewtracker.ingredients.json" in str(args[1])  # json file path
 
     # Test using config patching approach
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_seeding_with_config_override(
         self, mock_ingredient, mock_seed_ingredients
@@ -272,7 +272,7 @@ class TestIngredientSeeding:
             assert "mongodb" in args[0]  # mongo_uri should contain 'mongodb'
             assert "brewtracker.ingredients.json" in str(args[1])  # json file path
 
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_seeding_when_exists(
         self, mock_ingredient, mock_seed_ingredients, non_testing_config
@@ -287,7 +287,7 @@ class TestIngredientSeeding:
         # Verify that seed_ingredients was NOT called
         mock_seed_ingredients.assert_not_called()
 
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_seeding_in_testing_mode(
         self, mock_ingredient, mock_seed_ingredients
@@ -302,7 +302,7 @@ class TestIngredientSeeding:
         # Verify that seed_ingredients was NOT called even with empty database
         mock_seed_ingredients.assert_not_called()
 
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_seeding_handles_exceptions(
         self, mock_ingredient, mock_seed_ingredients, non_testing_config
@@ -323,7 +323,7 @@ class TestIngredientSeeding:
         # App should still be created successfully
         assert app is not None
 
-    @patch("seed_ingredients.seed_ingredients")
+    @patch("seeds.seed_ingredients.seed_ingredients")
     @patch("app.Ingredient")
     def test_ingredient_count_check_fails(
         self, mock_ingredient, mock_seed_ingredients, non_testing_config

@@ -81,7 +81,7 @@ def create_app(config_class=None):
                 print(
                     "No ingredients found in database. Running ingredient seed operation..."
                 )
-                from seed_ingredients import seed_ingredients
+                from seeds.seed_ingredients import seed_ingredients
 
                 json_file_path = (
                     Path(__file__).parent / "data" / "brewtracker.ingredients.json"
@@ -100,7 +100,7 @@ def create_app(config_class=None):
                 print(
                     "No beer styles found in database. Running beer style seed operation..."
                 )
-                from seed_beer_styles import seed_beer_styles
+                from seeds.seed_beer_styles import seed_beer_styles
 
                 json_file_path = (
                     Path(__file__).parent / "data" / "beer_style_guides.json"
