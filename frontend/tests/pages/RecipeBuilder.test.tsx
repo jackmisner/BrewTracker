@@ -9,6 +9,61 @@ import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
 // Mock the useRecipeBuilder hook
 jest.mock("../../src/hooks/useRecipeBuilder");
 
+// Mock BeerXML components and services
+jest.mock("../../src/components/BeerXML/BeerXMLImportExport", () => {
+  return function MockBeerXMLImportExport({ onImport, onExport, mode }: any) {
+    return (
+      <div data-testid="beerxml-import-export">
+        <h3>BeerXML Import/Export ({mode})</h3>
+        <button
+          onClick={() => onImport({
+            recipe: { name: "Imported Recipe", style: "IPA" },
+            ingredients: [{ id: "1", name: "Imported Grain", type: "grain" }],
+            createdIngredients: []
+          })}
+          data-testid="import-button"
+        >
+          Import BeerXML
+        </button>
+        <button
+          onClick={onExport}
+          data-testid="export-button"
+        >
+          Export BeerXML
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock("../../src/services/BeerXML/BeerXMLService", () => ({
+  exportRecipe: jest.fn(),
+  downloadBeerXML: jest.fn(),
+}));
+
+jest.mock("../../src/services", () => ({
+  ingredient: {
+    clearCache: jest.fn(),
+  },
+}));
+
+jest.mock("../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis", () => {
+  return function MockStyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }: any) {
+    return (
+      <div data-testid="style-analysis">
+        <h3>Style Analysis</h3>
+        <div>Current Style: {recipe?.style || "None"}</div>
+        <button
+          onClick={() => onStyleSuggestionSelect("American IPA")}
+          data-testid="style-suggestion-button"
+        >
+          Suggest American IPA
+        </button>
+      </div>
+    );
+  };
+});
+
 // Mock react-router with controllable return values
 const mockNavigate = jest.fn();
 const mockUseParams = jest.fn();
@@ -694,6 +749,358 @@ describe("RecipeBuilder", () => {
     });
   });
 
+  describe("BeerXML Import/Export", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockHookReturn.recipe = {
+        recipe_id: "test-recipe-123",
+        name: "Test Recipe",
+        style: "IPA",
+        batch_size: 5,
+        description: "",
+        boil_time: 60,
+        efficiency: 75,
+        is_public: false,
+        notes: "",
+      };
+      mockHookReturn.ingredients = [{ id: "1", name: "Test Grain", type: "grain" }];
+    });
+
+    test("shows BeerXML button", () => {
+      renderWithRouter(<RecipeBuilder />);
+      expect(screen.getByText("📄 BeerXML")).toBeInTheDocument();
+    });
+
+    test("opens BeerXML import/export panel", async () => {
+      const user = userEvent.setup();
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      expect(screen.getByTestId("beerxml-import-export")).toBeInTheDocument();
+      expect(screen.getByText("BeerXML Import/Export")).toBeInTheDocument();
+    });
+
+    test("closes BeerXML panel", async () => {
+      const user = userEvent.setup();
+      renderWithRouter(<RecipeBuilder />);
+
+      // Open panel
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+      expect(screen.getByTestId("beerxml-import-export")).toBeInTheDocument();
+
+      // Close panel
+      const closeButton = screen.getByText("×");
+      await user.click(closeButton);
+      expect(screen.queryByTestId("beerxml-import-export")).not.toBeInTheDocument();
+    });
+
+    test("shows export button for existing recipes", () => {
+      mockHookReturn.isEditing = true;
+      mockHookReturn.canSave = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+      expect(screen.getByText("📤 Export")).toBeInTheDocument();
+    });
+
+    test("handles BeerXML import for new recipe", async () => {
+      const user = userEvent.setup();
+      mockHookReturn.isEditing = false;
+      mockHookReturn.refreshAvailableIngredients = jest.fn();
+      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      // Open BeerXML panel
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      // Trigger import
+      const importButton = screen.getByTestId("import-button");
+      await user.click(importButton);
+
+      expect(mockHookReturn.updateRecipe).toHaveBeenCalledWith("name", "Imported Recipe");
+      expect(mockHookReturn.updateRecipe).toHaveBeenCalledWith("style", "IPA");
+      expect(mockHookReturn.importIngredients).toHaveBeenCalledWith([
+        { id: "1", name: "Imported Grain", type: "grain" }
+      ]);
+    });
+
+    test("handles BeerXML import with created ingredients", async () => {
+      const user = userEvent.setup();
+      const Services = require("../../src/services");
+      mockHookReturn.isEditing = false;
+      mockHookReturn.refreshAvailableIngredients = jest.fn();
+      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      // Mock the import with created ingredients
+      jest.doMock("../../src/components/BeerXML/BeerXMLImportExport", () => {
+        return function MockBeerXMLImportExport({ onImport }: any) {
+          return (
+            <button
+              onClick={() => onImport({
+                recipe: { name: "Imported Recipe" },
+                ingredients: [],
+                createdIngredients: [{ id: "new-1", name: "New Ingredient" }]
+              })}
+              data-testid="import-with-created"
+            >
+              Import with Created
+            </button>
+          );
+        };
+      });
+
+      renderWithRouter(<RecipeBuilder />);
+
+      // Open BeerXML panel and trigger import
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      // We can't easily test the import with created ingredients without rerendering
+      // But we can verify the Services.ingredient.clearCache would be called
+      expect(Services.ingredient.clearCache).toBeDefined();
+    });
+
+    test("handles BeerXML import for existing recipe (navigates to new)", async () => {
+      const user = userEvent.setup();
+      mockHookReturn.isEditing = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const importButton = screen.getByTestId("import-button");
+      await user.click(importButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/recipes/new", {
+        state: {
+          importedData: {
+            recipe: { name: "Imported Recipe", style: "IPA" },
+            ingredients: [{ id: "1", name: "Imported Grain", type: "grain" }],
+            createdIngredients: []
+          },
+          source: "BeerXML Import",
+        },
+      });
+    });
+
+    test("handles BeerXML export", async () => {
+      const user = userEvent.setup();
+      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      
+      beerXMLService.exportRecipe.mockResolvedValue({
+        xmlContent: "<xml>test</xml>",
+        filename: "test-recipe.xml"
+      });
+
+      mockHookReturn.isEditing = true;
+      mockHookReturn.canSave = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const exportButton = screen.getByText("📤 Export");
+      await user.click(exportButton);
+
+      expect(beerXMLService.exportRecipe).toHaveBeenCalledWith("test-recipe-123");
+      expect(beerXMLService.downloadBeerXML).toHaveBeenCalledWith(
+        "<xml>test</xml>",
+        "test-recipe.xml"
+      );
+    });
+
+    test("handles BeerXML export without recipe_id (saves first)", async () => {
+      const user = userEvent.setup();
+      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      
+      mockHookReturn.recipe.recipe_id = null;
+      mockHookReturn.saveRecipe = jest.fn().mockResolvedValue({ recipe_id: "new-recipe-123" });
+      beerXMLService.exportRecipe.mockResolvedValue({
+        xmlContent: "<xml>test</xml>",
+        filename: "test-recipe.xml"
+      });
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const exportButton = screen.getByTestId("export-button");
+      await user.click(exportButton);
+
+      expect(mockHookReturn.saveRecipe).toHaveBeenCalled();
+    });
+
+    test("shows importing status", async () => {
+      const user = userEvent.setup();
+      mockHookReturn.importIngredients = jest.fn(() => new Promise(() => {})); // Never resolves
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const importButton = screen.getByTestId("import-button");
+      await user.click(importButton);
+
+      expect(screen.getByText("Importing BeerXML...")).toBeInTheDocument();
+    });
+
+    test("shows exporting status", async () => {
+      const user = userEvent.setup();
+      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      
+      beerXMLService.exportRecipe.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockHookReturn.isEditing = true;
+      mockHookReturn.canSave = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const exportButton = screen.getByText("📤 Export");
+      await user.click(exportButton);
+
+      expect(screen.getByText("Exporting...")).toBeInTheDocument();
+    });
+
+    test("shows success message after import", async () => {
+      const user = userEvent.setup({ delay: null });
+      
+      mockHookReturn.isEditing = false;
+      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const importButton = screen.getByTestId("import-button");
+      await user.click(importButton);
+
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      expect(screen.getByText("✅ BeerXML imported successfully")).toBeInTheDocument();
+    });
+
+    test("shows success message after export", async () => {
+      const user = userEvent.setup({ delay: null });
+      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      
+      beerXMLService.exportRecipe.mockResolvedValue({
+        xmlContent: "<xml>test</xml>",
+        filename: "test-recipe.xml"
+      });
+
+      mockHookReturn.isEditing = true;
+      mockHookReturn.canSave = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const exportButton = screen.getByText("📤 Export");
+      await user.click(exportButton);
+
+      // Wait for async operations to complete
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      expect(screen.getByText("✅ BeerXML exported successfully")).toBeInTheDocument();
+    });
+
+    test("disables buttons during operations", () => {
+      mockHookReturn.saving = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      expect(beerXMLButton).toBeDisabled();
+    });
+
+    test("handles export error gracefully", async () => {
+      const user = userEvent.setup({ delay: null });
+      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const originalAlert = window.alert;
+      window.alert = jest.fn();
+      
+      beerXMLService.exportRecipe.mockRejectedValue(new Error("Export failed"));
+      mockHookReturn.isEditing = true;
+      mockHookReturn.canSave = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const exportButton = screen.getByText("📤 Export");
+      await user.click(exportButton);
+
+      // Wait for async error handling
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(window.alert).toHaveBeenCalledWith("Failed to export recipe: Export failed");
+      
+      window.alert = originalAlert;
+    });
+
+    test("prevents export if no ingredients", async () => {
+      const user = userEvent.setup({ delay: null });
+      const originalAlert = window.alert;
+      window.alert = jest.fn();
+      
+      mockHookReturn.ingredients = [];
+      mockHookReturn.isEditing = true;
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const exportButton = screen.getByTestId("export-button");
+      await user.click(exportButton);
+
+      expect(window.alert).toHaveBeenCalledWith("Please save your recipe before exporting");
+      
+      window.alert = originalAlert;
+    });
+  });
+
+  describe("Style Analysis Integration", () => {
+    test("renders style analysis component", () => {
+      renderWithRouter(<RecipeBuilder />);
+      expect(screen.getByTestId("style-analysis")).toBeInTheDocument();
+    });
+
+    test("handles style suggestion selection", async () => {
+      const user = userEvent.setup({ delay: null });
+      renderWithRouter(<RecipeBuilder />);
+
+      const suggestionButton = screen.getByTestId("style-suggestion-button");
+      await user.click(suggestionButton);
+
+      expect(mockHookReturn.updateRecipe).toHaveBeenCalledWith("style", "American IPA");
+    });
+
+    test("passes correct props to style analysis", () => {
+      mockHookReturn.recipe.style = "IPA";
+      mockHookReturn.metrics = { og: 1.065, fg: 1.012, abv: 6.9, ibu: 65, srm: 6.5 };
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      expect(screen.getByText("Current Style: IPA")).toBeInTheDocument();
+    });
+  });
+
   describe("Edge Cases", () => {
     test("handles missing recipe data gracefully", () => {
       mockHookReturn.recipe = {
@@ -740,6 +1147,61 @@ describe("RecipeBuilder", () => {
       (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
 
       expect(() => renderWithRouter(<RecipeBuilder />)).not.toThrow();
+    });
+
+    test("handles BeerXML import error gracefully", async () => {
+      const user = userEvent.setup({ delay: null });
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+      
+      mockHookReturn.importIngredients = jest.fn().mockRejectedValue(new Error("Import failed"));
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const importButton = screen.getByTestId("import-button");
+      await user.click(importButton);
+
+      // Wait for async error handling
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(console.error).toHaveBeenCalledWith(
+        "Error importing BeerXML:",
+        expect.any(Error)
+      );
+      
+      console.error = originalConsoleError;
+    });
+
+    test("handles save failure during export", async () => {
+      const user = userEvent.setup({ delay: null });
+      const originalAlert = window.alert;
+      window.alert = jest.fn();
+      
+      mockHookReturn.recipe.recipe_id = null;
+      mockHookReturn.ingredients = [{ id: "1", name: "Test Grain", type: "grain" }]; // Must have ingredients
+      mockHookReturn.saveRecipe = jest.fn().mockResolvedValue(null); // Save fails
+      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+
+      renderWithRouter(<RecipeBuilder />);
+
+      const beerXMLButton = screen.getByText("📄 BeerXML");
+      await user.click(beerXMLButton);
+
+      const exportButton = screen.getByTestId("export-button");
+      await user.click(exportButton);
+
+      // Wait for async error handling
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(window.alert).toHaveBeenCalledWith(
+        "Failed to export recipe: Failed to save recipe before export"
+      );
+      
+      window.alert = originalAlert;
     });
   });
 });

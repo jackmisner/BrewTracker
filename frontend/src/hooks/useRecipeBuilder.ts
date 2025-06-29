@@ -211,8 +211,17 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }
 
         // Calculate initial metrics
-        // For new recipes with no ingredients, skip metrics calculation
-        if (ingredients.length === 0) {
+        // If editing an existing recipe, try to use existing estimated metrics first
+        if (recipeId && (recipe.estimated_og || recipe.estimated_fg || recipe.estimated_abv || recipe.estimated_ibu || recipe.estimated_srm)) {
+          metrics = {
+            og: recipe.estimated_og || 1.0,
+            fg: recipe.estimated_fg || 1.0,
+            abv: recipe.estimated_abv || 0.0,
+            ibu: recipe.estimated_ibu || 0,
+            srm: recipe.estimated_srm || 0,
+          };
+        } else if (ingredients.length === 0) {
+          // For new recipes with no ingredients, use default values
           metrics = {
             og: 1.0,
             fg: 1.0,
@@ -221,6 +230,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             srm: 0,
           };
         } else {
+          // Calculate metrics from ingredients
           try {
             // Add timeout to metrics calculation
             const metricsPromise = Services.metrics.calculateMetrics(
