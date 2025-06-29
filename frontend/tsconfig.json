@@ -41,14 +41,14 @@
   },
   
   "include": [
-    "src/**/*",
-    "tests/**/*"
+    "src/**/*"
   ],
   
   "exclude": [
     "node_modules",
     "build",
     "dist",
+    "tests/**/*",
     "**/*.test.js",
     "**/*.test.jsx"
   ]

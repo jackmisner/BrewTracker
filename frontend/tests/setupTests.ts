@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom";
 import { TextEncoder, TextDecoder } from "util";
 import { cleanup } from "@testing-library/react";
+import React from "react";
 
 // Polyfills for Node.js environment
 global.TextEncoder = TextEncoder;
+// @ts-ignore - TextDecoder polyfill for Node.js environment
 global.TextDecoder = TextDecoder;
 
 // Mock window.matchMedia (used by some UI libraries)
@@ -77,10 +79,10 @@ const createLocalStorageMock = () => {
 };
 
 // Create the mock and make it global so tests can access it
-global.mockLocalStorage = createLocalStorageMock();
+(global as any).mockLocalStorage = createLocalStorageMock();
 
 Object.defineProperty(window, "localStorage", {
-  value: global.mockLocalStorage,
+  value: (global as any).mockLocalStorage,
   writable: true,
 });
 
@@ -96,7 +98,7 @@ Object.defineProperty(window, "dispatchEvent", {
   value: mockDispatchEvent,
   writable: true,
 });
-global.mockDispatchEvent = mockDispatchEvent;
+(global as any).mockDispatchEvent = mockDispatchEvent;
 
 // Mock fetch for any components that use it directly
 global.fetch = jest.fn();
@@ -107,8 +109,8 @@ afterEach(() => {
   // Clear all mock calls but preserve mock implementations
   jest.clearAllMocks();
   // Reset localStorage store
-  global.mockLocalStorage.clear();
-  global.mockLocalStorage._setStore({});
+  (global as any).mockLocalStorage.clear();
+  (global as any).mockLocalStorage._setStore({});
 });
 
 // Custom matchers for testing
@@ -143,7 +145,7 @@ Object.defineProperty(global, "crypto", {
 HTMLCanvasElement.prototype.getContext = jest.fn();
 
 // Global test utilities
-global.testUtils = {
+(global as any).testUtils = {
   // Helper to create mock events
   createMockEvent: (overrides = {}) => ({
     preventDefault: jest.fn(),
@@ -161,8 +163,8 @@ global.testUtils = {
   waitForNextTick: () => new Promise((resolve) => setTimeout(resolve, 0)),
 
   // Helper to mock API responses
-  mockApiSuccess: (data) => Promise.resolve({ data }),
-  mockApiError: (error) => Promise.reject(new Error(error)),
+  mockApiSuccess: (data: any) => Promise.resolve({ data }),
+  mockApiError: (error: string) => Promise.reject(new Error(error)),
 };
 
 // Mock react-router-dom for tests that don't explicitly test routing
@@ -179,15 +181,18 @@ jest.mock("react-router", () => ({
 }));
 
 // Mock recharts to avoid canvas issues in tests
-jest.mock("recharts", () => ({
-  LineChart: ({ children }) => <div data-testid="line-chart">{children}</div>,
-  Line: () => <div data-testid="line" />,
-  XAxis: () => <div data-testid="x-axis" />,
-  YAxis: () => <div data-testid="y-axis" />,
-  CartesianGrid: () => <div data-testid="cartesian-grid" />,
-  Tooltip: () => <div data-testid="tooltip" />,
-  Legend: () => <div data-testid="legend" />,
-  ResponsiveContainer: ({ children }) => (
-    <div data-testid="responsive-container">{children}</div>
-  ),
-}));
+jest.mock("recharts", () => {
+  const mockReact = require("react");
+  return {
+    LineChart: ({ children }: { children: React.ReactNode }) => 
+      mockReact.createElement("div", { "data-testid": "line-chart" }, children),
+    Line: () => mockReact.createElement("div", { "data-testid": "line" }),
+    XAxis: () => mockReact.createElement("div", { "data-testid": "x-axis" }),
+    YAxis: () => mockReact.createElement("div", { "data-testid": "y-axis" }),
+    CartesianGrid: () => mockReact.createElement("div", { "data-testid": "cartesian-grid" }),
+    Tooltip: () => mockReact.createElement("div", { "data-testid": "tooltip" }),
+    Legend: () => mockReact.createElement("div", { "data-testid": "legend" }),
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) =>
+      mockReact.createElement("div", { "data-testid": "responsive-container" }, children),
+  };
+});

@@ -55,7 +55,7 @@ const IngredientInputsContainer: React.FC<IngredientInputsContainerProps> = ({
       />
 
       <OtherInput
-        others={ingredients.other || (ingredients as any).adjunct || []}
+        others={ingredients.other?.length ? ingredients.other : (ingredients as any).adjunct || []}
         onAdd={(data: IngredientFormData) => addIngredient("other", {
           ingredient_id: data.ingredient_id,
           amount: data.amount,
