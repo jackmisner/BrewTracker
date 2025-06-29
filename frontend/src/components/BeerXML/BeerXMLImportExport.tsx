@@ -190,6 +190,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       setImportState((prev) => ({
         ...prev,
         error: error.message,
+        showMatchingReview: false, // Return to main view to show error
+        isImporting: false,
       }));
     }
   };
