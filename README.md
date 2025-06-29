@@ -110,7 +110,7 @@ homebrew-tracker/
 │   │   │   └── formatUtils.ts                      # Utility functions for unit formatting and display
 │   │   ├── App.tsx                                 # Main React application component with routing and global providers
 │   │   └── index.tsx                               # React application entry point and DOM rendering
-│   ├── tests/                                      # Jest tests for React components and utilities
+│   ├── tests/                                      # Jest + TypeScript tests for React components and utilities
 │   ├── package.json                                # Node.js dependencies, scripts, and project configuration
 │   └── .env                                        # Environment variables for API URLs and frontend configuration
 └── README.md                                       # The document you are currently reading!
@@ -323,6 +323,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ### Development Guidelines
 
 - All new frontend code should be written in TypeScript
+- All new frontend tests should be written in TypeScript (.test.ts/.test.tsx)
 - Maintain test coverage above 70%
 - Run type checking before committing: `npx tsc --noEmit`
 - Follow existing code conventions and patterns
