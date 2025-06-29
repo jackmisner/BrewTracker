@@ -274,7 +274,6 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
       case "Escape":
         setIsOpen(false);
         setHighlightedIndex(-1);
-        inputRef.current?.blur();
         break;
 
       default:
@@ -309,6 +308,9 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     }
   }, [highlightedIndex]);
 
+useEffect(() => {
+  setSearchTerm(value || '');
+}, [value]);
 
   if (loading) {
     return (
@@ -346,6 +348,9 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
       <div className="style-input-container">
         <input
           ref={inputRef}
+          role="combobox"
+          aria-controls="beer-style-listbox"
+          aria-expanded={isOpen}
           type="text"
           className="form-control"
           value={searchTerm}
@@ -363,9 +368,9 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
           <button
             type="button"
             onClick={() => {
-              setSearchTerm("");
+              setSearchTerm('');
               setSelectedStyle(null);
-              onChange("");
+              onChange('');
               inputRef.current?.focus();
             }}
             className="clear-button"
@@ -443,9 +448,18 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
             recipe={recipe} 
             metrics={metrics ?? undefined} 
             onStyleSuggestionSelect={() => {}} 
+          data-testid="style-analysis"
           />
         </div>
       )}
+      {(showStyleInfo && selectedStyle) || (showSuggestions && metrics) ? (
+  <StyleAnalysis
+    recipe={recipe}
+    metrics={metrics ?? undefined}
+    onStyleSuggestionSelect={onStyleSuggestionSelect || (() => {})}
+    data-testid="style-analysis"
+  />
+) : null}
 
       {/* Style suggestions when no style is selected */}
       {showSuggestions &&

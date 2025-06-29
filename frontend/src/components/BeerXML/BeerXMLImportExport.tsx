@@ -276,6 +276,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
               accept=".xml"
               onChange={handleFileSelect}
               className="file-input"
+              data-testid="beerxml-file-input"
             />
 
             <div

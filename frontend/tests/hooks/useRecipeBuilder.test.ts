@@ -250,6 +250,70 @@ describe("useRecipeBuilder", () => {
         srm: 0,
       });
     });
+
+    it("should use existing estimated metrics when editing a recipe with pre-calculated values", async () => {
+      // This test covers the bug where existing recipe metrics weren't loaded in edit mode
+      const recipeWithEstimatedMetrics = {
+        ...mockRecipe,
+        ingredients: mockIngredients,
+        // Include estimated metrics that should be used instead of recalculating
+        estimated_og: 1.048,
+        estimated_fg: 1.012,
+        estimated_abv: 4.7,
+        estimated_ibu: 25,
+        estimated_srm: 6.5,
+      };
+      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithEstimatedMetrics);
+
+      const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should NOT call calculateMetrics since we're using existing estimated values
+      expect(Services.metrics.calculateMetrics).not.toHaveBeenCalled();
+      
+      // Should use the estimated metrics from the recipe data
+      expect(result.current.metrics).toEqual({
+        og: 1.048,
+        fg: 1.012,
+        abv: 4.7,
+        ibu: 25,
+        srm: 6.5,
+      });
+    });
+
+    it("should gracefully handle partial estimated metrics when editing a recipe", async () => {
+      // Test partial estimated metrics (some fields missing)
+      const recipeWithPartialMetrics = {
+        ...mockRecipe,
+        ingredients: mockIngredients,
+        // Only some estimated metrics are available
+        estimated_og: 1.055,
+        estimated_abv: 5.8,
+        // estimated_fg, estimated_ibu, estimated_srm are missing
+      };
+      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithPartialMetrics);
+
+      const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should NOT call calculateMetrics since we have some estimated values
+      expect(Services.metrics.calculateMetrics).not.toHaveBeenCalled();
+      
+      // Should use available estimated metrics and defaults for missing ones
+      expect(result.current.metrics).toEqual({
+        og: 1.055,    // from estimated_og
+        fg: 1.0,      // default (estimated_fg missing)
+        abv: 5.8,     // from estimated_abv
+        ibu: 0,       // default (estimated_ibu missing)
+        srm: 0,       // default (estimated_srm missing)
+      });
+    });
   });
 
   describe("updateRecipe", () => {
