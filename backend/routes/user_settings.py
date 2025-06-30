@@ -41,7 +41,8 @@ def update_user_settings():
         return jsonify({"error": "User not found"}), 404
 
     data = request.get_json()
-    settings_data = data.get("settings", {})
+    # Support both nested format {"settings": {...}} and direct format {...}
+    settings_data = data.get("settings", data)
 
     try:
         user.update_settings(settings_data)
