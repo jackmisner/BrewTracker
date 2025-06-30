@@ -98,16 +98,10 @@ class MetricService {
       }
 
       const response = await ApiService.recipes.calculateMetricsPreview({
-        recipe: {
-          id: '',
-          name: 'Preview Recipe',
-          batch_size: calculationData.batch_size,
-          batch_size_unit: calculationData.batch_size_unit,
-          efficiency: calculationData.efficiency,
-          boil_time: calculationData.boil_time,
-          is_public: false,
-          ingredients: calculationData.ingredients,
-        },
+        batch_size: calculationData.batch_size,
+        batch_size_unit: calculationData.batch_size_unit,
+        efficiency: calculationData.efficiency,
+        boil_time: calculationData.boil_time,
         ingredients: calculationData.ingredients,
       });
       const metrics = this.processMetricsResponse(response.data.data || response.data);

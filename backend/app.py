@@ -56,7 +56,7 @@ def create_app(config_class=None):
         allowed_origins = [
             os.getenv(
                 "FRONTEND_URL",
-                "https://brewtracker-h7utwp6ek-jackmisners-projects.vercel.app",
+                "https://brewtracker-wheat.vercel.app",
             ),
             "https://*.vercel.app",  # Allow Vercel preview deployments
         ]

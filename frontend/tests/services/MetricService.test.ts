@@ -95,6 +95,36 @@ describe("MetricService", () => {
       expect(cachedResult).toEqual(result);
     });
 
+    test("passes correct data structure to API with batch_size as number", async () => {
+      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockResolvedValue(
+        mockApiResponse
+      );
+
+      await metricService.calculateMetrics(mockRecipeData, mockIngredients);
+
+      expect(ApiService.recipes.calculateMetricsPreview).toHaveBeenCalledWith({
+        batch_size: 5,
+        batch_size_unit: "gal",
+        efficiency: 75,
+        boil_time: 60,
+        ingredients: expect.arrayContaining([
+          expect.objectContaining({
+            ingredient_id: 1,
+            name: "Pale Malt",
+            type: "grain",
+            amount: 10,
+            unit: "lb",
+          }),
+        ]),
+      });
+
+      // Verify batch_size is specifically a number, not a string
+      const callArgs = (ApiService.recipes.calculateMetricsPreview as jest.Mock).mock.calls[0][0];
+      expect(typeof callArgs.batch_size).toBe("number");
+      expect(typeof callArgs.efficiency).toBe("number");
+      expect(typeof callArgs.boil_time).toBe("number");
+    });
+
     test("handles API errors and returns default metrics", async () => {
       (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockRejectedValue(
         new Error("API Error")
