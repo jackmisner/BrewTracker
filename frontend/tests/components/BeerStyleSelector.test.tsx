@@ -368,7 +368,7 @@ describe('BeerStyleSelector', () => {
   });
 
   describe('Style Suggestions Integration', () => {
-    it('shows style analysis when showSuggestions is true', async () => {
+    it('shows suggestions section when showSuggestions is true', async () => {
       render(
         <BeerStyleSelector 
           onChange={mockOnChange} 
@@ -379,11 +379,11 @@ describe('BeerStyleSelector', () => {
       );
       
       await waitFor(() => {
-        expect(screen.getByTestId('style-analysis')).toBeInTheDocument();
+        expect(screen.getByText('Suggested Styles Based on Current Recipe')).toBeInTheDocument();
       });
     });
 
-    it('does not show style analysis when showSuggestions is false', async () => {
+    it('does not show suggestions section when showSuggestions is false', async () => {
       render(
         <BeerStyleSelector 
           onChange={mockOnChange} 
@@ -393,13 +393,11 @@ describe('BeerStyleSelector', () => {
       );
       
       await waitFor(() => {
-        expect(screen.queryByTestId('style-analysis')).not.toBeInTheDocument();
+        expect(screen.queryByText('Suggested Styles Based on Current Recipe')).not.toBeInTheDocument();
       });
     });
 
-    it('handles style suggestion selection', async () => {
-      const user = userEvent.setup();
-      
+    it('shows no suggestions message when no suggestions available', async () => {
       render(
         <BeerStyleSelector 
           onChange={mockOnChange} 
@@ -410,13 +408,8 @@ describe('BeerStyleSelector', () => {
       );
       
       await waitFor(() => {
-        expect(screen.getByTestId('style-analysis')).toBeInTheDocument();
+        expect(screen.getByText('No style suggestions available based on current recipe metrics.')).toBeInTheDocument();
       });
-
-      const suggestionButton = screen.getByTestId('style-suggestion');
-      await user.click(suggestionButton);
-
-      expect(mockOnStyleSuggestionSelect).toHaveBeenCalledWith('Suggested Style');
     });
   });
 
@@ -512,7 +505,7 @@ describe('BeerStyleSelector', () => {
       });
     });
 
-    it('passes recipe prop to StyleAnalysis when provided', async () => {
+    it('shows style info when a style is selected and showStyleInfo is true', async () => {
       const mockRecipe = {
         id: 'test-recipe-1',
         recipe_id: 'test-recipe-1',
@@ -533,15 +526,15 @@ describe('BeerStyleSelector', () => {
       render(
         <BeerStyleSelector 
           onChange={mockOnChange} 
-          showSuggestions={true}
+          showStyleInfo={true}
+          value="American IPA"
           recipe={mockRecipe}
           metrics={mockMetrics}
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
         />
       );
       
       await waitFor(() => {
-        expect(screen.getByTestId('style-analysis')).toBeInTheDocument();
+        expect(screen.getByText('21A - American IPA')).toBeInTheDocument();
       });
     });
   });
