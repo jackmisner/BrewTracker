@@ -353,6 +353,9 @@ class MongoDBService:
             if user_id:
                 user = User.objects(id=user_id).first()
 
+            # Remove 'id' field if present - MongoDB will auto-generate _id
+            recipe_data.pop("id", None)
+
             # Extract ingredients data if provided
             ingredients_data = recipe_data.pop("ingredients", [])
 
@@ -382,6 +385,10 @@ class MongoDBService:
             return recipe
         except Exception as e:
             print(f"Database error creating recipe: {e}")
+            print(f"Recipe data: {recipe_data}")
+            import traceback
+
+            traceback.print_exc()
             return None
 
     @staticmethod

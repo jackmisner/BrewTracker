@@ -146,6 +146,18 @@ def create_recipe():
         # Create recipe with unit system
         recipe = MongoDBService.create_recipe(data, user_id)
 
+        if recipe is None:
+            print(
+                f"Error: MongoDBService.create_recipe returned None for user {user_id}"
+            )
+            print(f"Recipe data: {data}")
+            return (
+                jsonify(
+                    {"error": "Failed to create recipe: Database operation failed"}
+                ),
+                400,
+            )
+
         return (
             jsonify(
                 {
@@ -158,6 +170,11 @@ def create_recipe():
         )
 
     except Exception as e:
+        print(f"Exception in create_recipe route: {e}")
+        print(f"Recipe data: {data}")
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"error": f"Failed to create recipe: {str(e)}"}), 400
 
 
