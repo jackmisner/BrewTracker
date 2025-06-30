@@ -28,10 +28,8 @@ migrations/
 .env.*.local
 .env.production
 
-# Deployment files (keep these files but ignore them from repo)
+# Deployment files (some should be tracked for CI/CD)
 .dockerignore
-Dockerfile
-fly.toml
 deploy.sh
 DEPLOYMENT.md
 requirements-prod.txt
