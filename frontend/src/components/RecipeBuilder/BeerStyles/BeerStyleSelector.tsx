@@ -448,73 +448,69 @@ useEffect(() => {
             recipe={recipe} 
             metrics={metrics ?? undefined} 
             onStyleSuggestionSelect={() => {}} 
-          data-testid="style-analysis"
+            data-testid="style-analysis"
           />
         </div>
       )}
-      {(showStyleInfo && selectedStyle) || (showSuggestions && metrics) ? (
-  <StyleAnalysis
-    recipe={recipe}
-    metrics={metrics ?? undefined}
-    onStyleSuggestionSelect={onStyleSuggestionSelect || (() => {})}
-    data-testid="style-analysis"
-  />
-) : null}
+
 
       {/* Style suggestions when no style is selected */}
       {showSuggestions &&
         !selectedStyle &&
-        suggestions.length > 0 &&
         metrics && (
           <div className="style-suggestions">
             <h4>Suggested Styles Based on Current Recipe</h4>
-            <div className="suggestions-list">
-              {suggestions.slice(0, 3).map((suggestion, index) => (
-                <div key={index} className="suggestion-item">
-                  <div className="suggestion-header">
-                    <div className="style-info">
-                      <span className="style-id">
-                        {suggestion.style.style_id}
-                      </span>
-                      <span className="style-name">
-                        {suggestion.style.name}
-                      </span>
-                    </div>
-                    <div className="suggestion-actions">
-                      <span className="match-score">
-                        {Math.round(suggestion.match_percentage)}% match
-                      </span>
-                      <button
-                        onClick={() => {
-                          if (onStyleSuggestionSelect) {
-                            onStyleSuggestionSelect(suggestion.style.name);
-                          } else {
-                            handleStyleSelect(suggestion.style as EnhancedBeerStyle);
-                          }
-                        }}
-                        className="select-style-btn"
-                      >
-                        Select
-                      </button>
-                    </div>
-                  </div>
-                  <div className="match-breakdown">
-                    {Object.entries(suggestion.matches).map(
-                      ([spec, matches]) => (
-                        <span
-                          key={spec}
-                          className={`spec-indicator ${
-                            matches ? "match" : "no-match"
-                          }`}
-                        >
-                          {spec.toUpperCase()}
+            {suggestions.length > 0 ? (
+              <div className="suggestions-list">
+                {suggestions.slice(0, 3).map((suggestion, index) => (
+                  <div key={index} className="suggestion-item">
+                    <div className="suggestion-header">
+                      <div className="style-info">
+                        <span className="style-id">
+                          {suggestion.style.style_id}
                         </span>
-                      )
-                    )}
+                        <span className="style-name">
+                          {suggestion.style.name}
+                        </span>
+                      </div>
+                      <div className="suggestion-actions">
+                        <span className="match-score">
+                          {Math.round(suggestion.match_percentage)}% match
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (onStyleSuggestionSelect) {
+                              onStyleSuggestionSelect(suggestion.style.name);
+                            } else {
+                              handleStyleSelect(suggestion.style as EnhancedBeerStyle);
+                            }
+                          }}
+                          className="select-style-btn"
+                        >
+                          Select
+                        </button>
+                      </div>
+                    </div>
+                    <div className="match-breakdown">
+                      {Object.entries(suggestion.matches).map(
+                        ([spec, matches]) => (
+                          <span
+                            key={spec}
+                            className={`spec-indicator ${
+                              matches ? "match" : "no-match"
+                            }`}
+                          >
+                            {spec.toUpperCase()}
+                          </span>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p>No style suggestions available based on current recipe metrics.</p>
+            )}
           </div>
         )}
     </div>
