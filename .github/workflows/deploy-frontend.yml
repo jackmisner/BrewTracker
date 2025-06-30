@@ -11,9 +11,6 @@ jobs:
     name: Deploy Frontend
     runs-on: ubuntu-latest
     
-    # Only run if frontend files changed
-    if: contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/') || github.event_name == 'workflow_dispatch'
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,8 +40,7 @@ jobs:
       - name: Health Check
         run: |
           sleep 30
-          # Replace with your actual Vercel URL once deployed
-          curl -f https://brewtracker-h7utwp6ek-jackmisners-projects.vercel.app || exit 1
+          curl -f https://brewtracker-wheat.vercel.app || exit 1
         
       - name: Notify Success
         if: success()

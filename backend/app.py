@@ -72,6 +72,7 @@ def create_app(config_class=None):
         supports_credentials=True,
     )
     print(f"CORS enabled for origins: {allowed_origins}")
+    print(f"Backend deployment trigger test - {flask_env} mode")
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
