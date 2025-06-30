@@ -32,7 +32,7 @@ migrations/
 .dockerignore
 deploy.sh
 DEPLOYMENT.md
-requirements-prod.txt
+
 
 # Keep GitHub workflows (these should be committed)
 !.github/
