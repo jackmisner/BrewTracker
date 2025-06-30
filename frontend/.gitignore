@@ -26,6 +26,8 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.example
 
 # logs
 npm-debug.log*
@@ -52,3 +54,13 @@ lerna-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Deployment files (keep these files but ignore them from repo)
+.vercel
+vercel.json
+deploy.sh
+VERCEL_DEPLOYMENT.md
+vercel-setup.md
+
+# Keep GitHub workflows (these should be committed)
+!.github/

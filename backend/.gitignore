@@ -26,6 +26,18 @@ migrations/
 .env
 .env.local
 .env.*.local
+.env.production
+
+# Deployment files (keep these files but ignore them from repo)
+.dockerignore
+Dockerfile
+fly.toml
+deploy.sh
+DEPLOYMENT.md
+requirements-prod.txt
+
+# Keep GitHub workflows (these should be committed)
+!.github/
 
 # IDE files
 .vscode/

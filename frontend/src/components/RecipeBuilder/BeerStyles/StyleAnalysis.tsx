@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import BeerStyleService from "../../../services/BeerStyleService";
 import StyleRangeIndicator from "./StyleRangeIndicator";
 import { Recipe, RecipeMetrics } from "../../../types";
@@ -34,17 +34,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (metrics && recipe?.style) {
-      // Real-time style analysis based on current metrics and selected style
-      loadRealtimeStyleAnalysis();
-    } else if (metrics && !recipe?.style) {
-      // Only load suggestions when no style is selected
-      loadStyleSuggestionsOnly();
-    }
-  }, [recipe?.style, metrics]);
-
-  const loadRealtimeStyleAnalysis = async (): Promise<void> => {
+  const loadRealtimeStyleAnalysis = useCallback(async (): Promise<void> => {
     if (!recipe?.style || !metrics) return;
 
     try {
@@ -89,9 +79,9 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [recipe?.style, metrics]);
 
-  const loadStyleSuggestionsOnly = async (): Promise<void> => {
+  const loadStyleSuggestionsOnly = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -107,7 +97,17 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [metrics]);
+
+  useEffect(() => {
+    if (metrics && recipe?.style) {
+      // Real-time style analysis based on current metrics and selected style
+      loadRealtimeStyleAnalysis();
+    } else if (metrics && !recipe?.style) {
+      // Only load suggestions when no style is selected
+      loadStyleSuggestionsOnly();
+    }
+  }, [recipe?.style, metrics, loadRealtimeStyleAnalysis, loadStyleSuggestionsOnly]);
 
   const getMatchStatusColor = (matches: Record<string, boolean>): string => {
     const matchCount = Object.values(matches).filter(Boolean).length;
