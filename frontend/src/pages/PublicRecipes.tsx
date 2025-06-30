@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import ApiService from "../services/api";
 import RecipeCard from "../components/RecipeCard";
@@ -33,16 +33,12 @@ const PublicRecipes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [styleFilter, setStyleFilter] = useState<string>("");
 
-  useEffect(() => {
-    fetchPublicRecipes();
-  }, [currentPage, styleFilter]);
-
-  const fetchPublicRecipes = async (): Promise<void> => {
+  const fetchPublicRecipes = useCallback(async (searchTerm?: string): Promise<void> => {
     try {
       setLoading(true);
       const filters: PublicRecipeFilters = {};
       if (styleFilter) filters.style = styleFilter;
-      if (searchQuery) filters.search = searchQuery;
+      if (searchTerm) filters.search = searchTerm;
 
       const response = await ApiService.recipes.getPublic(currentPage, 12, filters);
 
@@ -54,12 +50,16 @@ const PublicRecipes: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, styleFilter]);
+
+  useEffect(() => {
+    fetchPublicRecipes();
+  }, [currentPage, styleFilter, fetchPublicRecipes]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchPublicRecipes();
+    fetchPublicRecipes(searchQuery);
   };
 
   const handleCloneRecipe = async (recipeId: ID): Promise<void> => {

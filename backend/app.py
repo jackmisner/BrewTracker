@@ -21,10 +21,19 @@ from routes.user_settings import user_settings_bp
 def create_app(config_class=None):
     app = Flask(__name__)
 
+    # Determine configuration based on environment
     if config_class:
         app.config.from_object(config_class)
     else:
-        app.config.from_object(config.Config)
+        env = os.getenv("FLASK_ENV", "development")
+        if env == "production":
+            app.config.from_object(config.ProductionConfig)
+            # Validate required environment variables in production
+            config.ProductionConfig.validate_required_vars()
+        elif env == "testing":
+            app.config.from_object(config.TestConfig)
+        else:
+            app.config.from_object(config.Config)
 
     # Initialize MongoDB connection
     try:
@@ -38,14 +47,31 @@ def create_app(config_class=None):
 
     # Initialize other extensions
     JWTManager(app)
+
+    # Configure CORS based on environment
+    flask_env = os.getenv("FLASK_ENV", "development")
+    print(f"FLASK_ENV detected: {flask_env}")
+    if flask_env == "production":
+        # Production CORS - restrict to your frontend domain
+        allowed_origins = [
+            os.getenv(
+                "FRONTEND_URL",
+                "https://brewtracker-h7utwp6ek-jackmisners-projects.vercel.app",
+            ),
+            "https://*.vercel.app",  # Allow Vercel preview deployments
+        ]
+    else:
+        # Development CORS
+        allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
     CORS(
         app,
-        origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        origins=allowed_origins,
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
         supports_credentials=True,
     )
-    print("CORS enabled for all domains")
+    print(f"CORS enabled for origins: {allowed_origins}")
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -120,7 +146,14 @@ def create_app(config_class=None):
     return app
 
 
+# Create app instance for WSGI servers
+app = create_app()
+
 # Run the application
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True, host="localhost", port=5000)
+    # Development server
+    port = int(os.getenv("PORT", 5000))
+    host = os.getenv("HOST", "0.0.0.0")
+    debug = os.getenv("FLASK_ENV", "development") != "production"
+
+    app.run(debug=debug, host=host, port=port)
