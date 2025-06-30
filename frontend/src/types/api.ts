@@ -82,7 +82,10 @@ export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {
 }
 
 export interface CalculateMetricsPreviewRequest {
-  recipe: Omit<Recipe, 'recipe_id' | 'created_at' | 'updated_at'>;
+  batch_size: number;
+  batch_size_unit: string;
+  efficiency: number;
+  boil_time: number;
   ingredients: Recipe['ingredients'];
 }
 

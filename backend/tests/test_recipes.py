@@ -443,6 +443,42 @@ class TestRecipeEndpointsExtended:
         assert "ibu" in response.json
         assert "srm" in response.json
 
+    def test_calculate_metrics_preview_batch_size_types(
+        self, client, authenticated_user
+    ):
+        """Test metrics preview with different batch_size types"""
+        user, headers = authenticated_user
+
+        # Test with integer batch_size
+        int_data = {"batch_size": 5, "efficiency": 75, "ingredients": []}
+        response = client.post(
+            "/api/recipes/calculate-metrics-preview", json=int_data, headers=headers
+        )
+        assert response.status_code == 200
+
+        # Test with float batch_size
+        float_data = {"batch_size": 5.5, "efficiency": 75, "ingredients": []}
+        response = client.post(
+            "/api/recipes/calculate-metrics-preview", json=float_data, headers=headers
+        )
+        assert response.status_code == 200
+
+        # Test with string batch_size (should fail)
+        string_data = {"batch_size": "5", "efficiency": 75, "ingredients": []}
+        response = client.post(
+            "/api/recipes/calculate-metrics-preview", json=string_data, headers=headers
+        )
+        assert response.status_code == 400
+        assert "batch_size must be a number" in response.json["error"]
+
+        # Test with None batch_size (should fail)
+        none_data = {"batch_size": None, "efficiency": 75, "ingredients": []}
+        response = client.post(
+            "/api/recipes/calculate-metrics-preview", json=none_data, headers=headers
+        )
+        assert response.status_code == 400
+        assert "batch_size must be a number" in response.json["error"]
+
     def test_clone_recipe_not_found(self, client, authenticated_user):
         """Test cloning non-existent recipe"""
         user, headers = authenticated_user
