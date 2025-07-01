@@ -12,10 +12,10 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
   return (
     <header className="header">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="header-container">
         <Link to="/" className="logo">
           <img src={logo} alt="Brewtracker Logo" />
-          <h1 className="text-2xl font-bold text-amber-100">Brewtracker</h1>
+          <h1 className="logo-title">Brewtracker</h1>
         </Link>
 
         <nav className="nav">
