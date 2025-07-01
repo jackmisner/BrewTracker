@@ -64,6 +64,7 @@ function RecipeBuilder(): React.ReactElement {
     updateIngredient,
     removeIngredient,
     importIngredients,
+    importRecipeData,
     scaleRecipe,
     saveRecipe,
     clearError,
@@ -94,10 +95,12 @@ function RecipeBuilder(): React.ReactElement {
 
       // For new recipes, replace current recipe with imported data
       if (!isEditing) {
-        // Update recipe details first
-        Object.keys(importData.recipe).forEach((key) => {
-          updateRecipe(key as keyof Recipe, importData.recipe[key as keyof Recipe]);
-        });
+        // Import all recipe data at once to avoid timing issues
+        if (importData.recipe && typeof importData.recipe === 'object') {
+          // Extract recipe data excluding ingredients since they're handled separately
+          const { ingredients: _, ...recipeData } = importData.recipe;
+          await importRecipeData(recipeData);
+        }
 
         // Add ALL ingredients at once instead of one by one to avoid race conditions
         await importIngredients(importData.ingredients);

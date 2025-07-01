@@ -102,7 +102,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
 
       // Parse BeerXML using backend
       const parsedRecipes = await beerXMLService.parseBeerXML(fileContent);
-
+      // console.log(parsedRecipes[0])
       setImportState((prev) => ({
         ...prev,
         parsedRecipes,
@@ -164,7 +164,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       const createdIngredients = importResult.createdIngredients || [];
 
       await onImport({
-        recipe: importState.selectedRecipe.recipe,
+        recipe: importState.selectedRecipe,
         ingredients: finalizedIngredients,
         metadata: importState.selectedRecipe.metadata,
         createdIngredients: createdIngredients, // Pass created ingredients for cache update
@@ -360,7 +360,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   >
                     {importState.parsedRecipes.map((recipe, index) => (
                       <option key={index} value={index}>
-                        {recipe.recipe.name} ({recipe.ingredients.length}{" "}
+                        {recipe?.recipe?.name || 'Unknown Recipe'} ({recipe?.ingredients?.length || 0}{" "}
                         ingredients)
                       </option>
                     ))}
@@ -376,29 +376,29 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     <div className="detail-row">
                       <span className="label">Name:</span>
                       <span className="value">
-                        {importState.selectedRecipe.recipe.name}
+                        {importState.selectedRecipe?.name || 'N/A'}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Style:</span>
                       <span className="value">
-                        {importState.selectedRecipe.recipe.style ||
+                        {importState.selectedRecipe?.style ||
                           "Not specified"}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Batch Size:</span>
                       <span className="value">
-                        {importState.selectedRecipe.recipe.batch_size.toFixed(
-                          1
-                        )}{" "}
+                        {importState.selectedRecipe?.batch_size?.toFixed(
+                          0
+                        ) || 'N/A'}{" "}
                         gal
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Ingredients:</span>
                       <span className="value">
-                        {importState.selectedRecipe.ingredients.length}
+                        {importState.selectedRecipe?.ingredients?.length || 0}
                       </span>
                     </div>
                   </div>
@@ -409,9 +409,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     <div className="ingredient-types">
                       {["grain", "hop", "yeast", "other"].map((type) => {
                         const count =
-                          importState.selectedRecipe.ingredients.filter(
+                          importState.selectedRecipe?.ingredients?.filter(
                             (ing: any) => ing.type === type
-                          ).length;
+                          ).length || 0;
                         if (count === 0) return null;
 
                         return (

@@ -926,4 +926,276 @@ describe("useRecipeBuilder", () => {
       // Test passes if no errors are thrown
     });
   });
+
+  describe("importRecipeData", () => {
+    beforeEach(() => {
+      // Set up default mocks
+      (Services.ingredient.fetchIngredients as jest.Mock).mockResolvedValue(
+        mockAvailableIngredients
+      );
+      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockResolvedValue({
+        og: 1.050,
+        fg: 1.010,
+        abv: 5.2,
+        ibu: 25,
+        srm: 8,
+      });
+    });
+
+    test("imports recipe data correctly", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const importData = {
+        name: "Imported Recipe",
+        style: "American IPA",
+        description: "A hoppy beer",
+        batch_size: 5.5,
+        efficiency: 75,
+        boil_time: 60,
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      expect(result.current.recipe.name).toBe("Imported Recipe");
+      expect(result.current.recipe.style).toBe("American IPA");
+      expect(result.current.recipe.description).toBe("A hoppy beer");
+      expect(result.current.recipe.batch_size).toBe(5.5);
+      expect(result.current.recipe.efficiency).toBe(75);
+      expect(result.current.recipe.boil_time).toBe(60);
+      expect(result.current.hasUnsavedChanges).toBe(true);
+    });
+
+    test("rounds batch size to 2 decimal places", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const importData = {
+        batch_size: 5.000002351132373, // Problematic precision from BeerXML
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      expect(result.current.recipe.batch_size).toBe(5.0);
+    });
+
+    test("handles edge cases for batch size rounding", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const testCases = [
+        { input: 4.999999, expected: 5.0 },
+        { input: 5.001, expected: 5.0 },
+        { input: 5.126, expected: 5.13 },
+        { input: 19.789123, expected: 19.79 },
+      ];
+
+      for (const testCase of testCases) {
+        await act(async () => {
+          await result.current.importRecipeData({
+            batch_size: testCase.input,
+          });
+        });
+
+        expect(result.current.recipe.batch_size).toBe(testCase.expected);
+      }
+    });
+
+    test("imports only provided fields without affecting others", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Import partial data
+      const importData = {
+        style: "Belgian Witbier",
+        batch_size: 4.5,
+        name: "Imported Recipe",
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      // Should have imported data
+      expect(result.current.recipe.style).toBe("Belgian Witbier");
+      expect(result.current.recipe.batch_size).toBe(4.5);
+      expect(result.current.recipe.name).toBe("Imported Recipe");
+      
+      // Should have default values for non-imported fields
+      expect(result.current.recipe.efficiency).toBe(75); // Default value
+      expect(result.current.hasUnsavedChanges).toBe(true);
+    });
+
+    test("triggers metrics recalculation for calculation fields", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Add some ingredients first so metrics calculation makes sense
+      const mockIngredients = [
+        {
+          id: "1",
+          name: "Pale Malt",
+          amount: 10,
+          unit: "lb",
+          type: "grain" as const,
+        },
+      ];
+      
+      await act(async () => {
+        await result.current.importIngredients(mockIngredients);
+      });
+
+      jest.clearAllMocks();
+
+      const importData = {
+        batch_size: 5.5,
+        efficiency: 75,
+        boil_time: 90,
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      expect(Services.metrics.calculateMetricsDebounced).toHaveBeenCalledWith(
+        "recipe-builder",
+        expect.objectContaining({
+          batch_size: 5.5,
+          efficiency: 75,
+          boil_time: 90,
+        }),
+        expect.any(Array)
+      );
+    });
+
+    test("does not trigger metrics recalculation for non-calculation fields", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      jest.clearAllMocks();
+
+      const importData = {
+        name: "Test Recipe",
+        style: "IPA",
+        description: "A test recipe",
+        notes: "Some notes",
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      expect(Services.metrics.calculateMetricsDebounced).not.toHaveBeenCalled();
+    });
+
+    test("handles errors gracefully", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Add some ingredients first so metrics calculation will be triggered
+      const mockIngredients = [
+        {
+          id: "1",
+          name: "Test Ingredient",
+          amount: 1,
+          unit: "lb",
+          type: "grain" as const,
+        },
+      ];
+      
+      await act(async () => {
+        await result.current.importIngredients(mockIngredients);
+      });
+
+      // Mock metrics calculation to throw an error
+      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockRejectedValue(
+        new Error("Metrics calculation failed")
+      );
+
+      const importData = {
+        name: "Test Recipe",
+        batch_size: 5.5, // This should trigger metrics calculation
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData);
+      });
+
+      // Recipe data should still be imported despite metrics error
+      expect(result.current.recipe.name).toBe("Test Recipe");
+      expect(result.current.recipe.batch_size).toBe(5.5);
+      expect(result.current.error).toBe("Failed to recalculate metrics");
+    });
+
+    test("handles empty import data", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const originalRecipe = { ...result.current.recipe };
+
+      await act(async () => {
+        await result.current.importRecipeData({});
+      });
+
+      // Recipe should remain unchanged except for hasUnsavedChanges
+      expect(result.current.recipe).toEqual({
+        ...originalRecipe,
+      });
+      expect(result.current.hasUnsavedChanges).toBe(true);
+    });
+
+    test("handles null and undefined values correctly", async () => {
+      const { result } = renderHook(() => useRecipeBuilder());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const importData = {
+        name: "Test Recipe",
+        style: undefined,
+        description: null,
+        notes: "",
+        batch_size: 0,
+      };
+
+      await act(async () => {
+        await result.current.importRecipeData(importData as any);
+      });
+
+      expect(result.current.recipe.name).toBe("Test Recipe");
+      expect(result.current.recipe.style).toBeUndefined();
+      expect(result.current.recipe.description).toBeNull();
+      expect(result.current.recipe.notes).toBe("");
+      expect(result.current.recipe.batch_size).toBe(0);
+    });
+  });
 });

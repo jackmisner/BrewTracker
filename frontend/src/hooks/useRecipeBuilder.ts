@@ -70,6 +70,7 @@ interface UseRecipeBuilderReturn {
   cancelOperation: () => void;
   getRecipeAnalysis: () => RecipeAnalysis;
   refreshAvailableIngredients: () => Promise<void>;
+  importRecipeData: (recipeData: Partial<Recipe>) => Promise<void>;
 
   // Beer style analysis
   styleAnalysis: StyleAnalysis | null;
@@ -716,6 +717,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   const importIngredients = useCallback(
     async (ingredientsToImport: RecipeIngredient[]): Promise<void> => {
       try {
+        
         setState((prev) => ({
           ...prev,
           addingIngredient: true,
@@ -804,6 +806,74 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     [state.recipe, state.availableIngredients]
   );
 
+  // Import recipe data all at once (for BeerXML import)
+  const importRecipeData = useCallback(
+    async (recipeData: Partial<Recipe>): Promise<void> => {
+      try {
+        // Clean up the imported data before applying
+        const cleanedRecipeData = { ...recipeData };
+        
+        // Round batch size to reasonable precision (2 decimal places)
+        if (cleanedRecipeData.batch_size && typeof cleanedRecipeData.batch_size === 'number') {
+          cleanedRecipeData.batch_size = Math.round(cleanedRecipeData.batch_size * 100) / 100;
+        }
+        
+        // Update the recipe state with all imported data at once
+        const updatedRecipe = { ...state.recipe, ...cleanedRecipeData };
+        
+        setState((prev) => ({
+          ...prev,
+          recipe: updatedRecipe,
+          hasUnsavedChanges: true,
+        }));
+
+        // Recalculate metrics if any calculation fields were updated
+        const calculationFields: (keyof Recipe)[] = [
+          "batch_size",
+          "efficiency",
+          "boil_time",
+          "batch_size_unit",
+        ];
+        
+        const hasCalculationFieldChanges = calculationFields.some(field => 
+          recipeData[field] !== undefined
+        );
+        
+        if (hasCalculationFieldChanges && state.ingredients.length > 0) {
+          try {
+            setState((prev) => ({ ...prev, calculatingMetrics: true }));
+
+            const metrics = await Services.metrics.calculateMetricsDebounced(
+              "recipe-builder",
+              updatedRecipe,
+              state.ingredients
+            );
+
+            setState((prev) => ({
+              ...prev,
+              metrics,
+              calculatingMetrics: false,
+            }));
+          } catch (error) {
+            console.error("Error recalculating metrics:", error);
+            setState((prev) => ({
+              ...prev,
+              calculatingMetrics: false,
+              error: "Failed to recalculate metrics",
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error importing recipe data:", error);
+        setState((prev) => ({
+          ...prev,
+          error: (error as Error).message || "Failed to import recipe data",
+        }));
+      }
+    },
+    [state.recipe, state.ingredients]
+  );
+
   const updateRecipeStyle = useCallback(
     async (styleName: string): Promise<void> => {
       await updateRecipe("style", styleName);
@@ -875,6 +945,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     cancelOperation,
     getRecipeAnalysis,
     refreshAvailableIngredients,
+    importRecipeData,
 
     // Beer style analysis
     styleAnalysis,
