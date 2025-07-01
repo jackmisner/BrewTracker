@@ -152,23 +152,23 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         });
       }
     } catch (err: any) {
-      console.error("🚨 Error fetching fermentation data:", err);
+      console.error("Error fetching fermentation data:", err);
 
       // Only set error for critical failures that prevent data loading
       if (err.response?.status === 404) {
-        console.log("🚨 404 error - setting empty data");
+        console.log("404 error - setting empty data");
         setError("Brew session not found.");
         setFermentationData([]);
         setStats(null);
       } else if (err.response?.status === 403) {
-        console.log("🚨 403 error - setting empty data");
+        console.log("403 error - setting empty data");
         setError("Access denied to fermentation data.");
         setFermentationData([]);
         setStats(null);
       } else {
         // For other errors, try to continue with empty data but don't block UI
-        console.warn("🚨 Non-critical error fetching fermentation data:", err);
-        console.log("🚨 Setting empty data due to non-critical error");
+        console.warn("Non-critical error fetching fermentation data:", err);
+        console.log("Setting empty data due to non-critical error");
         setFermentationData([]);
         setStats(null);
         // Clear any existing errors since we can still show empty state
