@@ -1,7 +1,15 @@
 .header {
   background-color: #92400e; /* Tailwind amber-800 */
   color: white;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .logo {
@@ -11,21 +19,29 @@
   color: white;
 }
 
+.logo-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #fef3c7; /* amber-100 equivalent */
+  margin: 0;
+}
+
 .logo img {
-  height: 40px;
-  margin-right: 10px;
+  height: 32px;
+  margin-right: 8px;
 }
 
 .nav {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-left: auto;
 }
 
 .nav-link {
   color: white;
   text-decoration: none;
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   transition: background-color 0.2s;
 }
@@ -44,6 +60,7 @@ button.nav-link {
 
 .user-greeting {
   margin-left: 1rem;
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   color: #fde68a; /* Tailwind amber-200 */
+  font-size: 0.9rem;
 }

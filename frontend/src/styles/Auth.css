@@ -2,7 +2,7 @@
 .auth-container {
   max-width: 28rem; /* 448px - slightly wider than md for better form spacing */
   margin: 0 auto;
-  margin-top: 2.5rem;
+  margin-top: 0rem;
   padding: 2rem;
   background-color: white;
   border-radius: 0.75rem;
@@ -16,7 +16,7 @@
   background-color: #f9fafb;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items:self-start;
   justify-content: center;
   padding: 1rem;
 }
