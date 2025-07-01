@@ -121,7 +121,7 @@ class BeerXMLService {
             beerxml_data: (ing as any).beerxml_data,
           }),
         })),
-      } as any);
+      });
 
       return (response.data as any).matching_results || (response.data as any).matched_ingredients;
     } catch (error) {

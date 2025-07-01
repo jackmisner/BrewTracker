@@ -153,6 +153,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     try {
       const finalizedIngredients = [];
       const createdIngredients: any[] = []; // Track newly created ingredients
+      const newIngredientCache = new Map<string, any>(); // Cache for created ingredients to prevent duplicates
 
       for (const decision of reviewState.decisions) {
         if (decision.action === "use_existing" && decision.selectedMatch) {
@@ -177,11 +178,21 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
           decision.action === "create_new" &&
           decision.newIngredientData
         ) {
-          // Create new ingredient
-          const newIngredient = await createNewIngredient(
-            decision.newIngredientData
-          );
-          createdIngredients.push(newIngredient); // Track for cache update
+          // Create deduplication key based on name and type (case-insensitive)
+          const dedupeKey = `${decision.newIngredientData.name.toLowerCase().trim()}-${decision.newIngredientData.type}`;
+          
+          let newIngredient;
+          if (newIngredientCache.has(dedupeKey)) {
+            // Reuse already created ingredient
+            newIngredient = newIngredientCache.get(dedupeKey);
+          } else {
+            // Create new ingredient
+            newIngredient = await createNewIngredient(
+              decision.newIngredientData
+            );
+            newIngredientCache.set(dedupeKey, newIngredient);
+            createdIngredients.push(newIngredient); // Track for cache update only when actually created
+          }
 
           // Add to finalized ingredients with complete structure
           finalizedIngredients.push({

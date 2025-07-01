@@ -856,4 +856,223 @@ describe('IngredientMatchingReview', () => {
       expect(document.activeElement).toBeTruthy();
     });
   });
+
+  describe('Ingredient Deduplication', () => {
+    it('prevents creating duplicate ingredients for same name and type', async () => {
+      const user = userEvent.setup();
+      
+      // Create mock results with duplicate ingredients (same hop used multiple times)
+      const duplicateMatchingResults = [
+        {
+          imported: {
+            ingredient_id: 'imp-1',
+            name: 'Cascade',
+            type: 'hop' as const,
+            amount: 1,
+            unit: 'oz' as const,
+            use: 'boil',
+            time: 60,
+            alpha_acid: 5.5,
+          },
+          matches: [],
+          confidence: 0.1,
+          requiresNewIngredient: true,
+          suggestedIngredientData: {
+            name: 'Cascade',
+            type: 'hop',
+            alpha_acid: 5.5,
+          },
+        },
+        {
+          imported: {
+            ingredient_id: 'imp-2',
+            name: 'Cascade', // Same ingredient, different use
+            type: 'hop' as const,
+            amount: 0.5,
+            unit: 'oz' as const,
+            use: 'whirlpool',
+            time: 10,
+            alpha_acid: 5.5,
+          },
+          matches: [],
+          confidence: 0.1,
+          requiresNewIngredient: true,
+          suggestedIngredientData: {
+            name: 'Cascade',
+            type: 'hop',
+            alpha_acid: 5.5,
+          },
+        },
+        {
+          imported: {
+            ingredient_id: 'imp-3',
+            name: 'Cascade', // Same ingredient, third use
+            type: 'hop' as const,
+            amount: 1,
+            unit: 'oz' as const,
+            use: 'dry-hop',
+            time: 4320, // 3 days
+            alpha_acid: 5.5,
+          },
+          matches: [],
+          confidence: 0.1,
+          requiresNewIngredient: true,
+          suggestedIngredientData: {
+            name: 'Cascade',
+            type: 'hop',
+            alpha_acid: 5.5,
+          },
+        },
+      ];
+
+      // Mock API to return different ingredient IDs but track call count
+      let createCallCount = 0;
+      (ApiService.ingredients.create as jest.Mock).mockImplementation(() => {
+        createCallCount++;
+        return Promise.resolve({
+          data: {
+            ingredient_id: 'cascade-123',
+            name: 'Cascade',
+            type: 'hop',
+            alpha_acid: 5.5,
+          }
+        });
+      });
+
+      render(
+        <IngredientMatchingReview
+          matchingResults={duplicateMatchingResults}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Complete the review
+      const completeButton = screen.getByText('Complete Import');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnComplete).toHaveBeenCalled();
+      });
+
+      // Verify that the API was called only once despite 3 ingredients with same name/type
+      expect(createCallCount).toBe(1);
+      expect(ApiService.ingredients.create).toHaveBeenCalledTimes(1);
+      expect(ApiService.ingredients.create).toHaveBeenCalledWith({
+        name: 'Cascade',
+        type: 'hop',
+        alpha_acid: 5.5,
+      });
+
+      // Verify that all 3 ingredients are included in the final result, but using the same ingredient_id
+      expect(mockOnComplete).toHaveBeenCalledWith({
+        ingredients: expect.arrayContaining([
+          expect.objectContaining({
+            ingredient_id: 'cascade-123',
+            name: 'Cascade',
+            type: 'hop',
+            amount: 1,
+            unit: 'oz',
+            use: 'boil',
+            time: 60,
+          }),
+          expect.objectContaining({
+            ingredient_id: 'cascade-123',
+            name: 'Cascade',
+            type: 'hop',
+            amount: 0.5,
+            unit: 'oz',
+            use: 'whirlpool',
+            time: 10,
+          }),
+          expect.objectContaining({
+            ingredient_id: 'cascade-123',
+            name: 'Cascade',
+            type: 'hop',
+            amount: 1,
+            unit: 'oz',
+            use: 'dry-hop',
+            time: 4320,
+          }),
+        ]),
+        createdIngredients: [
+          expect.objectContaining({
+            ingredient_id: 'cascade-123',
+            name: 'Cascade',
+            type: 'hop',
+          }),
+        ],
+      });
+    });
+
+    it('handles case-insensitive deduplication', async () => {
+      const user = userEvent.setup();
+      
+      const caseVariationResults = [
+        {
+          imported: {
+            ingredient_id: 'imp-1',
+            name: 'cascade', // lowercase
+            type: 'hop' as const,
+            amount: 1,
+            unit: 'oz' as const,
+          },
+          matches: [],
+          confidence: 0.1,
+          requiresNewIngredient: true,
+          suggestedIngredientData: {
+            name: 'cascade',
+            type: 'hop',
+          },
+        },
+        {
+          imported: {
+            ingredient_id: 'imp-2',
+            name: 'Cascade', // capitalized
+            type: 'hop' as const,
+            amount: 0.5,
+            unit: 'oz' as const,
+          },
+          matches: [],
+          confidence: 0.1,
+          requiresNewIngredient: true,
+          suggestedIngredientData: {
+            name: 'Cascade',
+            type: 'hop',
+          },
+        },
+      ];
+
+      let createCallCount = 0;
+      (ApiService.ingredients.create as jest.Mock).mockImplementation(() => {
+        createCallCount++;
+        return Promise.resolve({
+          data: {
+            ingredient_id: 'cascade-456',
+            name: 'cascade',
+            type: 'hop',
+          }
+        });
+      });
+
+      render(
+        <IngredientMatchingReview
+          matchingResults={caseVariationResults}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      const completeButton = screen.getByText('Complete Import');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnComplete).toHaveBeenCalled();
+      });
+
+      // Should create only one ingredient despite case difference
+      expect(createCallCount).toBe(1);
+      expect(ApiService.ingredients.create).toHaveBeenCalledTimes(1);
+    });
+  });
 });

@@ -18,12 +18,40 @@ jest.mock('../../src/services/BeerXML/BeerXMLService', () => ({
 
 // Mock the IngredientMatchingReview component
 jest.mock('../../src/components/BeerXML/IngredientMatchingReview', () => {
-  return function MockIngredientMatchingReview({ onComplete, onCancel }: any) {
+  return function MockIngredientMatchingReview({ onComplete, onCancel, matchingResults }: any) {
+    // Create a realistic mock response based on the matching results
+    let mockIngredients;
+    
+    try {
+      if (!matchingResults || matchingResults.length === 0) {
+        mockIngredients = [{ id: '1', name: 'Matched Ingredient' }];
+      } else {
+        mockIngredients = matchingResults.map((result: any, index: number) => ({
+          id: `existing-${index + 1}`,
+          ingredient_id: `${index + 1}`,
+          name: result.best_match?.ingredient?.name || result.imported?.name || 'Default Ingredient',
+          type: result.imported?.type || 'grain',
+          amount: result.imported?.amount || 1,
+          unit: result.imported?.unit || 'oz',
+          use: result.imported?.use || 'boil',
+          time: result.imported?.time || 0,
+          // Include relevant properties from matched ingredient or imported data
+          potential: result.imported?.potential,
+          color: result.imported?.color,
+          grain_type: result.imported?.grain_type,
+          alpha_acid: result.imported?.alpha_acid,
+          attenuation: result.imported?.attenuation,
+        }));
+      }
+    } catch (error) {
+      mockIngredients = [{ id: '1', name: 'Matched Ingredient' }];
+    }
+
     return (
       <div data-testid="ingredient-matching-review">
         <h3>Ingredient Matching Review</h3>
         <button
-          onClick={() => onComplete({ ingredients: [{ id: '1', name: 'Matched Ingredient' }], createdIngredients: [] })}
+          onClick={() => onComplete && onComplete({ ingredients: mockIngredients, createdIngredients: [] })}
           data-testid="complete-matching"
         >
           Complete Matching
@@ -475,7 +503,14 @@ const fileInput = screen.getByTestId('beerxml-file-input');
           style: "IPA",
           batch_size: 5
         }),
-        ingredients: [{ id: '1', name: 'Matched Ingredient' }],
+        ingredients: expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.stringContaining('existing-'),
+            ingredient_id: expect.any(String),
+            name: expect.any(String),
+            type: expect.any(String)
+          })
+        ]),
         metadata: mockParsedRecipes[0].metadata,
         createdIngredients: [],
       });
@@ -899,7 +934,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       });
     });
 
-    it.skip('preserves ingredient amounts and units correctly', async () => {
+    it('preserves ingredient amounts and units correctly', async () => {
       const user = userEvent.setup();
       const mockOnImport = jest.fn().mockResolvedValue(undefined);
 
