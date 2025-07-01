@@ -2,6 +2,7 @@ import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import FermentationTracker from "../../src/components/BrewSessions/FermentationTracker";
 import ApiService from "../../src/services/api";
+import brewSessionService from "../../src/services/BrewSessionService";
 import { renderWithProviders } from "../testUtils";
 
 // Mock the CSS import
@@ -15,6 +16,16 @@ jest.mock("../../src/services/api", () => ({
     addFermentationEntry: jest.fn(),
     deleteFermentationEntry: jest.fn(),
     update: jest.fn(),
+  },
+}));
+
+// Mock BrewSessionService
+jest.mock("../../src/services/BrewSessionService", () => ({
+  __esModule: true,
+  default: {
+    getFermentationData: jest.fn(),
+    getFermentationStats: jest.fn(),
+    addFermentationEntry: jest.fn(),
   },
 }));
 
@@ -126,7 +137,12 @@ describe("FermentationTracker", () => {
     console.warn = jest.fn();
     mockConfirm.mockReturnValue(true);
 
-    // Default successful API responses
+    // Default successful BrewSessionService responses
+    (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue(mockFermentationData);
+    (brewSessionService.getFermentationStats as jest.Mock).mockResolvedValue(mockStats);
+    (brewSessionService.addFermentationEntry as jest.Mock).mockResolvedValue(mockFermentationData);
+
+    // Default successful API responses (for direct API calls that still remain)
     (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
       data: { data: mockFermentationData },
     });
@@ -168,7 +184,7 @@ describe("FermentationTracker", () => {
 
   describe("Error Handling", () => {
     it("should show generic error message when data fetch fails", async () => {
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         new Error("Failed to fetch data")
       );
 
@@ -191,7 +207,7 @@ describe("FermentationTracker", () => {
     it("should show specific error message for 404 errors", async () => {
       const notFoundError = new Error("Not found") as any;
       notFoundError.response = { status: 404 };
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         notFoundError
       );
 
@@ -210,7 +226,7 @@ describe("FermentationTracker", () => {
     it("should show access denied for 403 errors", async () => {
       const accessDeniedError = new Error("Access denied") as any;
       accessDeniedError.response = { status: 403 };
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         accessDeniedError
       );
 
@@ -231,7 +247,7 @@ describe("FermentationTracker", () => {
     it("should show backend error message when available", async () => {
       const backendError = new Error("Backend error") as any;
       backendError.response = { data: { error: "Database connection failed" } };
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         backendError
       );
 
@@ -250,7 +266,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show error message when adding entry fails", async () => {
-      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockRejectedValue(
+      (brewSessionService.addFermentationEntry as jest.Mock).mockRejectedValue(
         new Error("Failed to add entry")
       );
 
@@ -313,7 +329,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should gracefully handle stats fetch errors", async () => {
-      (ApiService.brewSessions.getFermentationStats as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationStats as jest.Mock).mockRejectedValue(
         new Error("Stats error")
       );
 
@@ -445,9 +461,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show empty message when no fermentation data exists", async () => {
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: [],
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue([]);
 
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
@@ -464,7 +478,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show error state message when there's an error but still allow adding data", async () => {
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockRejectedValue(
+      (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         new Error("Network error")
       );
 
@@ -626,7 +640,7 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.addFermentationEntry
+          brewSessionService.addFermentationEntry
         ).toHaveBeenCalledWith(
           "test-session-id",
           expect.objectContaining({
@@ -670,7 +684,7 @@ describe("FermentationTracker", () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(ApiService.brewSessions.addFermentationEntry).toHaveBeenCalled();
+        expect(brewSessionService.addFermentationEntry).toHaveBeenCalled();
       });
 
       // Wait for form to be hidden (form is hidden after successful submission)
@@ -682,8 +696,8 @@ describe("FermentationTracker", () => {
     });
 
     it("should show submitting state during form submission", async () => {
-      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockReturnValue(
-        new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+      (brewSessionService.addFermentationEntry as jest.Mock).mockReturnValue(
+        new Promise((resolve) => setTimeout(() => resolve([]), 100))
       );
 
       // Use props that won't trigger auto-form (no actual_og)
@@ -754,9 +768,7 @@ describe("FermentationTracker", () => {
 
   describe("Auto OG Setting", () => {
     it("should auto-populate gravity and show form when session has actual_og but no fermentation data", async () => {
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: [], // No fermentation data
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue([]); // No fermentation data
 
       const propsWithOG = {
         ...defaultProps,
@@ -831,9 +843,7 @@ describe("FermentationTracker", () => {
 
   describe("Session Updates", () => {
     it("should update session with actual_og if first entry and session has no OG", async () => {
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: [], // No existing fermentation data
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue([]); // No existing fermentation data
 
       const propsWithoutOG = {
         ...defaultProps,
@@ -872,29 +882,25 @@ describe("FermentationTracker", () => {
 
     it("should calculate and set FG when gravity stabilizes", async () => {
       // Mock data with two entries where the last one is close to what we'll add
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: { data: [
-          {
-            entry_date: "2024-06-01T10:00:00Z",
-            gravity: 1.055, // Initial OG
-            temperature: 68.0,
-            ph: 4.2,
-            notes: "Initial reading",
-          },
-          {
-            entry_date: "2024-06-05T10:00:00Z",
-            gravity: 1.012, // Previous reading that we'll compare against
-            temperature: 68.0,
-            ph: 4.0,
-            notes: "Previous reading",
-          },
-        ] },
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue([
+        {
+          entry_date: "2024-06-01T10:00:00Z",
+          gravity: 1.055, // Initial OG
+          temperature: 68.0,
+          ph: 4.2,
+          notes: "Initial reading",
+        },
+        {
+          entry_date: "2024-06-05T10:00:00Z",
+          gravity: 1.012, // Previous reading that we'll compare against
+          temperature: 68.0,
+          ph: 4.0,
+          notes: "Previous reading",
+        },
+      ]);
 
       // Mock a successful add that returns updated data
-      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockResolvedValue({
-        data: { success: true },
-      });
+      (brewSessionService.addFermentationEntry as jest.Mock).mockResolvedValue([]);
 
       const propsForFG = {
         ...defaultProps,
@@ -936,7 +942,7 @@ describe("FermentationTracker", () => {
       // First verify that addFermentationEntry was called
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.addFermentationEntry
+          brewSessionService.addFermentationEntry
         ).toHaveBeenCalledWith(
           "test-session-id",
           expect.objectContaining({
@@ -1006,9 +1012,7 @@ describe("FermentationTracker", () => {
         },
       ];
 
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: { data: sparseData },
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue(sparseData);
 
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
@@ -1074,7 +1078,7 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.addFermentationEntry
+          brewSessionService.addFermentationEntry
         ).toHaveBeenCalledWith(
           "test-session-id",
           expect.objectContaining({
@@ -1095,10 +1099,10 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.getFermentationData
+          brewSessionService.getFermentationData
         ).toHaveBeenCalledWith("test-session-id");
         expect(
-          ApiService.brewSessions.getFermentationStats
+          brewSessionService.getFermentationStats
         ).toHaveBeenCalledWith("test-session-id");
       });
     });
@@ -1119,7 +1123,7 @@ describe("FermentationTracker", () => {
       // Wait for initial load
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.getFermentationData
+          brewSessionService.getFermentationData
         ).toHaveBeenCalledTimes(1);
       });
 
@@ -1137,10 +1141,10 @@ describe("FermentationTracker", () => {
       // Should refresh data after submission
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.getFermentationData
+          brewSessionService.getFermentationData
         ).toHaveBeenCalledTimes(2);
         expect(
-          ApiService.brewSessions.getFermentationStats
+          brewSessionService.getFermentationStats
         ).toHaveBeenCalledTimes(2);
       });
     });
@@ -1148,12 +1152,8 @@ describe("FermentationTracker", () => {
     it("should refresh data after successful deletion", async () => {
       // Reset mocks specifically for this test
       jest.clearAllMocks();
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
-        data: { data: mockFermentationData },
-      });
-      (ApiService.brewSessions.getFermentationStats as jest.Mock).mockResolvedValue({
-        data: { data: mockStats },
-      });
+      (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue(mockFermentationData);
+      (brewSessionService.getFermentationStats as jest.Mock).mockResolvedValue(mockStats);
       (ApiService.brewSessions.deleteFermentationEntry as jest.Mock).mockResolvedValue({
         data: { success: true },
       });
@@ -1163,7 +1163,7 @@ describe("FermentationTracker", () => {
       // Wait for initial load and verify data table is shown
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.getFermentationData
+          brewSessionService.getFermentationData
         ).toHaveBeenCalledTimes(1);
         expect(screen.getByText("Fermentation Data Log")).toBeInTheDocument();
       });
@@ -1180,7 +1180,7 @@ describe("FermentationTracker", () => {
       // Should refresh data after deletion
       await waitFor(() => {
         expect(
-          ApiService.brewSessions.getFermentationData
+          brewSessionService.getFermentationData
         ).toHaveBeenCalledTimes(2);
       });
     });

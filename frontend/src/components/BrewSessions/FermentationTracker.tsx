@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ApiService from "../../services/api";
+import brewSessionService from "../../services/BrewSessionService";
 import { 
   FermentationEntry, 
   BrewSession, 
@@ -91,17 +92,16 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       setError(""); // Clear any existing errors
 
       // Fetch fermentation data entries
-      const response = await ApiService.brewSessions.getFermentationData(
+      const fermentationData = await brewSessionService.getFermentationData(
         sessionId
       );
-      setFermentationData(response.data.data || []);
+      setFermentationData(fermentationData);
 
       // Fetch fermentation statistics
       try {
-        const statsResponse =
-          await ApiService.brewSessions.getFermentationStats(sessionId);
-        if (statsResponse.data.data) {
-          setStats(statsResponse.data.data);
+        const statsData = await brewSessionService.getFermentationStats(sessionId);
+        if (statsData) {
+          setStats(statsData);
         } else {
           setStats({
             duration_days: 0,
@@ -219,7 +219,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       };
 
       // Submit data
-      await ApiService.brewSessions.addFermentationEntry(
+      await brewSessionService.addFermentationEntry(
         sessionId,
         entry
       );

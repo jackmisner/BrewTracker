@@ -998,7 +998,7 @@ describe("BrewSessionService", () => {
 
   describe("fermentation methods", () => {
     test("getFermentationData", async () => {
-      const mockData = { entries: [] };
+      const mockData = []; // Backend returns direct array of fermentation entries
       (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
         data: mockData,
       });
@@ -1013,10 +1013,10 @@ describe("BrewSessionService", () => {
 
     test("addFermentationEntry validates and adds entry", async () => {
       const validEntry = { gravity: 1.045, temperature: 68 };
-      const mockResponse = { data: { id: "entry-1", ...validEntry } };
-      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockResolvedValue(
-        mockResponse
-      );
+      const mockData = [{ id: "entry-1", ...validEntry }]; // Backend returns updated array of fermentation entries
+      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockResolvedValue({
+        data: mockData,
+      });
 
       const result = await brewSessionService.addFermentationEntry(
         "session-1",
@@ -1027,7 +1027,7 @@ describe("BrewSessionService", () => {
         "session-1",
         validEntry
       );
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockData);
     });
 
     test("addFermentationEntry validates entry data", async () => {
