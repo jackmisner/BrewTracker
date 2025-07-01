@@ -147,7 +147,8 @@ export interface CreateBrewSessionRequest extends Omit<BrewSession, 'session_id'
 
 export interface UpdateBrewSessionRequest extends Partial<CreateBrewSessionRequest> {}
 
-export interface FermentationDataResponse extends ApiResponse<FermentationEntry[]> {}
+// Note: Backend returns fermentation data as a direct array, not wrapped in ApiResponse
+export interface FermentationDataResponse extends Array<FermentationEntry> {}
 
 export interface AddFermentationEntryRequest extends Omit<FermentationEntry, 'entry_date'> {}
 

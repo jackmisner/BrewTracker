@@ -310,7 +310,8 @@ class BrewSessionService {
       const response = await ApiService.brewSessions.getFermentationData(
         sessionId
       );
-      return response.data.data || response.data;
+      // Backend returns fermentation data as a direct array, not wrapped in ApiResponse
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error("Error fetching fermentation data:", error);
       throw this.createBrewSessionError(
@@ -334,7 +335,8 @@ class BrewSessionService {
         sessionId,
         entryData
       );
-      return response.data.data || response.data;
+      // Backend returns updated fermentation data as a direct array, not wrapped in ApiResponse
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error("Error adding fermentation entry:", error);
       throw this.createBrewSessionError(
@@ -352,7 +354,8 @@ class BrewSessionService {
       const response = await ApiService.brewSessions.getFermentationStats(
         sessionId
       );
-      return response.data.data || response.data;
+      // Backend returns fermentation stats as a direct object, not wrapped in ApiResponse
+      return response.data;
     } catch (error) {
       console.error("Error fetching fermentation stats:", error);
       return null;
