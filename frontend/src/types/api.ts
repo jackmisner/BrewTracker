@@ -184,9 +184,20 @@ export interface BeerXMLParseResponse extends ApiResponse<{
 }> {}
 
 export interface BeerXMLMatchIngredientsRequest {
-  unmatched_ingredients: Array<{
+  ingredients: Array<{
     name: string;
     type: string;
+    amount?: number;
+    unit?: string;
+    use?: string;
+    time?: number;
+    // Type-specific fields
+    potential?: number;
+    color?: number;
+    grain_type?: string;
+    alpha_acid?: number;
+    attenuation?: number;
+    beerxml_data?: any;
     selected_match?: ID;
   }>;
 }
