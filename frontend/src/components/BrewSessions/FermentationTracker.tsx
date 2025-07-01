@@ -95,6 +95,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       const fermentationData = await brewSessionService.getFermentationData(
         sessionId
       );
+      console.log("🔍 Raw fermentation data from service:", fermentationData);
+      console.log("🔍 Data type:", typeof fermentationData);
+      console.log("🔍 Is array:", Array.isArray(fermentationData));
+      console.log("🔍 Length:", fermentationData?.length);
       setFermentationData(fermentationData);
 
       // Fetch fermentation statistics
@@ -148,26 +152,30 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         });
       }
     } catch (err: any) {
-      console.error("Error fetching fermentation data:", err);
+      console.error("🚨 Error fetching fermentation data:", err);
 
       // Only set error for critical failures that prevent data loading
       if (err.response?.status === 404) {
+        console.log("🚨 404 error - setting empty data");
         setError("Brew session not found.");
         setFermentationData([]);
         setStats(null);
       } else if (err.response?.status === 403) {
+        console.log("🚨 403 error - setting empty data");
         setError("Access denied to fermentation data.");
         setFermentationData([]);
         setStats(null);
       } else {
         // For other errors, try to continue with empty data but don't block UI
-        console.warn("Non-critical error fetching fermentation data:", err);
+        console.warn("🚨 Non-critical error fetching fermentation data:", err);
+        console.log("🚨 Setting empty data due to non-critical error");
         setFermentationData([]);
         setStats(null);
         // Clear any existing errors since we can still show empty state
         setError("");
       }
     } finally {
+      console.log("🔍 fetchFermentationData finally block - setting loading to false");
       setLoading(false);
     }
   }, [sessionId]);
@@ -679,7 +687,12 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                 {error}
               </div>
             )}
-            {fermentationData.length === 0 ? (
+            {(() => {
+              console.log("🔍 Render time - fermentationData:", fermentationData);
+              console.log("🔍 Render time - fermentationData.length:", fermentationData.length);
+              console.log("🔍 Render time - showing empty?", fermentationData.length === 0);
+              return fermentationData.length === 0;
+            })() ? (
               <div className="empty-message">
                 <p>No fermentation data recorded yet.</p>
                 <p>
