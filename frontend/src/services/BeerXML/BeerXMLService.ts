@@ -79,7 +79,12 @@ class BeerXMLService {
         xml_content: xmlContent,
       });
 
-      return (response.data as any).recipes;
+      // Transform the backend response structure to match frontend expectations
+      const recipes = (response.data as any).recipes;
+      return recipes.map((recipeData: any) => ({
+        ...recipeData.recipe,
+        ingredients: recipeData.ingredients,
+      }));
     } catch (error) {
       console.error("Error parsing BeerXML:", error);
       throw new Error(`Failed to parse BeerXML: ${(error as Error).message}`);
@@ -92,11 +97,31 @@ class BeerXMLService {
   async matchIngredients(ingredients: RecipeIngredient[]): Promise<IngredientMatchingResult[]> {
     try {
       const response = await ApiService.beerxml.matchIngredients({
-        unmatched_ingredients: ingredients.map(ing => ({
+        ingredients: ingredients.map(ing => ({
           name: ing.name,
           type: ing.type,
+          amount: ing.amount,
+          unit: ing.unit,
+          use: ing.use,
+          time: ing.time,
+          // Include type-specific fields
+          ...(ing.type === 'grain' && {
+            potential: ing.potential,
+            color: ing.color,
+            grain_type: ing.grain_type,
+          }),
+          ...(ing.type === 'hop' && {
+            alpha_acid: ing.alpha_acid,
+          }),
+          ...(ing.type === 'yeast' && {
+            attenuation: ing.attenuation,
+          }),
+          // Include any additional BeerXML data if available
+          ...((ing as any).beerxml_data && {
+            beerxml_data: (ing as any).beerxml_data,
+          }),
         })),
-      });
+      } as any);
 
       return (response.data as any).matching_results || (response.data as any).matched_ingredients;
     } catch (error) {

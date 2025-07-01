@@ -504,6 +504,22 @@ export function getUnitAbbreviation(unit: string): string {
   return abbreviations[unit.toLowerCase()] || unit;
 }
 
+// Time formatting function to convert large minute values to days
+export function formatTime(timeInMinutes: number | string | null | undefined): string {
+  if (timeInMinutes === null || timeInMinutes === undefined || timeInMinutes === "") return "-";
+  
+  const numTime = parseFloat(timeInMinutes.toString());
+  if (isNaN(numTime) || numTime === 0) return "-";
+  
+  // Convert large minute values to more readable formats
+  if (numTime >= 1440) { // >= 1 day (1440 minutes)
+    const days = Math.round(numTime / 1440);
+    return `${days} day${days !== 1 ? 's' : ''}`;
+  } else {
+    return `${Math.round(numTime)} min`;
+  }
+}
+
 // Export the standalone conversion utilities for use in other parts of the app
 export const UnitConverter = {
   convertUnit,

@@ -80,6 +80,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
   const [matchingSummary, setMatchingSummary] = useState<MatchingSummary | null>(null);
 
   useEffect(() => {
+    
     // Initialize decisions array and calculate summary
     const decisions: Decision[] = matchingResults.map((result) => ({
       imported: result.imported,

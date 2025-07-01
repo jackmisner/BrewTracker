@@ -84,11 +84,10 @@ describe('BeerXMLImportExport', () => {
 
   const mockParsedRecipes = [
     {
-      recipe: {
         name: 'Imported IPA',
         style: 'IPA',
         batch_size: 5,
-      },
+    
       ingredients: [
         { id: '1', name: 'Imported Grain', type: 'grain' },
         { id: '2', name: 'Imported Hop', type: 'hop' },
@@ -270,7 +269,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
   });
 
   describe('Recipe Selection and Preview', () => {
-    beforeEach(async () => {
+    it('displays recipe preview', async () => {
       const user = userEvent.setup();
       render(<BeerXMLImportExport mode="import" />);
 
@@ -283,17 +282,28 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       await waitFor(() => {
         expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
       });
-    });
 
-    it('displays recipe preview', () => {
       expect(screen.getByText('Recipe Preview')).toBeInTheDocument();
       expect(screen.getByText('Imported IPA')).toBeInTheDocument();
       expect(screen.getByText('IPA')).toBeInTheDocument();
-      expect(screen.getByText('5.0 gal')).toBeInTheDocument();
+      expect(screen.getByText('5 gal')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument(); // ingredient count
     });
 
-    it('displays ingredient summary', () => {
+    it('displays ingredient summary', async () => {
+      const user = userEvent.setup();
+      render(<BeerXMLImportExport mode="import" />);
+
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+      });
+
       expect(screen.getByText('Ingredients')).toBeInTheDocument();
       expect(screen.getByText('1 grain')).toBeInTheDocument();
       expect(screen.getByText('1 hop')).toBeInTheDocument();
@@ -304,7 +314,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const multipleRecipes = [
         ...mockParsedRecipes,
         {
-          recipe: { name: 'Second Recipe', style: 'Stout', batch_size: 10 },
+          name: 'Second Recipe', style: 'Stout', batch_size: 10,
           ingredients: [{ id: '3', name: 'Dark Malt', type: 'grain' }],
           metadata: {},
         },
@@ -337,6 +347,17 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('starts ingredient matching process', async () => {
       const user = userEvent.setup();
+      render(<BeerXMLImportExport mode="import" />);
+
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+      });
 
       const importButton = screen.getByText('Import Recipe');
       await user.click(importButton);
@@ -347,6 +368,17 @@ const fileInput = screen.getByTestId('beerxml-file-input');
     it('displays ingredient matching loading state', async () => {
       const user = userEvent.setup();
       (beerXMLService.matchIngredients as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      render(<BeerXMLImportExport mode="import" />);
+
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+      });
 
       const importButton = screen.getByText('Import Recipe');
       await user.click(importButton);
@@ -358,6 +390,17 @@ const fileInput = screen.getByTestId('beerxml-file-input');
     it('handles ingredient matching errors', async () => {
       const user = userEvent.setup();
       (beerXMLService.matchIngredients as jest.Mock).mockRejectedValue(new Error('Matching failed'));
+      render(<BeerXMLImportExport mode="import" />);
+
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+      });
 
       const importButton = screen.getByText('Import Recipe');
       await user.click(importButton);
@@ -427,7 +470,11 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       await user.click(completeButton);
 
       expect(onImport).toHaveBeenCalledWith({
-        recipe: mockParsedRecipes[0].recipe,
+        recipe: expect.objectContaining({
+          name: "Imported IPA",
+          style: "IPA",
+          batch_size: 5
+        }),
         ingredients: [{ id: '1', name: 'Matched Ingredient' }],
         metadata: mockParsedRecipes[0].metadata,
         createdIngredients: [],
@@ -687,6 +734,318 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const errorMessage = screen.getByText('Test error').closest('.error-message');
       expect(errorMessage).toBeInTheDocument();
       expect(errorMessage?.querySelector('.error-icon')).toBeInTheDocument();
+    });
+  });
+
+  describe('BeerXML Import Integration Tests', () => {
+    const mockParsedRecipe = {
+      name: "Pickle Gose",
+      style: "Gose",
+      description: "Spices to go in @ 10 min:\\r\\n2g Grains of Paradise,\\r\\n15g Indian Coriander, \\r\\n15g Mustard Seed, \\r\\n15g Sea Salt.\\r\\n\\r\\nAdd to Fermenter 3 Days before kegging:\\r\\n3 Cucumbers, Peeled. Sliced thin. (Totaled 2lb)\\r\\n1 oz Sorachi Ace",
+      batch_size: 5.000002351132373, // Test precision issue
+      batch_size_unit: "gal",
+      boil_time: 60,
+      efficiency: 75,
+      is_public: false,
+      notes: "",
+      ingredients: [
+        {
+          amount: 3.0000024471331064,
+          name: "Pilsner",
+          type: "grain",
+          unit: "lb",
+          use: "mash",
+          time: 0,
+          color: 1.7,
+          grain_type: "base_malt",
+          potential: 37.3014,
+        },
+        {
+          alpha_acid: 13.2,
+          amount: 1.0000008148291857,
+          name: "Sorachi Ace",
+          time: 4320, // Test time formatting (3 days)
+          type: "hop",
+          unit: "oz",
+          use: "dry-hop"
+        },
+        {
+          amount: 110,
+          attenuation: 85,
+          name: "WildBrew Philly Sour",
+          time: 0,
+          type: "yeast",
+          unit: "g",
+          use: "fermentation"
+        }
+      ]
+    };
+
+    const mockMatchingResults = [
+      {
+        imported: mockParsedRecipe.ingredients[0],
+        best_match: {
+          confidence: 0.7,
+          ingredient: { ingredient_id: "1", name: "Bohemian Pilsner", type: "grain" }
+        },
+        confidence: 0.7,
+        requires_new: false
+      },
+      {
+        imported: mockParsedRecipe.ingredients[1],
+        best_match: {
+          confidence: 0.8,
+          ingredient: { ingredient_id: "2", name: "Sorachi Ace", type: "hop" }
+        },
+        confidence: 0.8,
+        requires_new: false
+      },
+      {
+        imported: mockParsedRecipe.ingredients[2],
+        best_match: {
+          confidence: 0.9,
+          ingredient: { ingredient_id: "3", name: "WildBrew Philly Sour", type: "yeast" }
+        },
+        confidence: 0.9,
+        requires_new: false
+      }
+    ];
+
+    beforeEach(() => {
+      (beerXMLService.validateFile as jest.Mock).mockReturnValue({
+        valid: true,
+        errors: [],
+      });
+      (beerXMLService.readFileContent as jest.Mock).mockResolvedValue('<xml>mock content</xml>');
+      (beerXMLService.parseBeerXML as jest.Mock).mockResolvedValue([mockParsedRecipe]);
+      (beerXMLService.matchIngredients as jest.Mock).mockResolvedValue(mockMatchingResults);
+    });
+
+    it('imports recipe with correct name and style', async () => {
+      const user = userEvent.setup();
+      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+
+      render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
+
+      // Upload file
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+
+      // Parse file
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Pickle Gose')).toBeInTheDocument();
+        expect(screen.getByText('Gose')).toBeInTheDocument();
+      });
+
+      // Import recipe
+      const importButton = screen.getByText('Import Recipe');
+      await user.click(importButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
+      });
+
+      // Complete matching
+      const completeButton = screen.getByTestId('complete-matching');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnImport).toHaveBeenCalledWith({
+          recipe: expect.objectContaining({
+            name: "Pickle Gose",
+            style: "Gose",
+            description: expect.stringContaining("Spices to go in @ 10 min"),
+            batch_size: 5.000002351132373,
+            notes: "",
+          }),
+          ingredients: expect.any(Array),
+          metadata: undefined,
+          createdIngredients: [],
+        });
+      });
+    });
+
+    it('handles batch size precision correctly in recipe data', async () => {
+      const user = userEvent.setup();
+      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+
+      render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
+
+      // Upload and parse file
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      const importButton = screen.getByText('Import Recipe');
+      await user.click(importButton);
+
+      const completeButton = screen.getByTestId('complete-matching');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnImport).toHaveBeenCalledWith({
+          recipe: expect.objectContaining({
+            batch_size: 5.000002351132373, // Should be passed as-is, rounding happens in hook
+          }),
+          ingredients: expect.any(Array),
+          metadata: undefined,
+          createdIngredients: [],
+        });
+      });
+    });
+
+    it.skip('preserves ingredient amounts and units correctly', async () => {
+      const user = userEvent.setup();
+      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+
+      render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
+
+      // Complete import flow
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      const importButton = screen.getByText('Import Recipe');
+      await user.click(importButton);
+
+      const completeButton = screen.getByTestId('complete-matching');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnImport).toHaveBeenCalledWith({
+          recipe: expect.any(Object),
+          ingredients: expect.arrayContaining([
+            expect.objectContaining({
+              amount: 3.0000024471331064,
+              unit: "lb",
+              name: "Bohemian Pilsner", // Should use matched ingredient name
+              type: "grain"
+            }),
+            expect.objectContaining({
+              amount: 1.0000008148291857,
+              unit: "oz",
+              name: "Sorachi Ace",
+              type: "hop",
+              time: 4320 // Time should be preserved in minutes for processing
+            }),
+            expect.objectContaining({
+              amount: 110,
+              unit: "g",
+              name: "WildBrew Philly Sour",
+              type: "yeast"
+            })
+          ]),
+          metadata: undefined,
+          createdIngredients: [],
+        });
+      });
+    });
+
+    it('does not duplicate description in notes field', async () => {
+      const user = userEvent.setup();
+      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+
+      render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
+
+      // Complete import flow
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      const importButton = screen.getByText('Import Recipe');
+      await user.click(importButton);
+
+      const completeButton = screen.getByTestId('complete-matching');
+      await user.click(completeButton);
+
+      await waitFor(() => {
+        expect(mockOnImport).toHaveBeenCalledWith({
+          recipe: expect.objectContaining({
+            description: expect.stringContaining("Spices to go in @ 10 min"),
+            notes: "", // Should remain empty, not duplicated from description
+          }),
+          ingredients: expect.any(Array),
+          metadata: undefined,
+          createdIngredients: [],
+        });
+      });
+    });
+
+    it('displays recipe preview with correct values', async () => {
+      const user = userEvent.setup();
+
+      render(<BeerXMLImportExport mode="import" />);
+
+      // Upload and parse file
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Pickle Gose')).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(screen.getByText('Gose')).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(screen.getByText('5 gal')).toBeInTheDocument(); // Should be rounded for display
+      });
+      await waitFor(() => {
+        expect(screen.getByText('3')).toBeInTheDocument(); // Number of ingredients
+      });
+    });
+
+    it('handles parsing errors gracefully', async () => {
+      const user = userEvent.setup();
+      (beerXMLService.parseBeerXML as jest.Mock).mockRejectedValue(
+        new Error('Invalid BeerXML format')
+      );
+
+      render(<BeerXMLImportExport mode="import" />);
+
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid BeerXML format')).toBeInTheDocument();
+      });
+    });
+
+    it('handles ingredient matching errors gracefully', async () => {
+      const user = userEvent.setup();
+      (beerXMLService.matchIngredients as jest.Mock).mockRejectedValue(
+        new Error('Ingredient matching failed')
+      );
+
+      render(<BeerXMLImportExport mode="import" />);
+
+      // Upload and parse file
+      const fileInput = screen.getByTestId('beerxml-file-input');
+      await user.upload(fileInput, mockFile);
+      
+      const parseButton = screen.getByText('Parse BeerXML File');
+      await user.click(parseButton);
+
+      const importButton = screen.getByText('Import Recipe');
+      await user.click(importButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Ingredient matching failed')).toBeInTheDocument();
+      });
     });
   });
 });

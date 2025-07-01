@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Services } from "../../services";
 import { RecipeIngredient, IngredientType } from "../../types";
+import { formatTime as formatTimeUtil } from "../../utils/formatUtils";
 
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];
@@ -406,19 +407,10 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     if (!ingredient.time) return "-";
 
     const time = parseInt(ingredient.time.toString());
-    const timeUnit = ingredient.time_unit || "min";
-
     if (time === 0) return "-";
 
-    // Singular/plural handling
-    let displayUnit = timeUnit;
-    if (time === 1) {
-      displayUnit = timeUnit === "minutes" ? "min" : timeUnit.slice(0, -1);
-    } else {
-      displayUnit = timeUnit === "minutes" ? "min" : timeUnit;
-    }
-
-    return `${time} ${displayUnit}`;
+    // Use the utility function to format time with smart conversion to days/hours
+    return formatTimeUtil(time);
   };
 
   // Get usage display text

@@ -13,7 +13,7 @@ import {
   formatTemperature,
   formatBatchSize,
   formatIngredientAmount,
-
+  formatTime,
   getUnitAbbreviation,
   UnitConverter,
   FrontendUnitConverter,
@@ -316,6 +316,45 @@ describe("formatUtils", () => {
       expect(
         FrontendUnitConverter.getAppropriateUnit("imperial", "volume", 1)
       ).toBe("gal");
+    });
+  });
+
+  describe("formatTime", () => {
+    test("formats minutes correctly", () => {
+      expect(formatTime(0)).toBe("-");
+      expect(formatTime(5)).toBe("5 min");
+      expect(formatTime(15)).toBe("15 min");
+      expect(formatTime(30)).toBe("30 min");
+      expect(formatTime(59)).toBe("59 min");
+    });
+
+    test("formats days correctly", () => {
+      expect(formatTime(1440)).toBe("1 day"); // Exactly 1 day
+      expect(formatTime(2880)).toBe("2 days"); // 2 days
+      expect(formatTime(4320)).toBe("3 days"); // 3 days (dry hop case)
+      expect(formatTime(10080)).toBe("7 days"); // 1 week
+      expect(formatTime(14400)).toBe("10 days");
+    });
+
+    test("handles string inputs", () => {
+      expect(formatTime("60")).toBe("60 min");
+      expect(formatTime("1440")).toBe("1 day");
+      expect(formatTime("4320")).toBe("3 days");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatTime(null)).toBe("-");
+      expect(formatTime(undefined)).toBe("-");
+      expect(formatTime("")).toBe("-");
+      expect(formatTime("invalid")).toBe("-");
+      expect(formatTime(NaN)).toBe("-");
+    });
+
+    test("rounds to nearest whole unit", () => {
+
+      expect(formatTime(1500)).toBe("1 day"); // 1500 minutes rounds to 1 day
+      expect(formatTime(2000)).toBe("1 day"); // 2000 minutes rounds to 1 day
+      expect(formatTime(2160)).toBe("2 days"); // 2160 minutes rounds to 2 days
     });
   });
 });

@@ -6,6 +6,7 @@ import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import RecipeVersionHistory from "../components/RecipeBuilder/RecipeVersionHistory";
 import RecipeActions from "../components/RecipeActions";
 import { Recipe, RecipeIngredient, BrewSession, BrewSessionSummary, ID } from "../types";
+import { formatTime } from "../utils/formatUtils";
 import "../styles/ViewRecipe.css";
 
 interface BrewingStats {
@@ -406,7 +407,7 @@ const ViewRecipe: React.FC = () => {
                           </td>
                           <td>{ingredient.use || "-"}</td>
                           <td>
-                            {ingredient.time ? `${ingredient.time} min` : "-"}
+                            {ingredient.time ? formatTime(ingredient.time) : "-"}
                           </td>
                         </tr>
                       ))}

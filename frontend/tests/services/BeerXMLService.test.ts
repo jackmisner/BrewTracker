@@ -90,9 +90,12 @@ describe('BeerXMLService', () => {
     data: {
       recipes: [
         {
+          recipe:
+          {
           name: 'Test IPA',
           style: 'American IPA',
-          batch_size: 5,
+          batch_size: 5
+        },
           ingredients: [
             { name: 'Pale Malt', type: 'grain', amount: 8, unit: 'lb' },
             { name: 'Cascade', type: 'hop', amount: 1, unit: 'oz' },
@@ -184,7 +187,17 @@ describe('BeerXMLService', () => {
       expect(ApiService.beerxml.parse).toHaveBeenCalledWith({
         xml_content: mockXmlContent,
       });
-      expect(result).toEqual(mockParseResponse.data.recipes);
+     
+     
+      expect(result[0]).toEqual({
+        name: 'Test IPA',
+        style: 'American IPA',
+        batch_size: 5,
+        ingredients: [
+          { name: 'Pale Malt', type: 'grain', amount: 8, unit: 'lb' },
+          { name: 'Cascade', type: 'hop', amount: 1, unit: 'oz' },
+        ],
+      });
     });
 
     it('validates XML content before parsing', async () => {
@@ -238,9 +251,27 @@ describe('BeerXMLService', () => {
       const result = await BeerXMLService.matchIngredients(ingredients as any);
 
       expect(ApiService.beerxml.matchIngredients).toHaveBeenCalledWith({
-        unmatched_ingredients: [
-          { name: 'Cascade', type: 'hop' },
-          { name: 'Pale Malt', type: 'grain' },
+        ingredients: [
+          { 
+            name: 'Cascade', 
+            type: 'hop', 
+            amount: 1, 
+            unit: 'oz',
+            use: undefined,
+            time: undefined,
+            alpha_acid: undefined,
+          },
+          { 
+            name: 'Pale Malt', 
+            type: 'grain', 
+            amount: 8, 
+            unit: 'lb',
+            use: undefined,
+            time: undefined,
+            potential: undefined,
+            color: undefined,
+            grain_type: undefined,
+          },
         ],
       });
       expect(result).toEqual(mockMatchingResponse.data.matching_results);
