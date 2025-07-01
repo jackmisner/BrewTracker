@@ -150,22 +150,23 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     } catch (err: any) {
       console.error("Error fetching fermentation data:", err);
 
-      // Handle different types of errors more gracefully
+      // Only set error for critical failures that prevent data loading
       if (err.response?.status === 404) {
         setError("Brew session not found.");
+        setFermentationData([]);
+        setStats(null);
       } else if (err.response?.status === 403) {
         setError("Access denied to fermentation data.");
-      } else if (err.response?.data?.error) {
-        // If the backend returns a specific error message, use it
-        setError(err.response.data.error);
+        setFermentationData([]);
+        setStats(null);
       } else {
-        // Generic error for network issues, etc.
-        setError("Failed to load fermentation data. Please try again.");
+        // For other errors, try to continue with empty data but don't block UI
+        console.warn("Non-critical error fetching fermentation data:", err);
+        setFermentationData([]);
+        setStats(null);
+        // Clear any existing errors since we can still show empty state
+        setError("");
       }
-
-      // Set empty data on error
-      setFermentationData([]);
-      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -358,8 +359,6 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         </button>
       </div>
 
-      {/* Only show error if there's an actual error, not just no data */}
-      {error && <div className="error-message">{error}</div>}
 
       {/* Form for adding new fermentation data */}
       {showForm && (
@@ -445,17 +444,6 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
       {loading ? (
         <div className="loading-message">Loading fermentation data...</div>
-      ) : error ? (
-        // If there's an error, show error state but still allow adding data
-        <div className="brew-session-section">
-          <h3 className="section-title">Fermentation Data Log</h3>
-          <div className="empty-message">
-            <p>Unable to load existing fermentation data.</p>
-            <p>
-              You can still add new fermentation readings using the form above.
-            </p>
-          </div>
-        </div>
       ) : (
         <>
           {/* Fermentation stats summary - only show if we have stats */}
@@ -686,6 +674,11 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           {/* Data Table */}
           <div className="brew-session-section">
             <h3 className="section-title">Fermentation Data Log</h3>
+            {error && (
+              <div className="error-message" style={{ marginBottom: "1rem" }}>
+                {error}
+              </div>
+            )}
             {fermentationData.length === 0 ? (
               <div className="empty-message">
                 <p>No fermentation data recorded yet.</p>

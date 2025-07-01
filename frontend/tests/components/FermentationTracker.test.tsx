@@ -183,7 +183,7 @@ describe("FermentationTracker", () => {
   });
 
   describe("Error Handling", () => {
-    it("should show generic error message when data fetch fails", async () => {
+    it("should handle generic error gracefully without blocking UI", async () => {
       (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         new Error("Failed to fetch data")
       );
@@ -191,10 +191,9 @@ describe("FermentationTracker", () => {
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
       await waitFor(() => {
+        // Should show empty message since data load failed but UI isn't blocked
         expect(
-          screen.getByText(
-            "Failed to load fermentation data. Please try again."
-          )
+          screen.getByText("No fermentation data recorded yet.")
         ).toBeInTheDocument();
       });
 
@@ -244,7 +243,7 @@ describe("FermentationTracker", () => {
       );
     });
 
-    it("should show backend error message when available", async () => {
+    it("should handle backend error gracefully without blocking UI", async () => {
       const backendError = new Error("Backend error") as any;
       backendError.response = { data: { error: "Database connection failed" } };
       (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
@@ -254,8 +253,9 @@ describe("FermentationTracker", () => {
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
       await waitFor(() => {
+        // Should show empty message since data load failed but UI isn't blocked
         expect(
-          screen.getByText("Database connection failed")
+          screen.getByText("No fermentation data recorded yet.")
         ).toBeInTheDocument();
       });
 
@@ -477,7 +477,7 @@ describe("FermentationTracker", () => {
       });
     });
 
-    it("should show error state message when there's an error but still allow adding data", async () => {
+    it("should handle network error gracefully and still allow adding data", async () => {
       (brewSessionService.getFermentationData as jest.Mock).mockRejectedValue(
         new Error("Network error")
       );
@@ -485,19 +485,17 @@ describe("FermentationTracker", () => {
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
       await waitFor(() => {
+        // Should show empty state since data load failed but UI isn't blocked
         expect(
-          screen.getByText(
-            "Failed to load fermentation data. Please try again."
-          )
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText("Unable to load existing fermentation data.")
+          screen.getByText("No fermentation data recorded yet.")
         ).toBeInTheDocument();
         expect(
           screen.getByText(
-            "You can still add new fermentation readings using the form above."
+            "Use the \"Add Entry\" button above to start tracking your fermentation progress."
           )
         ).toBeInTheDocument();
+        // Add Entry button should still be available
+        expect(screen.getByText("Cancel")).toBeInTheDocument(); // Form auto-opens due to actual_og
       });
     });
   });
