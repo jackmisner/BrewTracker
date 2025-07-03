@@ -166,7 +166,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     if (!fuse || loading) return [];
 
     if (!searchTerm || searchTerm.length < minQueryLength) {
-      return styles.slice(0, maxResults);
+      return styles; // Show all styles when no search term
     }
 
     const results = fuse.search(searchTerm);
