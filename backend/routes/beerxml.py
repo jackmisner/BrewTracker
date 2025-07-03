@@ -190,9 +190,10 @@ def generate_beerxml(recipe):
     # Add ingredients
     add_ingredients_to_xml(recipe_elem, recipe.ingredients)
 
-    # Convert to string
-    rough_string = ET.tostring(recipes, encoding="unicode")
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n{rough_string}'
+    # Format XML with proper indentation
+    _indent_xml(recipes)
+    xml_string = ET.tostring(recipes, encoding="unicode")
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n{xml_string}'
 
 
 def add_ingredients_to_xml(recipe_elem, ingredients):
@@ -761,6 +762,23 @@ def add_text_element(parent, tag_name, text_content):
     element.text = str(text_content) if text_content is not None else ""
 
 
+def _indent_xml(elem, level=0):
+    """Add indentation to XML elements for proper formatting"""
+    indent = " " * level
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = "\n" + indent + " "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = "\n" + indent
+        for elem in elem:
+            _indent_xml(elem, level + 1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = "\n" + indent
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = "\n" + indent
+
+
 def get_text_content(parent, tag_name):
     """Get text content from XML element"""
     element = parent.find(tag_name)
@@ -943,7 +961,8 @@ def export_recipe_with_style_beerxml(recipe):
                 if style_guide.examples:
                     add_text_element(style_elem, "EXAMPLES", style_guide.examples)
 
-            # Convert back to string
+            # Convert back to string with proper formatting
+            _indent_xml(root)
             return ET.tostring(root, encoding="unicode")
 
     return xml_content
