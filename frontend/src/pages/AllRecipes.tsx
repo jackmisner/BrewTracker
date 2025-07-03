@@ -105,6 +105,7 @@ const AllRecipes: React.FC = () => {
     
     // Apply sorting
     return sortRecipes(recipesToProcess);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fuse, searchTerm, recipes, sortBy]);
 
   // Fetch recipes when the component mounts

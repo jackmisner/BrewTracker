@@ -134,14 +134,15 @@ const PublicRecipes: React.FC = () => {
   const filteredAndSortedRecipes = useMemo(() => {
     let recipesToProcess = recipes || [];
     
-    // Apply client-side search filter if there's a search term and no server search
-    if (searchQuery && searchQuery.length >= 2 && fuse && !searchQuery) {
+    // Apply client-side search filter if there's a search term
+    if (searchQuery && searchQuery.length >= 2 && fuse) {
       const results = fuse.search(searchQuery);
       recipesToProcess = results.map(result => result.item);
     }
     
     // Apply sorting
     return sortRecipes(recipesToProcess);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fuse, searchQuery, recipes, sortBy]);
 
   return (
