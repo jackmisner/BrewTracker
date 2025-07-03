@@ -10,6 +10,7 @@ from mongoengine.connection import ConnectionFailure, get_connection
 import config
 from models.mongo_models import BeerStyleGuide, Ingredient
 from routes.auth import auth_bp
+from routes.attenuation_analytics import attenuation_analytics_bp
 from routes.beer_styles import beer_styles_bp
 from routes.beerxml import beerxml_bp
 from routes.brew_sessions import brew_sessions_bp
@@ -87,6 +88,7 @@ def create_app(config_class=None):
     app.register_blueprint(user_settings_bp, url_prefix="/api/user")
     app.register_blueprint(beerxml_bp, url_prefix="/api/beerxml")
     app.register_blueprint(beer_styles_bp, url_prefix="/api/beer-styles")
+    app.register_blueprint(attenuation_analytics_bp, url_prefix="/api/attenuation-analytics")
 
     @app.route("/api/health", methods=["GET"])
     def health_check():

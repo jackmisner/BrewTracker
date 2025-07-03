@@ -744,6 +744,11 @@ class MongoDBService:
             if not brew_session:
                 return None, "Brew session not found"
 
+            # Store original values for comparison
+            original_og = brew_session.actual_og
+            original_fg = brew_session.actual_fg
+            original_status = brew_session.status
+
             # Update fields
             for key, value in session_data.items():
                 if hasattr(brew_session, key):
@@ -751,6 +756,20 @@ class MongoDBService:
 
             # Save the updated session
             brew_session.save()
+
+            # Check if this session is newly completed and has attenuation data
+            if (brew_session.status == "completed" and 
+                original_status != "completed" and 
+                brew_session.actual_og and 
+                brew_session.actual_fg):
+                
+                # Process attenuation data collection
+                try:
+                    from services.attenuation_service import AttenuationService
+                    AttenuationService.process_completed_brew_session(brew_session)
+                except Exception as attenuation_error:
+                    print(f"Error processing attenuation data: {attenuation_error}")
+                    # Don't fail the update if attenuation processing fails
 
             # Reload the session from database to ensure all data is fresh
             brew_session.reload()
