@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import AttenuationBadge from "../../AttenuationAnalytics/AttenuationBadge";
 import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
+import "../../../styles/AttenuationAnalytics.css";
 
 interface UnitOption {
   value: string;
@@ -356,6 +358,13 @@ const YeastInput: React.FC<YeastInputProps> = ({
                 <small>{getYeastTypeInfo(yeastForm.selectedIngredient)}</small>
               </div>
             )}
+
+            {/* Attenuation Analytics */}
+            <AttenuationBadge 
+              ingredientId={yeastForm.selectedIngredient.ingredient_id}
+              className="compact"
+              showDetails={true}
+            />
           </div>
         )}
 

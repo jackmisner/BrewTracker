@@ -58,12 +58,18 @@ export interface Ingredient extends BaseEntity {
   alpha_acid?: number; // Alpha acid percentage
   
   // Yeast-specific properties
-  attenuation?: number; // Attenuation percentage
+  attenuation?: number; // Attenuation percentage (theoretical/manufacturer spec)
   manufacturer?: string;
   code?: string;
   alcohol_tolerance?: number;
   min_temperature?: number;
   max_temperature?: number;
+  
+  // Real-world attenuation tracking (for yeast only)
+  actual_attenuation_average?: number; // Running average of actual attenuation
+  actual_attenuation_count?: number; // Number of data points collected
+  attenuation_confidence?: number; // Confidence score (0-1) based on data volume
+  last_attenuation_update?: string; // When attenuation data was last updated
 }
 
 // Recipe ingredient (embedded in recipes)

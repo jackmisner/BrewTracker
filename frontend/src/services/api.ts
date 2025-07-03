@@ -289,6 +289,21 @@ const ApiService = {
     getData: (): Promise<AxiosResponse<DashboardResponse>> => 
       api.get("/dashboard"),
   },
+
+  // Attenuation Analytics
+  attenuationAnalytics: {
+    getYeastAnalytics: (ingredientId: ID): Promise<AxiosResponse<any>> => 
+      api.get(`/attenuation-analytics/yeast/${ingredientId}`),
+    
+    getAllYeastAnalytics: (): Promise<AxiosResponse<any>> => 
+      api.get("/attenuation-analytics/yeast"),
+    
+    getImprovedEstimate: (ingredientId: ID): Promise<AxiosResponse<any>> => 
+      api.get(`/attenuation-analytics/yeast/${ingredientId}/improved-estimate`),
+    
+    getSystemStats: (): Promise<AxiosResponse<any>> => 
+      api.get("/attenuation-analytics/stats"),
+  },
 };
 
 export default ApiService;
