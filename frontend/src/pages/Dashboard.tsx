@@ -34,9 +34,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async (): Promise<void> => {
       try {
-        // Fetch recipes and brew sessions
-        const recipesResponse = await ApiService.recipes.getAll();
-        const sessionsResponse = await ApiService.brewSessions.getAll();
+        // Fetch all recipes and brew sessions using large page sizes to avoid pagination limits
+        // Default API calls only return first 10 items due to pagination, affecting statistics accuracy
+        const recipesResponse = await ApiService.recipes.getAll(1, 1000);
+        const sessionsResponse = await ApiService.brewSessions.getAll(1, 1000);
 
         // Get recent items (last 5)
         const sortedRecipes = recipesResponse.data.recipes

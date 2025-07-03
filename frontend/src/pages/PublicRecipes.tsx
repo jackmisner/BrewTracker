@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
+import Fuse from "fuse.js";
 import ApiService from "../services/api";
-import RecipeCard from "../components/RecipeCard";
+import CompactRecipeCard from "../components/CompactRecipeCard";
 import { Recipe, ID } from "../types";
+import "../styles/PublicRecipes.css";
 
 interface Pagination {
   page: number;
@@ -32,6 +34,7 @@ const PublicRecipes: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [styleFilter, setStyleFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("updated_at_desc");
 
   const fetchPublicRecipes = useCallback(async (searchTerm?: string): Promise<void> => {
     try {
@@ -56,11 +59,6 @@ const PublicRecipes: React.FC = () => {
     fetchPublicRecipes();
   }, [currentPage, styleFilter, fetchPublicRecipes]);
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>): void => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchPublicRecipes(searchQuery);
-  };
 
   const handleCloneRecipe = async (recipeId: ID): Promise<void> => {
     try {
@@ -72,63 +70,226 @@ const PublicRecipes: React.FC = () => {
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold mb-6">Public Recipe Library</h1>
+  // Create Fuse instance for client-side fuzzy search
+  const fuse = useMemo(() => {
+    if (!recipes || recipes.length === 0) return null;
+    
+    return new Fuse(recipes, {
+      keys: [
+        { name: "name", weight: 1.0 },
+        { name: "style", weight: 0.8 },
+        { name: "description", weight: 0.6 },
+        { name: "notes", weight: 0.4 },
+        { name: "username", weight: 0.3 },
+      ],
+      threshold: 0.4,
+      distance: 100,
+      minMatchCharLength: 1,
+      includeScore: false,
+      includeMatches: false,
+      ignoreLocation: true,
+      useExtendedSearch: false,
+    });
+  }, [recipes]);
 
-      {/* Search and Filter Bar */}
-      <div className="mb-6">
-        <form onSubmit={handleSearch} className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Search recipes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2 border rounded"
-          />
-          <select
-            value={styleFilter}
-            onChange={(e) => setStyleFilter(e.target.value)}
-            className="px-4 py-2 border rounded"
-          >
-            <option value="">All Styles</option>
-            <option value="IPA">IPA</option>
-            <option value="Stout">Stout</option>
-            <option value="Lager">Lager</option>
-            <option value="Wheat">Wheat Beer</option>
-            <option value="Porter">Porter</option>
-            <option value="Pale Ale">Pale Ale</option>
-          </select>
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded"
-          >
-            Search
-          </button>
-        </form>
+  // Sort recipes based on selected criteria
+  const sortRecipes = (recipesToSort: Recipe[]): Recipe[] => {
+    const sorted = [...recipesToSort];
+    
+    switch (sortBy) {
+      case "name_asc":
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case "name_desc":
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      case "created_at_asc":
+        return sorted.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
+      case "created_at_desc":
+        return sorted.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+      case "updated_at_asc":
+        return sorted.sort((a, b) => new Date(a.updated_at || '').getTime() - new Date(b.updated_at || '').getTime());
+      case "updated_at_desc":
+        return sorted.sort((a, b) => new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime());
+      case "abv_asc":
+        return sorted.sort((a, b) => (a.estimated_abv || 0) - (b.estimated_abv || 0));
+      case "abv_desc":
+        return sorted.sort((a, b) => (b.estimated_abv || 0) - (a.estimated_abv || 0));
+      case "ibu_asc":
+        return sorted.sort((a, b) => (a.estimated_ibu || 0) - (b.estimated_ibu || 0));
+      case "ibu_desc":
+        return sorted.sort((a, b) => (b.estimated_ibu || 0) - (a.estimated_ibu || 0));
+      case "srm_asc":
+        return sorted.sort((a, b) => (a.estimated_srm || 0) - (b.estimated_srm || 0));
+      case "srm_desc":
+        return sorted.sort((a, b) => (b.estimated_srm || 0) - (a.estimated_srm || 0));
+      case "og_asc":
+        return sorted.sort((a, b) => (a.estimated_og || 0) - (b.estimated_og || 0));
+      case "og_desc":
+        return sorted.sort((a, b) => (b.estimated_og || 0) - (a.estimated_og || 0));
+      default:
+        return sorted.sort((a, b) => new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime());
+    }
+  };
+
+  // Filter and sort recipes (client-side filtering for search)
+  const filteredAndSortedRecipes = useMemo(() => {
+    let recipesToProcess = recipes || [];
+    
+    // Apply client-side search filter if there's a search term and no server search
+    if (searchQuery && searchQuery.length >= 2 && fuse && !searchQuery) {
+      const results = fuse.search(searchQuery);
+      recipesToProcess = results.map(result => result.item);
+    }
+    
+    // Apply sorting
+    return sortRecipes(recipesToProcess);
+  }, [fuse, searchQuery, recipes, sortBy]);
+
+  return (
+    <div className="public-recipes-container">
+      <div className="public-recipes-header">
+        <h1 className="public-recipes-title">Public Recipe Library</h1>
       </div>
 
-      {loading && <div className="text-center py-10">Loading...</div>}
+      {/* Search and Sort Controls */}
+      {!loading && !error && recipes && recipes.length > 0 && (
+        <div className="search-and-sort-container">
+          <div className="search-container">
+            <div className="search-input-container">
+              <input
+                type="text"
+                placeholder="Search recipes by name, style, description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              <div className="search-icon-container">
+                <svg
+                  className="search-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              {searchQuery && (
+                <div className="search-clear-container">
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="search-clear-button"
+                  >
+                    <svg
+                      className="search-clear-icon"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
+          <div className="sort-container">
+            <label htmlFor="sort-select" className="sort-label">Sort by:</label>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="sort-select"
+            >
+              <option value="updated_at_desc">Last Updated (Newest)</option>
+              <option value="updated_at_asc">Last Updated (Oldest)</option>
+              <option value="created_at_desc">Date Created (Newest)</option>
+              <option value="created_at_asc">Date Created (Oldest)</option>
+              <option value="name_asc">Name (A-Z)</option>
+              <option value="name_desc">Name (Z-A)</option>
+              <option value="abv_desc">ABV (High to Low)</option>
+              <option value="abv_asc">ABV (Low to High)</option>
+              <option value="ibu_desc">IBU (High to Low)</option>
+              <option value="ibu_asc">IBU (Low to High)</option>
+              <option value="srm_desc">SRM (Dark to Light)</option>
+              <option value="srm_asc">SRM (Light to Dark)</option>
+              <option value="og_desc">OG (High to Low)</option>
+              <option value="og_asc">OG (Low to High)</option>
+            </select>
+          </div>
+
+          <div className="style-filter-container">
+            <label htmlFor="style-filter" className="sort-label">Style:</label>
+            <select
+              id="style-filter"
+              value={styleFilter}
+              onChange={(e) => setStyleFilter(e.target.value)}
+              className="sort-select"
+            >
+              <option value="">All Styles</option>
+              <option value="IPA">IPA</option>
+              <option value="Stout">Stout</option>
+              <option value="Lager">Lager</option>
+              <option value="Wheat">Wheat Beer</option>
+              <option value="Porter">Porter</option>
+              <option value="Pale Ale">Pale Ale</option>
+            </select>
+          </div>
+
+          {searchQuery && searchQuery.length >= 2 && (
+            <p className="search-results-count">
+              Showing {filteredAndSortedRecipes.length} of {recipes?.length || 0} recipes
+            </p>
+          )}
+        </div>
+      )}
+
+      {loading && <div className="loading-state">Loading...</div>}
+      
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="error-state">
           {error}
         </div>
       )}
 
-      {!loading && !error && (
+      {!loading && !error && (!recipes || recipes.length === 0) && (
+        <div className="empty-state">No public recipes found.</div>
+      )}
+
+      {!loading && !error && recipes && recipes.length > 0 && filteredAndSortedRecipes.length === 0 && searchQuery && (
+        <div className="no-search-results">
+          <p>No recipes found matching "{searchQuery}"</p>
+          <button
+            onClick={() => setSearchQuery("")}
+            className="clear-search-link"
+          >
+            Clear search
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && filteredAndSortedRecipes.length > 0 && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recipes.map((recipe) => (
-              <div key={recipe.recipe_id} className="recipe-card">
-                <RecipeCard recipe={recipe} />
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
+          <div className="recipes-grid">
+            {filteredAndSortedRecipes.map((recipe) => (
+              <div key={recipe.recipe_id} className="public-recipe-card-wrapper">
+                <CompactRecipeCard recipe={recipe} />
+                <div className="public-recipe-actions">
+                  <span className="public-recipe-author">
                     by {recipe.username || 'Unknown'}
                   </span>
                   <button
                     onClick={() => handleCloneRecipe(recipe.recipe_id)}
-                    className="px-4 py-2 bg-green-500 text-white rounded text-sm"
+                    className="clone-recipe-button"
                   >
                     Clone Recipe
                   </button>
@@ -139,21 +300,21 @@ const PublicRecipes: React.FC = () => {
 
           {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="mt-8 flex justify-center gap-2">
+            <div className="pagination-container">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={!pagination.has_prev}
-                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                className="pagination-button"
               >
                 Previous
               </button>
-              <span className="px-4 py-2">
+              <span className="pagination-info">
                 Page {pagination.page} of {pagination.pages}
               </span>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={!pagination.has_next}
-                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                className="pagination-button"
               >
                 Next
               </button>

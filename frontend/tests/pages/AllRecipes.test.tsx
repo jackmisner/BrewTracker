@@ -1,6 +1,6 @@
 // @ts-ignore - React needed for JSX in test files
 import React from "react";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import AllRecipes from "../../src/pages/AllRecipes";
 import ApiService from "../../src/services/api";
 import userEvent from "@testing-library/user-event";
@@ -8,21 +8,15 @@ import userEvent from "@testing-library/user-event";
 // Mock ApiService
 jest.mock("../../src/services/api");
 
-// Mock RecipeCardContainer component
+// Mock CompactRecipeCard component
 jest.mock(
-  "../../src/components/RecipeCardContainer",
+  "../../src/components/CompactRecipeCard",
   () =>
-    ({ recipes, refreshTrigger }) =>
+    ({ recipe }) =>
       (
-        <div data-testid="recipe-card-container">
-          {recipes.map((r) => (
-            <div key={r.id} data-testid={`recipe-${r.id}`}>
-              {r.name}
-            </div>
-          ))}
-          <button onClick={refreshTrigger} data-testid="refresh-button">
-            Refresh
-          </button>
+        <div data-testid={`recipe-${recipe.id}`} className="compact-recipe-card">
+          <div className="compact-recipe-name">{recipe.name}</div>
+          <div className="compact-recipe-style">{recipe.style}</div>
         </div>
       )
 );
@@ -39,12 +33,12 @@ afterAll(() => {
 });
 
 const mockRecipes = [
-  { id: 1, name: "Recipe 1", updated_at: "2024-06-10T12:00:00Z" },
-  { id: 2, name: "Recipe 2", updated_at: "2024-06-09T12:00:00Z" },
-  { id: 3, name: "Recipe 3", updated_at: "2024-06-08T12:00:00Z" },
-  { id: 4, name: "Recipe 4", updated_at: "2024-06-07T12:00:00Z" },
-  { id: 5, name: "Recipe 5", updated_at: "2024-06-06T12:00:00Z" },
-  { id: 6, name: "Recipe 6", updated_at: "2024-06-05T12:00:00Z" },
+  { id: 1, name: "American IPA", style: "IPA", description: "Hoppy beer", updated_at: "2024-06-10T12:00:00Z" },
+  { id: 2, name: "German Lager", style: "Lager", description: "Clean and crisp", updated_at: "2024-06-09T12:00:00Z" },
+  { id: 3, name: "Belgian Witbier", style: "Wheat Beer", description: "Refreshing wheat", updated_at: "2024-06-08T12:00:00Z" },
+  { id: 4, name: "Porter Stout", style: "Porter", description: "Dark and roasty", updated_at: "2024-06-07T12:00:00Z" },
+  { id: 5, name: "Saison Farmhouse", style: "Saison", description: "Spicy and fruity", updated_at: "2024-06-06T12:00:00Z" },
+  { id: 6, name: "Pilsner Classic", style: "Pilsner", description: "Light and crisp", updated_at: "2024-06-05T12:00:00Z" },
 ];
 
 describe("AllRecipes", () => {
@@ -73,7 +67,7 @@ describe("AllRecipes", () => {
   });
 
   describe("Successful Data Loading", () => {
-    it("renders recipes after successful fetch (shows only 5 most recent)", async () => {
+    it("renders all recipes after successful fetch", async () => {
       ApiService.recipes = {
         getAll: jest.fn().mockResolvedValue({
           status: 200,
@@ -86,19 +80,16 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
-      // Should show only 5 most recent recipes
-      mockRecipes.slice(0, 5).forEach((recipe) => {
+      // Should show all recipes
+      mockRecipes.forEach((recipe) => {
         expect(screen.getByText(recipe.name)).toBeInTheDocument();
       });
-
-      // Should not show the 6th recipe (oldest)
-      expect(screen.queryByText("Recipe 6")).not.toBeInTheDocument();
     });
 
-    it("renders all recipes when less than 5 exist", async () => {
+    it("renders all recipes when few exist", async () => {
       const fewRecipes = mockRecipes.slice(0, 3);
       ApiService.recipes = {
         getAll: jest.fn().mockResolvedValue({
@@ -112,7 +103,7 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
       fewRecipes.forEach((recipe) => {
@@ -150,8 +141,8 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        // Component treats missing recipes array as an error, not empty state
-        expect(screen.getByText(/Failed to load recipes/i)).toBeInTheDocument();
+        // Component gracefully handles missing recipes array as empty state
+        expect(screen.getByText(/No recipes found/i)).toBeInTheDocument();
       });
     });
   });
@@ -238,21 +229,13 @@ describe("AllRecipes", () => {
   });
 
   describe("User Interactions", () => {
-    it("refreshTrigger causes recipes to reload", async () => {
-      const user = userEvent.setup();
-
-      const getAllMock = jest
-        .fn()
-        .mockResolvedValueOnce({
+    it("recipes are properly displayed in grid layout", async () => {
+      ApiService.recipes = {
+        getAll: jest.fn().mockResolvedValue({
           status: 200,
           data: { recipes: mockRecipes },
-        })
-        .mockResolvedValueOnce({
-          status: 200,
-          data: { recipes: [mockRecipes[0]] }, // Only return first recipe on refresh
-        });
-
-      ApiService.recipes = { getAll: getAllMock };
+        }),
+      };
 
       await act(async () => {
         render(<AllRecipes />);
@@ -260,28 +243,16 @@ describe("AllRecipes", () => {
 
       // Wait for initial load
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Recipe 1")).toBeInTheDocument();
-      expect(getAllMock).toHaveBeenCalledTimes(1);
-
-      // Click refresh button
-      const refreshButton = screen.getByTestId("refresh-button");
-      await act(async () => {
-        await user.click(refreshButton);
+      // Should show all recipes
+      mockRecipes.forEach((recipe) => {
+        expect(screen.getByText(recipe.name)).toBeInTheDocument();
       });
-
-      // Wait for refresh to complete
-      await waitFor(() => {
-        expect(getAllMock).toHaveBeenCalledTimes(2);
-      });
-
-      // Should still show Recipe 1 (the only one returned after refresh)
-      expect(screen.getByText("Recipe 1")).toBeInTheDocument();
     });
 
-    it("refresh functionality is not available during error state", async () => {
+    it("no recipes are displayed during error state", async () => {
       const getAllMock = jest
         .fn()
         .mockRejectedValue(new Error("Network error"));
@@ -299,16 +270,14 @@ describe("AllRecipes", () => {
 
       expect(getAllMock).toHaveBeenCalledTimes(1);
 
-      // Refresh button should not be available in error state
-      expect(screen.queryByTestId("refresh-button")).not.toBeInTheDocument();
+      // Recipes grid should not be available in error state
+      expect(document.querySelector(".recipes-grid")).not.toBeInTheDocument();
     });
 
-    it("multiple rapid refresh clicks are handled gracefully", async () => {
-      const user = userEvent.setup();
-
+    it("displays correct number of recipes in grid", async () => {
       const getAllMock = jest.fn().mockResolvedValue({
         status: 200,
-        data: { recipes: [mockRecipes[0]] },
+        data: { recipes: mockRecipes },
       });
 
       ApiService.recipes = { getAll: getAllMock };
@@ -318,22 +287,12 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
-      const refreshButton = screen.getByTestId("refresh-button");
-
-      // Click refresh multiple times rapidly
-      await act(async () => {
-        await user.click(refreshButton);
-        await user.click(refreshButton);
-        await user.click(refreshButton);
-      });
-
-      // Should handle multiple clicks gracefully
-      await waitFor(() => {
-        expect(getAllMock).toHaveBeenCalledTimes(4); // Initial + 3 refresh clicks
-      });
+      // Should show correct number of recipe cards
+      const recipeCards = document.querySelectorAll(".compact-recipe-card");
+      expect(recipeCards).toHaveLength(mockRecipes.length);
     });
   });
 
@@ -357,7 +316,7 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
       // All recipes should be displayed (less than 5)
@@ -387,7 +346,7 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
       // Should still display all recipes despite bad dates
@@ -418,13 +377,271 @@ describe("AllRecipes", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-card-container")).toBeInTheDocument();
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
       });
 
-      // Should only show 5 recipes regardless of input size
+      // Should show all recipes now
       // Use a more specific selector that excludes the container and button
       const displayedRecipes = screen.getAllByTestId(/^recipe-\d+$/);
-      expect(displayedRecipes).toHaveLength(5);
+      expect(displayedRecipes).toHaveLength(100);
+    });
+  });
+
+  describe("Sorting Functionality", () => {
+    beforeEach(() => {
+      ApiService.recipes = {
+        getAll: jest.fn().mockResolvedValue({
+          status: 200,
+          data: { recipes: mockRecipes },
+        }),
+      };
+    });
+
+    it("shows sort dropdown when recipes are loaded", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      expect(screen.getByLabelText("Sort by:")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("Last Updated (Newest)")).toBeInTheDocument();
+    });
+
+    it("sorts recipes by name when name sort is selected", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const sortSelect = screen.getByLabelText("Sort by:");
+      
+      await act(async () => {
+        fireEvent.change(sortSelect, { target: { value: "name_asc" } });
+      });
+
+      // Should still show all recipes, but potentially in different order
+      mockRecipes.forEach((recipe) => {
+        expect(screen.getByText(recipe.name)).toBeInTheDocument();
+      });
+      expect(screen.getByDisplayValue("Name (A-Z)")).toBeInTheDocument();
+    });
+
+    it("sorts recipes by ABV when ABV sort is selected", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const sortSelect = screen.getByLabelText("Sort by:");
+      
+      await act(async () => {
+        fireEvent.change(sortSelect, { target: { value: "abv_desc" } });
+      });
+
+      // Should still show all recipes
+      mockRecipes.forEach((recipe) => {
+        expect(screen.getByText(recipe.name)).toBeInTheDocument();
+      });
+      expect(screen.getByDisplayValue("ABV (High to Low)")).toBeInTheDocument();
+    });
+
+    it("search and sort work together", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      // First apply search
+      const searchInput = screen.getByPlaceholderText(
+        "Search recipes by name, style, description..."
+      );
+      
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "IPA" } });
+      });
+
+      // Then apply sort
+      const sortSelect = screen.getByLabelText("Sort by:");
+      
+      await act(async () => {
+        fireEvent.change(sortSelect, { target: { value: "name_asc" } });
+      });
+
+      // Should show search results with sorting applied
+      await waitFor(() => {
+        expect(screen.getByText("American IPA")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Name (A-Z)")).toBeInTheDocument();
+        expect(screen.getByText(/Showing \d+ of \d+ recipes/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Search Functionality", () => {
+    beforeEach(() => {
+      ApiService.recipes = {
+        getAll: jest.fn().mockResolvedValue({
+          status: 200,
+          data: { recipes: mockRecipes },
+        }),
+      };
+    });
+
+    it("shows search bar when recipes are loaded", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByPlaceholderText("Search recipes by name, style, description...")
+      ).toBeInTheDocument();
+    });
+
+    it("filters recipes by search term", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search recipes by name, style, description..."
+      );
+
+      // Search for "IPA"
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "IPA" } });
+      });
+
+      // Should show only recipes matching "IPA"
+      await waitFor(() => {
+        expect(screen.getByText("American IPA")).toBeInTheDocument();
+        expect(screen.queryByText("German Lager")).not.toBeInTheDocument();
+        expect(screen.queryByText("Porter Stout")).not.toBeInTheDocument();
+        expect(screen.queryByText("Saison Farmhouse")).not.toBeInTheDocument();
+        expect(screen.queryByText("Pilsner Classic")).not.toBeInTheDocument();
+      });
+      
+      // Note: We're not testing that Belgian Witbier is NOT shown because fuzzy search
+      // might match it due to common brewing terms
+
+      // Should show search result count
+      expect(screen.getByText(/Showing \d+ of \d+ recipes/)).toBeInTheDocument();
+    });
+
+    it("shows no results message when search finds nothing", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search recipes by name, style, description..."
+      );
+
+      // Search for something that doesn't exist
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "NonExistentRecipe" } });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/No recipes found matching "NonExistentRecipe"/)
+        ).toBeInTheDocument();
+        expect(screen.getByText("Clear search")).toBeInTheDocument();
+      });
+    });
+
+    it("clears search when clear button is clicked", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search recipes by name, style, description..."
+      );
+
+      // Enter a search term
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "IPA" } });
+      });
+
+      // Clear button should appear (it's the X button in the search input)
+      await waitFor(() => {
+        const clearButtons = screen.getAllByRole("button");
+        const clearButton = clearButtons.find(button => 
+          button.querySelector('svg path[d="M6 18L18 6M6 6l12 12"]')
+        );
+        expect(clearButton).toBeInTheDocument();
+      });
+
+      // Click clear button
+      const clearButtons = screen.getAllByRole("button");
+      const clearButton = clearButtons.find(button => 
+        button.querySelector('svg path[d="M6 18L18 6M6 6l12 12"]')
+      );
+      await act(async () => {
+        fireEvent.click(clearButton);
+      });
+
+      // Search should be cleared and all recipes shown
+      expect(searchInput).toHaveValue("");
+      mockRecipes.forEach((recipe) => {
+        expect(screen.getByText(recipe.name)).toBeInTheDocument();
+      });
+    });
+
+    it("does not search when term is less than 2 characters", async () => {
+      await act(async () => {
+        render(<AllRecipes />);
+      });
+
+      await waitFor(() => {
+        expect(document.querySelector(".recipes-grid")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search recipes by name, style, description..."
+      );
+
+      // Enter single character
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "A" } });
+      });
+
+      // Should still show all recipes
+      mockRecipes.forEach((recipe) => {
+        expect(screen.getByText(recipe.name)).toBeInTheDocument();
+      });
+
+      // Should not show search results count
+      await waitFor(() => {
+        expect(screen.queryByText(/Showing \d+ of \d+ recipes/)).not.toBeInTheDocument();
+      });
     });
   });
 });

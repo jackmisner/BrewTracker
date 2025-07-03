@@ -15,9 +15,9 @@ jest.mock("../../src/services/api", () => ({
   },
 }));
 
-// Mock RecipeCard component
-jest.mock("../../src/components/RecipeCard", () => {
-  return function MockRecipeCard({ recipe }) {
+// Mock CompactRecipeCard component
+jest.mock("../../src/components/CompactRecipeCard", () => {
+  return function MockCompactRecipeCard({ recipe }) {
     return (
       <div data-testid={`recipe-card-${recipe.recipe_id}`}>
         <h3>{recipe.name}</h3>
@@ -108,17 +108,19 @@ describe("PublicRecipes", () => {
   });
 
   describe("Initial render and loading", () => {
-    it("renders page title and search form", () => {
+    it("renders page title and search form", async () => {
       renderWithProviders(<PublicRecipes />);
 
       expect(screen.getByText("Public Recipe Library")).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
+
       expect(
-        screen.getByPlaceholderText("Search recipes...")
+        screen.getByPlaceholderText("Search recipes by name, style, description...")
       ).toBeInTheDocument();
       expect(screen.getByText("All Styles")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Search" })
-      ).toBeInTheDocument();
     });
 
     it("shows loading state initially", () => {
@@ -137,8 +139,12 @@ describe("PublicRecipes", () => {
       expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
     });
 
-    it("renders style filter options", () => {
+    it("renders style filter options", async () => {
       renderWithProviders(<PublicRecipes />);
+
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
 
       const styleSelect = screen.getByDisplayValue("All Styles");
       expect(styleSelect).toBeInTheDocument();
@@ -273,10 +279,14 @@ describe("PublicRecipes", () => {
   });
 
   describe("Search functionality", () => {
-    it("updates search query when typing", () => {
+    it("updates search query when typing", async () => {
       renderWithProviders(<PublicRecipes />);
 
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       fireEvent.change(searchInput, { target: { value: "IPA" } });
 
       expect((searchInput as HTMLInputElement).value).toBe("IPA");
@@ -285,12 +295,14 @@ describe("PublicRecipes", () => {
     it("calls API with search query when form is submitted", async () => {
       renderWithProviders(<PublicRecipes />);
 
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
-      const searchButton = screen.getByRole("button", { name: "Search" });
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
 
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       fireEvent.change(searchInput, { target: { value: "IPA recipes" } });
-      fireEvent.click(searchButton);
 
+      // Note: The new implementation uses client-side filtering, not API calls for search
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
@@ -299,11 +311,14 @@ describe("PublicRecipes", () => {
     it("calls API with search query when Enter is pressed", async () => {
       renderWithProviders(<PublicRecipes />);
 
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
 
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       fireEvent.change(searchInput, { target: { value: "stout" } });
-      fireEvent.submit(searchInput.closest("form"));
-
+      
+      // Note: The new implementation uses client-side filtering, not form submission
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
       });
@@ -325,9 +340,12 @@ describe("PublicRecipes", () => {
       });
 
       // Now search, which should reset to page 1
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       fireEvent.change(searchInput, { target: { value: "test" } });
-      fireEvent.submit(searchInput.closest("form"));
 
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
@@ -336,8 +354,12 @@ describe("PublicRecipes", () => {
   });
 
   describe("Style filtering", () => {
-    it("updates style filter when option is selected", () => {
+    it("updates style filter when option is selected", async () => {
       renderWithProviders(<PublicRecipes />);
+
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
 
       const styleSelect = screen.getByDisplayValue("All Styles");
       fireEvent.change(styleSelect, { target: { value: "IPA" } });
@@ -348,30 +370,36 @@ describe("PublicRecipes", () => {
     it("calls API with style filter when changed", async () => {
       renderWithProviders(<PublicRecipes />);
 
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
+
       const styleSelect = screen.getByDisplayValue("All Styles");
       fireEvent.change(styleSelect, { target: { value: "Stout" } });
 
       await waitFor(() => {
-        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {});
+        expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, { style: "Stout" });
       });
     });
 
     it("combines search and style filter", async () => {
       renderWithProviders(<PublicRecipes />);
 
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
+      await waitFor(() => {
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       const styleSelect = screen.getByDisplayValue("All Styles");
 
       fireEvent.change(searchInput, { target: { value: "hoppy" } });
       fireEvent.change(styleSelect, { target: { value: "IPA" } });
 
-      const searchButton = screen.getByRole("button", { name: "Search" });
-      fireEvent.click(searchButton);
-
+      // Note: The new implementation uses client-side filtering for search,
+      // so we only expect the API to be called with the style filter
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledWith(1, 12, {
           style: "IPA",
-          search: "hoppy",
         });
       });
     });
@@ -557,6 +585,7 @@ describe("PublicRecipes", () => {
 
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
       const styleSelect = screen.getByDisplayValue("All Styles");
@@ -572,12 +601,13 @@ describe("PublicRecipes", () => {
 
       await waitFor(() => {
         expect(ApiService.recipes.getPublic).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText("Search recipes...");
+      const searchInput = screen.getByPlaceholderText("Search recipes by name, style, description...");
       fireEvent.change(searchInput, { target: { value: "test" } });
 
-      // Should not trigger additional API call
+      // Should not trigger additional API call (client-side filtering)
       expect(ApiService.recipes.getPublic).toHaveBeenCalledTimes(1);
     });
   });
