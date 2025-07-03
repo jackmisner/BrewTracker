@@ -148,7 +148,37 @@ class BeerStyleService {
         }
       });
 
-      return allStyles.sort((a, b) => (a.style_id || '').localeCompare(b.style_id || ''));
+      return allStyles.sort((a, b) => {
+        const aStyleId = a.style_id || '';
+        const bStyleId = b.style_id || '';
+        
+        // Extract category number and subcategory letter from style_id (e.g., "1A" -> [1, "A"])
+        const parseStyleId = (styleId: string) => {
+          const match = styleId.match(/^(\d+)([A-Z]?)$/);
+          if (match) {
+            return {
+              category: parseInt(match[1], 10),
+              subcategory: match[2] || ''
+            };
+          }
+          // Fallback for non-standard format
+          return {
+            category: 999,
+            subcategory: styleId
+          };
+        };
+        
+        const aParsed = parseStyleId(aStyleId);
+        const bParsed = parseStyleId(bStyleId);
+        
+        // First sort by category number
+        if (aParsed.category !== bParsed.category) {
+          return aParsed.category - bParsed.category;
+        }
+        
+        // Then sort by subcategory letter alphabetically
+        return aParsed.subcategory.localeCompare(bParsed.subcategory);
+      });
     } catch (error) {
       console.error("Error getting styles list:", error);
       return [];
