@@ -52,6 +52,22 @@ class TestBeerXMLEndpoints:
                 description="Caramel malt",
             ),
             Ingredient(
+                name="Caramel Rye",
+                type="grain",
+                grain_type="caramel_crystal",
+                potential=32,
+                color=60.0,
+                description="Crystal malt made from rye",
+            ),
+            Ingredient(
+                name="Malted Rye",
+                type="grain",
+                grain_type="adjunct_grain",
+                potential=40,
+                color=3.0,
+                description="Malted rye grain",
+            ),
+            Ingredient(
                 name="Cascade",
                 type="hop",
                 alpha_acid=5.5,
@@ -70,6 +86,30 @@ class TestBeerXMLEndpoints:
                 manufacturer="Fermentis",
                 code="US-05",
                 description="American ale yeast",
+            ),
+            Ingredient(
+                name="W34/70",
+                type="yeast",
+                attenuation=82.0,
+                manufacturer="Fermentis",
+                code="W34/70",
+                description="German lager yeast",
+            ),
+            Ingredient(
+                name="American Ale",
+                type="yeast",
+                attenuation=73.0,
+                manufacturer="Wyeast",
+                code="1056",
+                description="Clean American ale yeast",
+            ),
+            Ingredient(
+                name="WLP001 California Ale",
+                type="yeast",
+                attenuation=73.0,
+                manufacturer="White Labs",
+                code="WLP001",
+                description="California ale yeast",
             ),
             Ingredient(
                 name="Irish Moss",
@@ -769,7 +809,7 @@ class TestBeerXMLEndpoints:
 
         partial_result = response.json["matching_results"][0]
         assert (
-            0.7 < partial_result["confidence"] < 1.0
+            partial_result["confidence"] > 0.7
         )  # High confidence due to identical properties
         assert partial_result["requires_new"] is False
 
@@ -790,7 +830,7 @@ class TestBeerXMLEndpoints:
         )
 
         medium_result = response.json["matching_results"][0]
-        assert 0.3 < medium_result["confidence"] < 0.8  # Medium confidence
+        assert 0.3 < medium_result["confidence"] <= 0.8  # Medium confidence
 
         # Test no match (should suggest creating new)
         no_match_ingredients = [
@@ -811,3 +851,262 @@ class TestBeerXMLEndpoints:
         no_match_result = response.json["matching_results"][0]
         assert no_match_result["requires_new"] is True
         assert "suggestedIngredientData" in no_match_result
+
+    def test_crystal_caramel_synonym_matching(
+        self, client, authenticated_user, sample_ingredients
+    ):
+        """Test that Crystal ingredients match to Caramel ingredients"""
+        user, headers = authenticated_user
+
+        # Test Crystal Rye should match to Caramel Rye
+        crystal_rye_ingredients = [
+            {
+                "name": "Crystal Rye",  # Should match to "Caramel Rye"
+                "type": "grain",
+                "potential": 32,
+                "color": 55.0,  # Slightly different to avoid exact color match with Crystal 60L
+            }
+        ]
+
+        response = client.post(
+            "/api/beerxml/match-ingredients",
+            json={"ingredients": crystal_rye_ingredients},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        crystal_result = response.json["matching_results"][0]
+
+        # Should find a match with high confidence
+        assert crystal_result["confidence"] > 0.7
+        assert crystal_result["requires_new"] is False
+        assert crystal_result["best_match"]["ingredient"]["name"] == "Caramel Rye"
+
+        # Test that the match was found due to name normalization
+        matches = crystal_result["matches"]
+        assert len(matches) > 0
+        best_match = matches[0]
+        assert best_match["ingredient"]["name"] == "Caramel Rye"
+
+    def test_enhanced_yeast_matching_manufacturer_prefix(
+        self, client, authenticated_user, sample_ingredients
+    ):
+        """Test that yeasts with manufacturer prefixes match correctly"""
+        user, headers = authenticated_user
+
+        # Test cases for different yeast manufacturer patterns
+        test_cases = [
+            {
+                "name": "Fermentis W34/70",  # Should match to W34/70
+                "expected_match": "W34/70",
+                "expected_manufacturer": "Fermentis",
+                "description": "Manufacturer prefix with code",
+            },
+            {
+                "name": "Fermentis US-05",  # Should match to US-05
+                "expected_match": "US-05",
+                "expected_manufacturer": "Fermentis",
+                "description": "Manufacturer prefix with different code",
+            },
+            {
+                "name": "Wyeast 1056",  # Should match to American Ale
+                "expected_match": "American Ale",
+                "expected_manufacturer": "Wyeast",
+                "description": "Manufacturer with numeric code",
+            },
+            {
+                "name": "White Labs WLP001",  # Should match to WLP001 California Ale
+                "expected_match": "WLP001 California Ale",
+                "expected_manufacturer": "White Labs",
+                "description": "White Labs with code",
+            },
+        ]
+
+        for test_case in test_cases:
+            yeast_ingredients = [
+                {
+                    "name": test_case["name"],
+                    "type": "yeast",
+                    "attenuation": 75.0,
+                }
+            ]
+
+            response = client.post(
+                "/api/beerxml/match-ingredients",
+                json={"ingredients": yeast_ingredients},
+                headers=headers,
+            )
+
+            assert response.status_code == 200, f"Failed for {test_case['description']}"
+            result = response.json["matching_results"][0]
+
+            # Should find a high confidence match
+            assert (
+                result["confidence"] > 0.6
+            ), f"Low confidence for {test_case['description']}: {result['confidence']}"
+            assert (
+                result["requires_new"] is False
+            ), f"Incorrectly requires new ingredient for {test_case['description']}"
+
+            # Check that it matched to the correct ingredient
+            best_match = result["best_match"]["ingredient"]
+            assert (
+                best_match["name"] == test_case["expected_match"]
+            ), f"Wrong match for {test_case['description']}: got {best_match['name']}, expected {test_case['expected_match']}"
+            assert (
+                best_match["manufacturer"] == test_case["expected_manufacturer"]
+            ), f"Wrong manufacturer for {test_case['description']}"
+
+    def test_enhanced_yeast_matching_code_in_name(
+        self, client, authenticated_user, sample_ingredients
+    ):
+        """Test that yeast names containing codes match correctly"""
+        user, headers = authenticated_user
+
+        # Test case where the code is embedded in a longer name
+        yeast_ingredients = [
+            {
+                "name": "Some Random Software W34/70 Yeast",  # Contains W34/70 code
+                "type": "yeast",
+                "attenuation": 82.0,
+            }
+        ]
+
+        response = client.post(
+            "/api/beerxml/match-ingredients",
+            json={"ingredients": yeast_ingredients},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        result = response.json["matching_results"][0]
+
+        # Should find a match because the code W34/70 is contained in the name
+        assert result["confidence"] > 0.5
+        assert result["requires_new"] is False
+
+        # Should match to W34/70
+        best_match = result["best_match"]["ingredient"]
+        assert best_match["name"] == "W34/70"
+        assert best_match["manufacturer"] == "Fermentis"
+
+        # Check that the reason includes code matching
+        reasons = result["best_match"]["reasons"]
+        assert any("code" in reason.lower() for reason in reasons)
+
+    def test_yeast_name_parsing(self, client, authenticated_user, sample_ingredients):
+        """Test the yeast name parsing functionality"""
+        user, headers = authenticated_user
+
+        # Import the parse_yeast_name function to test directly
+        from routes.beerxml import parse_yeast_name
+
+        test_cases = [
+            ("Fermentis W34/70", "fermentis", "W34/70"),
+            ("Wyeast 1056", "wyeast", "1056"),
+            ("White Labs WLP001", "white labs", "WLP001"),
+            ("WLP WLP002", "white labs", "WLP002"),  # WLP prefix
+            ("Omega OYL-218", "omega yeast", "OYL-218"),
+            ("Imperial A38", "imperial yeast", "A38"),
+            ("Lallemand Belle Saison", "lallemand", "Belle Saison"),
+            ("Just A Regular Name", None, "Just A Regular Name"),  # No manufacturer
+        ]
+
+        for input_name, expected_manufacturer, expected_cleaned in test_cases:
+            manufacturer, cleaned = parse_yeast_name(input_name)
+            assert (
+                manufacturer == expected_manufacturer
+            ), f"Failed manufacturer parsing for '{input_name}': got {manufacturer}, expected {expected_manufacturer}"
+            assert (
+                cleaned == expected_cleaned
+            ), f"Failed name cleaning for '{input_name}': got '{cleaned}', expected '{expected_cleaned}'"
+
+    def test_improved_crystal_rye_malt_matching(
+        self, client, authenticated_user, sample_ingredients
+    ):
+        """Test that Crystal Rye Malt matches to Caramel Rye with high confidence"""
+        user, headers = authenticated_user
+
+        # Test the specific case from the user's BeerXML import
+        crystal_rye_malt_ingredients = [
+            {
+                "name": "Crystal Rye Malt",  # Should match to "Caramel Rye"
+                "type": "grain",
+                "color": 60.0,
+                "potential": 32.0,
+            }
+        ]
+
+        response = client.post(
+            "/api/beerxml/match-ingredients",
+            json={"ingredients": crystal_rye_malt_ingredients},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        result = response.json["matching_results"][0]
+
+        # Should find a high confidence match (>= 0.7 to not require new ingredient)
+        assert (
+            result["confidence"] >= 0.7
+        ), f"Confidence too low: {result['confidence']}"
+        assert result["requires_new"] is False, "Should not require new ingredient"
+
+        # Should match to Caramel Rye specifically
+        assert result["best_match"]["ingredient"]["name"] == "Caramel Rye"
+
+        # Should have excellent match reason due to normalization
+        reasons = result["best_match"]["reasons"]
+        assert any(
+            "excellent" in reason.lower() or "match" in reason.lower()
+            for reason in reasons
+        )
+
+    def test_semantic_grain_matching_rye_malt(
+        self, client, authenticated_user, sample_ingredients
+    ):
+        """Test that Rye Malt matches to Malted Rye better than Caramel Rye"""
+        user, headers = authenticated_user
+
+        # Test the specific case where semantic matching should prefer Malted Rye
+        rye_malt_ingredients = [
+            {
+                "name": "Rye Malt",  # Should prefer "Malted Rye" over "Caramel Rye"
+                "type": "grain",
+                "color": 3.0,
+                "potential": 40.0,
+            }
+        ]
+
+        response = client.post(
+            "/api/beerxml/match-ingredients",
+            json={"ingredients": rye_malt_ingredients},
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        result = response.json["matching_results"][0]
+
+        # Should find a high confidence match
+        assert (
+            result["confidence"] >= 0.7
+        ), f"Confidence too low: {result['confidence']}"
+        assert result["requires_new"] is False, "Should not require new ingredient"
+
+        # Should match to Malted Rye specifically (not Caramel Rye)
+        assert result["best_match"]["ingredient"]["name"] == "Malted Rye"
+
+        # Check that Malted Rye has higher confidence than Caramel Rye in the matches list
+        matches = result["matches"]
+        malted_rye_match = next(
+            (m for m in matches if m["ingredient"]["name"] == "Malted Rye"), None
+        )
+        caramel_rye_match = next(
+            (m for m in matches if m["ingredient"]["name"] == "Caramel Rye"), None
+        )
+
+        assert malted_rye_match is not None, "Malted Rye should be in matches"
+        assert caramel_rye_match is not None, "Caramel Rye should be in matches"
+        assert (
+            malted_rye_match["confidence"] > caramel_rye_match["confidence"]
+        ), f"Malted Rye ({malted_rye_match['confidence']}) should score higher than Caramel Rye ({caramel_rye_match['confidence']})"

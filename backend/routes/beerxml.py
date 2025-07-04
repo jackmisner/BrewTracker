@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from rapidfuzz import fuzz, process
 
 from models.mongo_models import BeerStyleGuide, Ingredient, Recipe, User
 from services.mongodb_service import MongoDBService
@@ -548,7 +549,7 @@ def get_available_ingredients_grouped():
 
 
 def find_ingredient_matches(imported_ingredient, available_ingredients):
-    """Find matching ingredients in database"""
+    """Find matching ingredients in database using enhanced fuzzy matching"""
     ingredient_type = imported_ingredient["type"]
     available = available_ingredients.get(ingredient_type, [])
 
@@ -556,14 +557,14 @@ def find_ingredient_matches(imported_ingredient, available_ingredients):
         return []
 
     matches = []
-    imported_name = imported_ingredient["name"].lower()
+    imported_name = imported_ingredient["name"]
 
-    # Simple name matching - in production, use more sophisticated fuzzy matching
+    # Enhanced fuzzy matching
     for available_ing in available:
-        available_name = available_ing["name"].lower()
-
-        # Calculate simple similarity score
-        confidence = calculate_name_similarity(imported_name, available_name)
+        # Calculate enhanced similarity score
+        confidence = calculate_name_similarity(
+            imported_name, available_ing["name"], ingredient_type, available_ing
+        )
 
         # Type-specific scoring adjustments
         if ingredient_type == "grain":
@@ -595,22 +596,249 @@ def find_ingredient_matches(imported_ingredient, available_ingredients):
     return matches[:5]  # Top 5 matches
 
 
-def calculate_name_similarity(name1, name2):
-    """Calculate simple name similarity score"""
+def parse_yeast_name(name):
+    """Parse yeast name to extract manufacturer and cleaned name/code"""
+    if not name:
+        return None, name
+
+    name_lower = name.lower().strip()
+
+    # Known manufacturer patterns (case insensitive)
+    manufacturer_patterns = {
+        "fermentis": ["fermentis"],
+        "wyeast": ["wyeast"],
+        "white labs": ["white labs", "whitelabs", "wlp"],
+        "omega yeast": ["omega yeast", "omega", "oyl"],
+        "imperial yeast": ["imperial yeast", "imperial"],
+        "lallemand": ["lallemand"],
+    }
+
+    detected_manufacturer = None
+    cleaned_name = name.strip()
+
+    # Check for manufacturer prefixes
+    for manufacturer, patterns in manufacturer_patterns.items():
+        for pattern in patterns:
+            if name_lower.startswith(pattern):
+                detected_manufacturer = manufacturer
+                # Remove manufacturer prefix from name
+                cleaned_name = name[len(pattern) :].strip()
+                # Remove common separators
+                if cleaned_name.startswith(("-", " ", "/")):
+                    cleaned_name = cleaned_name[1:].strip()
+                break
+        if detected_manufacturer:
+            break
+
+    return detected_manufacturer, cleaned_name
+
+
+def enhanced_fuzzy_match(imported_name, existing_ingredient, ingredient_type):
+    """Enhanced fuzzy matching for ingredients using multiple strategies"""
+    scores = []
+
+    # Normalize names for better matching
+    norm_imported = normalize_ingredient_name(imported_name)
+    norm_existing = normalize_ingredient_name(existing_ingredient["name"])
+
+    # Strategy 1: Direct name comparison (most reliable)
+    direct_score = fuzz.ratio(norm_imported, norm_existing)
+    scores.append(("direct_name", direct_score / 100.0, 1.0))  # Full weight
+
+    # Strategy 2: Partial ratio (handles partial matches, but weight less)
+    partial_score = fuzz.partial_ratio(norm_imported, norm_existing)
+    scores.append(("partial_name", partial_score / 100.0, 0.8))  # Reduced weight
+
+    # Strategy 3: Token set ratio (handles word order differences, but weight less)
+    token_score = fuzz.token_set_ratio(norm_imported, norm_existing)
+    scores.append(("token_set", token_score / 100.0, 0.7))  # Reduced weight
+
+    # Strategy 4: Semantic word matching for grain ingredients
+    if ingredient_type == "grain":
+        semantic_score = calculate_semantic_grain_score(
+            imported_name, existing_ingredient["name"]
+        )
+        if semantic_score > 0:
+            scores.append(
+                ("semantic_grain", semantic_score, 1.0)
+            )  # Full weight for semantic matches
+
+    # Strategy 5: For yeasts, try manufacturer-specific matching
+    if ingredient_type == "yeast":
+        yeast_scores = enhanced_yeast_matching(imported_name, existing_ingredient)
+        # Add full weight to yeast-specific scores
+        scores.extend([(strategy, score, 1.0) for strategy, score in yeast_scores])
+
+    # Calculate weighted scores and return the best
+    if scores:
+        weighted_scores = [
+            (strategy, score * weight) for strategy, score, weight in scores
+        ]
+        best_strategy, best_score = max(weighted_scores, key=lambda x: x[1])
+        return best_score, best_strategy
+
+    return 0.0, "no_match"
+
+
+def calculate_semantic_grain_score(imported_name, existing_name):
+    """Calculate semantic similarity for grain ingredients based on word relationships"""
+    imported_words = set(imported_name.lower().split())
+    existing_words = set(existing_name.lower().split())
+
+    # Define semantic relationships for grain terms
+    grain_synonyms = {
+        "malt": {"malted", "malt"},
+        "malted": {"malt", "malted"},
+        "crystal": {"caramel", "crystal"},
+        "caramel": {"crystal", "caramel"},
+        "base": {"base", "pale"},
+        "pale": {"base", "pale"},
+    }
+
+    # Only apply semantic scoring when there are clear semantic relationships
+    # This prevents over-scoring of simple exact matches
+    has_semantic_match = False
+    matched_pairs = 0
+    total_pairs = 0
+
+    for imp_word in imported_words:
+        best_match_score = 0
+        found_semantic = False
+
+        for ex_word in existing_words:
+            if imp_word == ex_word:
+                # Exact match
+                best_match_score = 1.0
+                break
+            elif imp_word in grain_synonyms and ex_word in grain_synonyms[imp_word]:
+                # Semantic match - this is what we're looking for
+                best_match_score = max(best_match_score, 0.9)
+                found_semantic = True
+                has_semantic_match = True
+            elif fuzz.ratio(imp_word, ex_word) > 80:
+                # High fuzzy match
+                best_match_score = max(best_match_score, 0.8)
+
+        matched_pairs += best_match_score
+        total_pairs += 1
+
+    # Only return a semantic score if we found actual semantic relationships
+    # This prevents exact word matches from getting artificially high semantic scores
+    if not has_semantic_match:
+        return 0
+
+    # Normalize by the number of words in the imported name
+    base_score = matched_pairs / total_pairs if total_pairs > 0 else 0
+
+    # Apply a slight penalty to prevent semantic matches from always beating direct matches
+    return base_score * 0.95
+
+
+def enhanced_yeast_matching(imported_name, existing_ingredient):
+    """Enhanced matching specifically for yeast ingredients"""
+    scores = []
+
+    # Parse the imported yeast name
+    detected_manufacturer, cleaned_imported_name = parse_yeast_name(imported_name)
+
+    # Strategy 1: Check if detected manufacturer matches
+    if detected_manufacturer and existing_ingredient.get("manufacturer"):
+        manufacturer_match = fuzz.ratio(
+            detected_manufacturer.lower(), existing_ingredient["manufacturer"].lower()
+        )
+        if manufacturer_match > 80:  # High manufacturer match
+            # If manufacturer matches, compare the cleaned names
+            name_score = fuzz.ratio(
+                cleaned_imported_name.lower(), existing_ingredient["name"].lower()
+            )
+            combined_score = (manufacturer_match * 0.3 + name_score * 0.7) / 100.0
+            scores.append(("manufacturer_name", combined_score))
+
+    # Strategy 2: Check code matching
+    if existing_ingredient.get("code"):
+        # Try matching cleaned name against code
+        code_score = fuzz.ratio(
+            cleaned_imported_name.lower(), existing_ingredient["code"].lower()
+        )
+        scores.append(("code_match", code_score / 100.0))
+
+        # Try matching full imported name against code
+        full_code_score = fuzz.ratio(
+            imported_name.lower(), existing_ingredient["code"].lower()
+        )
+        scores.append(("full_code_match", full_code_score / 100.0))
+
+    # Strategy 3: Check if imported name contains the code
+    if existing_ingredient.get("code"):
+        code = existing_ingredient["code"].lower()
+        if code in imported_name.lower():
+            # High score if code is contained in imported name
+            scores.append(("contains_code", 0.9))
+
+    # Strategy 4: Combined manufacturer + code pattern matching
+    if (
+        detected_manufacturer
+        and existing_ingredient.get("manufacturer")
+        and existing_ingredient.get("code")
+    ):
+        manufacturer = existing_ingredient["manufacturer"].lower()
+        code = existing_ingredient["code"].lower()
+
+        # Check if the imported name follows "Manufacturer Code" pattern
+        expected_pattern = f"{manufacturer} {code}"
+        pattern_score = fuzz.ratio(imported_name.lower(), expected_pattern)
+        scores.append(("manufacturer_code_pattern", pattern_score / 100.0))
+
+    return scores
+
+
+def normalize_ingredient_name(name):
+    """Normalize ingredient name for better matching"""
+    if not name:
+        return ""
+
+    # Convert to lowercase and handle crystal/caramel synonyms
+    normalized = name.lower()
+
+    # Handle crystal/caramel interchangeability
+    # Crystal malts and caramel malts are essentially the same thing
+    normalized = normalized.replace("crystal", "caramel")
+
+    # Remove common redundant words that don't affect matching
+    common_words = ["malt", "grain", "base", "specialty"]
+    words = normalized.split()
+    filtered_words = [word for word in words if word not in common_words]
+
+    # If we removed all words, keep the original normalized name
+    if not filtered_words:
+        return normalized
+
+    return " ".join(filtered_words)
+
+
+def calculate_name_similarity(
+    name1, name2, ingredient_type="other", existing_ingredient=None
+):
+    """Calculate name similarity score using enhanced fuzzy matching"""
     if name1 == name2:
         return 1.0
 
-    # Simple word overlap scoring
-    words1 = set(name1.split())
-    words2 = set(name2.split())
+    # Normalize names to handle synonyms
+    normalized_name1 = normalize_ingredient_name(name1)
+    normalized_name2 = normalize_ingredient_name(name2)
 
-    if not words1 or not words2:
-        return 0.0
+    if normalized_name1 == normalized_name2:
+        return 1.0
 
-    intersection = words1.intersection(words2)
-    union = words1.union(words2)
+    # Use enhanced fuzzy matching if existing ingredient data is available
+    if existing_ingredient:
+        score, strategy = enhanced_fuzzy_match(
+            name1, existing_ingredient, ingredient_type
+        )
+        return score
 
-    return len(intersection) / len(union)
+    # Fallback to simple fuzzy matching
+    return fuzz.ratio(normalized_name1, normalized_name2) / 100.0
 
 
 def adjust_grain_confidence(imported, available, base_confidence):
@@ -674,25 +902,55 @@ def get_match_reasons(imported, available, confidence):
     """Get reasons why ingredients match"""
     reasons = []
 
-    if confidence > 0.8:
+    # Enhanced reasoning based on confidence levels
+    if confidence > 0.9:
+        reasons.append("Excellent match")
+    elif confidence > 0.8:
         reasons.append("Very similar name")
     elif confidence > 0.6:
         reasons.append("Similar name")
+    elif confidence > 0.4:
+        reasons.append("Partial match")
 
-    # Type-specific reasons
+    # Enhanced type-specific reasons
     if imported["type"] == "grain":
         if imported.get("color") and available.get("color"):
             color_diff = abs(imported["color"] - available["color"])
             if color_diff <= 2:
                 reasons.append("Similar color")
+            elif color_diff <= 10:
+                reasons.append("Close color match")
 
     elif imported["type"] == "hop":
         if imported.get("alpha_acid") and available.get("alpha_acid"):
             alpha_diff = abs(imported["alpha_acid"] - available["alpha_acid"])
             if alpha_diff <= 1:
                 reasons.append("Similar alpha acid")
+            elif alpha_diff <= 3:
+                reasons.append("Close alpha acid")
 
     elif imported["type"] == "yeast":
+        # Enhanced yeast matching reasons
+        detected_manufacturer, cleaned_name = parse_yeast_name(imported["name"])
+
+        # Check manufacturer match
+        if detected_manufacturer and available.get("manufacturer"):
+            manufacturer_match = fuzz.ratio(
+                detected_manufacturer.lower(), available["manufacturer"].lower()
+            )
+            if manufacturer_match > 80:
+                reasons.append("Matching manufacturer")
+
+        # Check code match
+        if available.get("code"):
+            if cleaned_name.lower() == available["code"].lower():
+                reasons.append("Exact code match")
+            elif available["code"].lower() in imported["name"].lower():
+                reasons.append("Contains product code")
+            elif fuzz.ratio(cleaned_name.lower(), available["code"].lower()) > 80:
+                reasons.append("Similar code")
+
+        # Check for BeerXML laboratory data
         imported_lab = imported.get("beerxml_data", {}).get("laboratory", "").lower()
         available_mfg = available.get("manufacturer", "").lower()
         if imported_lab and available_mfg and imported_lab in available_mfg:
