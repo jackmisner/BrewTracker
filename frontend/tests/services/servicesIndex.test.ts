@@ -9,6 +9,7 @@ import {
   CacheManager,
   RecipeDefaultsService,
   UserSettingsService,
+  attenuationAnalyticsServiceInstance,
   Services,
   ServiceUtils,
 } from "../../src/services/index";
@@ -52,6 +53,7 @@ describe("Services Index", () => {
         cache: CacheManager,
         recipeDefaults: RecipeDefaultsService,
         userSettings: UserSettingsService,
+        attenuationAnalytics: attenuationAnalyticsServiceInstance,
       });
     });
 
@@ -70,6 +72,7 @@ describe("Services Index", () => {
       brewSessionServiceInstance.clearCache = jest.fn();
       IngredientMatchingService.clearCache = jest.fn();
       UserSettingsService.clearCache = jest.fn();
+      attenuationAnalyticsServiceInstance.clearCache = jest.fn();
       CacheManager.clearAllCaches = jest.fn();
 
       ServiceUtils.clearAllCaches();
@@ -79,6 +82,7 @@ describe("Services Index", () => {
       expect(brewSessionServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(IngredientMatchingService.clearCache).toHaveBeenCalledTimes(1);
       expect(UserSettingsService.clearCache).toHaveBeenCalledTimes(1);
+      expect(attenuationAnalyticsServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(CacheManager.clearAllCaches).toHaveBeenCalledTimes(1);
     });
 
@@ -89,6 +93,7 @@ describe("Services Index", () => {
       brewSessionServiceInstance.clearCache = jest.fn();
       IngredientMatchingService.clearCache = jest.fn();
       UserSettingsService.clearCache = jest.fn();
+      attenuationAnalyticsServiceInstance.clearCache = jest.fn();
       CacheManager.clearAllCaches = jest.fn();
 
       // Should not throw
@@ -98,6 +103,7 @@ describe("Services Index", () => {
       expect(brewSessionServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(IngredientMatchingService.clearCache).toHaveBeenCalledTimes(1);
       expect(UserSettingsService.clearCache).toHaveBeenCalledTimes(1);
+      expect(attenuationAnalyticsServiceInstance.clearCache).toHaveBeenCalledTimes(1);
       expect(CacheManager.clearAllCaches).toHaveBeenCalledTimes(1);
     });
   });
@@ -244,6 +250,7 @@ describe("Services Index", () => {
       expect(Services.cache).toBe(CacheManager);
       expect(Services.recipeDefaults).toBe(RecipeDefaultsService);
       expect(Services.userSettings).toBe(UserSettingsService);
+      expect(Services.attenuationAnalytics).toBe(attenuationAnalyticsServiceInstance);
     });
 
     test("individual exports match Services object exports", () => {

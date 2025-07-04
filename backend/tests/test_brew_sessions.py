@@ -538,3 +538,252 @@ class TestFermentationTracking:
             headers=headers,
         )
         assert response.status_code == 403
+
+
+class TestGravityStabilizationAnalysis:
+    """Test gravity stabilization analysis for fermentation completion detection"""
+
+    @pytest.fixture
+    def authenticated_user(self, client):
+        """Create and authenticate a user"""
+        client.post(
+            "/api/auth/register",
+            json={
+                "username": "stabilizer",
+                "email": "stabilizer@example.com",
+                "password": "password123",
+            },
+        )
+
+        login_response = client.post(
+            "/api/auth/login",
+            json={"username": "stabilizer", "password": "password123"},
+        )
+        token = login_response.json["access_token"]
+        user = User.objects(username="stabilizer").first()
+
+        return user, {"Authorization": f"Bearer {token}"}
+
+    @pytest.fixture
+    def brew_session_for_analysis(self, client, authenticated_user):
+        """Create a brew session with recipe for gravity analysis testing"""
+        user, headers = authenticated_user
+
+        # Create recipe with estimated FG
+        recipe = Recipe(
+            user_id=user.id,
+            name="Stabilization Test Recipe",
+            batch_size=5.0,
+            estimated_og=1.050,
+            estimated_fg=1.012,
+        )
+        recipe.save()
+
+        # Create brew session
+        session_data = {
+            "recipe_id": str(recipe.id),
+            "name": "Stabilization Test Session",
+            "status": "fermenting",
+            "actual_og": 1.050,
+        }
+        response = client.post("/api/brew-sessions", json=session_data, headers=headers)
+        session_id = response.json["session_id"]
+
+        return session_id, headers
+
+    def test_analyze_completion_insufficient_data(
+        self, client, brew_session_for_analysis
+    ):
+        """Test analysis with insufficient gravity readings"""
+        session_id, headers = brew_session_for_analysis
+
+        # Add only 2 entries (less than minimum 3)
+        entries = [
+            {"gravity": 1.050, "notes": "Day 0"},
+            {"gravity": 1.030, "notes": "Day 3"},
+        ]
+
+        for entry in entries:
+            client.post(
+                f"/api/brew-sessions/{session_id}/fermentation",
+                json=entry,
+                headers=headers,
+            )
+
+        # Test analysis
+        response = client.get(
+            f"/api/brew-sessions/{session_id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        analysis = response.json
+        assert analysis["is_stable"] is False
+        assert analysis["completion_suggested"] is False
+        assert "Insufficient gravity readings" in analysis["reason"]
+        assert analysis["stabilization_confidence"] == 0.0
+
+    def test_analyze_completion_gravity_still_dropping(
+        self, client, brew_session_for_analysis
+    ):
+        """Test analysis when gravity is still actively dropping"""
+        session_id, headers = brew_session_for_analysis
+
+        # Add entries showing active fermentation
+        entries = [
+            {"gravity": 1.050, "notes": "Day 0"},
+            {"gravity": 1.040, "notes": "Day 1"},
+            {"gravity": 1.030, "notes": "Day 2"},
+            {"gravity": 1.020, "notes": "Day 3"},
+        ]
+
+        for entry in entries:
+            client.post(
+                f"/api/brew-sessions/{session_id}/fermentation",
+                json=entry,
+                headers=headers,
+            )
+
+        # Test analysis
+        response = client.get(
+            f"/api/brew-sessions/{session_id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        analysis = response.json
+        assert analysis["is_stable"] is False
+        assert analysis["completion_suggested"] is False
+        assert "still dropping" in analysis["reason"]
+
+    def test_analyze_completion_stable_near_target(
+        self, client, brew_session_for_analysis
+    ):
+        """Test analysis when gravity is stable and near estimated FG"""
+        session_id, headers = brew_session_for_analysis
+
+        # Add entries showing stabilization near estimated FG (1.012)
+        entries = [
+            {"gravity": 1.050, "notes": "Day 0"},
+            {"gravity": 1.030, "notes": "Day 3"},
+            {"gravity": 1.015, "notes": "Day 7"},
+            {"gravity": 1.012, "notes": "Day 10"},
+            {"gravity": 1.012, "notes": "Day 12"},
+            {"gravity": 1.012, "notes": "Day 14"},
+        ]
+
+        for entry in entries:
+            client.post(
+                f"/api/brew-sessions/{session_id}/fermentation",
+                json=entry,
+                headers=headers,
+            )
+
+        # Test analysis
+        response = client.get(
+            f"/api/brew-sessions/{session_id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        analysis = response.json
+        assert analysis["is_stable"] is True
+        assert analysis["completion_suggested"] is True
+        assert (
+            "close to estimated FG" in analysis["reason"]
+            or "close to adjusted expected FG" in analysis["reason"]
+        )
+        assert analysis["current_gravity"] == 1.012
+        assert analysis["estimated_fg"] == 1.012
+        assert (
+            analysis["stabilization_confidence"] >= 0.66
+        )  # Should be 2/3 = 0.67 for 2 stable readings
+
+    def test_analyze_completion_stable_but_high(
+        self, client, brew_session_for_analysis
+    ):
+        """Test analysis when gravity is stable but higher than expected"""
+        session_id, headers = brew_session_for_analysis
+
+        # Add entries showing stabilization at higher than expected gravity
+        entries = [
+            {"gravity": 1.050, "notes": "Day 0"},
+            {"gravity": 1.030, "notes": "Day 3"},
+            {"gravity": 1.022, "notes": "Day 7"},
+            {"gravity": 1.021, "notes": "Day 10"},
+            {"gravity": 1.021, "notes": "Day 12"},
+        ]
+
+        for entry in entries:
+            client.post(
+                f"/api/brew-sessions/{session_id}/fermentation",
+                json=entry,
+                headers=headers,
+            )
+
+        # Test analysis
+        response = client.get(
+            f"/api/brew-sessions/{session_id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        analysis = response.json
+        assert analysis["is_stable"] is True
+        assert analysis["completion_suggested"] is False
+        assert (
+            "higher than estimated FG" in analysis["reason"]
+            or "higher than adjusted expected FG" in analysis["reason"]
+        )
+        assert "attenuation issues" in analysis["reason"]
+
+    def test_analyze_completion_already_completed(
+        self, client, brew_session_for_analysis
+    ):
+        """Test analysis for a session already marked as completed"""
+        session_id, headers = brew_session_for_analysis
+
+        # Mark session as completed
+        update_data = {"status": "completed"}
+        client.put(
+            f"/api/brew-sessions/{session_id}", json=update_data, headers=headers
+        )
+
+        # Test analysis
+        response = client.get(
+            f"/api/brew-sessions/{session_id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+        analysis = response.json
+        assert analysis["is_stable"] is True
+        assert analysis["completion_suggested"] is False
+        assert "already marked as completed" in analysis["reason"]
+
+    def test_analyze_completion_access_control(self, client, authenticated_user):
+        """Test that users cannot analyze other users' sessions"""
+        user, headers = authenticated_user
+
+        # Create a session for another user
+        other_user = User(username="otheranalyzer", email="other@example.com")
+        other_user.set_password("password")
+        other_user.save()
+
+        recipe = Recipe(user_id=other_user.id, name="Other Recipe", batch_size=5.0)
+        recipe.save()
+
+        session = BrewSession(
+            recipe_id=recipe.id,
+            user_id=other_user.id,
+            name="Other Session",
+            status="fermenting",
+        )
+        session.save()
+
+        # Try to analyze other user's session
+        response = client.get(
+            f"/api/brew-sessions/{session.id}/fermentation/analyze-completion",
+            headers=headers,
+        )
+        assert response.status_code == 403

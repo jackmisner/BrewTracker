@@ -1,11 +1,11 @@
+// Misc imports
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { UnitProvider } from "./contexts/UnitContext";
 import ApiService from "./services/api";
 import { User } from "./types";
 
-// Components
-import Layout from "./components/Header/Layout";
+// Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -13,12 +13,16 @@ import RecipeBuilder from "./pages/RecipeBuilder";
 import ViewRecipe from "./pages/ViewRecipe";
 import AllRecipes from "./pages/AllRecipes";
 import PublicRecipes from "./pages/PublicRecipes";
+import UserSettings from "./pages/UserSettings";
+import IngredientManager from "./pages/IngredientManager";
+import AttenuationAnalyticsPage from "./pages/AttenuationAnalytics";
+
+// Components
+import Layout from "./components/Header/Layout";
 import BrewSessionList from "./components/BrewSessions/BrewSessionList";
 import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
-import UserSettings from "./pages/UserSettings";
-import IngredientManager from "./pages/IngredientManager";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -120,6 +124,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <IngredientManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/attenuation-analytics"
+              element={
+                <ProtectedRoute>
+                  <AttenuationAnalyticsPage />
                 </ProtectedRoute>
               }
             />

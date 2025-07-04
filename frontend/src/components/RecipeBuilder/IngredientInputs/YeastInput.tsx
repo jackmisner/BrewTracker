@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
+import AttenuationBadge from "../../AttenuationAnalytics/AttenuationBadge";
 import { Ingredient, IngredientFormData } from "../../../types";
 import "../../../styles/SearchableSelect.css";
+import "../../../styles/AttenuationAnalytics.css";
 
 interface UnitOption {
   value: string;
@@ -232,8 +234,11 @@ const YeastInput: React.FC<YeastInputProps> = ({
     const yeastInfo = yeast as Ingredient & YeastInfo;
     const info: string[] = [];
 
-    if (yeastInfo.attenuation) {
-      info.push(`${yeastInfo.attenuation}% attenuation`);
+    // Prefer improved attenuation estimate if available
+    const attenuationValue = yeast?.improved_attenuation_estimate || yeastInfo.attenuation;
+    if (attenuationValue) {
+      const source = yeast?.improved_attenuation_estimate ? " (enhanced)" : "";
+      info.push(`${attenuationValue}% attenuation${source}`);
     }
 
     if (yeastInfo.min_temperature && yeastInfo.max_temperature) {
@@ -356,6 +361,13 @@ const YeastInput: React.FC<YeastInputProps> = ({
                 <small>{getYeastTypeInfo(yeastForm.selectedIngredient)}</small>
               </div>
             )}
+
+            {/* Attenuation Analytics */}
+            <AttenuationBadge 
+              ingredientId={yeastForm.selectedIngredient.ingredient_id}
+              className="compact"
+              showDetails={true}
+            />
           </div>
         )}
 

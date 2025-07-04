@@ -13,6 +13,7 @@ import IngredientMatchingService from "./BeerXML/IngredientMatchingService";
 import CacheManager from "./CacheManager";
 import RecipeDefaultsService from "./RecipeDefaultsService";
 import UserSettingsService from "./UserSettingsService";
+import attenuationAnalyticsServiceInstance from "./AttenuationAnalyticsService";
 import { ID } from "../types";
 
 // Service-specific interfaces
@@ -52,6 +53,7 @@ export {
   CacheManager,
   RecipeDefaultsService,
   UserSettingsService,
+  attenuationAnalyticsServiceInstance,
 };
 
 // Export as grouped services object for convenience
@@ -66,6 +68,7 @@ export const Services = {
   cache: CacheManager,
   recipeDefaults: RecipeDefaultsService,
   userSettings: UserSettingsService,
+  attenuationAnalytics: attenuationAnalyticsServiceInstance,
 };
 
 // Export service utilities
@@ -81,6 +84,7 @@ export const ServiceUtils = {
       brewSessionServiceInstance,
       IngredientMatchingService,
       UserSettingsService,
+      attenuationAnalyticsServiceInstance,
     ];
 
     services.forEach((service) => {

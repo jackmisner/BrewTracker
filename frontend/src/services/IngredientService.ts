@@ -338,7 +338,12 @@ class IngredientService {
     } else if (type === "hop") {
       if (ingredient.alpha_acid) metadata.alpha_acid = ingredient.alpha_acid;
     } else if (type === "yeast") {
-      if (ingredient.attenuation) metadata.attenuation = ingredient.attenuation;
+      // Prefer improved attenuation estimate if available
+      if (ingredient.improved_attenuation_estimate) {
+        metadata.attenuation = ingredient.improved_attenuation_estimate;
+      } else if (ingredient.attenuation) {
+        metadata.attenuation = ingredient.attenuation;
+      }
     }
 
     return metadata;

@@ -1,0 +1,497 @@
+/* Attenuation Analytics Component Styles */
+
+.attenuation-badge {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.attenuation-badge.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-color: #ddd;
+  background: #f9f9f9;
+}
+
+.loading-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Badge main content */
+.badge-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+.badge-text {
+  font-weight: 600;
+  color: #333;
+}
+
+.confidence-indicator {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: #f0f0f0;
+  font-weight: 500;
+}
+
+/* Confidence level colors */
+.attenuation-badge.none {
+  border-color: #ddd;
+}
+
+.attenuation-badge.low {
+  border-color: #ffa726;
+  background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
+}
+
+.attenuation-badge.medium {
+  border-color: #ffcc02;
+  background: linear-gradient(135deg, #fffde7 0%, #ffffff 100%);
+}
+
+.attenuation-badge.high {
+  border-color: #66bb6a;
+  background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 100%);
+}
+
+/* Confidence indicator colors */
+.confidence-indicator.text-gray-500 {
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+.confidence-indicator.text-orange-500 {
+  color: #f97316;
+  background: #fef3c7;
+}
+
+.confidence-indicator.text-yellow-500 {
+  color: #eab308;
+  background: #fefce8;
+}
+
+.confidence-indicator.text-green-500 {
+  color: #22c55e;
+  background: #dcfce7;
+}
+
+/* Badge details */
+.badge-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e9ecef;
+  font-size: 0.8rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #333;
+  font-weight: 600;
+}
+
+.detail-value.positive {
+  color: #22c55e;
+}
+
+.detail-value.negative {
+  color: #ef4444;
+}
+
+/* Error state */
+.badge-error {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: #d32f2f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .attenuation-badge {
+    padding: 6px 10px;
+    margin: 6px 0;
+  }
+  
+  .badge-main {
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+  
+  .badge-details {
+    font-size: 0.75rem;
+  }
+}
+
+/* Integration with yeast input styles */
+.selected-ingredient-info .attenuation-badge {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Integration with ingredients list */
+.yeast-attenuation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.traditional-attenuation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.yeast-attenuation .attenuation-badge {
+  margin: 0;
+}
+
+/* Compact variant for recipe builder */
+.attenuation-badge.compact {
+  padding: 4px 8px;
+  margin: 4px 0;
+  font-size: 0.8rem;
+}
+
+.attenuation-badge.compact .badge-main {
+  gap: 4px;
+}
+
+.attenuation-badge.compact .badge-icon {
+  font-size: 0.9rem;
+}
+
+.attenuation-badge.compact .confidence-indicator {
+  font-size: 0.7rem;
+  padding: 1px 4px;
+}
+
+/* Analytics Page Styles */
+.analytics-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.analytics-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.analytics-header h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.header-description {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* System Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-card.highlight {
+  border-color: #007bff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+}
+
+.stat-card.success {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 100%);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Analytics Sections */
+.analytics-section {
+  margin-bottom: 40px;
+}
+
+.analytics-section h2 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.section-description {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* Yeast List */
+.yeast-list {
+  display: grid;
+  gap: 16px;
+}
+
+.yeast-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.yeast-rank {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #007bff;
+  min-width: 40px;
+}
+
+.yeast-info {
+  flex: 1;
+}
+
+.yeast-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.yeast-manufacturer,
+.yeast-code {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-right: 8px;
+  color: #666;
+}
+
+.yeast-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.stat-item .stat-label {
+  color: #666;
+}
+
+.stat-item .stat-value {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Improvement List */
+.improvement-list {
+  display: grid;
+  gap: 16px;
+}
+
+.improvement-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.improvement-info {
+  flex: 1;
+}
+
+.improvement-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 250px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.stat-row .stat-value.positive {
+  color: #22c55e;
+}
+
+.stat-row .stat-value.negative {
+  color: #ef4444;
+}
+
+/* No Data State */
+.no-data-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.no-data-state h2 {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.no-data-state p {
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Loading States */
+.loading-container {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-spinner.large {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+}
+
+/* Error States */
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.retry-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.retry-button:hover {
+  background: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analytics-page {
+    padding: 16px;
+  }
+  
+  .analytics-header h1 {
+    font-size: 2rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  
+  .yeast-card,
+  .improvement-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .yeast-stats,
+  .improvement-stats {
+    width: 100%;
+    min-width: auto;
+  }
+}

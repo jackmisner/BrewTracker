@@ -129,15 +129,28 @@ def calculate_og(recipe):
 
 
 def calculate_fg(recipe):
-    """Calculate final gravity using yeast attenuation"""
+    """Calculate final gravity using improved yeast attenuation estimates"""
     if not recipe or not hasattr(recipe, "ingredients"):
         return 1.000
 
-    # Find yeast with highest attenuation
+    # Find yeast with highest improved attenuation estimate
     max_attenuation = 0
     for ri in recipe.ingredients:
-        if ri.type == "yeast" and ri.attenuation:
-            max_attenuation = max(max_attenuation, ri.attenuation)
+        if ri.type == "yeast":
+            # Try to get improved attenuation estimate
+            from services.attenuation_service import AttenuationService
+
+            improved_attenuation = AttenuationService.get_improved_attenuation_estimate(
+                str(ri.ingredient_id)
+            )
+
+            # Fall back to theoretical attenuation if no improved estimate
+            attenuation = (
+                improved_attenuation if improved_attenuation else ri.attenuation
+            )
+
+            if attenuation:
+                max_attenuation = max(max_attenuation, attenuation)
 
     og = calculate_og(recipe)
     return calc_fg_core(og, max_attenuation)

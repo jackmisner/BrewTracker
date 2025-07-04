@@ -434,9 +434,10 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
                           Color: {match.ingredient.color}°L
                         </span>
                       )}
-                      {match.ingredient.attenuation && (
+                      {(match.ingredient.improved_attenuation_estimate || match.ingredient.attenuation) && (
                         <span className="detail">
-                          Att: {match.ingredient.attenuation}%
+                          Att: {match.ingredient.improved_attenuation_estimate || match.ingredient.attenuation}%
+                          {match.ingredient.improved_attenuation_estimate && <span title="Enhanced estimate">📊</span>}
                         </span>
                       )}
                     </div>

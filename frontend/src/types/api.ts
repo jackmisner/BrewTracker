@@ -162,6 +162,23 @@ export interface FermentationStatsResponse extends ApiResponse<{
   projected_fg: number;
 }> {}
 
+// Gravity Stabilization Analysis API types
+export interface GravityStabilizationAnalysis {
+  is_stable: boolean;
+  completion_suggested: boolean;
+  reason: string;
+  current_gravity: number;
+  estimated_fg?: number;
+  gravity_difference?: number;
+  stabilization_confidence: number;
+  stable_reading_count: number;
+  total_readings: number;
+  recent_changes: number[];
+}
+
+// Note: Backend returns gravity analysis as a direct object, not wrapped in ApiResponse
+export interface GravityStabilizationAnalysisResponse extends GravityStabilizationAnalysis {}
+
 // BeerXML API types
 export interface BeerXMLExportResponse extends ApiResponse<{
   xml_content: string;
@@ -279,3 +296,40 @@ export interface ApiCallOptions {
   retries?: number;
   signal?: AbortSignal;
 }
+
+// Attenuation Analytics API types
+export interface AttenuationAnalytics {
+  ingredient_id: ID;
+  name: string;
+  manufacturer?: string;
+  code?: string;
+  theoretical_attenuation?: number;
+  actual_attenuation_average?: number;
+  actual_attenuation_count?: number;
+  attenuation_confidence?: number;
+  improved_estimate?: number;
+  last_update?: string;
+  min_actual?: number;
+  max_actual?: number;
+  std_deviation?: number;
+}
+
+export interface AttenuationAnalyticsResponse extends ApiResponse<AttenuationAnalytics> {}
+
+export interface AllYeastAnalyticsResponse extends ApiResponse<{
+  yeast_analytics: AttenuationAnalytics[];
+  total_count: number;
+}> {}
+
+export interface ImprovedAttenuationEstimateResponse extends ApiResponse<{
+  ingredient_id: ID;
+  improved_estimate: number;
+}> {}
+
+export interface AttenuationSystemStatsResponse extends ApiResponse<{
+  total_yeast_ingredients: number;
+  yeast_with_actual_data: number;
+  total_attenuation_data_points: number;
+  high_confidence_yeast: number;
+  data_coverage_percentage: number;
+}> {}

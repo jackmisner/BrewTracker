@@ -1,8 +1,10 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useUnits } from "../../contexts/UnitContext";
 import { Services } from "../../services";
+import AttenuationBadge from "../AttenuationAnalytics/AttenuationBadge";
 import { RecipeIngredient, IngredientType } from "../../types";
 import { formatTime as formatTimeUtil } from "../../utils/formatUtils";
+import "../../styles/AttenuationAnalytics.css";
 
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];
@@ -598,15 +600,27 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                           )}
                         </div>
                       )}
-                      {ingredient.type === "yeast" &&
-                        (ingredient as any).attenuation && (
-                          <div className="detail-item">
-                            <span className="detail-label">Attenuation:</span>
-                            <span className="detail-value">
-                              {(ingredient as any).attenuation}%
-                            </span>
-                          </div>
-                        )}
+                      {ingredient.type === "yeast" && (
+                        <div className="detail-item yeast-attenuation">
+                          {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
+                            <div className="traditional-attenuation">
+                              <span className="detail-label">
+                                {ingredient.improved_attenuation_estimate ? "Enhanced Attenuation:" : "Base Attenuation:"}
+                              </span>
+                              <span className="detail-value">
+                                {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                {ingredient.improved_attenuation_estimate && (
+                                  <span className="enhanced-indicator" title="Based on real-world fermentation data">📊</span>
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          <AttenuationBadge 
+                            ingredientId={ingredient.ingredient_id}
+                            className="compact"
+                          />
+                        </div>
+                      )}
                     </div>
                   </td>
                 )}

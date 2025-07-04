@@ -860,9 +860,10 @@ const IngredientManager: React.FC = () => {
                                     (points per pound per gallon)
                                   </span>
                                 )}
-                                {ingredient.attenuation && (
+                                {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
                                   <span>
-                                    Attenuation: {ingredient.attenuation}%
+                                    Attenuation: {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                    {ingredient.improved_attenuation_estimate && <span title="Enhanced estimate based on real fermentation data"> 📊</span>}
                                   </span>
                                 )}
                                 {ingredient.manufacturer && (

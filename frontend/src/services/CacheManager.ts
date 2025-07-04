@@ -1,4 +1,5 @@
 import BrewSessionService from "./BrewSessionService";
+import attenuationAnalyticsServiceInstance from "./AttenuationAnalyticsService";
 import { ID } from "../types";
 
 // Service-specific interfaces
@@ -109,6 +110,11 @@ class CacheManager {
       BrewSessionService.clearSessionCache(sessionData.session_id);
     }
 
+    // Clear attenuation analytics cache when brew session is updated
+    // This is especially important when sessions are marked as completed
+    // since new attenuation data may have been collected
+    attenuationAnalyticsServiceInstance.clearCache();
+
     this.emit("brew-session-updated", sessionData);
   }
 
@@ -140,6 +146,7 @@ class CacheManager {
   clearAllCaches(): void {
     console.log("Cache invalidation: Clearing all caches");
     BrewSessionService.clearCache();
+    attenuationAnalyticsServiceInstance.clearCache();
 
     // Emit event for components to react
     this.emit("cache-cleared");
