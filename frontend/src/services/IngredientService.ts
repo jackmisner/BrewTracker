@@ -266,7 +266,7 @@ class IngredientService {
       }
       if (
         ingredientData.use === "boil" &&
-        (!ingredientData.time || parseInt(ingredientData.time.toString()) < 0)
+        (ingredientData.time === undefined || ingredientData.time === null || parseInt(ingredientData.time.toString()) < 0)
       ) {
         errors.push("Boil time is required for boil hops");
       }
