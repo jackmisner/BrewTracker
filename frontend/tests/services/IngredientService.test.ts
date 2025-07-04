@@ -315,6 +315,21 @@ describe("IngredientService", () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("Boil time is required for boil hops");
     });
+
+    test("allows hop with time: 0 for late additions", () => {
+      const hopData = {
+        ingredient_id: 1,
+        amount: 1,
+        unit: "oz",
+        use: "boil",
+        time: 0, // Late addition/flameout hop
+      };
+
+      const result = ingredientService.validateIngredientData("hop", hopData);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
   });
 
   describe("formatIngredientsForApi", () => {
