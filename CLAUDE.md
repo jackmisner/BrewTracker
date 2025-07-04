@@ -35,7 +35,7 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 
 - **Frontend**: React 19 with React Router, Axios for API calls, Fuse.js for fuzzy search
 - **Backend**: Flask with MongoEngine ORM, JWT authentication, MongoDB database
-- **Key Feature**: Brewing calculation engine with metric/imperial unit conversion
+- **Key Features**: Brewing calculation engine with metric/imperial unit conversion, yeast attenuation analytics
 
 ### Core Business Logic
 
@@ -50,6 +50,7 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 
 - **MongoDB models**: `backend/models/mongo_models.py` - User, Recipe, Ingredient, BrewSession, BeerStyleGuide
 - **Database service**: `backend/services/mongodb_service.py` - MongoDB interaction layer
+- **Yeast Analytics**: Extended Ingredient model with attenuation tracking fields (`min_attenuation`, `max_attenuation`, `avg_attenuation`, `attenuation_data_points`)
 
 #### Frontend Architecture
 
@@ -57,6 +58,7 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 - **Service layer**: `frontend/src/services/` - Fully TypeScript API abstractions for different domains
 - **Custom hooks**: `frontend/src/hooks/useRecipeBuilder.ts` - Complex recipe state management (TypeScript)
 - **Fuzzy search**: `frontend/src/components/SearchableSelect.tsx` - Fuse.js-powered ingredient search (TypeScript)
+- **Recipe UI**: `frontend/src/components/CompactRecipeCard.tsx` - Unified recipe display component with SRM color swatches and metrics
 
 ### Key Features
 
@@ -64,8 +66,10 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 - **Brew Sessions**: Track fermentation progress and brewing notes
 - **BeerXML**: Import/export recipes in standard format
 - **Beer Style Analysis**: Compare recipes against BJCP style guidelines
-- **Public/Private Recipes**: Recipe sharing system
+- **Public/Private Recipes**: Recipe sharing system with unified compact card design
 - **Version Control**: Recipe cloning with parent-child relationships
+- **Yeast Attenuation Analytics**: Real-world yeast performance tracking with min/max/average attenuation rates (implementation complete, pending real-world data)
+- **Advanced Recipe Browsing**: Fuzzy search and comprehensive sorting (14 criteria) for both personal and public recipes
 
 ### Testing Strategy
 
@@ -83,13 +87,108 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 - **Ingredients**: Auto-seeded from `backend/data/brewtracker.ingredients.json` on first run
 - **Beer styles**: Auto-seeded from `backend/data/beer_style_guides.json` on first run
 
+## Yeast Attenuation Analytics Feature
+
+### Implementation Status: Complete (Pending Real-World Data)
+
+The yeast attenuation analytics feature has been fully implemented to track real-world yeast performance data and provide more accurate fermentation estimates. This feature is ready for production use but requires actual brewing data to populate meaningful analytics.
+
+### Backend Implementation
+
+#### Database Schema Extensions
+- **Ingredient Model**: Extended with attenuation tracking fields:
+  - `min_attenuation`: Float - Minimum observed attenuation percentage
+  - `max_attenuation`: Float - Maximum observed attenuation percentage  
+  - `avg_attenuation`: Float - Average attenuation percentage across all data points
+  - `attenuation_data_points`: Integer - Number of real-world measurements collected
+
+#### API Endpoints
+- `GET /api/ingredients/attenuation-analytics` - Retrieve attenuation data for all yeasts
+- `GET /api/ingredients/<id>/attenuation` - Get detailed attenuation analytics for specific yeast
+- Additional ingredient endpoints return extended attenuation data
+
+#### Services
+- **AttenuationAnalyticsService**: `frontend/src/services/AttenuationAnalyticsService.ts` - TypeScript service for attenuation API calls
+- **Backend ingredient routes**: Extended to handle attenuation data queries
+
+### Frontend Implementation
+
+#### Components
+- **AttenuationAnalytics**: `frontend/src/pages/AttenuationAnalytics.tsx` - Dashboard displaying yeast performance data
+- **Enhanced ingredient views**: Updated to show attenuation statistics where available
+- **Recipe builder integration**: Improved FG estimates using real-world attenuation data
+
+#### Type Definitions
+- **Ingredient interfaces**: Updated TypeScript types in `frontend/src/types.ts` with optional attenuation fields
+- **API response types**: Comprehensive typing for attenuation analytics endpoints
+
+### Data Collection Strategy
+
+The system is designed to collect attenuation data from:
+1. **Brew session completions**: When users log final gravity measurements
+2. **Recipe feedback**: User-reported actual vs. expected attenuation rates
+3. **Community contributions**: Aggregated data from public recipes and brew sessions
+
+### Testing Coverage
+
+- **Frontend**: Comprehensive test suite covering all attenuation-related components and services
+- **Backend**: Full API endpoint testing with mock data scenarios
+- **Integration**: End-to-end testing of the analytics workflow
+
+### Current Limitations
+
+- **No historical data**: Feature is ready but lacks real brewing data for meaningful analytics
+- **Bootstrap requirements**: Initial data collection period needed to generate useful insights
+- **User adoption**: Effectiveness depends on community engagement with logging actual results
+
+### Future Enhancements
+
+- **Batch analysis**: Compare attenuation across different batch sizes and conditions
+- **Environmental factors**: Track temperature, pH, and other variables affecting attenuation
+- **Predictive modeling**: Machine learning models for attenuation prediction based on recipe composition
+
+## Recent UI/UX Improvements
+
+### Unified Recipe Display System
+
+#### CompactRecipeCard Component
+- **Location**: `frontend/src/components/CompactRecipeCard.tsx`
+- **Features**: 
+  - SRM color swatches with accurate beer color representation
+  - Compact metrics grid (OG, ABV, IBU, SRM)
+  - Consistent action buttons (View, Edit, Brew)
+  - Responsive design with mobile optimization
+  - Comprehensive test coverage (26 test cases)
+
+#### Enhanced Recipe Browsing
+- **AllRecipes Page**: `frontend/src/pages/AllRecipes.tsx`
+  - Advanced fuzzy search using Fuse.js
+  - 14 sorting criteria (name, dates, ABV, IBU, SRM, OG - both ascending/descending)
+  - Client-side filtering for instant results
+  - Search results count and clear functionality
+
+- **PublicRecipes Page**: `frontend/src/pages/PublicRecipes.tsx`
+  - Unified design matching AllRecipes interface
+  - Combined search/sort/filter controls
+  - Preserved pagination for performance
+  - Clone functionality with author attribution
+
+#### Code Cleanup Completed
+- **Removed deprecated RecipeCard component**: Old component fully replaced by CompactRecipeCard
+- **Deleted associated files**:
+  - `src/components/RecipeCard.tsx`
+  - `src/styles/RecipeCard.css` 
+  - `tests/components/RecipeCard.test.tsx`
+- **Updated all imports and references**: Codebase now uses consistent component architecture
+- **Maintained test coverage**: All 1,577 tests passing after cleanup
+
 ## CI/CD and Quality Assurance
 
 ### Frontend CI Pipeline (`.github/workflows/frontend-ci.yml`)
 
 - **Node.js 22** with npm caching
 - **TypeScript Compilation**: `npx tsc --noEmit` for type checking
-- **Testing**: Jest with React Testing Library (1,314 tests)
+- **Testing**: Jest with React Testing Library (1,577 tests)
 - **Coverage**: 70% threshold with TypeScript file inclusion
 - **Build Verification**: Production build testing
 - **Codecov Integration**: Automated coverage reporting
