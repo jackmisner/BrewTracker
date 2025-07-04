@@ -544,11 +544,19 @@ describe("IngredientMatchingService", () => {
         "pale 2row base malt"
       );
       expect(service.cleanName("Crystal/Caramel 40L")).toBe(
-        "crystalcaramel 40l"
+        "caramelcaramel 40l"
       );
       expect(service.cleanName("  Multiple   Spaces  ")).toBe(
         "multiple spaces"
       );
+    });
+
+    test("handles crystal/caramel synonyms", () => {
+      expect(service.cleanName("Crystal Rye")).toBe("caramel rye");
+      expect(service.cleanName("Crystal 40L")).toBe("caramel 40l");
+      expect(service.cleanName("Crystal Wheat")).toBe("caramel wheat");
+      expect(service.cleanName("Caramel Rye")).toBe("caramel rye");
+      expect(service.cleanName("Munich Crystal")).toBe("munich caramel");
     });
   });
 

@@ -593,11 +593,26 @@ class IngredientMatchingService {
    * Clean ingredient name for better matching
    */
   cleanIngredientName(name: string): string {
-    return name
+    let cleanedName = name
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "") // Remove special characters
       .replace(/\s+/g, " ") // Normalize whitespace
       .trim();
+    
+    // Handle crystal/caramel interchangeability
+    cleanedName = this.normalizeIngredientSynonyms(cleanedName);
+    
+    return cleanedName;
+  }
+
+  /**
+   * Normalize ingredient synonyms for better matching
+   */
+  private normalizeIngredientSynonyms(name: string): string {
+    // Handle crystal/caramel interchangeability
+    // Crystal malts and caramel malts are essentially the same thing
+    // Use global replacement to handle cases like "crystalcaramel" where special chars were removed
+    return name.replace(/crystal/g, 'caramel');
   }
 
   /**
