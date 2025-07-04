@@ -260,3 +260,28 @@ def get_fermentation_stats(session_id):
         return jsonify(stats), 200
     else:
         return jsonify({"error": message}), 404
+
+
+@brew_sessions_bp.route(
+    "/<session_id>/fermentation/analyze-completion", methods=["GET"]
+)
+@jwt_required()
+def analyze_fermentation_completion(session_id):
+    """Analyze gravity stabilization to suggest fermentation completion"""
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Analyze gravity stabilization
+    analysis, message = MongoDBService.analyze_gravity_stabilization(session_id)
+
+    if analysis is not None:
+        return jsonify(analysis), 200
+    else:
+        return jsonify({"error": message}), 400

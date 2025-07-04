@@ -2,6 +2,7 @@ import ApiService from "./api";
 import {
   BrewSession,
   ID,
+  GravityStabilizationAnalysis,
 } from "../types";
 
 // Service-specific interfaces
@@ -358,6 +359,20 @@ class BrewSessionService {
       return response.data;
     } catch (error) {
       console.error("Error fetching fermentation stats:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Analyze gravity stabilization to detect fermentation completion
+   */
+  async analyzeFermentationCompletion(sessionId: ID): Promise<GravityStabilizationAnalysis | null> {
+    try {
+      const response = await ApiService.brewSessions.analyzeFermentationCompletion(sessionId);
+      // Backend returns analysis as a direct object, not wrapped in ApiResponse
+      return response.data;
+    } catch (error) {
+      console.error("Error analyzing fermentation completion:", error);
       return null;
     }
   }

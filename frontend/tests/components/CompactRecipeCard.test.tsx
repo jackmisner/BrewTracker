@@ -170,7 +170,7 @@ describe("CompactRecipeCard", () => {
       const brewButton = screen.getByRole("button", { name: "Brew" });
       fireEvent.click(brewButton);
       
-      expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions/new?recipe=test-recipe-1");
+      expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions/new?recipeId=test-recipe-1");
     });
   });
 

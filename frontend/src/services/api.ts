@@ -49,6 +49,7 @@ import {
   AddFermentationEntryRequest,
   UpdateFermentationEntryRequest,
   FermentationStatsResponse,
+  GravityStabilizationAnalysisResponse,
   
   // BeerXML types
   BeerXMLExportResponse,
@@ -267,6 +268,9 @@ const ApiService = {
     
     getFermentationStats: (sessionId: ID): Promise<AxiosResponse<FermentationStatsResponse>> =>
       api.get(`/brew-sessions/${sessionId}/fermentation/stats`),
+    
+    analyzeFermentationCompletion: (sessionId: ID): Promise<AxiosResponse<GravityStabilizationAnalysisResponse>> =>
+      api.get(`/brew-sessions/${sessionId}/fermentation/analyze-completion`),
   },
 
   // BeerXML endpoints

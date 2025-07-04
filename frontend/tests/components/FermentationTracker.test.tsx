@@ -26,6 +26,7 @@ jest.mock("../../src/services/BrewSessionService", () => ({
     getFermentationData: jest.fn(),
     getFermentationStats: jest.fn(),
     addFermentationEntry: jest.fn(),
+    analyzeFermentationCompletion: jest.fn(),
   },
 }));
 
@@ -141,6 +142,7 @@ describe("FermentationTracker", () => {
     (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue(mockFermentationData);
     (brewSessionService.getFermentationStats as jest.Mock).mockResolvedValue(mockStats);
     (brewSessionService.addFermentationEntry as jest.Mock).mockResolvedValue(mockFermentationData);
+    (brewSessionService.analyzeFermentationCompletion as jest.Mock).mockResolvedValue(null);
 
     // Default successful API responses (for direct API calls that still remain)
     (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
@@ -878,7 +880,7 @@ describe("FermentationTracker", () => {
       });
     });
 
-    it("should calculate and set FG when gravity stabilizes", async () => {
+    it("should add fermentation entry without automatic FG calculation", async () => {
       // Mock data with two entries where the last one is close to what we'll add
       (brewSessionService.getFermentationData as jest.Mock).mockResolvedValue([
         {
@@ -927,17 +929,16 @@ describe("FermentationTracker", () => {
         ).toBeInTheDocument();
       });
 
-      // Add gravity reading within 0.001 of previous (1.012)
-      // AND less than actual_og (1.055) to trigger FG calculation
+      // Add gravity reading 
       const gravityInput = screen.getByLabelText("Gravity");
       fireEvent.change(gravityInput, {
-        target: { value: "1.012" }, // Exactly same as previous reading to indicate stabilization
+        target: { value: "1.012" },
       });
 
       const submitButton = screen.getByText("Save Reading");
       fireEvent.click(submitButton);
 
-      // First verify that addFermentationEntry was called
+      // Verify that addFermentationEntry was called
       await waitFor(() => {
         expect(
           brewSessionService.addFermentationEntry
@@ -949,16 +950,14 @@ describe("FermentationTracker", () => {
         );
       });
 
-      // Then verify that session update was called for FG calculation
-      await waitFor(() => {
-        expect(ApiService.brewSessions.update).toHaveBeenCalledWith(
-          "test-session-id",
-          expect.objectContaining({
-            actual_fg: 1.012,
-            actual_abv: expect.any(Number),
-          })
-        );
-      });
+      // With new intelligent analysis system, FG calculation is no longer automatic
+      // The intelligent analysis component handles fermentation completion detection
+      expect(ApiService.brewSessions.update).not.toHaveBeenCalledWith(
+        "test-session-id",
+        expect.objectContaining({
+          actual_fg: expect.any(Number),
+        })
+      );
     });
   });
 

@@ -379,7 +379,7 @@ const Dashboard: React.FC = () => {
               <div className="empty-state">
                 <p>No brew sessions recorded yet.</p>
                 <button
-                  onClick={() => navigate("/brew-sessions/new")}
+                  onClick={() => navigate("/recipes")}
                   className="primary-button"
                 >
                   Start Brewing

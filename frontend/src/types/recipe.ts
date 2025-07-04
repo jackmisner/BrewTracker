@@ -69,6 +69,7 @@ export interface Ingredient extends BaseEntity {
   actual_attenuation_average?: number; // Running average of actual attenuation
   actual_attenuation_count?: number; // Number of data points collected
   attenuation_confidence?: number; // Confidence score (0-1) based on data volume
+  improved_attenuation_estimate?: number; // Best estimate combining theoretical and real-world data
   last_attenuation_update?: string; // When attenuation data was last updated
 }
 
@@ -90,6 +91,7 @@ export interface RecipeIngredient {
   color?: number;
   alpha_acid?: number;
   attenuation?: number;
+  improved_attenuation_estimate?: number;
 }
 
 // Recipe metrics/calculated values

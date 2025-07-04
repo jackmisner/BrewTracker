@@ -757,15 +757,53 @@ class MongoDBService:
             # Save the updated session
             brew_session.save()
 
+            # Automatically set actual_fg and calculate actual_abv when status changes to completed
+            if (
+                brew_session.status == "completed"
+                and original_status != "completed"
+                and brew_session.fermentation_data
+            ):
+
+                # Find the most recent gravity reading for final gravity
+                latest_gravity = None
+                for entry in reversed(brew_session.fermentation_data):
+                    if entry.gravity:
+                        latest_gravity = entry.gravity
+                        break
+
+                # Set actual_fg if we found a gravity reading and it's not already set
+                if latest_gravity and not brew_session.actual_fg:
+                    brew_session.actual_fg = latest_gravity
+                    print(
+                        f"Automatically set actual_fg to {latest_gravity} from latest fermentation entry"
+                    )
+
+                # Calculate actual_abv if we have both OG and FG
+                if brew_session.actual_og and brew_session.actual_fg:
+                    from utils.brewing_calculation_core import calc_abv_core
+
+                    brew_session.actual_abv = calc_abv_core(
+                        brew_session.actual_og, brew_session.actual_fg
+                    )
+                    print(
+                        f"Automatically calculated actual_abv as {brew_session.actual_abv}%"
+                    )
+
+                # Save again with the new calculated values
+                brew_session.save()
+
             # Check if this session is newly completed and has attenuation data
-            if (brew_session.status == "completed" and 
-                original_status != "completed" and 
-                brew_session.actual_og and 
-                brew_session.actual_fg):
-                
+            if (
+                brew_session.status == "completed"
+                and original_status != "completed"
+                and brew_session.actual_og
+                and brew_session.actual_fg
+            ):
+
                 # Process attenuation data collection
                 try:
                     from services.attenuation_service import AttenuationService
+
                     AttenuationService.process_completed_brew_session(brew_session)
                 except Exception as attenuation_error:
                     print(f"Error processing attenuation data: {attenuation_error}")
@@ -802,8 +840,36 @@ class MongoDBService:
 
             fermentation_entry = FermentationEntry(**entry_data)
 
+            # Automatically set actual_og from the first gravity reading if not already set
+            if (
+                fermentation_entry.gravity
+                and not session.actual_og
+                and len(session.fermentation_data) == 0
+            ):
+                session.actual_og = fermentation_entry.gravity
+                print(
+                    f"Automatically set actual_og to {fermentation_entry.gravity} from first fermentation entry"
+                )
+
             # Add to session's fermentation data list
             session.fermentation_data.append(fermentation_entry)
+
+            # If session is completed and this entry has gravity, update actual_fg and actual_abv
+            if session.status == "completed" and fermentation_entry.gravity:
+                session.actual_fg = fermentation_entry.gravity
+                print(
+                    f"Updated actual_fg to {fermentation_entry.gravity} from new fermentation entry"
+                )
+
+                # Recalculate actual_abv if we have both OG and FG
+                if session.actual_og and session.actual_fg:
+                    from utils.brewing_calculation_core import calc_abv_core
+
+                    session.actual_abv = calc_abv_core(
+                        session.actual_og, session.actual_fg
+                    )
+                    print(f"Recalculated actual_abv as {session.actual_abv}%")
+
             session.save()
 
             return True, "Fermentation entry added successfully"
@@ -1097,3 +1163,215 @@ class MongoDBService:
         except Exception as e:
             print(f"Database error: {e}")
             return []
+
+    ###########################################################
+    #                 Fermentation Analysis Methods           #
+    ###########################################################
+
+    @staticmethod
+    def analyze_gravity_stabilization(session_id):
+        """Analyze fermentation data to detect gravity stabilization and suggest completion"""
+        try:
+            session = BrewSession.objects(id=session_id).first()
+            if not session:
+                return None, "Brew session not found"
+
+            # Skip if session is already completed
+            if session.status == "completed":
+                return {
+                    "is_stable": True,
+                    "completion_suggested": False,
+                    "reason": "Session is already marked as completed",
+                    "current_gravity": session.actual_fg,
+                    "stabilization_confidence": 1.0,
+                }, "Session already completed"
+
+            # Need at least 3 gravity readings to detect patterns
+            gravity_readings = [
+                entry
+                for entry in session.fermentation_data
+                if entry.gravity is not None
+            ]
+
+            if len(gravity_readings) < 3:
+                return {
+                    "is_stable": False,
+                    "completion_suggested": False,
+                    "reason": "Insufficient gravity readings for analysis (minimum 3 required)",
+                    "current_gravity": (
+                        gravity_readings[-1].gravity if gravity_readings else None
+                    ),
+                    "stabilization_confidence": 0.0,
+                }, "Insufficient data for analysis"
+
+            # Sort by entry date to ensure chronological order
+            gravity_readings.sort(key=lambda x: x.entry_date)
+            recent_readings = gravity_readings[-5:]  # Look at last 5 readings
+
+            # Extract gravity values and dates
+            gravity_values = [reading.gravity for reading in recent_readings]
+            current_gravity = gravity_values[-1]
+
+            # Calculate gravity change patterns
+            gravity_changes = []
+            for i in range(1, len(gravity_values)):
+                change = (
+                    gravity_values[i - 1] - gravity_values[i]
+                )  # Positive means gravity dropped
+                gravity_changes.append(change)
+
+            # Analysis criteria
+            max_change_threshold = (
+                0.002  # Maximum change per reading to consider stable
+            )
+            min_stable_readings = 3  # Minimum consecutive stable readings
+            target_gravity_tolerance = (
+                0.005  # Tolerance for comparing against estimated FG
+            )
+
+            # Check if recent changes are minimal (stable)
+            recent_changes = (
+                gravity_changes[-(min_stable_readings - 1) :]
+                if len(gravity_changes) >= min_stable_readings - 1
+                else gravity_changes
+            )
+            is_stable = all(
+                abs(change) <= max_change_threshold for change in recent_changes
+            )
+
+            # Calculate stabilization confidence based on number of stable readings
+            stable_reading_count = 0
+            for change in reversed(gravity_changes):
+                if abs(change) <= max_change_threshold:
+                    stable_reading_count += 1
+                else:
+                    break
+
+            stabilization_confidence = min(
+                stable_reading_count / min_stable_readings, 1.0
+            )
+
+            # Calculate expected final gravity based on actual OG and yeast attenuation
+            from models.mongo_models import Recipe
+            from utils.brewing_calculation_core import calc_fg_core
+
+            recipe = Recipe.objects(id=session.recipe_id).first()
+            estimated_fg = recipe.estimated_fg if recipe else None
+            actual_og = session.actual_og
+
+            # Calculate a more intelligent expected FG if we have both actual OG and recipe data
+            adjusted_expected_fg = None
+            if actual_og and recipe:
+                # Get yeast ingredients to determine expected attenuation
+                yeast_ingredients = [
+                    ing for ing in recipe.ingredients if ing.ingredient_type == "yeast"
+                ]
+
+                if yeast_ingredients:
+                    # Use the first yeast's attenuation (could be improved to handle multiple yeasts)
+                    yeast_ingredient = yeast_ingredients[0]
+
+                    # Try to get improved attenuation estimate from analytics
+                    from services.attenuation_service import AttenuationService
+
+                    improved_attenuation = None
+
+                    try:
+                        # Get the actual ingredient object to check for improved estimates
+                        ingredient_obj = Ingredient.objects(
+                            id=yeast_ingredient.ingredient_id
+                        ).first()
+                        if (
+                            ingredient_obj
+                            and hasattr(ingredient_obj, "improved_attenuation_estimate")
+                            and ingredient_obj.improved_attenuation_estimate
+                        ):
+                            improved_attenuation = (
+                                ingredient_obj.improved_attenuation_estimate
+                            )
+                        elif ingredient_obj and ingredient_obj.attenuation:
+                            improved_attenuation = ingredient_obj.attenuation
+                    except Exception as e:
+                        print(f"Could not get improved attenuation: {e}")
+
+                    # Calculate expected FG based on actual OG and yeast attenuation
+                    if improved_attenuation:
+                        adjusted_expected_fg = calc_fg_core(
+                            actual_og, improved_attenuation
+                        )
+
+                # Fallback: If we have both actual and estimated OG, adjust the estimated FG proportionally
+                if not adjusted_expected_fg and estimated_fg and recipe.estimated_og:
+                    # Calculate the original expected attenuation from recipe
+                    recipe_attenuation = (
+                        (recipe.estimated_og - estimated_fg)
+                        / (recipe.estimated_og - 1.0)
+                    ) * 100
+                    # Apply the same attenuation to actual OG
+                    adjusted_expected_fg = calc_fg_core(actual_og, recipe_attenuation)
+
+            # Use adjusted expected FG if available, otherwise fall back to recipe estimated FG
+            expected_fg_for_analysis = adjusted_expected_fg or estimated_fg
+
+            # Determine completion suggestion
+            completion_suggested = False
+            reason = "Gravity still dropping"
+
+            if is_stable:
+                if expected_fg_for_analysis:
+                    # Compare against intelligently calculated expected FG
+                    gravity_difference = abs(current_gravity - expected_fg_for_analysis)
+                    if gravity_difference <= target_gravity_tolerance:
+                        completion_suggested = True
+                        if adjusted_expected_fg:
+                            reason = f"Gravity stable at {current_gravity:.3f}, close to adjusted expected FG ({expected_fg_for_analysis:.3f}) based on actual OG"
+                        else:
+                            reason = f"Gravity stable at {current_gravity:.3f}, close to estimated FG ({expected_fg_for_analysis:.3f})"
+                    else:
+                        if (
+                            current_gravity
+                            > expected_fg_for_analysis + target_gravity_tolerance
+                        ):
+                            if adjusted_expected_fg:
+                                reason = f"Gravity stable at {current_gravity:.3f}, but higher than adjusted expected FG ({expected_fg_for_analysis:.3f}). May need more time or have attenuation issues."
+                            else:
+                                reason = f"Gravity stable at {current_gravity:.3f}, but higher than estimated FG ({expected_fg_for_analysis:.3f}). May need more time or have attenuation issues."
+                        else:
+                            completion_suggested = True
+                            if adjusted_expected_fg:
+                                reason = f"Gravity stable at {current_gravity:.3f}, lower than adjusted expected FG ({expected_fg_for_analysis:.3f}). Fermentation likely complete."
+                            else:
+                                reason = f"Gravity stable at {current_gravity:.3f}, lower than estimated FG ({expected_fg_for_analysis:.3f}). Fermentation likely complete."
+                else:
+                    # No expected FG to compare against, suggest based on stability alone
+                    completion_suggested = True
+                    reason = f"Gravity stable at {current_gravity:.3f} for {stable_reading_count} consecutive readings"
+
+            # Additional safety check - ensure gravity is reasonable for completion
+            if completion_suggested and current_gravity > 1.020:
+                completion_suggested = False
+                reason = f"Gravity appears stable but high ({current_gravity:.3f}). Consider checking for stuck fermentation."
+
+            return {
+                "is_stable": is_stable,
+                "completion_suggested": completion_suggested,
+                "reason": reason,
+                "current_gravity": current_gravity,
+                "estimated_fg": expected_fg_for_analysis,
+                "gravity_difference": (
+                    abs(current_gravity - expected_fg_for_analysis)
+                    if expected_fg_for_analysis
+                    else None
+                ),
+                "stabilization_confidence": round(stabilization_confidence, 2),
+                "stable_reading_count": stable_reading_count,
+                "total_readings": len(gravity_readings),
+                "recent_changes": [round(change, 4) for change in recent_changes],
+            }, "Analysis completed successfully"
+
+        except Exception as e:
+            print(f"Error analyzing gravity stabilization: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return None, str(e)

@@ -234,8 +234,11 @@ const YeastInput: React.FC<YeastInputProps> = ({
     const yeastInfo = yeast as Ingredient & YeastInfo;
     const info: string[] = [];
 
-    if (yeastInfo.attenuation) {
-      info.push(`${yeastInfo.attenuation}% attenuation`);
+    // Prefer improved attenuation estimate if available
+    const attenuationValue = yeast?.improved_attenuation_estimate || yeastInfo.attenuation;
+    if (attenuationValue) {
+      const source = yeast?.improved_attenuation_estimate ? " (enhanced)" : "";
+      info.push(`${attenuationValue}% attenuation${source}`);
     }
 
     if (yeastInfo.min_temperature && yeastInfo.max_temperature) {

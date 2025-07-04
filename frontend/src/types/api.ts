@@ -162,6 +162,23 @@ export interface FermentationStatsResponse extends ApiResponse<{
   projected_fg: number;
 }> {}
 
+// Gravity Stabilization Analysis API types
+export interface GravityStabilizationAnalysis {
+  is_stable: boolean;
+  completion_suggested: boolean;
+  reason: string;
+  current_gravity: number;
+  estimated_fg?: number;
+  gravity_difference?: number;
+  stabilization_confidence: number;
+  stable_reading_count: number;
+  total_readings: number;
+  recent_changes: number[];
+}
+
+// Note: Backend returns gravity analysis as a direct object, not wrapped in ApiResponse
+export interface GravityStabilizationAnalysisResponse extends GravityStabilizationAnalysis {}
+
 // BeerXML API types
 export interface BeerXMLExportResponse extends ApiResponse<{
   xml_content: string;

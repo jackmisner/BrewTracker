@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import ApiService from "../../services/api";
 import brewSessionService from "../../services/BrewSessionService";
+import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { 
   FermentationEntry, 
   BrewSession, 
@@ -242,36 +243,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         }
       }
 
-      // If status is fermenting and this entry has a lower gravity than the OG,
-      // it might be the FG if it's stabilized
-      if (
-        sessionData.status === "fermenting" &&
-        entry.gravity &&
-        sessionData.actual_og &&
-        entry.gravity < sessionData.actual_og &&
-        !sessionData.actual_fg
-      ) {
-        // Check if gravity has stabilized (two readings within 0.001)
-        if (fermentationData.length > 0) {
-          const lastEntry = fermentationData[fermentationData.length - 1];
-          if (
-            lastEntry.gravity &&
-            Math.abs(lastEntry.gravity - entry.gravity) <= 0.001
-          ) {
-            const sessionUpdateData: Partial<BrewSession> = {
-              actual_fg: entry.gravity,
-              actual_abv: (sessionData.actual_og - entry.gravity) * 131.25,
-            };
-
-            await ApiService.brewSessions.update(sessionId, sessionUpdateData);
-
-            // Notify parent component of the update
-            if (onUpdateSession) {
-              onUpdateSession(sessionUpdateData);
-            }
-          }
-        }
-      }
+      // Note: Gravity stabilization is now handled by the intelligent analysis component
+      // which provides more sophisticated detection and user confirmation
 
       // Reset form
       setFormData({
@@ -303,6 +276,49 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         console.error("Error deleting fermentation entry:", err);
         setError("Failed to delete fermentation entry");
       }
+    }
+  };
+
+  const handleAcceptCompletionSuggestion = async (): Promise<void> => {
+    try {
+      if (!sessionData || sessionData.status === "completed") {
+        return;
+      }
+
+      // Get the latest gravity reading for final gravity
+      const latestGravityEntry = [...fermentationData]
+        .reverse()
+        .find((entry) => entry.gravity);
+
+      if (!latestGravityEntry?.gravity) {
+        setError("No gravity reading available to set as final gravity");
+        return;
+      }
+
+      const updateData: Partial<BrewSession> = {
+        status: "completed",
+        actual_fg: latestGravityEntry.gravity,
+        fermentation_end_date: new Date().toISOString().split('T')[0], // Today's date
+      };
+
+      // Calculate ABV if we have OG
+      if (sessionData.actual_og) {
+        updateData.actual_abv = (sessionData.actual_og - latestGravityEntry.gravity) * 131.25;
+      }
+
+      await ApiService.brewSessions.update(sessionId, updateData);
+
+      // Notify parent component of the update
+      if (onUpdateSession) {
+        onUpdateSession(updateData);
+      }
+
+      // Refresh data to reflect changes
+      fetchFermentationData();
+      
+    } catch (err: any) {
+      console.error("Error updating session to completed:", err);
+      setError("Failed to mark session as completed");
     }
   };
 
@@ -544,6 +560,18 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Gravity Stabilization Analysis - only show if we have enough data and session is not completed */}
+          {fermentationData.length >= 3 && 
+           sessionData?.status !== "completed" && 
+           sessionData?.status === "fermenting" && (
+            <div className="brew-session-section">
+              <GravityStabilizationAnalysis 
+                sessionId={sessionId}
+                onSuggestCompletion={handleAcceptCompletionSuggestion}
+              />
             </div>
           )}
 

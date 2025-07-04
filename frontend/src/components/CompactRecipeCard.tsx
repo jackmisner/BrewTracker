@@ -55,7 +55,7 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({ recipe }) => {
   };
 
   const handleBrew = (): void => {
-    navigate(`/brew-sessions/new?recipe=${recipe.recipe_id}`);
+    navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`);
   };
 
   return (

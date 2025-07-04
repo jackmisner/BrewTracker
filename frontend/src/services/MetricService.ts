@@ -161,7 +161,7 @@ class MetricService {
       color: ing.color || undefined,
       grain_type: ing.grain_type || undefined,
       alpha_acid: ing.alpha_acid || undefined,
-      attenuation: ing.attenuation || undefined,
+      attenuation: ing.improved_attenuation_estimate || ing.attenuation || undefined,
     }));
   }
 

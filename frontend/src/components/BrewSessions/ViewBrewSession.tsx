@@ -4,6 +4,7 @@ import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
+import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { Recipe, BrewSession } from "../../types";
 import "../../styles/BrewSessions.css";
 
@@ -154,6 +155,52 @@ const ViewBrewSession: React.FC = () => {
 
   const handleErrorDismiss = (): void => {
     setError("");
+  };
+
+  const handleCompletionSuggestion = async (): Promise<void> => {
+    try {
+      if (!session || session.status === "completed") {
+        return;
+      }
+
+      // Get the latest gravity reading for final gravity
+      const fermentationData = session.fermentation_data || [];
+      const latestGravityEntry = [...fermentationData]
+        .reverse()
+        .find((entry) => entry.gravity);
+
+      if (!latestGravityEntry?.gravity) {
+        setError("No gravity reading available to set as final gravity");
+        return;
+      }
+
+      setIsUpdating(true);
+
+      const updateData: Partial<BrewSession> = {
+        status: "completed",
+        actual_fg: latestGravityEntry.gravity,
+        fermentation_end_date: new Date().toISOString().split('T')[0], // Today's date
+      };
+
+      // Calculate ABV if we have OG
+      if (session.actual_og) {
+        updateData.actual_abv = (session.actual_og - latestGravityEntry.gravity) * 131.25;
+      }
+
+      const updatedSession = await BrewSessionService.updateBrewSession(session.session_id, updateData);
+      
+      // Update local state
+      setSession(updatedSession);
+      
+      // Clear any related caches
+      invalidateBrewSessionCaches.onUpdated({ sessionId: session.session_id, recipeId: session.recipe_id });
+      
+    } catch (err: any) {
+      console.error("Error updating session to completed:", err);
+      setError("Failed to mark session as completed");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   if (loading) {
@@ -581,6 +628,19 @@ const ViewBrewSession: React.FC = () => {
                     );
                   })()}
                 </div>
+              </div>
+            )}
+
+            {/* Advanced Gravity Analysis */}
+            {session.fermentation_data && 
+             session.fermentation_data.length >= 3 && 
+             session.status === "fermenting" && (
+              <div className="brew-session-section">
+                <h3 className="section-title">Fermentation Completion Analysis</h3>
+                <GravityStabilizationAnalysis 
+                  sessionId={session.session_id}
+                  onSuggestCompletion={handleCompletionSuggestion}
+                />
               </div>
             )}
           </div>

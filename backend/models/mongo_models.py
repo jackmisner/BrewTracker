@@ -194,12 +194,16 @@ class Ingredient(Document):
     alcohol_tolerance = FloatField()  # Alcohol tolerance as percentage
     min_temperature = FloatField()  # Minimum fermentation temperature
     max_temperature = FloatField()  # Maximum fermentation temperature
-    
+
     # Real-world attenuation tracking
-    actual_attenuation_data = ListField(FloatField())  # List of actual attenuation percentages
+    actual_attenuation_data = ListField(
+        FloatField()
+    )  # List of actual attenuation percentages
     actual_attenuation_average = FloatField()  # Running average of actual attenuation
     actual_attenuation_count = IntField(default=0)  # Number of data points collected
-    attenuation_confidence = FloatField(default=0.0)  # Confidence score (0-1) based on data volume
+    attenuation_confidence = FloatField(
+        default=0.0
+    )  # Confidence score (0-1) based on data volume
     last_attenuation_update = DateTimeField()  # When attenuation data was last updated
 
     meta = {"collection": "ingredients", "indexes": ["name", "type", "grain_type"]}
@@ -223,7 +227,11 @@ class Ingredient(Document):
             "actual_attenuation_average": self.actual_attenuation_average,
             "actual_attenuation_count": self.actual_attenuation_count,
             "attenuation_confidence": self.attenuation_confidence,
-            "last_attenuation_update": self.last_attenuation_update.isoformat() if self.last_attenuation_update else None,
+            "last_attenuation_update": (
+                self.last_attenuation_update.isoformat()
+                if self.last_attenuation_update
+                else None
+            ),
         }
 
 

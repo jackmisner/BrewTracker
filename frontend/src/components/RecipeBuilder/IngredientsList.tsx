@@ -602,11 +602,16 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                       )}
                       {ingredient.type === "yeast" && (
                         <div className="detail-item yeast-attenuation">
-                          {(ingredient as any).attenuation && (
+                          {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
                             <div className="traditional-attenuation">
-                              <span className="detail-label">Base Attenuation:</span>
+                              <span className="detail-label">
+                                {ingredient.improved_attenuation_estimate ? "Enhanced Attenuation:" : "Base Attenuation:"}
+                              </span>
                               <span className="detail-value">
-                                {(ingredient as any).attenuation}%
+                                {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                {ingredient.improved_attenuation_estimate && (
+                                  <span className="enhanced-indicator" title="Based on real-world fermentation data">📊</span>
+                                )}
                               </span>
                             </div>
                           )}

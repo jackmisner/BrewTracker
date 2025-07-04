@@ -139,13 +139,16 @@ def calculate_fg(recipe):
         if ri.type == "yeast":
             # Try to get improved attenuation estimate
             from services.attenuation_service import AttenuationService
+
             improved_attenuation = AttenuationService.get_improved_attenuation_estimate(
                 str(ri.ingredient_id)
             )
-            
+
             # Fall back to theoretical attenuation if no improved estimate
-            attenuation = improved_attenuation if improved_attenuation else ri.attenuation
-            
+            attenuation = (
+                improved_attenuation if improved_attenuation else ri.attenuation
+            )
+
             if attenuation:
                 max_attenuation = max(max_attenuation, attenuation)
 
