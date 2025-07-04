@@ -84,15 +84,25 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     // Initialize decisions array and calculate summary
     const decisions: Decision[] = matchingResults.map((result) => ({
       imported: result.imported,
-      action: result.best_match ? "use_existing" : "create_new", // Fixed: use best_match instead of bestMatch
-      selectedMatch: result.best_match?.ingredient || null, // Fixed: use best_match instead of bestMatch
-      newIngredientData: result.suggestedIngredientData, // This should now work with backend fix
+      action: (result.best_match || result.bestMatch) ? "use_existing" : "create_new",
+      selectedMatch: (result.best_match || result.bestMatch)?.ingredient || null,
+      newIngredientData: result.suggestedIngredientData,
       confidence: result.confidence,
     }));
 
     setReviewState((prev) => ({ ...prev, decisions }));
+    
+    // Convert backend format to frontend format for summary calculation
+    const normalizedResults = matchingResults.map(result => ({
+      ...result,
+      bestMatch: result.best_match || result.bestMatch, // Normalize to frontend expected field
+      requiresNewIngredient: result.requiresNewIngredient || 
+        (result as any).requires_new || 
+        (!result.best_match && !result.bestMatch)
+    }));
+    
     setMatchingSummary(
-      ingredientMatchingService.getMatchingSummary(matchingResults as any)
+      ingredientMatchingService.getMatchingSummary(normalizedResults as any)
     );
   }, [matchingResults]);
 
