@@ -152,7 +152,7 @@ describe("BrewSessionList", () => {
       renderWithProviders(<BrewSessionList />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Filter by Status:")).toBeInTheDocument();
+        expect(screen.getByLabelText("Status:")).toBeInTheDocument();
       });
       await waitFor(() => {
         expect(screen.getByDisplayValue("All Statuses")).toBeInTheDocument();
@@ -215,9 +215,13 @@ describe("BrewSessionList", () => {
       renderWithProviders(<BrewSessionList />);
 
       await waitFor(() => {
-        expect(screen.getByText("Completed")).toBeInTheDocument();
-        expect(screen.getByText("Fermenting")).toBeInTheDocument();
-        expect(screen.getByText("Planned")).toBeInTheDocument();
+        // Get all status badges and check their content
+        const statusBadges = screen.getAllByText("Completed").concat(
+          screen.getAllByText("Fermenting"),
+          screen.getAllByText("Planned")
+        ).filter(element => element.closest(".status-badge"));
+        
+        expect(statusBadges.length).toBeGreaterThan(0);
       });
     });
 
@@ -244,83 +248,6 @@ describe("BrewSessionList", () => {
     });
   });
 
-  describe("Pagination", () => {
-    beforeEach(() => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
-        scenarios.success(mockBrewSessionsResponse.data)
-      );
-    });
-
-    it("should display pagination info when multiple pages exist", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      // Wait for the pagination info container
-      const paginationInfo = await screen.findByRole("status", {
-        name: /pagination results/i,
-      });
-
-      expect(paginationInfo).toHaveTextContent(
-        /showing 1 to 10 of 15 results/i
-      );
-    });
-
-    it("should render pagination controls", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      await waitFor(() => {
-        expect(screen.getByText("←")).toBeInTheDocument();
-        expect(screen.getByText("→")).toBeInTheDocument();
-      });
-
-      // Use Testing Library queries to find the active page button
-      const activePageButton = screen.getByRole("button", { name: "1" });
-      expect(activePageButton).toHaveClass("active");
-
-      // Find the page 2 button (not prev/next, not active)
-      const page2Button = screen.getByRole("button", { name: "2" });
-      expect(page2Button).toBeInTheDocument();
-    });
-
-    it("should disable previous button on first page", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      await waitFor(() => {
-        const prevButton = screen.getByText("←").closest("button");
-        expect(prevButton).toBeDisabled();
-      });
-    });
-
-    it("should handle page navigation", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      await waitFor(() => {
-        const nextButton = screen.getByText("→").closest("button")!;
-        expect(nextButton).not.toBeDisabled();
-        fireEvent.click(nextButton);
-      });
-
-      expect(ApiService.brewSessions.getAll).toHaveBeenCalledWith(2);
-    });
-
-    it("should handle direct page number clicks", async () => {
-      renderWithProviders(<BrewSessionList />);
-
-      await waitFor(() => {
-        const paginationControls = screen
-          .getByText("←")
-          .closest(".pagination-controls");
-        const pageButtons = paginationControls!.querySelectorAll(
-          'button:not([class*="prev"]):not([class*="next"])'
-        );
-        const page2Button = Array.from(pageButtons).find(
-          (btn) => btn.textContent === "2"
-        );
-        fireEvent.click(page2Button!);
-      });
-
-      expect(ApiService.brewSessions.getAll).toHaveBeenCalledWith(2);
-    });
-  });
 
   describe("Filtering", () => {
     beforeEach(() => {
@@ -349,29 +276,85 @@ describe("BrewSessionList", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should reset to first page when changing filter", async () => {
+  });
+
+  describe("Search and Sort", () => {
+    beforeEach(() => {
+      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+        scenarios.success(mockBrewSessionsResponse.data)
+      );
+    });
+
+    it("should render search input", async () => {
       renderWithProviders(<BrewSessionList />);
 
       await waitFor(() => {
-        // First navigate to page 2
-        const paginationControls = screen
-          .getByText("←")
-          .closest(".pagination-controls");
-        const pageButtons = paginationControls!.querySelectorAll(
-          'button:not([class*="prev"]):not([class*="next"])'
-        );
-        const page2Button = Array.from(pageButtons).find(
-          (btn) => btn.textContent === "2"
-        );
-        fireEvent.click(page2Button!);
+        expect(screen.getByPlaceholderText("Search sessions by name, status, notes...")).toBeInTheDocument();
+      });
+    });
+
+    it("should render sort dropdown with options", async () => {
+      renderWithProviders(<BrewSessionList />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("Sort by:")).toBeInTheDocument();
+      });
+      
+      const sortSelect = screen.getByDisplayValue("Brew Date (Newest)");
+      expect(sortSelect).toBeInTheDocument();
+      
+      const options = sortSelect.querySelectorAll("option");
+      expect(options.length).toBeGreaterThan(5); // Should have multiple sort options
+    });
+
+    it("should filter sessions by search term", async () => {
+      renderWithProviders(<BrewSessionList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("My First IPA")).toBeInTheDocument();
+        expect(screen.getByText("Wheat Beer Experiment")).toBeInTheDocument();
       });
 
-      // Then change filter
-      const filterSelect = screen.getByDisplayValue("All Statuses");
-      fireEvent.change(filterSelect, { target: { value: "fermenting" } });
+      const searchInput = screen.getByPlaceholderText("Search sessions by name, status, notes...");
+      fireEvent.change(searchInput, { target: { value: "IPA" } });
 
-      // Should have called API with page 1 for the filter change
-      expect(ApiService.brewSessions.getAll).toHaveBeenLastCalledWith(1);
+      // Should show search results count
+      await waitFor(() => {
+        expect(screen.getByText(/Showing .* of .* sessions/)).toBeInTheDocument();
+      });
+    });
+
+    it("should show clear search button when searching", async () => {
+      renderWithProviders(<BrewSessionList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("My First IPA")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search sessions by name, status, notes...");
+      fireEvent.change(searchInput, { target: { value: "test" } });
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
+      });
+    });
+
+    it("should clear search when clear button is clicked", async () => {
+      renderWithProviders(<BrewSessionList />);
+
+      await waitFor(() => {
+        expect(screen.getByText("My First IPA")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search sessions by name, status, notes...");
+      fireEvent.change(searchInput, { target: { value: "test" } });
+
+      await waitFor(() => {
+        const clearButton = screen.getByRole("button", { name: /clear/i });
+        fireEvent.click(clearButton);
+      });
+
+      expect(searchInput).toHaveValue("");
     });
   });
 
@@ -404,8 +387,32 @@ describe("BrewSessionList", () => {
       const filterSelect = screen.getByDisplayValue("All Statuses");
       fireEvent.change(filterSelect, { target: { value: "archived" } });
 
-      // Should show empty state message
-      expect(screen.getByText("No brew sessions found.")).toBeInTheDocument();
+      // Should hide the sessions that don't match the filter
+      expect(screen.queryByText("My First IPA")).not.toBeInTheDocument();
+      expect(screen.queryByText("Wheat Beer Experiment")).not.toBeInTheDocument();
+    });
+
+    it("should show no search results message when search returns no matches", async () => {
+      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+        scenarios.success(mockBrewSessionsResponse.data)
+      );
+
+      renderWithProviders(<BrewSessionList />);
+
+      // Wait for initial data to load
+      await waitFor(() => {
+        expect(screen.getByText("My First IPA")).toBeInTheDocument();
+      });
+
+      // Search for something that doesn't exist
+      const searchInput = screen.getByPlaceholderText("Search sessions by name, status, notes...");
+      fireEvent.change(searchInput, { target: { value: "nonexistent" } });
+
+      // Should show no search results message
+      await waitFor(() => {
+        expect(screen.getByText(/No sessions found matching "nonexistent"/)).toBeInTheDocument();
+        expect(screen.getByText("Clear search")).toBeInTheDocument();
+      });
     });
   });
 
@@ -417,7 +424,7 @@ describe("BrewSessionList", () => {
 
       renderWithProviders(<BrewSessionList />);
 
-      expect(ApiService.brewSessions.getAll).toHaveBeenCalledWith(1);
+      expect(ApiService.brewSessions.getAll).toHaveBeenCalledWith(1, 1000);
     });
 
     it("should handle API call failure gracefully", async () => {
@@ -463,12 +470,16 @@ describe("BrewSessionList", () => {
       renderWithProviders(<BrewSessionList />);
 
       await waitFor(() => {
-        const editLinks = screen.getAllByText("Edit");
-        expect(editLinks[0].closest("a")).toHaveAttribute(
-          "href",
-          "/brew-sessions/session-1/edit"
-        );
+        expect(screen.getByText("My First IPA")).toBeInTheDocument();
       });
+      
+      // Find the specific edit link for "My First IPA" session
+      const ipaRow = screen.getByText("My First IPA").closest("tr");
+      const editLink = ipaRow?.querySelector('a[href*="/edit"]');
+      expect(editLink).toHaveAttribute(
+        "href",
+        "/brew-sessions/session-1/edit"
+      );
     });
   });
 });

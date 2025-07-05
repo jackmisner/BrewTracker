@@ -27,14 +27,14 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
               <Link to="/recipes/public" className="nav-link">
                 Public Recipes
               </Link>
+              <Link to="/brew-sessions" className="nav-link">
+                Brew Sessions
+              </Link>
               <Link to="/ingredients/manage" className="nav-link">
                 Manage Ingredients
               </Link>
               <Link to="/attenuation-analytics" className="nav-link">
                 Yeast Attenuation Analytics
-              </Link>
-              <Link to="/brew-sessions" className="nav-link">
-                Brew Sessions
               </Link>
               <Link to="/settings" className="nav-link">
                 Settings
