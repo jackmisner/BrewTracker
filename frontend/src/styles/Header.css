@@ -1,15 +1,38 @@
 .header {
   background-color: #92400e; /* Tailwind amber-800 */
   color: white;
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 2rem; /* Increased horizontal padding */
 }
 
 .header-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%; /* Full width instead of max-width constraint */
+  /* Removed max-width and margin auto to allow full viewport width */
+}
+
+/* Navigation Group Styles */
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-group-left {
+  justify-content: flex-start;
+  flex: 0 0 auto; /* Don't grow, maintain content width */
+}
+
+.nav-group-center {
+  justify-content: center;
+  flex: 1; /* Take the remaining space in the middle */
+  margin: 0 2rem; /* Add some margin for breathing room */
+}
+
+.nav-group-right {
+  justify-content: flex-end;
+  flex: 0 0 auto; /* Don't grow, maintain content width */
+  margin-left: auto; /* Push to the far right */
 }
 
 .logo {
@@ -17,6 +40,7 @@
   align-items: center;
   text-decoration: none;
   color: white;
+  margin-right: 2rem; /* Add space after logo */
 }
 
 .logo-title {
@@ -29,13 +53,6 @@
 .logo img {
   height: 32px;
   margin-right: 8px;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-left: auto;
 }
 
 .nav-link {
@@ -59,7 +76,7 @@ button.nav-link {
 }
 
 .user-greeting {
-  margin-left: 1rem;
+  margin-right: 1rem; /* Changed from margin-left to margin-right */
   padding: 0.25rem 0.5rem;
   color: #fde68a; /* Tailwind amber-200 */
   font-size: 0.9rem;
