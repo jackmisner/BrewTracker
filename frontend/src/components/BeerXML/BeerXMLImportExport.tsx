@@ -102,7 +102,6 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
 
       // Parse BeerXML using backend
       const parsedRecipes = await beerXMLService.parseBeerXML(fileContent);
-      // console.log(parsedRecipes[0])
       setImportState((prev) => ({
         ...prev,
         parsedRecipes,

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { attenuationAnalyticsServiceInstance } from "../services";
 import { AttenuationAnalytics } from "../types";
+import { formatAttenuation } from "../utils/formatUtils";
 import "../styles/AttenuationAnalytics.css";
 
 interface SystemStats {
@@ -164,7 +165,7 @@ const AttenuationAnalyticsPage: React.FC = () => {
                     <div className="stat-item">
                       <span className="stat-label">Avg Attenuation:</span>
                       <span className="stat-value">
-                        {yeast.actual_attenuation_average?.toFixed(1)}%
+                        {yeast.actual_attenuation_average ? formatAttenuation(yeast.actual_attenuation_average) : '-'}
                       </span>
                     </div>
                     <div className="stat-item">
@@ -205,11 +206,11 @@ const AttenuationAnalyticsPage: React.FC = () => {
                     <div className="improvement-stats">
                       <div className="stat-row">
                         <span className="stat-label">Theoretical:</span>
-                        <span className="stat-value">{yeast.theoretical_attenuation?.toFixed(1)}%</span>
+                        <span className="stat-value">{yeast.theoretical_attenuation ? formatAttenuation(yeast.theoretical_attenuation) : '-'}</span>
                       </div>
                       <div className="stat-row">
                         <span className="stat-label">Actual Average:</span>
-                        <span className="stat-value">{yeast.actual_attenuation_average?.toFixed(1)}%</span>
+                        <span className="stat-value">{yeast.actual_attenuation_average ? formatAttenuation(yeast.actual_attenuation_average) : '-'}</span>
                       </div>
                       <div className="stat-row">
                         <span className="stat-label">Difference:</span>

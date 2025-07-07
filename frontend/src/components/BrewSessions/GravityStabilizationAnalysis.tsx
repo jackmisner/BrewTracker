@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { GravityStabilizationAnalysis, ID } from "../../types";
 import brewSessionService from "../../services/BrewSessionService";
+import { formatGravity, formatPercentage } from "../../utils/formatUtils";
 
 interface GravityStabilizationAnalysisProps {
   sessionId: ID;
@@ -118,12 +119,12 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
           <div className="metric-row">
             <div className="metric">
               <label>Current Gravity:</label>
-              <span className="metric-value">{analysis.current_gravity.toFixed(3)}</span>
+              <span className="metric-value">{formatGravity(analysis.current_gravity)}</span>
             </div>
             {analysis.estimated_fg && (
               <div className="metric">
                 <label>Estimated FG:</label>
-                <span className="metric-value">{analysis.estimated_fg.toFixed(3)}</span>
+                <span className="metric-value">{formatGravity(analysis.estimated_fg)}</span>
               </div>
             )}
           </div>
@@ -135,7 +136,7 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
                 className="metric-value confidence"
                 style={{ color: getConfidenceColor(analysis.stabilization_confidence) }}
               >
-                {getConfidenceLabel(analysis.stabilization_confidence)} ({(analysis.stabilization_confidence * 100).toFixed(0)}%)
+                {getConfidenceLabel(analysis.stabilization_confidence)} ({formatPercentage(analysis.stabilization_confidence * 100, 0)})
               </span>
             </div>
             <div className="metric">
@@ -151,7 +152,7 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
               <div className="metric">
                 <label>Difference from Target:</label>
                 <span className="metric-value">
-                  {Math.abs(analysis.gravity_difference).toFixed(3)} 
+                  {formatGravity(Math.abs(analysis.gravity_difference))} 
                   {analysis.gravity_difference > 0 ? ' (higher)' : ' (lower)'}
                 </span>
               </div>
