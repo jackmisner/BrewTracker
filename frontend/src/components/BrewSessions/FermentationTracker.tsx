@@ -18,6 +18,7 @@ import {
   Recipe,
   ID 
 } from "../../types";
+import { formatGravity, formatAttenuation, formatTemperature } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 interface FermentationTrackerProps {
@@ -358,7 +359,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       ((firstReading.gravity! - lastReading.gravity!) /
         (firstReading.gravity! - 1.0)) *
       100;
-    return attenuation.toFixed(1);
+    return formatAttenuation(attenuation).replace('%', ''); // Remove % since it's added separately
   };
 
   const attenuation = calculateAttenuation();
@@ -471,7 +472,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Initial:</span>
                     <span className="fermentation-stat-value">
-                      {stats.gravity.initial.toFixed(3)}
+                      {formatGravity(stats.gravity.initial)}
                     </span>
                   </div>
                 )}
@@ -479,7 +480,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Current:</span>
                     <span className="fermentation-stat-value">
-                      {stats.gravity.current.toFixed(3)}
+                      {formatGravity(stats.gravity.current)}
                     </span>
                   </div>
                 )}
@@ -487,7 +488,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Drop:</span>
                     <span className="fermentation-stat-value">
-                      {stats.gravity.drop.toFixed(3)}
+                      {formatGravity(stats.gravity.drop)}
                     </span>
                   </div>
                 )}
@@ -497,7 +498,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       Attenuation:
                     </span>
                     <span className="fermentation-stat-value">
-                      {stats.gravity.attenuation.toFixed(1)}%
+                      {formatAttenuation(stats.gravity.attenuation)}
                     </span>
                   </div>
                 )}
@@ -509,7 +510,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Min:</span>
                     <span className="fermentation-stat-value">
-                      {stats.temperature.min.toFixed(1)}°F
+                      {formatTemperature(stats.temperature.min, "f")}
                     </span>
                   </div>
                 )}
@@ -517,7 +518,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Max:</span>
                     <span className="fermentation-stat-value">
-                      {stats.temperature.max.toFixed(1)}°F
+                      {formatTemperature(stats.temperature.max, "f")}
                     </span>
                   </div>
                 )}
@@ -525,7 +526,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   <div className="fermentation-stat-row">
                     <span className="fermentation-stat-label">Avg:</span>
                     <span className="fermentation-stat-value">
-                      {stats.temperature.avg.toFixed(1)}°F
+                      {formatTemperature(stats.temperature.avg, "f")}
                     </span>
                   </div>
                 )}
@@ -588,7 +589,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       Expected OG
                     </span>
                     <div className="fermentation-comparison-value">
-                      {recipeData.estimated_og.toFixed(3)}
+                      {formatGravity(recipeData.estimated_og)}
                     </div>
                   </div>
                   <div className="fermentation-comparison-col">
@@ -596,7 +597,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       Expected FG
                     </span>
                     <div className="fermentation-comparison-value">
-                      {recipeData.estimated_fg.toFixed(3)}
+                      {formatGravity(recipeData.estimated_fg)}
                     </div>
                   </div>
                   <div className="fermentation-comparison-col">
@@ -623,7 +624,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       </span>
                       <div className="fermentation-comparison-value">
                         {fermentationData[0].gravity
-                          ? fermentationData[0].gravity.toFixed(3)
+                          ? formatGravity(fermentationData[0].gravity)
                           : "-"}
                       </div>
                     </div>
@@ -633,9 +634,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       </span>
                       <div className="fermentation-comparison-value">
                         {fermentationData[fermentationData.length - 1].gravity
-                          ? fermentationData[
+                          ? formatGravity(fermentationData[
                               fermentationData.length - 1
-                            ].gravity!.toFixed(3)
+                            ].gravity!)
                           : "-"}
                       </div>
                     </div>
@@ -741,11 +742,11 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                           })}
                         </td>
                         <td>
-                          {entry.gravity ? entry.gravity.toFixed(3) : "-"}
+                          {entry.gravity ? formatGravity(entry.gravity) : "-"}
                         </td>
                         <td>
                           {entry.temperature
-                            ? `${entry.temperature.toFixed(1)}°F`
+                            ? formatTemperature(entry.temperature, "f")
                             : "-"}
                         </td>
                         <td>{entry.ph ? entry.ph.toFixed(1) : "-"}</td>

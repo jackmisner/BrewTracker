@@ -6,7 +6,7 @@ import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import RecipeVersionHistory from "../components/RecipeBuilder/RecipeVersionHistory";
 import RecipeActions from "../components/RecipeActions";
 import { Recipe, RecipeIngredient, BrewSession, BrewSessionSummary, ID } from "../types";
-import { formatTime } from "../utils/formatUtils";
+import { formatTime, formatGravity, formatAbv, formatEfficiency, formatPercentage } from "../utils/formatUtils";
 import "../styles/ViewRecipe.css";
 
 interface BrewingStats {
@@ -209,7 +209,7 @@ const ViewRecipe: React.FC = () => {
                     )}
                     {brewingSummary.successRate && (
                       <span className="summary-stat success">
-                        {brewingSummary.successRate.toFixed(0)}% success
+                        {formatPercentage(brewingSummary.successRate, 0)} success
                       </span>
                     )}
                   </div>
@@ -251,7 +251,7 @@ const ViewRecipe: React.FC = () => {
                         <span className="stat-label">Avg OG:</span>
                         <span className="stat-value">
                           {brewingStats.averageOG
-                            ? brewingStats.averageOG.toFixed(3)
+                            ? formatGravity(brewingStats.averageOG)
                             : "-"}
                         </span>
                       </div>
@@ -259,7 +259,7 @@ const ViewRecipe: React.FC = () => {
                         <span className="stat-label">Avg ABV:</span>
                         <span className="stat-value">
                           {brewingStats.averageABV
-                            ? `${brewingStats.averageABV.toFixed(1)}%`
+                            ? formatAbv(brewingStats.averageABV)
                             : "-"}
                         </span>
                       </div>
@@ -267,7 +267,7 @@ const ViewRecipe: React.FC = () => {
                         <span className="stat-label">Avg Efficiency:</span>
                         <span className="stat-value">
                           {brewingStats.averageEfficiency
-                            ? `${brewingStats.averageEfficiency.toFixed(1)}%`
+                            ? formatEfficiency(brewingStats.averageEfficiency)
                             : "-"}
                         </span>
                       </div>
@@ -324,22 +324,22 @@ const ViewRecipe: React.FC = () => {
                           <div className="session-metrics">
                             {session.actual_og && (
                               <span className="metric">
-                                OG: {session.actual_og.toFixed(3)}
+                                OG: {formatGravity(session.actual_og)}
                               </span>
                             )}
                             {session.actual_fg && (
                               <span className="metric">
-                                FG: {session.actual_fg.toFixed(3)}
+                                FG: {formatGravity(session.actual_fg)}
                               </span>
                             )}
                             {session.actual_abv && (
                               <span className="metric">
-                                ABV: {session.actual_abv.toFixed(1)}%
+                                ABV: {formatAbv(session.actual_abv)}
                               </span>
                             )}
                             {session.actual_efficiency && (
                               <span className="metric">
-                                Eff: {session.actual_efficiency.toFixed(1)}%
+                                Eff: {formatEfficiency(session.actual_efficiency)}
                               </span>
                             )}
                           </div>

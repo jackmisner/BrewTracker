@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { attenuationAnalyticsServiceInstance } from "../../services";
 import { AttenuationAnalytics, ID } from "../../types";
+import { formatAttenuation } from "../../utils/formatUtils";
 
 interface AttenuationBadgeProps {
   ingredientId: ID;
@@ -66,7 +67,7 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
       <div className="badge-main">
         <span className="badge-icon">📊</span>
         <span className="badge-text">
-          {bestEstimate ? `${bestEstimate.toFixed(1)}%` : "N/A"} attenuation
+          {bestEstimate ? formatAttenuation(bestEstimate) : "N/A"} attenuation
         </span>
         <span className={`confidence-indicator ${confidence.color}`}>
           {attenuationAnalyticsServiceInstance.formatConfidence(analytics.attenuation_confidence)}
@@ -96,7 +97,7 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
             <div className="detail-row">
               <span className="detail-label">Consistency:</span>
               <span className="detail-value">
-                ±{analytics.std_deviation.toFixed(1)}%
+                ±{formatAttenuation(analytics.std_deviation)}
               </span>
             </div>
           )}

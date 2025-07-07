@@ -180,6 +180,25 @@ export function formatSrm(srm: number | string | null | undefined): string {
   return isNaN(numSrm) ? "0.0" : numSrm.toFixed(1);
 }
 
+// Brewing-specific percentage formatting functions
+export function formatAttenuation(attenuation: number | string | null | undefined): string {
+  if (!attenuation) return "0.0%";
+  const numAttenuation = parseFloat(attenuation.toString());
+  return isNaN(numAttenuation) ? "0.0%" : `${numAttenuation.toFixed(1)}%`;
+}
+
+export function formatEfficiency(efficiency: number | string | null | undefined): string {
+  if (!efficiency) return "0.0%";
+  const numEfficiency = parseFloat(efficiency.toString());
+  return isNaN(numEfficiency) ? "0.0%" : `${numEfficiency.toFixed(1)}%`;
+}
+
+export function formatPercentage(percentage: number | string | null | undefined, decimals: number = 1): string {
+  if (!percentage) return "0.0%";
+  const numPercentage = parseFloat(percentage.toString());
+  return isNaN(numPercentage) ? "0.0%" : `${numPercentage.toFixed(decimals)}%`;
+}
+
 // Unit-aware formatting functions
 export function formatWeight(
   amount: number | string | null | undefined,

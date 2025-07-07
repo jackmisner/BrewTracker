@@ -386,11 +386,11 @@ describe("FermentationTracker", () => {
           .closest(".fermentation-stat-card");
         expect(tempStatsCard).toBeInTheDocument();
         expect(tempStatsCard).toHaveTextContent("Min:");
-        expect(tempStatsCard).toHaveTextContent("67.5°F");
+        expect(tempStatsCard).toHaveTextContent("68°F");
         expect(tempStatsCard).toHaveTextContent("Max:");
-        expect(tempStatsCard).toHaveTextContent("69.0°F");
+        expect(tempStatsCard).toHaveTextContent("69°F");
         expect(tempStatsCard).toHaveTextContent("Avg:");
-        expect(tempStatsCard).toHaveTextContent("68.3°F");
+        expect(tempStatsCard).toHaveTextContent("68°F");
 
         // pH stats - Fixed expectation: 4.05 rounds to 4.0, not 4.1
         const phStatsCard = screen

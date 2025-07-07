@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import Fuse from "fuse.js";
 import ApiService from "../../services/api";
 import { BrewSession } from "../../types";
+import { formatGravity, formatAbv } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 
@@ -306,12 +307,12 @@ const BrewSessionList: React.FC = () => {
                     </span>
                   </td>
                   <td className="session-metrics-cell">
-                    {session.actual_og ? session.actual_og.toFixed(3) : "-"} /
-                    {session.actual_fg ? session.actual_fg.toFixed(3) : "-"}
+                    {session.actual_og ? formatGravity(session.actual_og) : "-"} /
+                    {session.actual_fg ? formatGravity(session.actual_fg) : "-"}
                   </td>
                   <td className="session-metrics-cell">
                     {session.actual_abv
-                      ? `${session.actual_abv.toFixed(1)}%`
+                      ? formatAbv(session.actual_abv)
                       : "-"}
                   </td>
                   <td className="session-actions-cell">

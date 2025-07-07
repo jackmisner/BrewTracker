@@ -6,6 +6,7 @@ import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { Recipe, BrewSession } from "../../types";
+import { formatGravity, formatAbv, formatEfficiency, formatAttenuation, formatTemperature } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 type BrewSessionStatus = "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
@@ -438,22 +439,22 @@ const ViewBrewSession: React.FC = () => {
                 <div className="brew-session-metric">
                   <p className="brew-session-metric-label">Original Gravity</p>
                   <p className="brew-session-metric-value">
-                    {session.actual_og ? session.actual_og.toFixed(3) : "-"}
+                    {session.actual_og ? formatGravity(session.actual_og) : "-"}
                   </p>
                   {recipe && recipe.estimated_og && (
                     <p className="brew-session-metric-est">
-                      Est: {recipe.estimated_og.toFixed(3)}
+                      Est: {formatGravity(recipe.estimated_og)}
                     </p>
                   )}
                 </div>
                 <div className="brew-session-metric">
                   <p className="brew-session-metric-label">Final Gravity</p>
                   <p className="brew-session-metric-value">
-                    {session.actual_fg ? session.actual_fg.toFixed(3) : "-"}
+                    {session.actual_fg ? formatGravity(session.actual_fg) : "-"}
                   </p>
                   {recipe && recipe.estimated_fg && (
                     <p className="brew-session-metric-est">
-                      Est: {recipe.estimated_fg.toFixed(3)}
+                      Est: {formatGravity(recipe.estimated_fg)}
                     </p>
                   )}
                 </div>
@@ -461,12 +462,12 @@ const ViewBrewSession: React.FC = () => {
                   <p className="brew-session-metric-label">ABV</p>
                   <p className="brew-session-metric-value">
                     {session.actual_abv
-                      ? `${session.actual_abv.toFixed(1)}%`
+                      ? formatAbv(session.actual_abv)
                       : "-"}
                   </p>
                   {recipe && recipe.estimated_abv && (
                     <p className="brew-session-metric-est">
-                      Est: {recipe.estimated_abv.toFixed(1)}%
+                      Est: {formatAbv(recipe.estimated_abv)}
                     </p>
                   )}
                 </div>
@@ -474,12 +475,12 @@ const ViewBrewSession: React.FC = () => {
                   <p className="brew-session-metric-label">Efficiency</p>
                   <p className="brew-session-metric-value">
                     {session.actual_efficiency
-                      ? `${session.actual_efficiency.toFixed(1)}%`
+                      ? formatEfficiency(session.actual_efficiency)
                       : "-"}
                   </p>
                   {recipe && recipe.efficiency && (
                     <p className="brew-session-metric-est">
-                      Target: {recipe.efficiency.toFixed(1)}%
+                      Target: {formatEfficiency(recipe.efficiency)}
                     </p>
                   )}
                 </div>
@@ -496,7 +497,7 @@ const ViewBrewSession: React.FC = () => {
                       Mash Temperature:
                     </span>
                     <span className="brewing-data-value">
-                      {session.mash_temp}°F
+                      {formatTemperature(session.mash_temp, "f")}
                     </span>
                   </div>
                 </div>
@@ -602,7 +603,7 @@ const ViewBrewSession: React.FC = () => {
                             Actual Attenuation:
                           </span>
                           <span className="fermentation-stat-value">
-                            {actualAttenuation.toFixed(1)}%
+                            {formatAttenuation(actualAttenuation)}
                           </span>
                         </div>
                         {estimatedAttenuation !== null && (
@@ -611,7 +612,7 @@ const ViewBrewSession: React.FC = () => {
                               Estimated Attenuation:
                             </span>
                             <span className="fermentation-stat-value">
-                              {estimatedAttenuation.toFixed(1)}%
+                              {formatAttenuation(estimatedAttenuation)}
                             </span>
                           </div>
                         )}

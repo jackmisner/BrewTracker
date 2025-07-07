@@ -4,6 +4,7 @@ import BrewSessionService from "../../services/BrewSessionService";
 import RecipeService from "../../services/RecipeService";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import { Recipe } from "../../types";
+import { formatGravity, formatAbv, formatIbu, formatSrm } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 interface CreateBrewSessionFormData {
@@ -163,21 +164,21 @@ const CreateBrewSession: React.FC = () => {
             <div className="recipe-preview-metric">
               <p>Batch Size: {recipe.batch_size} gallons</p>
               {recipe.estimated_og && (
-                <p>Est. OG: {recipe.estimated_og.toFixed(3)}</p>
+                <p>Est. OG: {formatGravity(recipe.estimated_og)}</p>
               )}
               {recipe.estimated_fg && (
-                <p>Est. FG: {recipe.estimated_fg.toFixed(3)}</p>
+                <p>Est. FG: {formatGravity(recipe.estimated_fg)}</p>
               )}
             </div>
             <div className="recipe-preview-metric">
               {recipe.estimated_abv && (
-                <p>Est. ABV: {recipe.estimated_abv.toFixed(1)}%</p>
+                <p>Est. ABV: {formatAbv(recipe.estimated_abv)}</p>
               )}
               {recipe.estimated_ibu && (
-                <p>Est. IBU: {recipe.estimated_ibu.toFixed(1)}</p>
+                <p>Est. IBU: {formatIbu(recipe.estimated_ibu)}</p>
               )}
               {recipe.estimated_srm && (
-                <p>Est. SRM: {recipe.estimated_srm.toFixed(1)}</p>
+                <p>Est. SRM: {formatSrm(recipe.estimated_srm)}</p>
               )}
             </div>
           </div>

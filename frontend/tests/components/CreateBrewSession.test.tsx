@@ -135,7 +135,7 @@ describe("CreateBrewSession", () => {
         expect(preview).toHaveTextContent("Est. OG: 1.055");
         expect(preview).toHaveTextContent("Est. FG: 1.012");
         expect(preview).toHaveTextContent("Est. ABV: 6.5%");
-        expect(preview).toHaveTextContent("Est. IBU: 45.0");
+        expect(preview).toHaveTextContent("Est. IBU: 45");
         expect(preview).toHaveTextContent("Est. SRM: 8.0");
       });
     });
