@@ -15,8 +15,6 @@ import {
   formatIngredientAmount,
   formatTime,
   getUnitAbbreviation,
-  UnitConverter,
-  FrontendUnitConverter,
 } from "../../src/utils/formatUtils";
 
 describe("formatUtils", () => {
@@ -258,66 +256,6 @@ describe("formatUtils", () => {
     });
   });
 
-  describe("UnitConverter", () => {
-    test("convertUnit performs conversions correctly", () => {
-      expect(UnitConverter.convertUnit(1, "kg", "lb")).toEqual({
-        value: expect.closeTo(2.20462, 4),
-        unit: "lb",
-      });
-      expect(UnitConverter.convertUnit(1, "gal", "l")).toEqual({
-        value: expect.closeTo(3.78541, 4),
-        unit: "l",
-      });
-      expect(UnitConverter.convertUnit(32, "f", "c")).toEqual({
-        value: 0,
-        unit: "c",
-      });
-    });
-
-    test("getAppropriateUnit returns correct units", () => {
-      expect(UnitConverter.getAppropriateUnit("metric", "weight", 500)).toBe(
-        "g"
-      );
-      expect(UnitConverter.getAppropriateUnit("metric", "weight", 1500)).toBe(
-        "kg"
-      );
-      expect(UnitConverter.getAppropriateUnit("imperial", "weight", 8)).toBe(
-        "oz"
-      );
-      expect(UnitConverter.getAppropriateUnit("imperial", "weight", 20)).toBe(
-        "lb"
-      );
-    });
-
-    test("formatValue formats values correctly", () => {
-      expect(UnitConverter.formatValue(1.234, "kg", "weight")).toBe("1.2 kg");
-      expect(UnitConverter.formatValue(500, "ml", "volume")).toBe("500 ml");
-      expect(UnitConverter.formatValue(25.5, "c", "temperature")).toBe("26 c");
-    });
-  });
-
-  describe("FrontendUnitConverter", () => {
-    test("conversion methods return correct values", () => {
-      expect(FrontendUnitConverter.convertWeight(1, "kg", "lb")).toBeCloseTo(
-        2.20462,
-        4
-      );
-      expect(FrontendUnitConverter.convertVolume(1, "gal", "l")).toBeCloseTo(
-        3.78541,
-        4
-      );
-      expect(FrontendUnitConverter.convertTemperature(32, "f", "c")).toBe(0);
-    });
-
-    test("getAppropriateUnit works correctly", () => {
-      expect(
-        FrontendUnitConverter.getAppropriateUnit("metric", "weight", 500)
-      ).toBe("g");
-      expect(
-        FrontendUnitConverter.getAppropriateUnit("imperial", "volume", 1)
-      ).toBe("gal");
-    });
-  });
 
   describe("formatTime", () => {
     test("formats minutes correctly", () => {

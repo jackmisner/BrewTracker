@@ -577,21 +577,3 @@ export function formatTime(timeInMinutes: number | string | null | undefined): s
   }
 }
 
-// Export the standalone conversion utilities for use in other parts of the app
-export const UnitConverter = {
-  convertUnit,
-  getAppropriateUnit,
-  formatValue: formatValueStandalone,
-};
-
-// Backward compatibility - create a FrontendUnitConverter-like object
-export const FrontendUnitConverter = {
-  getAppropriateUnit,
-  convertWeight: (amount: number | string, fromUnit: string, toUnit: string): number =>
-    convertUnit(amount, fromUnit, toUnit).value,
-  convertVolume: (amount: number | string, fromUnit: string, toUnit: string): number =>
-    convertUnit(amount, fromUnit, toUnit).value,
-  convertTemperature: (temp: number | string, fromUnit: string, toUnit: string): number =>
-    convertUnit(temp, fromUnit, toUnit).value,
-  convertUnit,
-};
