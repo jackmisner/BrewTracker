@@ -402,21 +402,59 @@ function shouldConvertUnit(amount: number, fromUnit: string, toUnit: string): bo
 export function getSrmColour(srm: number | string | null | undefined): string {
   if (!srm) return "#FFE699";
   const numSrm = parseFloat(srm.toString());
-  if (isNaN(numSrm) || numSrm <= 0) return "#FFE699";
+  if (isNaN(numSrm) || numSrm < 0) return "#FFE699";
   
-  if (numSrm > 0 && numSrm <= 2) return "#FFE699";
-  if (numSrm > 2 && numSrm <= 3) return "#FFCA5A";
-  if (numSrm > 3 && numSrm <= 4) return "#FFBF42";
-  if (numSrm > 4 && numSrm <= 6) return "#FBB123";
-  if (numSrm > 6 && numSrm <= 8) return "#F39C00";
-  if (numSrm > 8 && numSrm <= 10) return "#E58500";
-  if (numSrm > 10 && numSrm <= 13) return "#CF6900";
-  if (numSrm > 13 && numSrm <= 17) return "#BB5100";
-  if (numSrm > 17 && numSrm <= 20) return "#A13700";
-  if (numSrm > 20 && numSrm <= 24) return "#8E2900";
-  if (numSrm > 24 && numSrm <= 29) return "#701400";
-  if (numSrm > 29 && numSrm <= 35) return "#600903";
-  return "#3D0708";
+  // Round to nearest integer for lookup
+  const roundedSrm = Math.round(numSrm);
+  
+  // Colors for SRM 0-40, anything above 40 returns black
+  if (roundedSrm > 40) return "#000000";
+  
+  const srmColors: string[] = [
+    "#FFE699", // SRM 0
+    "#FFE699", // SRM 1
+    "#FFE699", // SRM 2
+    "#FFCA5A", // SRM 3
+    "#FFBF42", // SRM 4
+    "#FFC232", // SRM 5
+    "#FBB123", // SRM 6
+    "#F8A615", // SRM 7
+    "#F39C00", // SRM 8
+    "#F09100", // SRM 9
+    "#E58500", // SRM 10
+    "#E07A00", // SRM 11
+    "#DB6F00", // SRM 12
+    "#CF6900", // SRM 13
+    "#CA5E00", // SRM 14
+    "#C45400", // SRM 15
+    "#BE4A00", // SRM 16
+    "#BB5100", // SRM 17
+    "#B04600", // SRM 18
+    "#A63C00", // SRM 19
+    "#A13700", // SRM 20
+    "#9B3200", // SRM 21
+    "#962E00", // SRM 22
+    "#912A00", // SRM 23
+    "#8E2900", // SRM 24
+    "#862400", // SRM 25
+    "#7E1F00", // SRM 26
+    "#761B00", // SRM 27
+    "#6E1700", // SRM 28
+    "#701400", // SRM 29
+    "#6A1200", // SRM 30
+    "#651000", // SRM 31
+    "#600E00", // SRM 32
+    "#5B0C00", // SRM 33
+    "#560A01", // SRM 34
+    "#600903", // SRM 35
+    "#550802", // SRM 36
+    "#4A0702", // SRM 37
+    "#420601", // SRM 38
+    "#3D0601", // SRM 39
+    "#3D0708"  // SRM 40
+  ];
+  
+  return srmColors[roundedSrm];
 }
 
 

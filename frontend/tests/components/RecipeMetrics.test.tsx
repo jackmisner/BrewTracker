@@ -80,7 +80,7 @@ describe("RecipeMetrics", () => {
     renderWithUnitProvider(<RecipeMetrics {...defaultProps} />);
 
     const colorSwatch = screen.getByTitle("SRM 8.5");
-    expect(colorSwatch).toHaveStyle({ backgroundColor: "#E58500" });
+    expect(colorSwatch).toHaveStyle({ backgroundColor: "#F09100" });
   });
 
   test("renders recipe scaling section when onScale provided", () => {

@@ -84,7 +84,7 @@ describe("formatUtils", () => {
       expect(getSrmColour(6)).toBe("#FBB123"); // Gold
       expect(getSrmColour(10)).toBe("#E58500"); // Amber
       expect(getSrmColour(20)).toBe("#A13700"); // Brown
-      expect(getSrmColour(30)).toBe("#600903"); // Dark
+      expect(getSrmColour(30)).toBe("#6A1200"); // Dark
       expect(getSrmColour(40)).toBe("#3D0708"); // Black
     });
 

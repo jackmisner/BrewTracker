@@ -90,7 +90,7 @@ describe("CompactRecipeCard", () => {
       
       const colorSwatch = document.querySelector(".compact-color-swatch");
       expect(colorSwatch).toBeInTheDocument();
-      expect(colorSwatch).toHaveAttribute("title", "SRM: 6");
+      expect(colorSwatch).toHaveAttribute("title", "SRM: 6.0");
     });
   });
 
@@ -116,7 +116,7 @@ describe("CompactRecipeCard", () => {
     it("formats SRM values correctly", () => {
       renderWithRouter(<CompactRecipeCard recipe={mockRecipe} />);
       
-      expect(screen.getByText("6")).toBeInTheDocument();
+      expect(screen.getByText("6.0")).toBeInTheDocument();
     });
 
     it("handles missing metric values gracefully", () => {
@@ -124,7 +124,8 @@ describe("CompactRecipeCard", () => {
       
       expect(screen.getByText("1.000")).toBeInTheDocument(); // OG default
       expect(screen.getByText("0.0%")).toBeInTheDocument(); // ABV default
-      expect(screen.getAllByText("0")).toHaveLength(2); // IBU and SRM both show 0
+      expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
+      expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0
     });
 
     it("rounds decimal values appropriately", () => {
@@ -141,7 +142,7 @@ describe("CompactRecipeCard", () => {
       expect(screen.getByText("1.055")).toBeInTheDocument(); // Gravity to 3 decimals
       expect(screen.getByText("5.7%")).toBeInTheDocument(); // ABV to 1 decimal
       expect(screen.getByText("65")).toBeInTheDocument(); // IBU rounded
-      expect(screen.getByText("6")).toBeInTheDocument(); // SRM rounded
+      expect(screen.getByText("5.9")).toBeInTheDocument(); // SRM formatted to 1 decimal
     });
   });
 
@@ -220,7 +221,7 @@ describe("CompactRecipeCard", () => {
       const { container } = renderWithRouter(<CompactRecipeCard recipe={lightRecipe} />);
       const colorSwatch = container.querySelector(".compact-color-swatch");
       
-      expect(colorSwatch).toHaveStyle("background-color: rgb(245, 242, 199)"); // Light color
+      expect(colorSwatch).toHaveStyle("background-color: rgb(255, 230, 153)"); // Light color
     });
 
     it("uses dark color for high SRM values", () => {
@@ -232,14 +233,14 @@ describe("CompactRecipeCard", () => {
       const { container } = renderWithRouter(<CompactRecipeCard recipe={darkRecipe} />);
       const colorSwatch = container.querySelector(".compact-color-swatch");
       
-      expect(colorSwatch).toHaveStyle("background-color: rgb(139, 69, 19)"); // Dark brown
+      expect(colorSwatch).toHaveStyle("background-color: rgb(134, 36, 0)"); // Dark brown
     });
 
     it("uses default color for missing SRM values", () => {
       const { container } = renderWithRouter(<CompactRecipeCard recipe={mockRecipeMinimal} />);
       const colorSwatch = container.querySelector(".compact-color-swatch");
       
-      expect(colorSwatch).toHaveStyle("background-color: rgb(246, 243, 210)"); // Default light
+      expect(colorSwatch).toHaveStyle("background-color: rgb(255, 230, 153)"); // Default light
     });
   });
 
@@ -269,7 +270,8 @@ describe("CompactRecipeCard", () => {
       
       expect(screen.getByText("1.000")).toBeInTheDocument(); // OG formatted as 1.000
       expect(screen.getByText("0.0%")).toBeInTheDocument(); // ABV
-      expect(screen.getAllByText("0")).toHaveLength(2); // IBU and SRM both show 0
+      expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
+      expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0
     });
 
     it("handles recipes with undefined values", () => {
@@ -288,7 +290,8 @@ describe("CompactRecipeCard", () => {
       expect(screen.getByText("No style specified")).toBeInTheDocument();
       expect(screen.getByText("1.000")).toBeInTheDocument();
       expect(screen.getByText("0.0%")).toBeInTheDocument();
-      expect(screen.getAllByText("0")).toHaveLength(2); // IBU and SRM both show 0
+      expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
+      expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0
     });
   });
 
@@ -305,7 +308,7 @@ describe("CompactRecipeCard", () => {
       renderWithRouter(<CompactRecipeCard recipe={mockRecipe} />);
       
       const colorSwatch = document.querySelector(".compact-color-swatch");
-      expect(colorSwatch).toHaveAttribute("title", "SRM: 6");
+      expect(colorSwatch).toHaveAttribute("title", "SRM: 6.0");
     });
 
     it("uses semantic HTML structure", () => {
