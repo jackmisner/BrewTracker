@@ -96,32 +96,72 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     const changes: IngredientChange[] = [];
 
     ingredients.forEach(ingredient => {
-      if (ingredient.type === 'grain' && ingredient.unit === 'lb') {
+      if (ingredient.type === 'grain') {
         const currentAmount = ingredient.amount;
-        const normalizedAmount = Math.round(currentAmount * 4) / 4; // Round to nearest 0.25
+        let normalizedAmount = currentAmount;
+        let threshold = 0.01;
+        let reason = '';
 
-        if (Math.abs(currentAmount - normalizedAmount) > 0.1) {
+        switch (ingredient.unit.toLowerCase()) {
+          case 'lb':
+            normalizedAmount = Math.round(currentAmount * 4) / 4; // Quarter pounds
+            threshold = 0.1;
+            reason = 'Round to quarter-pound increments for easier measuring';
+            break;
+          case 'kg':
+            normalizedAmount = Math.round(currentAmount * 10) / 10; // Tenth kg
+            threshold = 0.05;
+            reason = 'Round to tenth-kilogram increments for easier measuring';
+            break;
+          case 'g':
+            normalizedAmount = Math.round(currentAmount / 10) * 10; // 10g increments
+            threshold = 5;
+            reason = 'Round to 10-gram increments for easier measuring';
+            break;
+          case 'oz':
+            normalizedAmount = Math.round(currentAmount * 8) / 8; // Eighth ounces
+            threshold = 0.05;
+            reason = 'Round to eighth-ounce increments for easier measuring';
+            break;
+        }
+
+        if (Math.abs(currentAmount - normalizedAmount) > threshold) {
           changes.push({
             ingredientId: ingredient.id!,
             ingredientName: ingredient.name,
             field: 'amount',
             currentValue: currentAmount,
             suggestedValue: normalizedAmount,
-            reason: 'Round to quarter-pound increments for easier measuring'
+            reason
           });
         }
-      } else if (ingredient.type === 'hop' && ingredient.unit === 'oz') {
+      } else if (ingredient.type === 'hop') {
         const currentAmount = ingredient.amount;
-        const normalizedAmount = Math.round(currentAmount * 8) / 8; // Round to nearest 0.125
+        let normalizedAmount = currentAmount;
+        let threshold = 0.01;
+        let reason = '';
 
-        if (Math.abs(currentAmount - normalizedAmount) > 0.05) {
+        switch (ingredient.unit.toLowerCase()) {
+          case 'oz':
+            normalizedAmount = Math.round(currentAmount * 8) / 8; // Eighth ounces
+            threshold = 0.05;
+            reason = 'Round to eighth-ounce increments for easier measuring';
+            break;
+          case 'g':
+            normalizedAmount = Math.round(currentAmount / 5) * 5; // 5g increments
+            threshold = 2;
+            reason = 'Round to 5-gram increments for easier measuring';
+            break;
+        }
+
+        if (Math.abs(currentAmount - normalizedAmount) > threshold) {
           changes.push({
             ingredientId: ingredient.id!,
             ingredientName: ingredient.name,
             field: 'amount',
             currentValue: currentAmount,
             suggestedValue: normalizedAmount,
-            reason: 'Round to eighth-ounce increments for easier measuring'
+            reason
           });
         }
       }
@@ -190,15 +230,37 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     return suggestions;
   };
 
+  // Helper function to convert grain weight to pounds
+  const convertToPounds = (amount: number, unit: string): number => {
+    switch (unit.toLowerCase()) {
+      case 'g':
+        return amount * 0.00220462; // grams to pounds
+      case 'kg':
+        return amount * 2.20462; // kilograms to pounds
+      case 'oz':
+        return amount / 16; // ounces to pounds
+      case 'lb':
+      default:
+        return amount; // already in pounds
+    }
+  };
+
   // Generate base malt suggestions
   const generateBaseMaltSuggestions = async (ingredients: RecipeIngredient[]): Promise<Suggestion[]> => {
     const suggestions: Suggestion[] = [];
     const grains = ingredients.filter(ingredient => ingredient.type === 'grain');
     
     if (grains.length > 0) {
-      const totalGrainWeight = grains.reduce((sum, grain) => sum + grain.amount, 0);
+      // Convert all grain weights to pounds for consistent calculation
+      const totalGrainWeight = grains.reduce((sum, grain) => {
+        return sum + convertToPounds(grain.amount, grain.unit);
+      }, 0);
+      
       const baseMalts = grains.filter(grain => grain.grain_type === 'base_malt');
-      const baseMaltWeight = baseMalts.reduce((sum, grain) => sum + grain.amount, 0);
+      const baseMaltWeight = baseMalts.reduce((sum, grain) => {
+        return sum + convertToPounds(grain.amount, grain.unit);
+      }, 0);
+      
       const baseMaltPercentage = (baseMaltWeight / totalGrainWeight) * 100;
 
       // Debug logging
@@ -213,21 +275,47 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       if (baseMaltPercentage < 60 && baseMaltPercentage > 0) {
         // Generate actual changes - suggest increasing the largest base malt
         const changes: IngredientChange[] = [];
-        const largestBaseMalt = baseMalts.reduce((largest, current) => 
-          current.amount > largest.amount ? current : largest, baseMalts[0]);
+        const largestBaseMalt = baseMalts.reduce((largest, current) => {
+          const currentWeightInPounds = convertToPounds(current.amount, current.unit);
+          const largestWeightInPounds = convertToPounds(largest.amount, largest.unit);
+          return currentWeightInPounds > largestWeightInPounds ? current : largest;
+        }, baseMalts[0]);
         
         if (largestBaseMalt) {
           const targetBaseMaltPercentage = 65; // Target 65% base malt
           const targetBaseMaltWeight = (targetBaseMaltPercentage / 100) * totalGrainWeight;
           const additionalBaseMalt = targetBaseMaltWeight - baseMaltWeight;
-          const newAmount = largestBaseMalt.amount + additionalBaseMalt;
+          
+          // Convert the additional amount back to the original unit of the largest base malt
+          let additionalInOriginalUnit = additionalBaseMalt;
+          if (largestBaseMalt.unit.toLowerCase() === 'kg') {
+            additionalInOriginalUnit = additionalBaseMalt / 2.20462;
+          } else if (largestBaseMalt.unit.toLowerCase() === 'g') {
+            additionalInOriginalUnit = additionalBaseMalt / 0.00220462;
+          } else if (largestBaseMalt.unit.toLowerCase() === 'oz') {
+            additionalInOriginalUnit = additionalBaseMalt * 16;
+          }
+          
+          const newAmount = largestBaseMalt.amount + additionalInOriginalUnit;
+          
+          // Round appropriately based on unit
+          let roundedAmount = newAmount;
+          if (largestBaseMalt.unit.toLowerCase() === 'lb') {
+            roundedAmount = Math.round(newAmount * 4) / 4; // Quarter pounds
+          } else if (largestBaseMalt.unit.toLowerCase() === 'kg') {
+            roundedAmount = Math.round(newAmount * 10) / 10; // Tenth kg
+          } else if (largestBaseMalt.unit.toLowerCase() === 'g') {
+            roundedAmount = Math.round(newAmount / 10) * 10; // 10g increments
+          } else if (largestBaseMalt.unit.toLowerCase() === 'oz') {
+            roundedAmount = Math.round(newAmount * 8) / 8; // Eighth ounces
+          }
           
           changes.push({
             ingredientId: largestBaseMalt.id!,
             ingredientName: largestBaseMalt.name,
             field: 'amount',
             currentValue: largestBaseMalt.amount,
-            suggestedValue: Math.round(newAmount * 4) / 4, // Round to quarter pounds
+            suggestedValue: roundedAmount,
             reason: `Increase base malt from ${baseMaltPercentage.toFixed(1)}% to ${targetBaseMaltPercentage}% for better fermentability`
           });
         }
