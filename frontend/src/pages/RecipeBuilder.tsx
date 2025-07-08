@@ -8,6 +8,7 @@ import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
 import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
+import AISuggestions from "../components/RecipeBuilder/AISuggestions";
 import Services from "../services";
 import { Recipe, RecipeIngredient } from "../types";
 import "../styles/RecipeBuilder.css";
@@ -436,6 +437,15 @@ function RecipeBuilder(): React.ReactElement {
             { className: "ingredients-header" },
             React.createElement("h2", { className: "section-title" }, "Ingredients")
           ),
+
+          // AI Suggestions
+          React.createElement(AISuggestions, {
+            recipe: recipe,
+            ingredients: ingredients,
+            metrics: metrics,
+            onIngredientUpdate: updateIngredient,
+            disabled: addingIngredient || updatingIngredient || saving,
+          }),
 
           // Ingredients List
           React.createElement(IngredientsList, {
