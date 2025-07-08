@@ -44,6 +44,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const generateSuggestions = useCallback(async (): Promise<void> => {
     if (!ingredients.length || !metrics) return;
 
+    console.log('Generating suggestions for ingredients:', ingredients);
+    console.log('Recipe metrics:', metrics);
+
     setLoading(true);
     const newSuggestions: Suggestion[] = [];
 
@@ -198,14 +201,44 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       const baseMaltWeight = baseMalts.reduce((sum, grain) => sum + grain.amount, 0);
       const baseMaltPercentage = (baseMaltWeight / totalGrainWeight) * 100;
 
-      if (baseMaltPercentage < 60) {
+      // Debug logging
+      console.log('Base malt analysis:', {
+        totalGrains: grains.length,
+        totalGrainWeight,
+        baseMalts: baseMalts.map(g => ({ name: g.name, amount: g.amount, grain_type: g.grain_type })),
+        baseMaltWeight,
+        baseMaltPercentage
+      });
+
+      if (baseMaltPercentage < 60 && baseMaltPercentage > 0) {
+        // Generate actual changes - suggest increasing the largest base malt
+        const changes: IngredientChange[] = [];
+        const largestBaseMalt = baseMalts.reduce((largest, current) => 
+          current.amount > largest.amount ? current : largest, baseMalts[0]);
+        
+        if (largestBaseMalt) {
+          const targetBaseMaltPercentage = 65; // Target 65% base malt
+          const targetBaseMaltWeight = (targetBaseMaltPercentage / 100) * totalGrainWeight;
+          const additionalBaseMalt = targetBaseMaltWeight - baseMaltWeight;
+          const newAmount = largestBaseMalt.amount + additionalBaseMalt;
+          
+          changes.push({
+            ingredientId: largestBaseMalt.id!,
+            ingredientName: largestBaseMalt.name,
+            field: 'amount',
+            currentValue: largestBaseMalt.amount,
+            suggestedValue: Math.round(newAmount * 4) / 4, // Round to quarter pounds
+            reason: `Increase base malt from ${baseMaltPercentage.toFixed(1)}% to ${targetBaseMaltPercentage}% for better fermentability`
+          });
+        }
+
         suggestions.push({
           id: 'base-malt-percentage',
           type: 'base_malt',
           title: 'Increase Base Malt Percentage',
           description: `Current base malt: ${baseMaltPercentage.toFixed(1)}%. Consider increasing to 60%+ for better fermentability`,
-          confidence: 'high',
-          changes: [] // This would require more complex logic to suggest specific changes
+          confidence: 'medium',
+          changes
         });
       }
     }
@@ -309,12 +342,17 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const applySuggestion = async (suggestion: Suggestion): Promise<void> => {
     if (disabled) return;
 
+    console.log('Applying suggestion:', suggestion);
+
     try {
       for (const change of suggestion.changes) {
+        console.log('Applying change:', change);
+        
         const updateData: Partial<RecipeIngredient> = {
           [change.field]: change.suggestedValue
         };
         
+        console.log('Update data:', updateData);
         await onIngredientUpdate(change.ingredientId, updateData);
       }
 
