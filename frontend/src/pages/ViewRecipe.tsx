@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import RecipeService from "../services/RecipeService";
 import BrewSessionService from "../services/BrewSessionService";
-import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
-import RecipeVersionHistory from "../components/RecipeBuilder/RecipeVersionHistory";
-import RecipeActions from "../components/RecipeActions";
+import CompactRecipeHeader from "../components/CompactRecipeHeader";
+import CompactRecipeInfo from "../components/CompactRecipeInfo";
+import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import { Recipe, RecipeIngredient, BrewSession, BrewSessionSummary, ID } from "../types";
-import { formatTime, formatGravity, formatAbv, formatEfficiency, formatPercentage } from "../utils/formatUtils";
+import { formatGravity, formatAbv, formatEfficiency, formatPercentage } from "../utils/formatUtils";
 import "../styles/ViewRecipe.css";
+import "../styles/CompactComponents.css";
 
 interface BrewingStats {
   averageOG?: number;
@@ -25,9 +26,6 @@ interface ProcessedBrewSession extends BrewSession {
   duration?: number;
 }
 
-interface GroupedIngredients {
-  [key: string]: RecipeIngredient[];
-}
 
 const ViewRecipe: React.FC = () => {
   const { recipeId } = useParams<{ recipeId: ID }>();
@@ -110,77 +108,25 @@ const ViewRecipe: React.FC = () => {
     return <div className="text-center py-10">Recipe not found</div>;
   }
 
-  // Group ingredients by type
-  const groupedIngredients: GroupedIngredients = ingredients.reduce((acc, ingredient) => {
-    const type = ingredient.type || "other";
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(ingredient);
-    return acc;
-  }, {} as GroupedIngredients);
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="recipe-header">
-        <h1 className="recipe-title">{recipe.name}</h1>
-        {recipe.style && <p className="recipe-style">{recipe.style}</p>}
-        {recipe.version && recipe.version > 1 && (
-          <div className="recipe-version-badge">Version: {recipe.version}</div>
-        )}
-      </div>
-
-      <RecipeActions recipe={recipe} showViewButton={false} />
-
-      <div className="recipe-content">
-        <div className="recipe-details">
-          <div className="recipe-section">
-            <h2 className="section-title">Recipe Details</h2>
-            <div className="detail-grid">
-              <div className="detail-item">
-                <span className="detail-label">Batch Size:</span>
-                <span className="detail-value">
-                  {recipe.batch_size} gallons
-                </span>
+    <div className="view-recipe-container">
+      <CompactRecipeHeader recipe={recipe} showViewButton={false} />
+      
+      <div className="view-recipe-content">
+        <div className="view-recipe-top-section">
+          <div className="view-recipe-details">
+            <CompactRecipeInfo recipe={recipe} />
+            
+            {recipe.notes && (
+              <div className="compact-recipe-notes">
+                <h3 className="compact-recipe-info-title">Brewing Notes</h3>
+                <p className="compact-recipe-description">{recipe.notes}</p>
               </div>
-              {recipe.boil_time && (
-                <div className="detail-item">
-                  <span className="detail-label">Boil Time:</span>
-                  <span className="detail-value">
-                    {recipe.boil_time} minutes
-                  </span>
-                </div>
-              )}
-              {recipe.efficiency && (
-                <div className="detail-item">
-                  <span className="detail-label">Efficiency:</span>
-                  <span className="detail-value">{recipe.efficiency}%</span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-
-          {recipe.description && (
-            <div className="recipe-section">
-              <h2 className="section-title">Description</h2>
-              <p className="recipe-description">{recipe.description}</p>
-            </div>
-          )}
-
-          <div className="recipe-section">
-            <h2 className="section-title">Recipe Metrics</h2>
-            <RecipeMetrics
-              metrics={{
-                og: recipe.estimated_og || 1.0,
-                fg: recipe.estimated_fg || 1.0,
-                abv: recipe.estimated_abv || 0,
-                ibu: recipe.estimated_ibu || 0,
-                srm: recipe.estimated_srm || 0,
-              }}
-              recipe={recipe}
-              onScale={() => {}}
-            />
-          </div>
+          
+          <div className="view-recipe-brew-sessions">
 
           {/* Enhanced Brew Sessions Section */}
           <div className="recipe-section">
@@ -215,15 +161,6 @@ const ViewRecipe: React.FC = () => {
                   </div>
                 )}
               </div>
-              <button
-                onClick={() =>
-                  navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`)
-                }
-                className="btn btn-primary"
-                style={{ fontSize: "0.9rem", padding: "0.5rem 1rem" }}
-              >
-                + New Session
-              </button>
             </div>
 
             {sessionsLoading ? (
@@ -242,8 +179,8 @@ const ViewRecipe: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* Brewing Statistics Overview */}
-                {brewingStats && (
+                {/* Brewing Statistics Overview - Only show for multiple sessions */}
+                {brewingStats && brewSessions.length > 1 && (
                   <div className="brewing-stats-overview">
                     <h3 className="stats-title">Brewing Performance</h3>
                     <div className="stats-grid">
@@ -375,64 +312,31 @@ const ViewRecipe: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                
+                {/* Add session button when sessions exist */}
+                <div className="new-session-action">
+                  <button
+                    onClick={() =>
+                      navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`)
+                    }
+                    className="btn btn-primary"
+                  >
+                    + New Session
+                  </button>
+                </div>
               </>
             )}
           </div>
-
-          <div className="recipe-section">
-            <h2 className="section-title">Ingredients</h2>
-            {Object.keys(groupedIngredients).length === 0 ? (
-              <p>No ingredients added to this recipe.</p>
-            ) : (
-              Object.entries(groupedIngredients).map(([type, items]) => (
-                <div key={type} className="ingredient-group">
-                  <h3 className="ingredient-type-title">
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </h3>
-                  <table className="ingredients-table">
-                    <thead>
-                      <tr>
-                        <th>Ingredient</th>
-                        <th>Amount</th>
-                        <th>Use</th>
-                        <th>Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((ingredient, index) => (
-                        <tr key={index}>
-                          <td className="ingredient-name">{ingredient.name}</td>
-                          <td>
-                            {ingredient.amount} {ingredient.unit}
-                          </td>
-                          <td>{ingredient.use || "-"}</td>
-                          <td>
-                            {ingredient.time ? formatTime(ingredient.time) : "-"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))
-            )}
           </div>
-
-          {recipe.notes && (
-            <div className="recipe-section">
-              <h2 className="section-title">Brewing Notes</h2>
-              <p className="recipe-notes">{recipe.notes}</p>
-            </div>
-          )}
-
-          {/* Version History */}
-          {((recipe.version && recipe.version > 1) || recipe.parent_recipe_id) && (
-            <RecipeVersionHistory
-              recipeId={recipe.recipe_id}
-              version={recipe.version ?? 1}
-              parentRecipeId={recipe.parent_recipe_id}
-            />
-          )}
+        </div>
+        
+        <div className="view-recipe-ingredients-section">
+          <IngredientsList 
+            ingredients={ingredients}
+            onRemove={() => {}}
+            onUpdate={async () => {}}
+            isEditing={false}
+          />
         </div>
       </div>
     </div>

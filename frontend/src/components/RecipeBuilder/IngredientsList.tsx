@@ -11,6 +11,7 @@ interface IngredientsListProps {
   onRemove: (ingredientId: string) => void;
   onUpdate: (ingredientId: string, updatedIngredient: RecipeIngredient) => Promise<void>;
   isEditing: boolean;
+  compact?: boolean;
 }
 
 interface EditingCell {
@@ -28,7 +29,8 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   ingredients, 
   onRemove, 
   onUpdate, 
-  isEditing 
+  isEditing,
+  compact = false
 }) => {
   const { formatValue } = useUnits();
 
@@ -462,6 +464,127 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
 
     return baseClass;
   };
+
+  // Group ingredients by type for compact display
+  const groupedIngredients: { [key: string]: RecipeIngredient[] } = sortedIngredients.reduce((acc, ingredient) => {
+    const type = ingredient.type || "other";
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(ingredient);
+    return acc;
+  }, {} as { [key: string]: RecipeIngredient[] });
+
+  // Render ingredients in compact card format
+  const renderCompactIngredients = () => {
+    return (
+      <div className={compact ? "ingredients-compact-container" : "card"}>
+        <h3 className="card-title">Recipe Ingredients</h3>
+        
+        <div className="ingredients-compact-grid">
+          {Object.entries(groupedIngredients).map(([type, items]) => (
+            <div key={type} className="ingredient-type-section">
+              <h4 className="ingredient-type-title">
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </h4>
+              <div className="ingredient-cards">
+                {items.map((ingredient) => (
+                  <div
+                    key={`${ingredient.type}-${ingredient.id}`}
+                    className={`ingredient-card ${getRowClass(ingredient)}`}
+                  >
+                    <div className="ingredient-card-header">
+                      <div className="ingredient-card-name">
+                        <strong>{ingredient.name}</strong>
+                        {ingredient.type === "grain" && (ingredient as any).grain_type && (
+                          <span className="ingredient-subtype">
+                            {mapGrainType((ingredient as any).grain_type)}
+                          </span>
+                        )}
+                        {ingredient.type === "hop" && (ingredient as any).origin && (
+                          <span className="ingredient-origin">
+                            {(ingredient as any).origin}
+                          </span>
+                        )}
+                        {ingredient.type === "yeast" && (ingredient as any).manufacturer && (
+                          <span className="ingredient-manufacturer">
+                            {(ingredient as any).manufacturer}
+                          </span>
+                        )}
+                      </div>
+                      <div className="ingredient-card-amount">
+                        <strong>{formatIngredientAmount(ingredient)}</strong>
+                      </div>
+                    </div>
+                    
+                    <div className="ingredient-card-details">
+                      <div className="ingredient-card-info">
+                        <span className="ingredient-detail">
+                          <strong>Use:</strong> {formatUsage(ingredient)}
+                        </span>
+                        <span className="ingredient-detail">
+                          <strong>Time:</strong> {formatTime(ingredient)}
+                        </span>
+                      </div>
+                      
+                      {ingredient.type === "hop" && (ingredient as any).alpha_acid && (
+                        <div className="ingredient-card-spec">
+                          <span className="spec-label">AA:</span>
+                          <span className="spec-value">{(ingredient as any).alpha_acid}%</span>
+                        </div>
+                      )}
+                      
+                      {ingredient.type === "grain" && (ingredient as any).color && (
+                        <div className="ingredient-card-spec">
+                          <span className="spec-label">Color:</span>
+                          <span className="spec-value">{(ingredient as any).color}°L</span>
+                        </div>
+                      )}
+                      
+                      {ingredient.type === "yeast" && (
+                        <div className="ingredient-card-yeast">
+                          {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
+                            <div className="yeast-attenuation">
+                              <span className="spec-label">
+                                {ingredient.improved_attenuation_estimate ? "Enhanced Att:" : "Base Att:"}
+                              </span>
+                              <span className="spec-value">
+                                {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                {ingredient.improved_attenuation_estimate && (
+                                  <span className="enhanced-indicator" title="Based on real-world fermentation data">📊</span>
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          <AttenuationBadge 
+                            ingredientId={ingredient.ingredient_id}
+                            className="compact"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Return compact view if compact prop is true
+  if (compact) {
+    if (!ingredients || ingredients.length === 0) {
+      return (
+        <div className="ingredients-compact-container">
+          <h3 className="card-title">Recipe Ingredients</h3>
+          <p className="text-center py-4">No ingredients added yet.</p>
+        </div>
+      );
+    }
+    return renderCompactIngredients();
+  }
 
   return (
     <div className="card">
