@@ -147,6 +147,121 @@ The system is designed to collect attenuation data from:
 - **Environmental factors**: Track temperature, pH, and other variables affecting attenuation
 - **Predictive modeling**: Machine learning models for attenuation prediction based on recipe composition
 
+## AI Recipe Suggestions System
+
+### Implementation Status: Phase 2 Complete
+
+BrewTracker now includes an intelligent AI suggestions system that analyzes recipes and provides actionable recommendations for improvement. This system helps brewers create better, more balanced recipes that meet style guidelines using advanced brewing science and BJCP style analysis.
+
+### Current Implementation
+
+#### Phase 1: Base Malt Intelligence (✅ COMPLETED)
+- **Enhanced Base Malt Suggestions**: Proportional increase across all base malts instead of targeting just the largest
+- **Bulk Update System**: Atomic ingredient updates preventing race conditions
+- **Cascading Effects Calculator**: Real-time prediction of OG/FG/ABV/IBU/SRM changes from ingredient adjustments
+- **Visual Impact Preview**: Shows exact metric changes before applying suggestions
+
+#### Phase 2: Smart Base Malt Selection (✅ COMPLETED)
+- **BeerStyleGuide Integration**: Uses full BJCP style objects instead of keyword matching
+- **Intelligent Style Analysis**: Extracts brewing characteristics from style descriptions and ranges
+- **Style-Aware Malt Selection**: Recommends specific base malts based on style requirements
+- **Advanced Grain Bill Analysis**: Considers fermentability, color contribution, and flavor profiles
+
+#### Components
+- **AISuggestions**: `frontend/src/components/RecipeBuilder/AISuggestions.tsx` - Main suggestion UI with BeerStyleGuide integration
+- **CascadingEffectsService**: `frontend/src/services/CascadingEffectsService.ts` - Calculates metric change predictions
+- **SmartBaseMaltService**: `frontend/src/services/SmartBaseMaltService.ts` - Intelligent base malt analysis and selection
+- **Bulk Update Hook**: Enhanced `useRecipeBuilder` with `bulkUpdateIngredients()` method
+
+#### Current Suggestion Types
+1. **Normalize Amounts** - Round ingredients to brewing-friendly increments
+2. **Smart Base Malt Selection** - Style-aware base malt recommendations with intelligent prioritization
+3. **Hop Timing Optimization** - Improve aroma retention and bitterness balance
+4. **Style Compliance (Enhanced)** - BJCP-based compliance checking using full style data
+5. **Yeast Selection** - Attenuation improvements from real-world data
+
+#### Smart Base Malt Features
+- **Style Characteristic Detection**: 
+  - Dark/light style analysis from SRM ranges
+  - Hop-forward identification from IBU thresholds and descriptions
+  - Complex malt requirement detection from flavor descriptions
+  - Primary flavor extraction from style text analysis
+- **Malt Recommendations by Style**:
+  - **American IPA**: 2-Row for clean hop character
+  - **American Stout**: Maris Otter for complementary biscuit notes
+  - **German Lager**: Pilsner malt for authentic crisp profile
+  - **Porter**: Munich malt for rich, malty character
+- **Grain Bill Analysis**: Fermentability scoring, color contribution, specialty grain balance
+
+### Planned Implementation Roadmap
+
+#### Phase 3: Enhanced Style Guidelines Integration (🔄 NEXT)
+- **Comprehensive BJCP compliance**: Deep integration with all style specifications
+- **Priority-based suggestions**: Different styles prioritize different characteristics
+- **Multi-metric optimization**: Suggest changes that improve multiple compliance metrics
+- **Style-specific suggestion ordering**: Present recommendations in brewing-logical sequence
+
+#### Phase 4: Color Management System
+- **SRM prediction accuracy**: Consider grain interactions and Maillard reactions
+- **Smart specialty grain swaps**: Maintain flavor while adjusting color
+- **Color-style compliance**: Ensure color stays within style after base malt changes
+- **Grain interaction modeling**: Account for complex color contributions
+
+#### Phase 5: Hop Optimization Engine
+- **IBU targeting**: Precise hop adjustments to hit style IBU ranges
+- **Utilization calculations**: Factor in OG effects on hop utilization
+- **Hop scheduling intelligence**: Optimize boil times and whirlpool additions
+- **Flavor balance**: Consider bitterness-to-sweetness ratios
+
+#### Phase 6: Yeast Selection Assistant
+- **Attenuation matching**: Suggest yeasts to achieve target FG/ABV
+- **Style-appropriate strains**: Recommend yeasts that complement beer style
+- **Fermentation temperature optimization**: Suggest fermentation schedules
+
+#### Phase 7: Advanced Features
+- **Staged suggestion workflow**: Present suggestions in logical brewing order
+- **Impact prediction**: Show cascading effects for all suggestion types
+- **Alternative solutions**: Multiple approaches for each identified issue
+- **Constraint-based optimization**: Respect user preferences and ingredient availability
+
+### Technical Architecture
+
+#### Key Design Principles
+1. **BJCP-driven intelligence**: All suggestions based on official style guidelines and brewing science
+2. **Modular suggestion engine**: Each suggestion type is independently developed and testable
+3. **Cascading effects awareness**: All suggestions consider impacts on other recipe metrics
+4. **Style-driven intelligence**: BeerStyleGuide objects inform all recommendation logic
+5. **Atomic updates**: Bulk ingredient changes prevent race conditions and state inconsistencies
+6. **User experience focused**: Clear impact previews and logical suggestion ordering
+
+#### Data Flow
+1. **Style Analysis**: Load and analyze full BeerStyleGuide objects for intelligent recommendations
+2. **Recipe Analysis**: Analyze current recipe metrics and ingredient composition
+3. **Issue Identification**: Detect areas for improvement based on brewing best practices and style guidelines
+4. **Solution Generation**: Create actionable ingredient changes with predicted effects
+5. **Impact Calculation**: Use CascadingEffectsService to predict metric changes
+6. **User Presentation**: Display suggestions with clear before/after comparisons and style context
+7. **Bulk Application**: Apply all changes atomically via enhanced useRecipeBuilder hook
+
+#### Smart Base Malt Service Architecture
+- **Style Characteristic Analysis**: Extracts brewing requirements from BeerStyleGuide objects
+- **Malt Recommendation Engine**: Generates style-specific base malt suggestions
+- **Grain Bill Intelligence**: Analyzes fermentability, color, and flavor contributions
+- **Fallback Mechanisms**: Handles cases where style data is unavailable
+
+### Integration Points
+- **Recipe Builder**: Seamlessly integrated into the recipe building workflow
+- **BeerStyleGuide System**: Deep integration with BJCP style data
+- **Style Analysis**: Works with existing style compliance system
+- **Metrics Calculation**: Leverages existing brewing calculation engine
+- **Ingredient Management**: Respects ingredient availability and validation rules
+
+### Testing Coverage
+- **SmartBaseMaltService**: Comprehensive test suite covering grain bill analysis and recommendations
+- **Component Integration**: Tests for BeerStyleGuide integration in AI suggestions
+- **Cascading Effects**: Validated metric change predictions
+- **Error Handling**: Graceful fallbacks when style data unavailable
+
 ## Recent UI/UX Improvements
 
 ### Unified Recipe Display System

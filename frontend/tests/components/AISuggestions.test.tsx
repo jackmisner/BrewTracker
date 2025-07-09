@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AISuggestions from '../../src/components/RecipeBuilder/AISuggestions';
 import { Recipe, RecipeIngredient, RecipeMetrics } from '../../src/types';
+import { UnitProvider } from '../../src/contexts/UnitContext';
 
 // Mock BeerStyleService
 const mockGetAllStylesList = jest.fn();
@@ -11,6 +12,17 @@ jest.mock('../../src/services/BeerStyleService', () => ({
   default: {
     getAllStylesList: mockGetAllStylesList,
     calculateStyleMatch: mockCalculateStyleMatch,
+  },
+}));
+
+// Mock UserSettingsService
+const mockGetUserSettings = jest.fn();
+const mockUpdateSettings = jest.fn();
+
+jest.mock('../../src/services/UserSettingsService', () => ({
+  default: {
+    getUserSettings: mockGetUserSettings,
+    updateSettings: mockUpdateSettings,
   },
 }));
 
@@ -74,51 +86,57 @@ describe('AISuggestions Component', () => {
     srm: 4,
   };
 
-  const mockOnIngredientUpdate = jest.fn();
+  const mockOnBulkIngredientUpdate = jest.fn();
+
+  // Helper to render with UnitProvider
+  const renderWithUnitProvider = (ui: React.ReactElement) => {
+    return render(<UnitProvider>{ui}</UnitProvider>);
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetAllStylesList.mockClear();
     mockCalculateStyleMatch.mockClear();
+    mockGetUserSettings.mockResolvedValue({
+      settings: { preferred_units: 'imperial' },
+    });
+    mockUpdateSettings.mockResolvedValue(undefined);
   });
 
   it('renders without crashing', () => {
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
   });
 
   it('shows AI suggestions header when suggestions are available', async () => {
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
     await waitFor(() => {
-      const header = screen.queryByText(/AI Suggestions/);
-      // Component might not render if no suggestions are generated
-      if (header) {
-        expect(header).toBeInTheDocument();
-      }
+      expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
+      expect(screen.getByText('Analyze Recipe & Suggest Improvements')).toBeInTheDocument();
     });
   });
 
   it('can be expanded and collapsed', async () => {
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
@@ -132,13 +150,13 @@ describe('AISuggestions Component', () => {
     });
   });
 
-  it('calls onIngredientUpdate when applying suggestions', async () => {
-    render(
+  it('calls onBulkIngredientUpdate when applying suggestions', async () => {
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
@@ -146,43 +164,47 @@ describe('AISuggestions Component', () => {
       const applyButtons = screen.queryAllByText('Apply');
       if (applyButtons.length > 0) {
         fireEvent.click(applyButtons[0]);
-        expect(mockOnIngredientUpdate).toHaveBeenCalled();
+        expect(mockOnBulkIngredientUpdate).toHaveBeenCalled();
       }
     });
   });
 
-  it('does not render when no ingredients are provided', () => {
-    const { container } = render(
+  it('shows disabled analyze button when no ingredients are provided', () => {
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={[]}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze recipe/i })).toBeDisabled();
+    expect(screen.getByText('Add ingredients to your recipe to get analysis.')).toBeInTheDocument();
   });
 
-  it('does not render when no metrics are provided', () => {
-    const { container } = render(
+  it('shows disabled analyze button when no metrics are provided', () => {
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        metrics={undefined}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze recipe/i })).toBeDisabled();
   });
 
   it('disables apply buttons when disabled prop is true', async () => {
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
         disabled={true}
       />
     );
@@ -210,12 +232,12 @@ describe('AISuggestions Component', () => {
       },
     ];
 
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={ingredientsWithNonStandardAmounts}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 
@@ -228,12 +250,12 @@ describe('AISuggestions Component', () => {
   });
 
   it('dismisses suggestions when dismiss button is clicked', async () => {
-    render(
+    renderWithUnitProvider(
       <AISuggestions
         recipe={mockRecipe}
         ingredients={mockIngredients}
         metrics={mockMetrics}
-        onIngredientUpdate={mockOnIngredientUpdate}
+        onBulkIngredientUpdate={mockOnBulkIngredientUpdate}
       />
     );
 

@@ -448,6 +448,7 @@ useEffect(() => {
             recipe={recipe} 
             metrics={metrics ?? undefined} 
             onStyleSuggestionSelect={() => {}} 
+            variant="main"
             data-testid="style-analysis"
           />
         </div>

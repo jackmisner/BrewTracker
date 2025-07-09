@@ -63,6 +63,7 @@ function RecipeBuilder(): React.ReactElement {
     updateRecipe,
     addIngredient,
     updateIngredient,
+    bulkUpdateIngredients,
     removeIngredient,
     importIngredients,
     importRecipeData,
@@ -443,7 +444,7 @@ function RecipeBuilder(): React.ReactElement {
             recipe: recipe,
             ingredients: ingredients,
             metrics: metrics,
-            onIngredientUpdate: updateIngredient,
+            onBulkIngredientUpdate: bulkUpdateIngredients,
             disabled: addingIngredient || updatingIngredient || saving,
           }),
 
