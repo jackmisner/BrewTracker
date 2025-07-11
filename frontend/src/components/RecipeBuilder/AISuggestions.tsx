@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Recipe, RecipeIngredient, RecipeMetrics } from "../../types";
+import { Recipe, RecipeIngredient, RecipeMetrics, CreateRecipeIngredientData } from "../../types";
 import { BeerStyleGuide } from "../../types/beer-styles";
 import BeerStyleService from "../../services/BeerStyleService";
 import CascadingEffectsService, { CascadingEffects } from "../../services/CascadingEffectsService";
@@ -30,6 +30,9 @@ interface IngredientChange {
   currentValue: any;
   suggestedValue: any;
   reason: string;
+  // For adding new ingredients
+  isNewIngredient?: boolean;
+  newIngredientData?: CreateRecipeIngredientData;
 }
 
 interface AISuggestionsProps {
@@ -92,6 +95,157 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     loadSelectedStyleGuide();
   }, [loadSelectedStyleGuide]);
 
+  // Check if recipe truly meets all style requirements (stringent criteria)
+  const checkRecipeFullyCompliant = useCallback((
+    ingredients: RecipeIngredient[], 
+    metrics: RecipeMetrics, 
+    styleGuide?: BeerStyleGuide | null
+  ): boolean => {
+    // Check base malt percentage (should be at least 60%)
+    const grains = ingredients.filter(ingredient => ingredient.type === 'grain');
+    if (grains.length === 0) return false;
+    
+    const totalGrainWeight = grains.reduce((sum, grain) => {
+      return sum + convertToPounds(grain.amount, grain.unit);
+    }, 0);
+    
+    const baseMalts = grains.filter(grain => grain.grain_type === 'base_malt');
+    const baseMaltWeight = baseMalts.reduce((sum, grain) => {
+      return sum + convertToPounds(grain.amount, grain.unit);
+    }, 0);
+    
+    const baseMaltPercentage = (baseMaltWeight / totalGrainWeight) * 100;
+    
+    // Base malt should be at least 55% (more lenient than 60% as requested)
+    if (baseMaltPercentage < 55) return false;
+    
+    // If no style guide, just check base malt percentage
+    if (!styleGuide) return true;
+    
+    // Check ALL style metrics are in range
+    const styleRanges = [
+      { name: 'OG', current: metrics.og, range: styleGuide.original_gravity },
+      { name: 'FG', current: metrics.fg, range: styleGuide.final_gravity },
+      { name: 'ABV', current: metrics.abv, range: styleGuide.alcohol_by_volume },
+      { name: 'IBU', current: metrics.ibu, range: styleGuide.international_bitterness_units },
+      { name: 'SRM', current: metrics.srm, range: styleGuide.color }
+    ];
+    
+    // ALL metrics must be in range
+    for (const metric of styleRanges) {
+      if (!metric.range?.minimum?.value || !metric.range?.maximum?.value) continue;
+      
+      const min = metric.range.minimum.value;
+      const max = metric.range.maximum.value;
+      
+      if (metric.current < min || metric.current > max) {
+        console.log(`Recipe not fully compliant: ${metric.name} ${metric.current} is outside range ${min}-${max}`);
+        return false;
+      }
+    }
+    
+    return true;
+  }, []);
+
+  // Check if recipe needs Blackprinz Malt addition for SRM
+  const checkNeedsBlackprinzAddition = useCallback((
+    ingredients: RecipeIngredient[], 
+    metrics: RecipeMetrics, 
+    styleGuide?: BeerStyleGuide | null
+  ): { needed: boolean; targetSRM: number } | null => {
+    if (!styleGuide?.color?.minimum?.value) return null;
+    
+    const minSRM = styleGuide.color.minimum.value;
+    const maxSRM = styleGuide.color.maximum.value || minSRM + 10;
+    
+    // Only suggest if SRM is below minimum
+    if (metrics.srm >= minSRM) return null;
+    
+    // Check if there are existing roasted grains to modify instead
+    const roastedGrains = ingredients.filter(ingredient => 
+      ingredient.type === 'grain' && 
+      ingredient.grain_type === 'roasted'
+    );
+    
+    // If there are roasted grains, let existing logic handle modifications
+    if (roastedGrains.length > 0) return null;
+    
+    // Target the lower end of the style range
+    const targetSRM = minSRM + (maxSRM - minSRM) * 0.3;
+    
+    return { needed: true, targetSRM };
+  }, []);
+
+  // Generate Blackprinz Malt addition suggestion for SRM adjustment
+  const generateBlackprinzAddition = useCallback((
+    ingredients: RecipeIngredient[], 
+    metrics: RecipeMetrics, 
+    styleGuide?: BeerStyleGuide | null
+  ): Suggestion[] => {
+    const blackprinzCheck = checkNeedsBlackprinzAddition(ingredients, metrics, styleGuide);
+    if (!blackprinzCheck?.needed) return [];
+    
+    // Calculate SRM difference needed
+    const srmIncrease = blackprinzCheck.targetSRM - metrics.srm;
+    
+    // Blackprinz Malt has ~450-500L color. Use conservative estimate of 450L
+    // Rough calculation: 1 lb Blackprinz in 5 gal batch adds ~90 SRM points
+    // For small amounts: 1 oz adds roughly 5.6 SRM points in 5 gal batch
+    const batchSizeGallons = recipe.batch_size_unit === 'l' ? recipe.batch_size * 0.264172 : recipe.batch_size;
+    const scalingFactor = batchSizeGallons / 5; // Scale to actual batch size
+    
+    // Estimate pounds needed (very rough approximation)
+    const poundsNeeded = (srmIncrease / 90) * scalingFactor;
+    
+    // Convert to user's preferred unit and round to reasonable amounts
+    let suggestedAmount: number;
+    let suggestedUnit: string;
+    
+    if (unitSystem === 'metric') {
+      // Convert to grams and round to 25g increments
+      const gramsNeeded = poundsNeeded * 453.592;
+      suggestedAmount = Math.max(25, Math.round(gramsNeeded / 25) * 25);
+      suggestedUnit = 'g';
+    } else {
+      // Convert to ounces and round to 0.5 oz increments
+      const ouncesNeeded = poundsNeeded * 16;
+      suggestedAmount = Math.max(0.5, Math.round(ouncesNeeded * 2) / 2);
+      suggestedUnit = 'oz';
+    }
+    
+    // Generate a unique ID for the new ingredient
+    const newIngredientId = `new-blackprinz-${Date.now()}`;
+    
+    const change: IngredientChange = {
+      ingredientId: newIngredientId,
+      ingredientName: 'Blackprinz Malt',
+      field: 'amount',
+      currentValue: 0,
+      suggestedValue: suggestedAmount,
+      reason: `Add to increase SRM for style compliance`,
+      isNewIngredient: true,
+      newIngredientData: {
+        name: 'Blackprinz Malt',
+        amount: suggestedAmount,
+        unit: suggestedUnit,
+        grain_type: 'roasted',
+        color: 450 // Lovibond
+      }
+    };
+    
+    return [{
+      id: 'add-blackprinz-malt',
+      type: 'style_compliance',
+      title: 'Add Blackprinz Malt for Color',
+      description: `Add ${suggestedAmount} ${suggestedUnit} Blackprinz Malt to increase SRM and meet ${styleGuide?.name || 'style'} color requirements`,
+      confidence: 'high',
+      changes: [change],
+      priority: 2,
+      impactType: 'important',
+      styleImpact: `Increases SRM from ${metrics.srm.toFixed(1)} to approximately ${blackprinzCheck.targetSRM.toFixed(1)}`
+    }];
+  }, [checkNeedsBlackprinzAddition, recipe.batch_size, recipe.batch_size_unit, unitSystem]);
+
   // Generate cohesive suggestions based on recipe analysis
   const generateCohesiveSuggestions = useCallback(async (): Promise<void> => {
     if (!ingredients.length || !metrics) return;
@@ -125,6 +279,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         );
       }
 
+      // PHASE 2B: Blackprinz Malt addition for SRM (when no roasted grains exist)
+      const blackprinzSuggestions = generateBlackprinzAddition(ingredients, currentMetrics, selectedStyleGuide);
+      
       // PHASE 3: Secondary improvements
       const normalizeAmountSuggestions = await generateNormalizeAmountSuggestions(ingredients);
       const hopTimingSuggestions = await generateHopTimingSuggestions(ingredients, currentMetrics);
@@ -139,6 +296,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       // Group suggestions by category for better organization
       const baseMaltChanges = baseMaltSuggestions.flatMap(s => s.changes);
       const styleComplianceChanges = styleComplianceSuggestions.flatMap(s => s.changes);
+      const blackprinzChanges = blackprinzSuggestions.flatMap(s => s.changes);
       const hopTimingChanges = hopTimingSuggestions.flatMap(s => s.changes);
       const yeastChanges = yeastSuggestions.flatMap(s => s.changes);
       const normalizationChanges = normalizeAmountSuggestions.flatMap(s => s.changes);
@@ -154,6 +312,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       const allChangeCategories = [
         { changes: baseMaltChanges, description: 'Base Malt Optimization', priority: 3 },
         { changes: styleComplianceChanges, description: 'Style Compliance', priority: 2 },
+        { changes: blackprinzChanges, description: 'Color Adjustment', priority: 2 },
         { changes: hopTimingChanges, description: 'Hop Timing Optimization', priority: 1 },
         { changes: yeastChanges, description: 'Yeast Selection', priority: 1 },
         { changes: normalizationChanges, description: 'Amount Normalization', priority: 0 }
@@ -174,6 +333,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
       if (styleComplianceChanges.length > 0) {
         suggestionBreakdown.push(`Style compliance optimization (${styleComplianceChanges.length} ${styleComplianceChanges.length === 1 ? 'adjustment' : 'adjustments'})`);
+      }
+      if (blackprinzChanges.length > 0) {
+        suggestionBreakdown.push(`Color adjustment via ingredient addition (${blackprinzChanges.length} ${blackprinzChanges.length === 1 ? 'addition' : 'additions'})`);
       }
       if (hopTimingChanges.length > 0) {
         suggestionBreakdown.push(`Hop timing optimization (${hopTimingChanges.length} ${hopTimingChanges.length === 1 ? 'change' : 'changes'})`);
@@ -211,9 +373,10 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         // Determine overall impact and confidence
         const hasStyleCompliance = styleComplianceChanges.length > 0;
         const hasBaseMaltOptimization = baseMaltChanges.length > 0;
+        const hasBlackprinzAddition = blackprinzChanges.length > 0;
         const changeCount = allChanges.length;
         
-        const impactType = hasStyleCompliance || hasBaseMaltOptimization ? 'critical' : 
+        const impactType = hasStyleCompliance || hasBaseMaltOptimization || hasBlackprinzAddition ? 'critical' : 
                           hopTimingChanges.length > 0 ? 'important' : 'nice-to-have';
         
         const confidence = changeCount >= 3 ? 'high' : changeCount >= 2 ? 'medium' : 'low';
@@ -360,58 +523,77 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     return suggestions;
   };
 
-  // Generate hop timing suggestions
+  // Generate hop timing suggestions focused on IBU management
   const generateHopTimingSuggestions = async (ingredients: RecipeIngredient[], metrics: RecipeMetrics): Promise<Suggestion[]> => {
     const suggestions: Suggestion[] = [];
     const changes: IngredientChange[] = [];
 
     const hops = ingredients.filter(ingredient => ingredient.type === 'hop');
     
+    // Only suggest hop timing changes if IBU is significantly out of range
+    const targetIBU = selectedStyleGuide ? 
+      ((selectedStyleGuide.international_bitterness_units?.minimum?.value || 0) + 
+       (selectedStyleGuide.international_bitterness_units?.maximum?.value || 0)) / 2 : 
+      metrics.ibu;
+    
+    const ibuDeviation = Math.abs(metrics.ibu - targetIBU);
+    const isIBUOutOfRange = selectedStyleGuide ? 
+      (metrics.ibu < (selectedStyleGuide.international_bitterness_units?.minimum?.value || 0) || 
+       metrics.ibu > (selectedStyleGuide.international_bitterness_units?.maximum?.value || 100)) :
+      false;
+    
+    // Only make hop timing suggestions if IBU is significantly problematic
+    if (isIBUOutOfRange || ibuDeviation > 10) {
+      hops.forEach(hop => {
+        if (hop.use === 'boil' && hop.time !== undefined) {
+          // Suggest reducing boil time for overly bitter recipes
+          if (metrics.ibu > targetIBU && hop.time >= 45) {
+            const reductionNeeded = (metrics.ibu - targetIBU) / metrics.ibu;
+            const timeReduction = Math.min(reductionNeeded * hop.time, 20); // Cap reduction
+            const newTime = Math.max(hop.time - timeReduction, 15);
+            
+            if (newTime !== hop.time) {
+              changes.push({
+                ingredientId: hop.id!,
+                ingredientName: hop.name,
+                field: 'time',
+                currentValue: hop.time,
+                suggestedValue: newTime,
+                reason: `Reduce boil time to lower IBU from ${metrics.ibu.toFixed(1)} toward target of ${targetIBU.toFixed(1)}`
+              });
+            }
+          }
+          // Suggest increasing boil time for under-bitter recipes (only if very low)
+          else if (metrics.ibu < targetIBU && metrics.ibu < targetIBU * 0.7 && hop.time < 45) {
+            const increaseNeeded = (targetIBU - metrics.ibu) / targetIBU;
+            const timeIncrease = Math.min(increaseNeeded * 30, 15); // Cap increase
+            const newTime = Math.min(hop.time + timeIncrease, 60);
+            
+            if (newTime !== hop.time) {
+              changes.push({
+                ingredientId: hop.id!,
+                ingredientName: hop.name,
+                field: 'time',
+                currentValue: hop.time,
+                suggestedValue: newTime,
+                reason: `Increase boil time to raise IBU from ${metrics.ibu.toFixed(1)} toward target of ${targetIBU.toFixed(1)}`
+              });
+            }
+          }
+        }
+      });
+    }
+    
+    // Always suggest normalizing hop timing to common intervals for consistency
     hops.forEach(hop => {
       if (hop.use === 'boil' && hop.time !== undefined) {
-        // Suggest converting late boil additions to whirlpool for better aroma
-        if (hop.time <= 10 && hop.time > 0) {
-          changes.push({
-            ingredientId: hop.id!,
-            ingredientName: hop.name,
-            field: 'use',
-            currentValue: 'boil',
-            suggestedValue: 'whirlpool',
-            reason: 'Late boil additions work better as whirlpool for aroma retention'
-          });
-        }
-        // Suggest adjusting timing for overly bitter recipes
-        else if (metrics.ibu > 60 && hop.time >= 45) {
-          const newTime = Math.max(hop.time - 15, 20);
-          changes.push({
-            ingredientId: hop.id!,
-            ingredientName: hop.name,
-            field: 'time',
-            currentValue: hop.time,
-            suggestedValue: newTime,
-            reason: `Reduce boil time to lower IBU from ${metrics.ibu.toFixed(1)} to target range`
-          });
-        }
-        // Suggest optimizing hop timing for better flavor/aroma balance
-        else if (hop.time === 60 && metrics.ibu < 40) {
-          // For low IBU recipes, suggest some later additions for flavor
-          changes.push({
-            ingredientId: hop.id!,
-            ingredientName: hop.name,
-            field: 'time',
-            currentValue: hop.time,
-            suggestedValue: 20,
-            reason: 'Add some later boil additions for better hop flavor and aroma'
-          });
-        }
-        // Suggest normalizing hop timing to common intervals
-        else if (hop.time && ![0, 5, 10, 15, 20, 30, 45, 60].includes(hop.time)) {
+        if (![0, 5, 10, 15, 20, 30, 45, 60].includes(hop.time)) {
           const standardTimes = [0, 5, 10, 15, 20, 30, 45, 60];
           const closestTime = standardTimes.reduce((prev, curr) => 
             Math.abs(curr - hop.time!) < Math.abs(prev - hop.time!) ? curr : prev
           );
           
-          if (Math.abs(hop.time - closestTime) <= 5) {
+          if (Math.abs(hop.time - closestTime) <= 3) { // Tighter tolerance for normalization
             changes.push({
               ingredientId: hop.id!,
               ingredientName: hop.name,
@@ -423,19 +605,45 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           }
         }
       }
+      // Handle existing whirlpool hops - normalize timing only
+      else if (hop.use === 'whirlpool' && hop.time !== undefined) {
+        const whirlpoolStandardTimes = [10, 15, 20, 30];
+        if (!whirlpoolStandardTimes.includes(hop.time)) {
+          const closestTime = whirlpoolStandardTimes.reduce((prev, curr) => 
+            Math.abs(curr - hop.time!) < Math.abs(prev - hop.time!) ? curr : prev
+          );
+          
+          if (Math.abs(hop.time - closestTime) <= 3) {
+            changes.push({
+              ingredientId: hop.id!,
+              ingredientName: hop.name,
+              field: 'time',
+              currentValue: hop.time,
+              suggestedValue: closestTime,
+              reason: `Normalize to standard ${closestTime}-minute whirlpool time for consistency`
+            });
+          }
+        }
+      }
     });
 
     if (changes.length > 0) {
+      const description = isIBUOutOfRange || ibuDeviation > 10 ? 
+        `Adjust hop timing to optimize IBU levels for style compliance` :
+        `Normalize hop timing to standard brewing intervals`;
+        
       suggestions.push({
         id: 'hop-timing-optimization',
         type: 'hop_timing',
         title: 'Optimize Hop Timing',
-        description: `Improve hop schedule for better flavor and aroma balance`,
+        description,
         confidence: 'medium',
         changes,
         priority: 1, // Medium priority
         impactType: 'important',
-        styleImpact: 'Improves hop flavor balance and aroma retention'
+        styleImpact: selectedStyleGuide ? 
+          `Optimize IBU levels for ${selectedStyleGuide.name} style guidelines` :
+          'Improve hop schedule consistency and IBU management'
       });
     }
 
@@ -1088,7 +1296,29 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     try {
       // Prepare bulk updates
       const updates = suggestion.changes.map(change => {
-        // Find the existing ingredient to get required fields for validation
+        // Handle new ingredient additions
+        if (change.isNewIngredient && change.newIngredientData) {
+          // For new ingredients, create the full ingredient data
+          const newIngredientData: Partial<RecipeIngredient> = {
+            ingredient_id: change.ingredientId, // Use the generated ID
+            name: change.newIngredientData.name!,
+            type: 'grain' as const,
+            amount: Number(change.newIngredientData.amount!),
+            unit: change.newIngredientData.unit! as any,
+            grain_type: change.newIngredientData.grain_type!,
+            color: change.newIngredientData.color!,
+            potential: 1.035, // Default potential for specialty grains
+            use: 'mash'
+          };
+          
+          return {
+            ingredientId: change.ingredientId,
+            updatedData: newIngredientData,
+            isNewIngredient: true
+          };
+        }
+        
+        // Handle existing ingredient modifications
         const existingIngredient = ingredients.find(ing => ing.id === change.ingredientId);
         if (!existingIngredient) {
           throw new Error(`Ingredient ${change.ingredientName} not found`);
@@ -1148,43 +1378,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   // Always render the component to show the analyze button
   const canAnalyze = ingredients.length > 0 && metrics && !analyzing && !disabled;
-  
-  if (!suggestions.length && !hasAnalyzed && !analyzing) {
-    return (
-      <div className="ai-suggestions-card">
-        <div className="ai-suggestions-header">
-          <h3 className="ai-suggestions-title">
-            🤖 AI Recipe Analysis
-          </h3>
-        </div>
-        <div className="ai-suggestions-content">
-          <div className="analyze-recipe-section">
-            <p className="analyze-description">
-              Get comprehensive suggestions to improve your recipe including base malt optimization, 
-              style compliance, and ingredient normalization.
-            </p>
-            <button 
-              className="btn btn-primary analyze-button"
-              onClick={handleAnalyzeRecipe}
-              disabled={!canAnalyze}
-            >
-              {analyzing ? (
-                <>
-                  <span className="button-spinner"></span>
-                  Analyzing Recipe...
-                </>
-              ) : (
-                'Analyze Recipe & Suggest Improvements'
-              )}
-            </button>
-            {!canAnalyze && ingredients.length === 0 && (
-              <p className="help-text">Add ingredients to your recipe to get analysis.</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="ai-suggestions-card">
@@ -1203,8 +1396,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       
       {isExpanded && (
         <div className="ai-suggestions-content">
+          {/* Show analyze button if not analyzed yet */}
           {!hasAnalyzed && (
             <div className="analyze-recipe-section">
+              <p className="analyze-description">
+                Get comprehensive suggestions to improve your recipe including base malt optimization, 
+                style compliance, and ingredient normalization.
+              </p>
               <button 
                 className="btn btn-primary analyze-button"
                 onClick={handleAnalyzeRecipe}
@@ -1219,9 +1417,34 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   'Analyze Recipe & Suggest Improvements'
                 )}
               </button>
+              {!canAnalyze && ingredients.length === 0 && (
+                <p className="help-text">Add ingredients to your recipe to get analysis.</p>
+              )}
             </div>
           )}
-          {suggestions.map(suggestion => (
+          
+          {/* Show results after analysis */}
+          {hasAnalyzed && (
+            <>
+              {suggestions.length > 0 || (metrics && !checkRecipeFullyCompliant(ingredients, metrics, selectedStyleGuide)) ? (
+                <>
+                  <div className="analyze-recipe-section">
+                    <button 
+                      className="btn btn-outline analyze-button"
+                      onClick={handleAnalyzeRecipe}
+                      disabled={!canAnalyze}
+                    >
+                      {analyzing ? (
+                        <>
+                          <span className="button-spinner"></span>
+                          Re-analyzing Recipe...
+                        </>
+                      ) : (
+                        'Re-analyze Recipe'
+                      )}
+                    </button>
+                  </div>
+                  {suggestions.map(suggestion => (
             <div key={suggestion.id} className={`ai-suggestion-item ${suggestion.impactType || 'nice-to-have'}`}>
               <div className="ai-suggestion-header">
                 <h4 className="ai-suggestion-title">
@@ -1254,12 +1477,42 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 <div className="ai-suggestion-changes">
                   {suggestion.changes.map((change, index) => {
                     const ingredient = ingredients.find(ing => ing.id === change.ingredientId);
-                    const currentValueFormatted = ingredient && change.field === 'amount' 
-                      ? formatIngredientAmount(change.currentValue, ingredient.unit, ingredient.type, unitSystem)
-                      : change.currentValue;
-                    const suggestedValueFormatted = ingredient && change.field === 'amount'
-                      ? formatIngredientAmount(change.suggestedValue, ingredient.unit, ingredient.type, unitSystem)
-                      : change.suggestedValue;
+                    
+                    // Handle formatting for new ingredients
+                    let currentValueFormatted = change.currentValue;
+                    let suggestedValueFormatted = change.suggestedValue;
+                    
+                    if (change.field === 'amount') {
+                      if (change.isNewIngredient && change.newIngredientData) {
+                        // For new ingredients, use the data from newIngredientData
+                        currentValueFormatted = formatIngredientAmount(
+                          change.currentValue, 
+                          change.newIngredientData.unit!, 
+                          'grain', 
+                          unitSystem
+                        );
+                        suggestedValueFormatted = formatIngredientAmount(
+                          change.suggestedValue, 
+                          change.newIngredientData.unit!, 
+                          'grain', 
+                          unitSystem
+                        );
+                      } else if (ingredient) {
+                        // For existing ingredients, use the ingredient data
+                        currentValueFormatted = formatIngredientAmount(
+                          change.currentValue, 
+                          ingredient.unit, 
+                          ingredient.type, 
+                          unitSystem
+                        );
+                        suggestedValueFormatted = formatIngredientAmount(
+                          change.suggestedValue, 
+                          ingredient.unit, 
+                          ingredient.type, 
+                          unitSystem
+                        );
+                      }
+                    }
                     
                     return (
                       <div key={index} className="ai-suggestion-change">
@@ -1307,6 +1560,57 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               </div>
             </div>
           ))}
+                </>
+              ) : (
+                /* No suggestions case - only show positive message if recipe is truly compliant */
+                <div className={`ai-suggestion-item ${metrics && checkRecipeFullyCompliant(ingredients, metrics, selectedStyleGuide) ? 'no-suggestions' : ''}`}>
+                  <div className="ai-suggestion-header">
+                    <h4 className="ai-suggestion-title">
+                      {metrics && checkRecipeFullyCompliant(ingredients, metrics, selectedStyleGuide) ? 
+                        '✅ Recipe Analysis Complete' : 
+                        '🔍 Analysis Complete - Manual Review Needed'
+                      }
+                    </h4>
+                  </div>
+                  <p className="ai-suggestion-description">
+                    {metrics && checkRecipeFullyCompliant(ingredients, metrics, selectedStyleGuide) ? (
+                      <>
+                        Excellent! Your recipe is fully optimized and meets all requirements. 
+                        The base malt percentage is adequate (≥55%), all ingredients are properly normalized, and 
+                        {selectedStyleGuide ? ` all metrics fall within ${selectedStyleGuide.name} style guidelines.` : ' the recipe follows good brewing practices.'}
+                      </>
+                    ) : (
+                      <>
+                        Your recipe may need improvements that our automatic suggestions cannot address. 
+                        {selectedStyleGuide ? (
+                          ` Please manually review the Style Analysis to ensure all metrics meet ${selectedStyleGuide.name} requirements, `
+                        ) : (
+                          ' Please review base malt percentage (should be ≥55%), ingredient amounts, and '
+                        )}
+                        and consider adjustments that require brewer expertise.
+                      </>
+                    )}
+                  </p>
+                  <div className="ai-suggestion-actions">
+                    <button 
+                      className="btn btn-outline analyze-button"
+                      onClick={handleAnalyzeRecipe}
+                      disabled={!canAnalyze}
+                    >
+                      {analyzing ? (
+                        <>
+                          <span className="button-spinner"></span>
+                          Re-analyzing Recipe...
+                        </>
+                      ) : (
+                        'Re-analyze Recipe'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

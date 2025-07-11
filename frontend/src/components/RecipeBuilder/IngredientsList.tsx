@@ -390,6 +390,11 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
 
   // Format ingredient amount with unit-aware display
   const formatIngredientAmount = (ingredient: RecipeIngredient): string => {
+    // Handle undefined or null amounts safely
+    if (ingredient.amount === undefined || ingredient.amount === null) {
+      return "0 " + (ingredient.unit || "");
+    }
+    
     const amount = parseFloat(ingredient.amount.toString());
     const unit = ingredient.unit;
 

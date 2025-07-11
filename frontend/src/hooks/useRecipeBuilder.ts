@@ -59,7 +59,7 @@ interface UseRecipeBuilderReturn {
   updateRecipe: (field: keyof Recipe, value: any) => Promise<void>;
   addIngredient: (type: IngredientType, ingredientData: CreateRecipeIngredientData) => Promise<void>;
   updateIngredient: (ingredientId: string, updatedIngredientData: Partial<RecipeIngredient>) => Promise<void>;
-  bulkUpdateIngredients: (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient> }>) => Promise<void>;
+  bulkUpdateIngredients: (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }>) => Promise<void>;
   removeIngredient: (ingredientId: string) => Promise<void>;
   scaleRecipe: (newBatchSize: number | string) => Promise<void>;
   saveRecipe: (event?: React.FormEvent) => Promise<Recipe>;
@@ -496,7 +496,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
   // Bulk update ingredients
   const bulkUpdateIngredients = useCallback(
-    async (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient> }>): Promise<void> => {
+    async (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }>): Promise<void> => {
       try {
         // Use functional setState to access current state and avoid stale closures
         let currentIngredients: RecipeIngredient[] = [];
@@ -515,35 +515,76 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         // Apply all updates to the current ingredients
         let updatedIngredients = [...currentIngredients];
         
-        for (const { ingredientId, updatedData } of updates) {
-          // Find the ingredient to update
-          const existingIngredient = updatedIngredients.find(ing => ing.id === ingredientId);
-          if (!existingIngredient) {
-            throw new Error(`Ingredient with ID ${ingredientId} not found`);
+        for (const { ingredientId, updatedData, isNewIngredient } of updates) {
+          if (isNewIngredient) {
+            // Handle new ingredient additions
+            const newIngredient: RecipeIngredient = {
+              id: ingredientId,
+              ingredient_id: updatedData.ingredient_id!,
+              name: updatedData.name!,
+              type: updatedData.type!,
+              amount: updatedData.amount!,
+              unit: updatedData.unit!,
+              grain_type: updatedData.grain_type,
+              color: updatedData.color,
+              potential: updatedData.potential,
+              use: updatedData.use,
+              time: updatedData.time,
+              alpha_acid: updatedData.alpha_acid,
+              attenuation: updatedData.attenuation,
+              improved_attenuation_estimate: updatedData.improved_attenuation_estimate,
+            };
+
+            // Validate the new ingredient data
+            const validation = Services.ingredient.validateIngredientData(
+              newIngredient.type,
+              {
+                ingredient_id: newIngredient.ingredient_id,
+                amount: newIngredient.amount,
+                unit: newIngredient.unit,
+                use: newIngredient.use,
+                time: newIngredient.time,
+                alpha_acid: newIngredient.alpha_acid,
+                color: newIngredient.color,
+              } as CreateRecipeIngredientData
+            );
+
+            if (!validation.isValid) {
+              throw new Error(`Validation failed for ${newIngredient.name}: ${validation.errors.join(", ")}`);
+            }
+
+            // Add the new ingredient to the array
+            updatedIngredients.push(newIngredient);
+          } else {
+            // Handle existing ingredient updates
+            const existingIngredient = updatedIngredients.find(ing => ing.id === ingredientId);
+            if (!existingIngredient) {
+              throw new Error(`Ingredient with ID ${ingredientId} not found`);
+            }
+
+            // Validate the updated ingredient data
+            const validation = Services.ingredient.validateIngredientData(
+              existingIngredient.type,
+              {
+                ingredient_id: updatedData.ingredient_id || existingIngredient.ingredient_id,
+                amount: updatedData.amount || existingIngredient.amount,
+                unit: updatedData.unit || existingIngredient.unit,
+                use: updatedData.use || existingIngredient.use,
+                time: updatedData.time || existingIngredient.time,
+                alpha_acid: updatedData.alpha_acid || existingIngredient.alpha_acid,
+                color: updatedData.color || existingIngredient.color,
+              } as CreateRecipeIngredientData
+            );
+
+            if (!validation.isValid) {
+              throw new Error(`Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`);
+            }
+
+            // Update the ingredient in the array
+            updatedIngredients = updatedIngredients.map((ing) =>
+              ing.id === ingredientId ? { ...ing, ...updatedData } : ing
+            );
           }
-
-          // Validate the updated ingredient data
-          const validation = Services.ingredient.validateIngredientData(
-            existingIngredient.type,
-            {
-              ingredient_id: updatedData.ingredient_id || existingIngredient.ingredient_id,
-              amount: updatedData.amount || existingIngredient.amount,
-              unit: updatedData.unit || existingIngredient.unit,
-              use: updatedData.use || existingIngredient.use,
-              time: updatedData.time || existingIngredient.time,
-              alpha_acid: updatedData.alpha_acid || existingIngredient.alpha_acid,
-              color: updatedData.color || existingIngredient.color,
-            } as CreateRecipeIngredientData
-          );
-
-          if (!validation.isValid) {
-            throw new Error(`Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`);
-          }
-
-          // Update the ingredient in the array
-          updatedIngredients = updatedIngredients.map((ing) =>
-            ing.id === ingredientId ? { ...ing, ...updatedData } : ing
-          );
         }
 
         const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);

@@ -5,6 +5,7 @@ import BrewSessionService from "../services/BrewSessionService";
 import CompactRecipeHeader from "../components/CompactRecipeHeader";
 import CompactRecipeInfo from "../components/CompactRecipeInfo";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
+import RecipeActions from "../components/RecipeActions";
 import { Recipe, RecipeIngredient, BrewSession, BrewSessionSummary, ID } from "../types";
 import { formatGravity, formatAbv, formatEfficiency, formatPercentage } from "../utils/formatUtils";
 import "../styles/ViewRecipe.css";
@@ -337,6 +338,10 @@ const ViewRecipe: React.FC = () => {
             onUpdate={async () => {}}
             isEditing={false}
           />
+        </div>
+        
+        <div className="view-recipe-actions">
+          <RecipeActions recipe={recipe} showViewButton={false} />
         </div>
       </div>
     </div>

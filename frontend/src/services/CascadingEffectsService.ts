@@ -10,6 +10,9 @@ interface IngredientChange {
   field: string;
   currentValue: any;
   suggestedValue: any;
+  // For adding new ingredients
+  isNewIngredient?: boolean;
+  newIngredientData?: any;
 }
 
 /**
@@ -97,6 +100,25 @@ class CascadingEffectsService {
     let updatedIngredients = [...currentIngredients];
 
     for (const change of changes) {
+      // Handle new ingredient additions
+      if (change.isNewIngredient && change.newIngredientData) {
+        const newIngredient: RecipeIngredient = {
+          id: change.ingredientId,
+          ingredient_id: change.ingredientId,
+          name: change.newIngredientData.name,
+          type: 'grain',
+          amount: change.newIngredientData.amount,
+          unit: change.newIngredientData.unit,
+          grain_type: change.newIngredientData.grain_type,
+          color: change.newIngredientData.color,
+          potential: 1.035, // Default potential for specialty grains
+          use: 'mash'
+        };
+        updatedIngredients.push(newIngredient);
+        continue;
+      }
+      
+      // Handle existing ingredient modifications
       // Validate the suggested value before applying
       if (change.field === 'amount' && (
         !isFinite(change.suggestedValue) || 
