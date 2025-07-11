@@ -13,16 +13,7 @@ jest.mock('../../src/services/BeerStyleService', () => ({
   findMatchingStyles: jest.fn(),
 }));
 
-// Mock the StyleRangeIndicator component
-jest.mock('../../src/components/RecipeBuilder/BeerStyles/StyleRangeIndicator', () => {
-  return function MockStyleRangeIndicator({ metricType, currentValue, styleRange, label, unit = '' }: any) {
-    return (
-      <div data-testid={`style-range-${metricType}`}>
-        {label}: {currentValue}{unit} (Range: {styleRange?.min}-{styleRange?.max})
-      </div>
-    );
-  };
-});
+// Note: StyleRangeIndicator is no longer used in the component
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
@@ -66,11 +57,26 @@ describe('StyleAnalysis', () => {
     display_name: 'American IPA',
     category: 'IPA',
     subcategory: 'American IPA',
-    original_gravity: { min: 1.056, max: 1.070 },
-    final_gravity: { min: 1.008, max: 1.014 },
-    alcohol_by_volume: { min: 5.5, max: 7.5 },
-    international_bitterness_units: { min: 40, max: 70 },
-    color: { min: 6, max: 14 },
+    original_gravity: { 
+      minimum: { value: 1.056, unit: 'sg' },
+      maximum: { value: 1.070, unit: 'sg' }
+    },
+    final_gravity: { 
+      minimum: { value: 1.008, unit: 'sg' },
+      maximum: { value: 1.014, unit: 'sg' }
+    },
+    alcohol_by_volume: { 
+      minimum: { value: 5.5, unit: '%' },
+      maximum: { value: 7.5, unit: '%' }
+    },
+    international_bitterness_units: { 
+      minimum: { value: 40, unit: 'IBU' },
+      maximum: { value: 70, unit: 'IBU' }
+    },
+    color: { 
+      minimum: { value: 6, unit: 'SRM' },
+      maximum: { value: 14, unit: 'SRM' }
+    },
     description: 'A decidedly hoppy and bitter beer',
   };
 
@@ -98,6 +104,26 @@ describe('StyleAnalysis', () => {
         display_name: 'Specialty IPA',
         category: 'IPA',
         subcategory: 'Specialty IPA',
+        original_gravity: { 
+          minimum: { value: 1.056, unit: 'sg' },
+          maximum: { value: 1.070, unit: 'sg' }
+        },
+        final_gravity: { 
+          minimum: { value: 1.008, unit: 'sg' },
+          maximum: { value: 1.014, unit: 'sg' }
+        },
+        alcohol_by_volume: { 
+          minimum: { value: 5.5, unit: '%' },
+          maximum: { value: 7.5, unit: '%' }
+        },
+        international_bitterness_units: { 
+          minimum: { value: 40, unit: 'IBU' },
+          maximum: { value: 70, unit: 'IBU' }
+        },
+        color: { 
+          minimum: { value: 6, unit: 'SRM' },
+          maximum: { value: 14, unit: 'SRM' }
+        },
       },
       match_percentage: 85,
       matches: { og: true, fg: true, abv: false, ibu: true, srm: true },
@@ -117,12 +143,12 @@ describe('StyleAnalysis', () => {
 
   describe('Initial Rendering', () => {
     it('renders with title', () => {
-      render(<StyleAnalysis onStyleSuggestionSelect={mockOnStyleSuggestionSelect} />);
+      render(<StyleAnalysis onStyleSuggestionSelect={mockOnStyleSuggestionSelect} variant="main" />);
       expect(screen.getByText('Style Analysis')).toBeInTheDocument();
     });
 
     it('shows no metrics message when metrics are empty', () => {
-      render(<StyleAnalysis onStyleSuggestionSelect={mockOnStyleSuggestionSelect} />);
+      render(<StyleAnalysis onStyleSuggestionSelect={mockOnStyleSuggestionSelect} variant="main" />);
       expect(screen.getByText(/Add ingredients to your recipe to calculate metrics/)).toBeInTheDocument();
     });
 
@@ -131,7 +157,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={emptyMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
       
@@ -147,7 +174,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -155,12 +183,13 @@ describe('StyleAnalysis', () => {
     });
   });
 
-  describe('Style Suggestions (No Recipe Style)', () => {
+  describe('Style Suggestions (No Recipe Style - Main Variant)', () => {
     beforeEach(async () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -209,7 +238,7 @@ describe('StyleAnalysis', () => {
   });
 
   describe('Recipe Style Analysis', () => {
-    it('displays compact analysis for matching style', async () => {
+    it('displays basic analysis for matching style', async () => {
       render(
         <StyleAnalysis 
           recipe={mockRecipe}
@@ -223,13 +252,81 @@ describe('StyleAnalysis', () => {
         expect(screen.getByText('100% match')).toBeInTheDocument();
       });
 
-      // Should show compact view by default
-      expect(screen.getByText('▶')).toBeInTheDocument(); // Expand indicator
+      // Should show basic spec breakdown without ranges (sidebar variant)
+      expect(screen.getByText('OG')).toBeInTheDocument();
+      expect(screen.getByText('FG')).toBeInTheDocument();
+      expect(screen.getByText('ABV')).toBeInTheDocument();
+      expect(screen.getByText('IBU')).toBeInTheDocument();
+      expect(screen.getByText('SRM')).toBeInTheDocument();
     });
 
-    it('expands analysis on click', async () => {
-      const user = userEvent.setup();
-      
+    it('displays analysis with ranges in both variants when style is selected', async () => {
+      render(
+        <StyleAnalysis 
+          recipe={mockRecipe}
+          metrics={mockMetrics} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('American IPA')).toBeInTheDocument();
+        expect(screen.getByText('100% match')).toBeInTheDocument();
+      });
+
+      // Should show spec breakdown with ranges in both variants when style is selected
+      expect(screen.getByText('OG')).toBeInTheDocument();
+      expect(screen.getByText('FG')).toBeInTheDocument();
+      expect(screen.getByText('ABV')).toBeInTheDocument();
+      expect(screen.getByText('IBU')).toBeInTheDocument();
+      expect(screen.getByText('SRM')).toBeInTheDocument();
+    });
+
+    it('shows ranges in both variants when style is selected', async () => {
+      const { rerender } = render(
+        <StyleAnalysis 
+          recipe={mockRecipe}
+          metrics={mockMetrics} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="sidebar"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('American IPA')).toBeInTheDocument();
+      });
+
+      // Sidebar variant should show ranges when style is selected
+      expect(screen.getByText('OG')).toBeInTheDocument();
+      expect(screen.getByText('FG')).toBeInTheDocument();
+      expect(screen.getByText('ABV')).toBeInTheDocument();
+      expect(screen.getByText('IBU')).toBeInTheDocument();
+      expect(screen.getByText('SRM')).toBeInTheDocument();
+
+      // Switch to main variant
+      rerender(
+        <StyleAnalysis 
+          recipe={mockRecipe}
+          metrics={mockMetrics} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('American IPA')).toBeInTheDocument();
+      });
+
+      // Main variant should also show ranges
+      expect(screen.getByText('OG')).toBeInTheDocument();
+      expect(screen.getByText('FG')).toBeInTheDocument();
+      expect(screen.getByText('ABV')).toBeInTheDocument();
+      expect(screen.getByText('IBU')).toBeInTheDocument();
+      expect(screen.getByText('SRM')).toBeInTheDocument();
+    });
+
+    it('shows match indicators for all specs', async () => {
       render(
         <StyleAnalysis 
           recipe={mockRecipe}
@@ -242,16 +339,17 @@ describe('StyleAnalysis', () => {
         expect(screen.getByText('American IPA')).toBeInTheDocument();
       });
 
-      const compactView = screen.getByRole('button', { name: /american ipa/i });
-      await user.click(compactView);
-
-      expect(screen.getByText('▲')).toBeInTheDocument(); // Collapse indicator
-      expect(screen.getByText('Style Analysis: American IPA')).toBeInTheDocument();
-      expect(screen.getByText('Detailed Style Compliance')).toBeInTheDocument();
+      // Should show match indicators for all specs
+      expect(screen.getAllByText('✓')).toHaveLength(5); // All specs match in mockStyleMatch
     });
 
-    it('shows expanded analysis with range indicators', async () => {
-      const user = userEvent.setup();
+    it('handles partial match display correctly', async () => {
+      const partialMatch = {
+        matches: { og: true, fg: true, abv: false, ibu: false, srm: false },
+        percentage: 40,
+      };
+
+      (BeerStyleService.calculateStyleMatch as jest.Mock).mockReturnValue(partialMatch);
       
       render(
         <StyleAnalysis 
@@ -263,74 +361,42 @@ describe('StyleAnalysis', () => {
 
       await waitFor(() => {
         expect(screen.getByText('American IPA')).toBeInTheDocument();
+        expect(screen.getByText('40% match')).toBeInTheDocument();
       });
 
-      const compactView = screen.getByRole('button', { name: /american ipa/i });
-      await user.click(compactView);
-
-      // Check for range indicators
-      expect(screen.getByTestId('style-range-og')).toBeInTheDocument();
-      expect(screen.getByTestId('style-range-fg')).toBeInTheDocument();
-      expect(screen.getByTestId('style-range-abv')).toBeInTheDocument();
-      expect(screen.getByTestId('style-range-ibu')).toBeInTheDocument();
-      expect(screen.getByTestId('style-range-srm')).toBeInTheDocument();
+      // Should show correct match indicators
+      expect(screen.getAllByText('✓')).toHaveLength(2); // OG and FG match
+      expect(screen.getAllByText('✗')).toHaveLength(3); // ABV, IBU, SRM don't match
     });
 
-    it('collapses analysis on second click', async () => {
-      const user = userEvent.setup();
-      
+    it('sidebar variant does not render when no style is selected', async () => {
+      const { container } = render(
+        <StyleAnalysis 
+          metrics={mockMetrics} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="sidebar"
+        />
+      );
+
+      // Component should not render anything
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('main variant shows suggestions when no style is selected', async () => {
       render(
         <StyleAnalysis 
-          recipe={mockRecipe}
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
       await waitFor(() => {
-        expect(screen.getByText('American IPA')).toBeInTheDocument();
+        expect(screen.getByText('Suggested Styles Based on Current Metrics')).toBeInTheDocument();
       });
 
-      // Expand
-      const compactView = screen.getByRole('button', { name: /american ipa/i });
-      await user.click(compactView);
-
-      expect(screen.getByText('▲')).toBeInTheDocument();
-
-      // Collapse
-      const expandedHeader = screen.getByRole('button', { name: /style analysis: american ipa/i });
-      await user.click(expandedHeader);
-
-      expect(screen.getByText('▶')).toBeInTheDocument();
-    });
-
-    it('handles keyboard navigation for expand/collapse', async () => {
-      const user = userEvent.setup();
-      
-      render(
-        <StyleAnalysis 
-          recipe={mockRecipe}
-          metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
-        />
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('American IPA')).toBeInTheDocument();
-      });
-
-      const compactView = screen.getByRole('button', { name: /american ipa/i });
-      
-      // Test Enter key
-      compactView.focus();
-      await user.keyboard('{Enter}');
-      expect(screen.getByText('▲')).toBeInTheDocument();
-
-      // Test Space key
-      const expandedHeader = screen.getByRole('button', { name: /style analysis: american ipa/i });
-      expandedHeader.focus();
-      await user.keyboard(' ');
-      expect(screen.getByText('▶')).toBeInTheDocument();
+      expect(screen.getByText('American IPA')).toBeInTheDocument();
+      expect(screen.getByText('Specialty IPA')).toBeInTheDocument();
     });
 
     it('shows style not found message for unknown styles', async () => {
@@ -382,7 +448,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -418,7 +485,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -433,7 +501,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -565,7 +634,8 @@ describe('StyleAnalysis', () => {
       const { rerender } = render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -578,7 +648,8 @@ describe('StyleAnalysis', () => {
         <StyleAnalysis 
           recipe={mockRecipe}
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -602,7 +673,8 @@ describe('StyleAnalysis', () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
@@ -617,26 +689,27 @@ describe('StyleAnalysis', () => {
   });
 
   describe('Accessibility', () => {
-    it('has proper ARIA roles and keyboard support', async () => {
+    it('has proper heading structure with recipe style', async () => {
       render(
         <StyleAnalysis 
           recipe={mockRecipe}
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 
       await waitFor(() => {
-        const compactView = screen.getByRole('button', { name: /american ipa/i });
-        expect(compactView).toHaveAttribute('tabIndex', '0');
+        expect(screen.getByRole('heading', { level: 3, name: 'Style Analysis' })).toBeInTheDocument();
       });
     });
 
-    it('has proper heading structure', async () => {
+    it('has proper heading structure without recipe style', async () => {
       render(
         <StyleAnalysis 
           metrics={mockMetrics} 
-          onStyleSuggestionSelect={mockOnStyleSuggestionSelect} 
+          onStyleSuggestionSelect={mockOnStyleSuggestionSelect}
+          variant="main"
         />
       );
 

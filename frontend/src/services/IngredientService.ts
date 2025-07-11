@@ -350,7 +350,23 @@ class IngredientService {
   }
 
   private generateIngredientId(): string {
-    return `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Generate a more robust UUID-like ID that doesn't depend on timestamps
+    // Use multiple random components to ensure uniqueness even in bulk operations
+    const randomPart1 = Math.random().toString(36).substr(2, 9);
+    const randomPart2 = Math.random().toString(36).substr(2, 9);
+    const randomPart3 = Math.random().toString(36).substr(2, 9);
+    
+    // Use a global counter to ensure uniqueness across all instances
+    const globalCounter = IngredientService.getNextId();
+    
+    return `new-${randomPart1}-${randomPart2}-${randomPart3}-${globalCounter.toString(36)}`;
+  }
+
+  // Static counter shared across all instances to ensure uniqueness
+  private static globalIdCounter = 0;
+  
+  private static getNextId(): number {
+    return ++IngredientService.globalIdCounter;
   }
 
   private isCacheValid(): boolean {

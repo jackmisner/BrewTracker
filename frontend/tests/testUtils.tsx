@@ -2,6 +2,7 @@ import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { UnitProvider } from "../src/contexts/UnitContext";
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialEntries?: string[];
@@ -31,7 +32,9 @@ export function renderWithProviders(
     return (
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <UnitProvider>
+            {children}
+          </UnitProvider>
         </QueryClientProvider>
       </BrowserRouter>
     );
@@ -49,7 +52,10 @@ export const mockData = {
     style: "IPA",
     batch_size: 5,
     batch_size_unit: "gal" as const,
+    boil_time: 60,
+    efficiency: 75,
     is_public: false,
+    version: 1,
     estimated_og: 1.065,
     estimated_fg: 1.012,
     estimated_abv: 6.9,
@@ -57,6 +63,7 @@ export const mockData = {
     estimated_srm: 6.5,
     ingredients: [],
     created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
   }),
 
@@ -73,9 +80,12 @@ export const mockData = {
   }),
 
   ingredient: (type: string = "grain", overrides: Record<string, any> = {}) => ({
+    id: `test-ingredient-${Math.random().toString(36).substr(2, 9)}`,
     ingredient_id: 1,
     name: "Test Ingredient",
     type,
+    amount: 1,
+    unit: type === "grain" ? "lb" : type === "hop" ? "oz" : "pkg",
     ...(type === "grain" && {
       grain_type: "base_malt",
       potential: 1.037,
@@ -83,6 +93,8 @@ export const mockData = {
     }),
     ...(type === "hop" && {
       alpha_acid: 5.5,
+      use: "boil",
+      time: 60,
     }),
     ...(type === "yeast" && {
       attenuation: 81,

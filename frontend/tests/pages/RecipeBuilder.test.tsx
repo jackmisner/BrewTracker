@@ -3,11 +3,18 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
+import { UnitProvider } from "../../src/contexts/UnitContext";
 import RecipeBuilder from "../../src/pages/RecipeBuilder";
 import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
 
 // Mock the useRecipeBuilder hook
 jest.mock("../../src/hooks/useRecipeBuilder");
+
+// Mock UserSettingsService to prevent network calls
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
+  updateUserSettings: jest.fn(() => Promise.resolve()),
+}));
 
 // Mock BeerXML components and services
 jest.mock("../../src/components/BeerXML/BeerXMLImportExport", () => {
@@ -213,7 +220,13 @@ jest.mock(
 );
 
 const renderWithRouter = (component: any) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+  return render(
+    <BrowserRouter>
+      <UnitProvider>
+        {component}
+      </UnitProvider>
+    </BrowserRouter>
+  );
 };
 
 describe("RecipeBuilder", () => {

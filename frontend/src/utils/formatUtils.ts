@@ -101,9 +101,11 @@ export const getAppropriateUnit = (
   switch (measurementType) {
     case "weight":
       if (unitSystem === "metric") {
+        // For grain amounts, use smaller units for amounts under 1kg
         return amount >= 1000 ? "kg" : "g";
       } else {
-        return amount >= 16 ? "lb" : "oz";
+        // For grain amounts, use smaller units for amounts under 1lb
+        return amount >= 1 ? "lb" : "oz";
       }
     case "hop_weight":
       return unitSystem === "metric" ? "g" : "oz";
@@ -236,6 +238,55 @@ export function formatWeight(
   }
 }
 
+// Special grain weight formatting that prefers smaller units for small amounts
+export function formatGrainWeight(
+  amount: number | string | null | undefined,
+  unit: WeightUnit | string,
+  unitSystem: UnitSystem = "imperial"
+): string {
+  if (!amount && amount !== 0) return "-";
+
+  const numAmount = parseFloat(amount.toString());
+  if (isNaN(numAmount)) return "-";
+
+  // Only convert if we're crossing unit systems
+  const metricWeight = ["g", "kg"];
+  const imperialWeight = ["oz", "lb"];
+
+  const needsConversion =
+    (metricWeight.includes(unit) && unitSystem === "imperial") ||
+    (imperialWeight.includes(unit) && unitSystem === "metric");
+
+  if (needsConversion) {
+    const targetUnit = getAppropriateUnit(unitSystem, "weight", numAmount);
+    const converted = convertUnit(numAmount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "weight");
+  } else {
+    // For grain amounts, be more conservative about converting to larger units
+    let targetUnit = unit;
+    
+    // Convert lb to oz for amounts less than 1 lb
+    if (unit === "lb" && numAmount < 1) {
+      targetUnit = "oz";
+    }
+    // Convert kg to g for amounts less than 1 kg
+    else if (unit === "kg" && numAmount < 1) {
+      targetUnit = "g";
+    }
+    // Convert g to kg only for very large amounts
+    else if (unit === "g" && numAmount >= 1000) {
+      targetUnit = "kg";
+    }
+    // Convert oz to lb only for amounts >= 16 oz
+    else if (unit === "oz" && numAmount >= 16) {
+      targetUnit = "lb";
+    }
+
+    const converted = convertUnit(numAmount, unit, targetUnit);
+    return formatValueStandalone(converted.value, converted.unit, "weight");
+  }
+}
+
 export function formatVolume(
   amount: number | string | null | undefined,
   unit: VolumeUnit | string,
@@ -331,6 +382,10 @@ export function formatIngredientAmount(
     if (ingredientType === "hop") {
       return formatWeight(numAmount, unit as WeightUnit, unitSystem);
     }
+    // Special handling for grain amounts - prefer smaller units for small amounts
+    if (ingredientType === "grain") {
+      return formatGrainWeight(numAmount, unit as WeightUnit, unitSystem);
+    }
     return formatWeight(numAmount, unit as WeightUnit, unitSystem);
   } else if (isVolume) {
     return formatVolume(numAmount, unit as VolumeUnit, unitSystem);
@@ -409,7 +464,12 @@ function shouldConvertUnit(amount: number, fromUnit: string, toUnit: string): bo
   if (fromUnit === "oz" && toUnit === "lb" && amount < 16) return false;
   if (fromUnit === "ml" && toUnit === "l" && amount < 1000) return false;
 
-  // NEVER convert larger units to smaller ones within same system
+  // Allow conversion of larger units to smaller ones for grain amounts
+  // This is useful for specialty grains that are often less than 1 lb/kg
+  if (fromUnit === "kg" && toUnit === "g" && amount < 1) return true;
+  if (fromUnit === "lb" && toUnit === "oz" && amount < 1) return true;
+  
+  // NEVER convert larger units to smaller ones for other cases
   if (fromUnit === "kg" && toUnit === "g") return false;
   if (fromUnit === "lb" && toUnit === "oz") return false;
   if (fromUnit === "l" && toUnit === "ml") return false;

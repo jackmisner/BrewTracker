@@ -15,6 +15,14 @@ import {
   formatIngredientAmount,
   formatTime,
   getUnitAbbreviation,
+  formatEfficiency,
+  formatPercentage,
+  formatAttenuation,
+  formatGrainWeight,
+  formatIngredientAmountWithContext,
+  convertUnit,
+  getAppropriateUnit,
+  formatValueStandalone,
 } from "../../src/utils/formatUtils";
 
 describe("formatUtils", () => {
@@ -293,6 +301,167 @@ describe("formatUtils", () => {
       expect(formatTime(1500)).toBe("1 day"); // 1500 minutes rounds to 1 day
       expect(formatTime(2000)).toBe("1 day"); // 2000 minutes rounds to 1 day
       expect(formatTime(2160)).toBe("2 days"); // 2160 minutes rounds to 2 days
+    });
+  });
+
+  describe("formatEfficiency", () => {
+    test("formats efficiency values correctly", () => {
+      expect(formatEfficiency(75)).toBe("75.0%");
+      expect(formatEfficiency(80.5)).toBe("80.5%");
+      expect(formatEfficiency("72")).toBe("72.0%");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatEfficiency(null)).toBe("0.0%");
+      expect(formatEfficiency(undefined)).toBe("0.0%");
+      expect(formatEfficiency(0)).toBe("0.0%");
+    });
+  });
+
+  describe("formatPercentage", () => {
+    test("formats percentage values correctly", () => {
+      expect(formatPercentage(50, 1)).toBe("50.0%");
+      expect(formatPercentage(33.333, 2)).toBe("33.33%");
+      expect(formatPercentage(100, 0)).toBe("100%");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatPercentage(null, 1)).toBe("0.0%");
+      expect(formatPercentage(undefined, 1)).toBe("0.0%");
+      expect(formatPercentage(0, 1)).toBe("0.0%");
+    });
+  });
+
+  describe("formatAttenuation", () => {
+    test("formats attenuation values correctly", () => {
+      expect(formatAttenuation(75)).toBe("75.0%");
+      expect(formatAttenuation(80.5)).toBe("80.5%");
+      expect(formatAttenuation("72")).toBe("72.0%");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatAttenuation(null)).toBe("0.0%");
+      expect(formatAttenuation(undefined)).toBe("0.0%");
+      expect(formatAttenuation(0)).toBe("0.0%");
+    });
+  });
+
+  describe("formatGrainWeight", () => {
+    test("formats grain weight in imperial system", () => {
+      expect(formatGrainWeight(1000, "g", "imperial")).toBe("2.2 lb");
+      expect(formatGrainWeight(2, "kg", "imperial")).toBe("4.4 lb");
+    });
+
+    test("formats grain weight in metric system", () => {
+      // Adjusted expectations based on actual conversion behavior
+      expect(formatGrainWeight(2.2, "lb", "metric")).toBe("997.9 g"); // 2.2 lb converts to ~998g, not 1kg
+      expect(formatGrainWeight(16, "oz", "metric")).toBe("453.59 g"); // 16 oz converts to ~454g
+    });
+
+    test("handles edge cases", () => {
+      expect(formatGrainWeight(null, "g", "metric")).toBe("-");
+      expect(formatGrainWeight(undefined, "g", "metric")).toBe("-");
+      expect(formatGrainWeight(0, "g", "metric")).toBe("0 g");
+    });
+  });
+
+  describe("convertUnit", () => {
+    test("converts kg to lb correctly", () => {
+      const result = convertUnit(1, "kg", "lb");
+      expect(result.value).toBeCloseTo(2.2, 1);
+      expect(result.unit).toBe("lb");
+    });
+
+    test("converts g to oz correctly", () => {
+      const result = convertUnit(28.35, "g", "oz");
+      expect(result.value).toBeCloseTo(1, 1);
+      expect(result.unit).toBe("oz");
+    });
+
+    test("converts gallon to liter correctly", () => {
+      const result = convertUnit(1, "gal", "l");
+      expect(result.value).toBeCloseTo(3.785, 1);
+      expect(result.unit).toBe("l");
+    });
+
+    test("handles same unit conversion", () => {
+      const result = convertUnit(5, "kg", "kg");
+      expect(result.value).toBe(5);
+      expect(result.unit).toBe("kg");
+    });
+
+    test("handles invalid input", () => {
+      const result = convertUnit("invalid", "kg", "lb");
+      expect(result.value).toBe(0);
+      expect(result.unit).toBe("lb");
+    });
+  });
+
+  describe("getAppropriateUnit", () => {
+    test("gets appropriate unit for grain in imperial", () => {
+      const result = getAppropriateUnit("imperial", "weight", 0.5);
+      expect(result).toBe("oz"); // Less than 1 lb, so should be oz
+    });
+
+    test("gets appropriate unit for grain in metric", () => {
+      const result = getAppropriateUnit("metric", "weight", 500);
+      expect(result).toBe("g"); // Less than 1000g, so should be g
+    });
+
+    test("keeps larger amounts in original unit", () => {
+      const result = getAppropriateUnit("imperial", "weight", 2);
+      expect(result).toBe("lb"); // Greater than 1, so should be lb
+    });
+
+    test("gets appropriate unit for volume", () => {
+      expect(getAppropriateUnit("metric", "volume", 500)).toBe("ml");
+      expect(getAppropriateUnit("metric", "volume", 1500)).toBe("l");
+      expect(getAppropriateUnit("imperial", "volume", 1)).toBe("gal");
+    });
+  });
+
+  describe("formatValueStandalone", () => {
+    test("formats values for weight", () => {
+      expect(formatValueStandalone(2.2, "lb", "weight")).toBe("2.2 lb");
+      expect(formatValueStandalone(1, "kg", "weight")).toBe("1 kg");
+    });
+
+    test("formats values for volume", () => {
+      expect(formatValueStandalone(1, "gal", "volume")).toBe("1 gal");
+      expect(formatValueStandalone(3.785, "l", "volume")).toBe("3.8 l");
+    });
+
+    test("handles edge cases", () => {
+      expect(formatValueStandalone("invalid", "kg", "weight")).toBe("0 kg");
+      expect(formatValueStandalone(0, "kg", "weight")).toBe("0 kg");
+    });
+  });
+
+  describe("formatIngredientAmountWithContext", () => {
+    test("formats ingredient amounts with context", () => {
+      const result = formatIngredientAmountWithContext(
+        2.2, "lb", "grain", "imperial", { batch_size: 5, batch_size_unit: "gal" }
+      );
+      expect(result).toContain("2.2 lb");
+    });
+
+    test("handles different ingredient types", () => {
+      const hopResult = formatIngredientAmountWithContext(
+        1, "oz", "hop", "imperial", { batch_size: 5, batch_size_unit: "gal" }
+      );
+      expect(hopResult).toContain("1 oz");
+
+      const yeastResult = formatIngredientAmountWithContext(
+        1, "pkg", "yeast", "imperial", { batch_size: 5, batch_size_unit: "gal" }
+      );
+      expect(yeastResult).toContain("1 pkg");
+    });
+
+    test("handles edge cases", () => {
+      const result = formatIngredientAmountWithContext(
+        null, "lb", "grain", "imperial", { batch_size: 5, batch_size_unit: "gal" }
+      );
+      expect(result).toBe("-");
     });
   });
 });

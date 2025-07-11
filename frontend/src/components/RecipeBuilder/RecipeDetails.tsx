@@ -211,7 +211,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               className="form-control"
               min="15"
               max="180"
-              step="15"
+              step="1"
               placeholder="60"
               disabled={saving}
             />

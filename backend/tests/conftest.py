@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from mongoengine import connect, disconnect
 
@@ -107,3 +109,20 @@ def clean_db():
 
     # Clean up after each test (optional, since we clean before each test)
     # This ensures no test data persists
+
+
+@pytest.fixture(autouse=True)
+def mock_requests():
+    """Mock all requests.get calls to prevent network calls during tests"""
+    with patch("routes.auth.requests.get") as mock_get:
+        # Mock successful geo lookup response
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda: {"countryCode": "US", "timezone": "America/New_York"},
+            },
+        )()
+        mock_get.return_value = mock_response
+        yield mock_get

@@ -579,7 +579,7 @@ describe("RecipeDetails", () => {
 
       expect(boilTimeInput).toHaveAttribute("min", "15");
       expect(boilTimeInput).toHaveAttribute("max", "180");
-      expect(boilTimeInput).toHaveAttribute("step", "15");
+      expect(boilTimeInput).toHaveAttribute("step", "1");
 
       expect(efficiencyInput).toHaveAttribute("min", "50");
       expect(efficiencyInput).toHaveAttribute("max", "95");

@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import BeerStyleService from "../../../services/BeerStyleService";
-import StyleRangeIndicator from "./StyleRangeIndicator";
 import { Recipe, RecipeMetrics } from "../../../types";
 import { BeerStyleGuide, StyleSuggestion as BeerStyleSuggestion } from "../../../types/beer-styles";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+} from "../../../utils/formatUtils";
 
 interface StyleMatch {
   matches: Record<string, boolean>;
@@ -21,18 +26,19 @@ interface StyleAnalysisProps {
   recipe?: Recipe;
   metrics?: RecipeMetrics;
   onStyleSuggestionSelect: (styleName: string) => void;
+  variant?: 'main' | 'sidebar';
 }
 
 const StyleAnalysis: React.FC<StyleAnalysisProps> = ({ 
   recipe, 
   metrics, 
-  onStyleSuggestionSelect 
+  onStyleSuggestionSelect,
+  variant = 'sidebar'
 }) => {
   const [analysis, setAnalysis] = useState<StyleAnalysisResult | null>(null);
   const [suggestions, setSuggestions] = useState<BeerStyleSuggestion[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const loadRealtimeStyleAnalysis = useCallback(async (): Promise<void> => {
     if (!recipe?.style || !metrics) return;
@@ -103,11 +109,11 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     if (metrics && recipe?.style) {
       // Real-time style analysis based on current metrics and selected style
       loadRealtimeStyleAnalysis();
-    } else if (metrics && !recipe?.style) {
-      // Only load suggestions when no style is selected
+    } else if (metrics && !recipe?.style && variant === 'main') {
+      // Only load suggestions when no style is selected and in main variant
       loadStyleSuggestionsOnly();
     }
-  }, [recipe?.style, metrics, loadRealtimeStyleAnalysis, loadStyleSuggestionsOnly]);
+  }, [recipe?.style, metrics, variant, loadRealtimeStyleAnalysis, loadStyleSuggestionsOnly]);
 
   const getMatchStatusColor = (matches: Record<string, boolean>): string => {
     const matchCount = Object.values(matches).filter(Boolean).length;
@@ -119,44 +125,71 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     return "danger";
   };
 
-  const getMatchStatusText = (matches: Record<string, boolean>): string => {
-    const matchCount = Object.values(matches).filter(Boolean).length;
-    const totalSpecs = Object.keys(matches).length;
-    return `${matchCount}/${totalSpecs} specs match`;
+
+  // Helper function to format values for specific spec types
+  const formatValueForSpec = (spec: string, value: number): string => {
+    switch (spec) {
+      case 'og':
+      case 'fg':
+        return formatGravity(value);
+      case 'abv':
+        return formatAbv(value);
+      case 'ibu':
+        return formatIbu(value);
+      case 'srm':
+        return formatSrm(value);
+      default:
+        return value.toFixed(1);
+    }
   };
 
-  const toggleExpanded = (): void => {
-    setIsExpanded(!isExpanded);
+  // Helper function to format style ranges for spec breakdown
+  const formatStyleRange = (spec: string, style: BeerStyleGuide): string => {
+    let range;
+    switch (spec) {
+      case 'og':
+        range = style.original_gravity;
+        break;
+      case 'fg':
+        range = style.final_gravity;
+        break;
+      case 'abv':
+        range = style.alcohol_by_volume;
+        break;
+      case 'ibu':
+        range = style.international_bitterness_units;
+        break;
+      case 'srm':
+        range = style.color;
+        break;
+      default:
+        return '';
+    }
+    
+    if (!range?.minimum?.value || !range?.maximum?.value) return '';
+    
+    const min = formatValueForSpec(spec, range.minimum.value);
+    const max = formatValueForSpec(spec, range.maximum.value);
+    return `${min} - ${max}`;
   };
 
-  const renderCompactAnalysis = (): React.ReactElement | null => {
+
+  const renderStyleAnalysis = (): React.ReactElement | null => {
     if (!analysis?.found || !analysis.match_result) return null;
 
     const { matches, percentage } = analysis.match_result;
 
     return (
-      <div
-        className="style-analysis-compact"
-        onClick={toggleExpanded}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleExpanded();
-          }
-        }}
-      >
-        <div className="compact-content">
-          <span className="compact-style-name">{recipe?.style}</span>
-          <span
-            className={`compact-match-percentage ${getMatchStatusColor(
-              matches
-            )}`}
-          >
-            {Math.round(percentage)}% match
-          </span>
-          <span className="expand-indicator">{isExpanded ? "▼" : "▶"}</span>
+      <div className="style-analysis-result">
+        <div className="style-analysis-content">
+          <div className="style-match-header">
+            <span className="style-name">{recipe?.style}</span>
+            <span
+              className={`match-percentage ${getMatchStatusColor(matches)}`}
+            >
+              {Math.round(percentage)}% match
+            </span>
+          </div>
           <div className="spec-breakdown">
             {Object.entries(analysis.match_result.matches).map(
               ([spec, matches]) => (
@@ -166,6 +199,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
                 >
                   <span className="spec-name">{spec.toUpperCase()}</span>
                   <span className="match-indicator">{matches ? "✓" : "✗"}</span>
+                  <span className="spec-range">{formatStyleRange(spec, analysis.style!)}</span>
                 </div>
               )
             )}
@@ -175,112 +209,11 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     );
   };
 
-  const renderExpandedAnalysis = (): React.ReactElement | null => {
-    if (!analysis?.found || !analysis.match_result) return null;
 
-    return (
-      <div className="style-analysis-expanded">
-        <div
-          className="expanded-header"
-          onClick={toggleExpanded}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              toggleExpanded();
-            }
-          }}
-        >
-          <h4>Style Analysis: {recipe?.style}</h4>
-          <span className="collapse-indicator">▲</span>
-        </div>
-
-        <div className="style-match-result">
-          <div
-            className={`match-status ${getMatchStatusColor(
-              analysis.match_result.matches
-            )}`}
-          >
-            <span className="match-percentage">
-              {Math.round(analysis.match_result.percentage)}% match
-            </span>
-            <span className="match-details">
-              {getMatchStatusText(analysis.match_result.matches)}
-            </span>
-          </div>
-
-          <div className="spec-breakdown">
-            {Object.entries(analysis.match_result.matches).map(
-              ([spec, matches]) => (
-                <div
-                  key={spec}
-                  className={`spec-match ${matches ? "match" : "no-match"}`}
-                >
-                  <span className="spec-name">{spec.toUpperCase()}</span>
-                  <span className="match-indicator">{matches ? "✓" : "✗"}</span>
-                </div>
-              )
-            )}
-          </div>
-
-          {/* Visual range indicators for detailed analysis */}
-          {analysis.style && metrics && (
-            <div className="detailed-style-analysis">
-              <h5>Detailed Style Compliance</h5>
-              <div className="range-indicators">
-                {analysis.style.original_gravity && (
-                  <StyleRangeIndicator
-                    metricType="og"
-                    currentValue={metrics.og}
-                    styleRange={analysis.style.original_gravity}
-                    label="Original Gravity"
-                  />
-                )}
-
-                {analysis.style.final_gravity && (
-                  <StyleRangeIndicator
-                    metricType="fg"
-                    currentValue={metrics.fg}
-                    styleRange={analysis.style.final_gravity}
-                    label="Final Gravity"
-                  />
-                )}
-
-                {analysis.style.alcohol_by_volume && (
-                  <StyleRangeIndicator
-                    metricType="abv"
-                    currentValue={metrics.abv}
-                    styleRange={analysis.style.alcohol_by_volume}
-                    label="Alcohol by Volume"
-                    unit="%"
-                  />
-                )}
-
-                {analysis.style.international_bitterness_units && (
-                  <StyleRangeIndicator
-                    metricType="ibu"
-                    currentValue={metrics.ibu}
-                    styleRange={analysis.style.international_bitterness_units}
-                    label="International Bitterness Units"
-                  />
-                )}
-
-                {analysis.style.color && (
-                  <StyleRangeIndicator
-                    metricType="srm"
-                    currentValue={metrics.srm}
-                    styleRange={analysis.style.color}
-                    label="Color (SRM)"
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
+  // Sidebar variant should not render when no style is selected
+  if (variant === 'sidebar' && !recipe?.style) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -324,13 +257,12 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     <div className="style-analysis">
       <h3 className="analysis-title">Style Analysis</h3>
 
-      {/* Current Style Analysis - with collapsible view */}
+      {/* Current Style Analysis */}
       {recipe?.style && analysis && (
         <div className="current-style-analysis">
           {analysis.found ? (
             <div className="style-analysis-container">
-              {/* Show compact or expanded view based on state */}
-              {isExpanded ? renderExpandedAnalysis() : renderCompactAnalysis()}
+              {renderStyleAnalysis()}
             </div>
           ) : (
             <div className="style-not-found">
@@ -343,8 +275,8 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
         </div>
       )}
 
-      {/* Style suggestions - only show when no style is selected */}
-      {!recipe?.style && suggestions.length > 0 && (
+      {/* Style suggestions - only show when no style is selected and in main variant */}
+      {variant === 'main' && !recipe?.style && suggestions.length > 0 && (
         <div className="style-suggestions">
           <h4>Suggested Styles Based on Current Metrics</h4>
           <p className="suggestions-help">
@@ -396,7 +328,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       )}
 
       {/* No matches */}
-      {suggestions.length === 0 && !loading && !error && !recipe?.style && (
+      {variant === 'main' && suggestions.length === 0 && !loading && !error && !recipe?.style && (
         <div className="no-suggestions">
           <p>
             No close style matches found. Your recipe may be a unique creation!

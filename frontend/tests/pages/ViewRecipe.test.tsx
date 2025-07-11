@@ -14,6 +14,17 @@ import BrewSessionService from "../../src/services/BrewSessionService";
 // Mock the services
 jest.mock("../../src/services/RecipeService");
 jest.mock("../../src/services/BrewSessionService");
+jest.mock("../../src/services/BeerStyleService", () => ({
+  getAllStylesList: jest.fn(() => Promise.resolve([])),
+  getStyleCategories: jest.fn(() => Promise.resolve({})),
+  getRecipeStyleAnalysis: jest.fn(() => Promise.resolve(null)),
+  findMatchingStyles: jest.fn(() => Promise.resolve([])),
+}));
+
+jest.mock("../../src/services/UserSettingsService", () => ({
+  getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
+  updateUserSettings: jest.fn(() => Promise.resolve()),
+}));
 
 // Mock react-router hooks
 const mockNavigate = jest.fn();
@@ -244,7 +255,7 @@ describe("ViewRecipe", () => {
       await waitFor(() => {
         expect(screen.getByText("Test Imperial IPA")).toBeInTheDocument();
         expect(screen.getByText("Imperial IPA")).toBeInTheDocument();
-        expect(screen.getByText("Version: 2")).toBeInTheDocument();
+        expect(screen.getByText("Version 2")).toBeInTheDocument();
       });
     });
 
@@ -254,9 +265,9 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("5.5 gallons")).toBeInTheDocument();
-        expect(screen.getByText("90 minutes")).toBeInTheDocument();
-        expect(screen.getByText("78%")).toBeInTheDocument();
+        expect(screen.getByText("5.5 gal")).toBeInTheDocument();
+        expect(screen.getByText("90 min")).toBeInTheDocument();
+        expect(screen.getByText("78.0%")).toBeInTheDocument();
       });
     });
 
@@ -276,35 +287,28 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        const metricsSection = screen.getByTestId("recipe-metrics");
-        expect(
-          within(metricsSection).getByTestId("recipe-og")
-        ).toHaveTextContent("Recipe OG: 1.075");
-        expect(
-          within(metricsSection).getByTestId("recipe-fg")
-        ).toHaveTextContent("Recipe FG: 1.012");
-        expect(
-          within(metricsSection).getByTestId("recipe-abv")
-        ).toHaveTextContent("Recipe ABV: 8.3");
-        expect(
-          within(metricsSection).getByTestId("recipe-ibu")
-        ).toHaveTextContent("Recipe IBU: 85");
-        expect(
-          within(metricsSection).getByTestId("recipe-srm")
-        ).toHaveTextContent("Recipe SRM: 7.2");
+        // Check metrics are displayed in the header
+        expect(screen.getByText("1.075")).toBeInTheDocument();
+        expect(screen.getByText("1.012")).toBeInTheDocument();
+        expect(screen.getByText("8.3%")).toBeInTheDocument();
+        expect(screen.getByText("85")).toBeInTheDocument();
+        expect(screen.getByText("7.2")).toBeInTheDocument();
       });
     });
 
-    it("displays ingredients grouped by type", async () => {
+    it("displays ingredients in table format", async () => {
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Grain")).toBeInTheDocument();
-        expect(screen.getByText("Hop")).toBeInTheDocument();
-        expect(screen.getByText("Yeast")).toBeInTheDocument();
+        // Check table headers
+        expect(screen.getByText("Ingredient")).toBeInTheDocument();
+        expect(screen.getByText("Amount")).toBeInTheDocument();
+        expect(screen.getByText("Use")).toBeInTheDocument();
+        expect(screen.getByText("Time")).toBeInTheDocument();
 
+        // Check ingredient names and details
         expect(screen.getByText("Pale Malt")).toBeInTheDocument();
         expect(screen.getByText("10 lbs")).toBeInTheDocument();
 
@@ -333,7 +337,7 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("version-history")).toBeInTheDocument();
+        expect(screen.getByText("Version 2")).toBeInTheDocument();
       });
     });
 
@@ -358,7 +362,7 @@ describe("ViewRecipe", () => {
       await waitFor(() => {
         expect(screen.getByText("Basic Recipe")).toBeInTheDocument();
         expect(
-          screen.getByText("No ingredients added to this recipe.")
+          screen.getByText("No ingredients added yet.")
         ).toBeInTheDocument();
       });
 
@@ -539,7 +543,7 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-actions")).toBeInTheDocument();
+        expect(screen.getByText("Brew This Recipe")).toBeInTheDocument();
       });
 
       const brewButton = screen.getByText("Brew This Recipe");
@@ -556,7 +560,7 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-actions")).toBeInTheDocument();
+        expect(screen.getByText("Edit Recipe")).toBeInTheDocument();
       });
 
       const editButton = screen.getByText("Edit Recipe");
@@ -784,8 +788,9 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("recipe-actions")).toBeInTheDocument();
-        expect(screen.getByTestId("recipe-metrics")).toBeInTheDocument();
+        // Check for action buttons
+        expect(screen.getByText("Brew This Recipe")).toBeInTheDocument();
+        expect(screen.getByText("Edit Recipe")).toBeInTheDocument();
       });
     });
   });

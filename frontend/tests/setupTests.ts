@@ -196,3 +196,65 @@ jest.mock("recharts", () => {
       mockReact.createElement("div", { "data-testid": "responsive-container" }, children),
   };
 });
+
+// Suppress expected console warnings during tests
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+console.error = (...args: any[]) => {
+  const message = args[0];
+  
+  // Suppress React act() warnings - these are expected in test environment
+  if (typeof message === 'string' && message.includes('An update to') && message.includes('inside a test was not wrapped in act(...)')) {
+    return;
+  }
+  
+  // Suppress CORS/Network errors from API calls during tests
+  if (typeof message === 'string' && (
+    message.includes('Cross origin') ||
+    message.includes('Network Error') ||
+    message.includes('Error fetching') ||
+    message.includes('AxiosError')
+  )) {
+    return;
+  }
+  
+  // Suppress expected service errors during tests
+  if (typeof message === 'string' && (
+    message.includes('Error fetching beer styles') ||
+    message.includes('Error fetching all yeast analytics') ||
+    message.includes('Failed to load') ||
+    message.includes('Error getting style-specific analysis')
+  )) {
+    return;
+  }
+  
+  // Allow all other console.error messages to pass through
+  originalConsoleError.apply(console, args);
+};
+
+console.warn = (...args: any[]) => {
+  const message = args[0];
+  
+  // Suppress React development warnings that are expected in tests
+  if (typeof message === 'string' && (
+    message.includes('React Hook') ||
+    message.includes('Warning: ReactDOM.render') ||
+    message.includes('Warning: componentWillMount') ||
+    message.includes('Warning: componentWillReceiveProps')
+  )) {
+    return;
+  }
+  
+  // Suppress expected service warnings during tests
+  if (typeof message === 'string' && (
+    message.includes('Failed to load unit preferences') ||
+    message.includes('Failed to get analytics') ||
+    message.includes('using default')
+  )) {
+    return;
+  }
+  
+  // Allow all other console.warn messages to pass through
+  originalConsoleWarn.apply(console, args);
+};

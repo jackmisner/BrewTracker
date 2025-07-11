@@ -179,6 +179,37 @@ describe("IngredientService", () => {
         attenuation: 81,
       });
     });
+
+    test("generates unique IDs for multiple ingredients", () => {
+      // Create multiple ingredients rapidly to test ID uniqueness
+      const ingredientData = {
+        ingredient_id: 2,
+        amount: 1,
+        unit: "oz",
+        use: "boil",
+        time: 60,
+      };
+
+      const ingredients = [];
+      for (let i = 0; i < 10; i++) {
+        const result = ingredientService.createRecipeIngredient(
+          "hop",
+          ingredientData,
+          availableIngredients
+        );
+        ingredients.push(result);
+      }
+
+      // Check that all IDs are unique
+      const ids = ingredients.map(ing => ing.id);
+      const uniqueIds = [...new Set(ids)];
+      expect(uniqueIds).toHaveLength(10);
+      
+      // Check that all IDs follow the expected pattern (new-random-random-random-counter)
+      ids.forEach(id => {
+        expect(id).toMatch(/^new-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/);
+      });
+    });
   });
 
   describe("scaleIngredients", () => {
