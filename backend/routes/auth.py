@@ -2,25 +2,59 @@ from datetime import UTC, datetime, timedelta
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+import requests
 
-from models.mongo_models import User
+from models.mongo_models import User, UserSettings
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def get_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        return request.headers.getlist("X-Forwarded-For")[0]
+    return request.remote_addr
+
+
+def get_geo_info(ip):
+    try:
+        res = requests.get(f"http://ip-api.com/json/{ip}")
+        if res.status_code == 200:
+            data = res.json()
+            return {
+                "country_code": data.get("countryCode"),
+                "timezone": data.get("timezone"),
+            }
+    except Exception as e:
+        print(f"[IP Geo] Lookup failed: {e}")
+    return {"country_code": None, "timezone": "UTC"}
 
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
 
-    # Check if user exists
     if User.objects(username=data.get("username")).first():
         return jsonify({"error": "Username already exists"}), 400
 
     if User.objects(email=data.get("email")).first():
         return jsonify({"error": "Email already exists"}), 400
 
-    # Create new user
-    user = User(username=data.get("username"), email=data.get("email"))
+    # Get user IP and geo info
+    ip = get_ip()
+    geo = get_geo_info(ip)
+    use_metric = geo["country_code"] != "US"
+
+    # Dynamically configure UserSettings
+    settings = UserSettings(
+        preferred_units="metric" if use_metric else "imperial",
+        default_batch_size=19.0 if use_metric else 5.0,
+        timezone=geo["timezone"],
+    )
+
+    # Create and save user
+    user = User(
+        username=data.get("username"), email=data.get("email"), settings=settings
+    )
     user.set_password(data.get("password"))
     user.save()
 
