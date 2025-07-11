@@ -1,8 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
+import requests
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
-import requests
 
 from models.mongo_models import User, UserSettings
 
