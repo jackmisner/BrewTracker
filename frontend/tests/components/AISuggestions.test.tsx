@@ -95,8 +95,34 @@ describe('AISuggestions Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetAllStylesList.mockClear();
-    mockCalculateStyleMatch.mockClear();
+    
+    // Setup BeerStyleService mocks
+    mockGetAllStylesList.mockResolvedValue([
+      {
+        style_guide_id: 'american-ipa',
+        style_id: '21A',
+        name: 'American IPA',
+        display_name: 'American IPA',
+        category: 'IPA',
+        category_id: '21',
+        category_name: 'American IPA',
+        overall_impression: 'A hoppy American ale',
+        original_gravity: { minimum: { value: 1.056, unit: 'SG' }, maximum: { value: 1.070, unit: 'SG' } },
+        final_gravity: { minimum: { value: 1.008, unit: 'SG' }, maximum: { value: 1.014, unit: 'SG' } },
+        alcohol_by_volume: { minimum: { value: 5.5, unit: '%' }, maximum: { value: 7.5, unit: '%' } },
+        international_bitterness_units: { minimum: { value: 40, unit: 'IBU' }, maximum: { value: 70, unit: 'IBU' } },
+        color: { minimum: { value: 6.0, unit: 'SRM' }, maximum: { value: 14.0, unit: 'SRM' } },
+      }
+    ]);
+    
+    mockCalculateStyleMatch.mockReturnValue({
+      matches: { og: true, fg: true, abv: true, ibu: true, srm: true },
+      percentage: 95,
+      matchingSpecs: 5,
+      totalSpecs: 5
+    });
+    
+    // Setup UserSettingsService mocks
     mockGetUserSettings.mockResolvedValue({
       settings: { preferred_units: 'imperial' },
     });
@@ -141,12 +167,11 @@ describe('AISuggestions Component', () => {
     );
 
     await waitFor(() => {
-      const toggleButton = screen.queryByRole('button');
-      if (toggleButton && toggleButton.textContent === '−') {
-        // Component is expanded, test collapsing
-        fireEvent.click(toggleButton);
-        expect(toggleButton.textContent).toBe('+');
-      }
+      // Find the toggle button specifically 
+      const toggleButton = screen.getByText('−');
+      // Component is expanded, test collapsing
+      fireEvent.click(toggleButton);
+      expect(screen.getByText('+')).toBeInTheDocument();
     });
   });
 
