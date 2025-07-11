@@ -265,7 +265,7 @@ describe("ViewRecipe", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("5.5 gallons")).toBeInTheDocument();
+        expect(screen.getByText("5.5 gal")).toBeInTheDocument();
         expect(screen.getByText("90 min")).toBeInTheDocument();
         expect(screen.getByText("78.0%")).toBeInTheDocument();
       });

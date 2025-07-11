@@ -17,7 +17,7 @@ const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
         <div className="compact-recipe-info-item">
           <span className="compact-recipe-info-label">Batch Size</span>
           <span className="compact-recipe-info-value">
-            {recipe.batch_size} gallons
+            {recipe.batch_size} {recipe.batch_size_unit}
           </span>
         </div>
         
