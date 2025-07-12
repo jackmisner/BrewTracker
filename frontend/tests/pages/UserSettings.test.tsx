@@ -28,11 +28,18 @@ jest.mock("../../src/contexts/UnitContext", () => ({
   UnitProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-// Mock useNavigate
+// Mock useNavigate and useBlocker
 const mockNavigate = jest.fn();
+const mockBlocker = {
+  state: "unblocked",
+  reset: jest.fn(),
+  proceed: jest.fn(),
+};
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,
+  useBlocker: () => mockBlocker,
+  Outlet: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock window.confirm
@@ -75,6 +82,9 @@ describe("UserSettings", () => {
     mockNavigate.mockClear();
     mockUpdateUnitSystem.mockClear();
     mockConfirm.mockClear();
+    mockBlocker.reset.mockClear();
+    mockBlocker.proceed.mockClear();
+    mockBlocker.state = "unblocked";
 
     // Default successful API response
     (UserSettingsService.getUserSettings as jest.Mock).mockResolvedValue(sampleUserSettings);
@@ -414,81 +424,62 @@ describe("UserSettings", () => {
       expect(metricButton).not.toHaveClass("active");
     });
 
-    it("switches to metric when metric button is clicked", async () => {
+    it("switches to metric when metric button is clicked", () => {
       const metricButton = screen.getByText("Metric").closest("button");
       fireEvent.click(metricButton);
 
-      await waitFor(() => {
-        expect(mockUpdateUnitSystem).toHaveBeenCalledWith("metric");
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText("Units changed to Metric")).toBeInTheDocument();
-      });
-    });
-
-    it("handles unit system change error", async () => {
-      mockUpdateUnitSystem.mockRejectedValue(new Error("Unit update failed"));
-
-      const metricButton = screen.getByText("Metric").closest("button");
-      fireEvent.click(metricButton);
-
-      await waitFor(() => {
-        expect(screen.getByText("Unit update failed")).toBeInTheDocument();
-      });
-    });
-
-    it("disables unit buttons when saving", async () => {
-      mockUpdateUnitSystem.mockImplementation(() => scenarios.loading());
-
-      const metricButton = screen.getByText("Metric").closest("button");
+      // Should update button active state immediately
+      expect(metricButton).toHaveClass("active");
       const imperialButton = screen.getByText("Imperial").closest("button");
+      expect(imperialButton).not.toHaveClass("active");
 
-      fireEvent.click(metricButton);
-
-      expect(metricButton).toBeDisabled();
-      expect(imperialButton).toBeDisabled();
+      // Should not call updateUnitSystem immediately
+      expect(mockUpdateUnitSystem).not.toHaveBeenCalled();
     });
 
-    it("shows correct unit labels based on system", () => {
+    it("sets default batch size to 19L when switching to metric", () => {
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+
+      const batchSizeInput = screen.getByDisplayValue("19");
+      expect(batchSizeInput).toBeInTheDocument();
+    });
+
+    it("sets default batch size to 5 gallons when switching to imperial", () => {
+      // First switch to metric
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+      
+      // Then switch back to imperial
+      const imperialButton = screen.getByText("Imperial").closest("button");
+      fireEvent.click(imperialButton);
+
+      const batchSizeInput = screen.getByDisplayValue("5");
+      expect(batchSizeInput).toBeInTheDocument();
+    });
+
+    it("shows correct unit labels based on selected system", () => {
+      // Initially imperial
       expect(
         screen.getByText("Default Batch Size (gallons)")
       ).toBeInTheDocument();
       expect(
         screen.getByText("Typical homebrew batch: 5 gallons")
       ).toBeInTheDocument();
+
+      // Switch to metric
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+
+      expect(
+        screen.getByText("Default Batch Size (liters)")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Typical homebrew batch: 19-23 liters")
+      ).toBeInTheDocument();
     });
   });
 
-  describe("Unit system switching from metric to imperial", () => {
-    it("switches to imperial when imperial button is clicked", async () => {
-      // Set up metric system first
-      mockUseUnits.unitSystem = "metric";
-
-      renderWithProviders(<UserSettings />);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText("Loading settings...")
-        ).not.toBeInTheDocument();
-      });
-
-      const preferencesTab = screen.getByRole("button", {
-        name: /Preferences/,
-      });
-      fireEvent.click(preferencesTab);
-
-      const imperialButton = screen.getByText("Imperial").closest("button");
-      fireEvent.click(imperialButton);
-
-      await waitFor(() => {
-        expect(mockUpdateUnitSystem).toHaveBeenCalledWith("imperial");
-      });
-
-      // Reset for other tests
-      mockUseUnits.unitSystem = "imperial";
-    });
-  });
 
   describe("Preferences tab - Form submission", () => {
     beforeEach(async () => {
@@ -533,14 +524,41 @@ describe("UserSettings", () => {
         expect(UserSettingsService.updateSettings).toHaveBeenCalledWith(
           expect.objectContaining({
             default_batch_size: 7.5,
+            preferred_units: "imperial",
           })
         );
+      });
+
+      await waitFor(() => {
+        expect(mockUpdateUnitSystem).toHaveBeenCalledWith("imperial");
       });
 
       await waitFor(() => {
         expect(
           screen.getByText("Preferences updated successfully")
         ).toBeInTheDocument();
+      });
+    });
+
+    it("submits unit system changes with form", async () => {
+      // Switch to metric
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+
+      const saveButton = screen.getByText("Save Preferences");
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(UserSettingsService.updateSettings).toHaveBeenCalledWith(
+          expect.objectContaining({
+            preferred_units: "metric",
+            default_batch_size: 19,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        expect(mockUpdateUnitSystem).toHaveBeenCalledWith("metric");
       });
     });
 
@@ -956,6 +974,154 @@ describe("UserSettings", () => {
       expect(batchSizeInput).toHaveAttribute("min", "0.5");
       expect(batchSizeInput).toHaveAttribute("max", "100");
       expect(batchSizeInput).toHaveAttribute("step", "0.5");
+    });
+  });
+
+  describe("Unsaved changes warning", () => {
+    it("does not show navigation warning when no changes are made", async () => {
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Loading settings...")
+        ).not.toBeInTheDocument();
+      });
+
+      // Should not show modal when no changes
+      expect(screen.queryByText("Unsaved Changes")).not.toBeInTheDocument();
+    });
+
+    it("shows navigation warning when profile form has unsaved changes", async () => {
+      mockBlocker.state = "blocked";
+      
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("testuser")).toBeInTheDocument();
+      });
+
+      // Make a change but don't save
+      const usernameInput = screen.getByDisplayValue("testuser");
+      fireEvent.change(usernameInput, { target: { value: "newusername" } });
+
+      // Re-render to show the modal
+      renderWithProviders(<UserSettings />);
+
+      expect(screen.getByText("Unsaved Changes")).toBeInTheDocument();
+      expect(
+        screen.getByText("You have unsaved changes that will be lost. Are you sure you want to leave this page?")
+      ).toBeInTheDocument();
+    });
+
+    it("shows navigation warning when preferences form has unsaved changes", async () => {
+      mockBlocker.state = "blocked";
+      
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Loading settings...")
+        ).not.toBeInTheDocument();
+      });
+
+      // Switch to preferences tab
+      const preferencesTab = screen.getByText("Preferences");
+      fireEvent.click(preferencesTab);
+
+      // Make a change to unit system
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+
+      // Re-render to show the modal
+      renderWithProviders(<UserSettings />);
+
+      expect(screen.getByText("Unsaved Changes")).toBeInTheDocument();
+    });
+
+    it("allows staying on page when unsaved changes warning is shown", async () => {
+      mockBlocker.state = "blocked";
+      
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Stay on Page")).toBeInTheDocument();
+      });
+
+      const stayButton = screen.getByText("Stay on Page");
+      fireEvent.click(stayButton);
+
+      expect(mockBlocker.reset).toHaveBeenCalledTimes(1);
+    });
+
+    it("allows leaving without saving when unsaved changes warning is shown", async () => {
+      mockBlocker.state = "blocked";
+      
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Leave Without Saving")).toBeInTheDocument();
+      });
+
+      const leaveButton = screen.getByText("Leave Without Saving");
+      fireEvent.click(leaveButton);
+
+      expect(mockBlocker.proceed).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears unsaved changes state after successful form submission", async () => {
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("testuser")).toBeInTheDocument();
+      });
+
+      // Make a change
+      const usernameInput = screen.getByDisplayValue("testuser");
+      fireEvent.change(usernameInput, { target: { value: "newusername" } });
+
+      // Save the form
+      const updateButton = screen.getByText("Update Profile");
+      fireEvent.click(updateButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Profile updated successfully")
+        ).toBeInTheDocument();
+      });
+
+      // Changes should be cleared, so no navigation warning
+      expect(screen.queryByText("Unsaved Changes")).not.toBeInTheDocument();
+    });
+
+    it("clears unsaved changes state after successful preferences submission", async () => {
+      renderWithProviders(<UserSettings />);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Loading settings...")
+        ).not.toBeInTheDocument();
+      });
+
+      // Switch to preferences tab
+      const preferencesTab = screen.getByText("Preferences");
+      fireEvent.click(preferencesTab);
+
+      // Make a change
+      const metricButton = screen.getByText("Metric").closest("button");
+      fireEvent.click(metricButton);
+
+      // Save the form
+      const saveButton = screen.getByText("Save Preferences");
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Preferences updated successfully")
+        ).toBeInTheDocument();
+      });
+
+      // Changes should be cleared
+      expect(screen.queryByText("Unsaved Changes")).not.toBeInTheDocument();
     });
   });
 });
