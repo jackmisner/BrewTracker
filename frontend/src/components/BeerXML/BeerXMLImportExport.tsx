@@ -391,7 +391,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                         {importState.selectedRecipe?.batch_size?.toFixed(
                           0
                         ) || 'N/A'}{" "}
-                        gal
+                        {importState.selectedRecipe?.batch_size_unit === "l" ? "L" : (importState.selectedRecipe?.batch_size_unit || "gal")}
                       </span>
                     </div>
                     <div className="detail-row">

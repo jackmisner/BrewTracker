@@ -173,13 +173,25 @@ def generate_beerxml(recipe):
     batch_size_unit = getattr(recipe, "batch_size_unit", "gal")
     if batch_size_unit == "l":
         batch_size_l = recipe.batch_size
+        # For metric recipes, display in liters
+        add_text_element(recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} L")
     else:
         batch_size_l = UnitConverter.convert_volume(recipe.batch_size, "gal", "l")
+        # For imperial recipes, display in gallons
+        add_text_element(recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} gal")
 
     add_text_element(recipe_elem, "BATCH_SIZE", f"{batch_size_l:.2f}")
-    add_text_element(
-        recipe_elem, "BOIL_SIZE", f"{batch_size_l * 1.2:.2f}"
-    )  # 20% larger
+    
+    # Calculate boil size with appropriate display format
+    boil_size_l = batch_size_l * 1.2  # 20% larger
+    if batch_size_unit == "l":
+        boil_size_display = boil_size_l
+        add_text_element(recipe_elem, "DISPLAY_BOIL_SIZE", f"{boil_size_display:.1f} L")
+    else:
+        boil_size_display = UnitConverter.convert_volume(boil_size_l, "l", "gal")
+        add_text_element(recipe_elem, "DISPLAY_BOIL_SIZE", f"{boil_size_display:.1f} gal")
+    
+    add_text_element(recipe_elem, "BOIL_SIZE", f"{boil_size_l:.2f}")
     add_text_element(recipe_elem, "BOIL_TIME", str(recipe.boil_time or 60))
     add_text_element(recipe_elem, "EFFICIENCY", str(recipe.efficiency or 75))
 
@@ -339,17 +351,29 @@ def parse_recipe_element(recipe_elem):
             "is_public": False,
         }
 
-        # Convert batch size from liters to gallons
+        # Detect original unit system from DISPLAY_BATCH_SIZE
+        display_batch_size = get_text_content(recipe_elem, "DISPLAY_BATCH_SIZE")
+        detected_unit_system = UnitConverter.detect_unit_system_from_display_batch_size(display_batch_size)
+        
+        # Get batch size in liters (BeerXML standard)
         batch_size_l = float(get_text_content(recipe_elem, "BATCH_SIZE") or 19)
-        recipe["batch_size"] = UnitConverter.convert_volume(batch_size_l, "l", "gal")
-        recipe["batch_size_unit"] = "gal"
+        
+        # Convert batch size based on detected original unit system
+        if detected_unit_system == "metric":
+            # Recipe was originally in metric - keep as liters
+            recipe["batch_size"] = batch_size_l
+            recipe["batch_size_unit"] = "l"
+        else:
+            # Recipe was originally imperial or detection failed - convert to gallons (default behavior)
+            recipe["batch_size"] = UnitConverter.convert_volume(batch_size_l, "l", "gal")
+            recipe["batch_size_unit"] = "gal"
 
-        # Parse ingredients
+        # Parse ingredients with detected unit system
         ingredients = []
-        ingredients.extend(parse_fermentables(recipe_elem))
-        ingredients.extend(parse_hops(recipe_elem))
-        ingredients.extend(parse_yeasts(recipe_elem))
-        ingredients.extend(parse_misc(recipe_elem))
+        ingredients.extend(parse_fermentables(recipe_elem, detected_unit_system))
+        ingredients.extend(parse_hops(recipe_elem, detected_unit_system))
+        ingredients.extend(parse_yeasts(recipe_elem, detected_unit_system))
+        ingredients.extend(parse_misc(recipe_elem, detected_unit_system))
 
         return {
             "recipe": recipe,
@@ -380,16 +404,25 @@ def parse_recipe_element(recipe_elem):
         return None
 
 
-def parse_fermentables(recipe_elem):
+def parse_fermentables(recipe_elem, detected_unit_system=None):
     """Parse fermentable ingredients from recipe"""
     fermentables = []
     fermentable_elements = recipe_elem.findall(".//FERMENTABLES/FERMENTABLE")
 
     for elem in fermentable_elements:
         try:
-            # Amount in kg, convert to lb
+            # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
-            amount_lb = UnitConverter.convert_weight(amount_kg, "kg", "lb")
+            
+            # Convert to appropriate unit based on detected system
+            if detected_unit_system == "metric":
+                # Convert to grams for metric system
+                amount = amount_kg * 1000
+                unit = "g"
+            else:
+                # Convert to pounds for imperial system (default)
+                amount = UnitConverter.convert_weight(amount_kg, "kg", "lb")
+                unit = "lb"
 
             # Calculate potential from yield
             yield_pct = float(get_text_content(elem, "YIELD") or 80)
@@ -398,8 +431,8 @@ def parse_fermentables(recipe_elem):
             fermentable = {
                 "name": get_text_content(elem, "NAME") or "Unknown Fermentable",
                 "type": "grain",
-                "amount": amount_lb,
-                "unit": "lb",
+                "amount": amount,
+                "unit": unit,
                 "use": "mash",
                 "time": 0,
                 "potential": potential,
@@ -422,22 +455,31 @@ def parse_fermentables(recipe_elem):
     return fermentables
 
 
-def parse_hops(recipe_elem):
+def parse_hops(recipe_elem, detected_unit_system=None):
     """Parse hop ingredients from recipe"""
     hops = []
     hop_elements = recipe_elem.findall(".//HOPS/HOP")
 
     for elem in hop_elements:
         try:
-            # Amount in kg, convert to oz
+            # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
-            amount_oz = UnitConverter.convert_weight(amount_kg, "kg", "oz")
+            
+            # Convert to appropriate unit based on detected system
+            if detected_unit_system == "metric":
+                # Convert to grams for metric system
+                amount = amount_kg * 1000
+                unit = "g"
+            else:
+                # Convert to ounces for imperial system (default)
+                amount = UnitConverter.convert_weight(amount_kg, "kg", "oz")
+                unit = "oz"
 
             hop = {
                 "name": get_text_content(elem, "NAME") or "Unknown Hop",
                 "type": "hop",
-                "amount": amount_oz,
-                "unit": "oz",
+                "amount": amount,
+                "unit": unit,
                 "use": map_xml_use_to_hop(get_text_content(elem, "USE")),
                 "time": int(get_text_content(elem, "TIME") or 0),
                 "alpha_acid": float(get_text_content(elem, "ALPHA") or 0),
@@ -457,7 +499,7 @@ def parse_hops(recipe_elem):
     return hops
 
 
-def parse_yeasts(recipe_elem):
+def parse_yeasts(recipe_elem, detected_unit_system=None):
     """Parse yeast ingredients from recipe"""
     yeasts = []
     yeast_elements = recipe_elem.findall(".//YEASTS/YEAST")
@@ -467,13 +509,20 @@ def parse_yeasts(recipe_elem):
             amount = float(get_text_content(elem, "AMOUNT") or 1)
             amount_is_weight = get_text_content(elem, "AMOUNT_IS_WEIGHT") == "TRUE"
 
+            if amount_is_weight:
+                # Amount is in kg, convert to grams
+                final_amount = amount * 1000
+                unit = "g"
+            else:
+                # Amount is in packages - normalize to practical amounts
+                final_amount = UnitConverter.normalize_yeast_amount_to_packages(amount, "pkg")
+                unit = "pkg"
+
             yeast = {
                 "name": get_text_content(elem, "NAME") or "Unknown Yeast",
                 "type": "yeast",
-                "amount": (
-                    amount * 1000 if amount_is_weight else amount
-                ),  # Convert kg to g if weight
-                "unit": "g" if amount_is_weight else "pkg",
+                "amount": final_amount,
+                "unit": unit,
                 "use": "fermentation",
                 "time": 0,
                 "attenuation": float(get_text_content(elem, "ATTENUATION") or 75),
@@ -482,6 +531,8 @@ def parse_yeasts(recipe_elem):
                     "product_id": get_text_content(elem, "PRODUCT_ID"),
                     "type": get_text_content(elem, "TYPE"),
                     "form": get_text_content(elem, "FORM"),
+                    "original_amount": amount,  # Store original for reference
+                    "was_normalized": not amount_is_weight and amount != final_amount,
                 },
             }
 
@@ -494,7 +545,7 @@ def parse_yeasts(recipe_elem):
     return yeasts
 
 
-def parse_misc(recipe_elem):
+def parse_misc(recipe_elem, detected_unit_system=None):
     """Parse miscellaneous ingredients from recipe"""
     misc_ingredients = []
     misc_elements = recipe_elem.findall(".//MISCS/MISC")
@@ -505,13 +556,25 @@ def parse_misc(recipe_elem):
             amount_is_weight = get_text_content(elem, "AMOUNT_IS_WEIGHT") == "TRUE"
 
             if amount_is_weight:
-                # Convert kg to g
-                final_amount = amount * 1000
-                unit = "g"
+                # Weight-based misc ingredient
+                if detected_unit_system == "metric":
+                    # Convert kg to grams for metric
+                    final_amount = amount * 1000
+                    unit = "g"
+                else:
+                    # Convert kg to ounces for imperial
+                    final_amount = UnitConverter.convert_weight(amount, "kg", "oz")
+                    unit = "oz"
             else:
-                # Convert l to ml
-                final_amount = amount * 1000
-                unit = "ml"
+                # Volume-based misc ingredient
+                if detected_unit_system == "metric":
+                    # Convert liters to ml for metric
+                    final_amount = amount * 1000
+                    unit = "ml"
+                else:
+                    # Convert liters to fluid ounces for imperial
+                    final_amount = UnitConverter.convert_volume(amount, "l", "floz")
+                    unit = "floz"
 
             misc = {
                 "name": get_text_content(elem, "NAME") or "Unknown Misc",
