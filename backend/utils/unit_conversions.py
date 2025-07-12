@@ -103,21 +103,21 @@ class UnitConverter:
         """
         if not display_batch_size or not isinstance(display_batch_size, str):
             return None
-            
+
         display_lower = display_batch_size.lower().strip()
-        
+
         # Check for imperial indicators first (more specific patterns)
-        imperial_indicators = ['gal', 'gallon', 'gallons']
+        imperial_indicators = ["gal", "gallon", "gallons"]
         for indicator in imperial_indicators:
             if indicator in display_lower:
-                return 'imperial'
-        
+                return "imperial"
+
         # Check for metric indicators
-        metric_indicators = ['l', 'liter', 'liters', 'litre', 'litres']
+        metric_indicators = ["l", "liter", "liters", "litre", "litres"]
         for indicator in metric_indicators:
             if indicator in display_lower:
-                return 'metric'
-                
+                return "metric"
+
         return None
 
     @classmethod
@@ -126,12 +126,12 @@ class UnitConverter:
         Normalize yeast amounts to practical package quantities
         Converts fractional packages to whole numbers for usability
         """
-        if unit != 'pkg' and unit != 'package':
+        if unit != "pkg" and unit != "package":
             return amount  # Don't normalize non-package units
-            
+
         if amount <= 0:
             return 1  # Minimum 1 package
-            
+
         # Round to nearest practical package amount
         if amount < 0.6:
             return 1

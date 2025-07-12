@@ -174,14 +174,18 @@ def generate_beerxml(recipe):
     if batch_size_unit == "l":
         batch_size_l = recipe.batch_size
         # For metric recipes, display in liters
-        add_text_element(recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} L")
+        add_text_element(
+            recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} L"
+        )
     else:
         batch_size_l = UnitConverter.convert_volume(recipe.batch_size, "gal", "l")
         # For imperial recipes, display in gallons
-        add_text_element(recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} gal")
+        add_text_element(
+            recipe_elem, "DISPLAY_BATCH_SIZE", f"{recipe.batch_size:.1f} gal"
+        )
 
     add_text_element(recipe_elem, "BATCH_SIZE", f"{batch_size_l:.2f}")
-    
+
     # Calculate boil size with appropriate display format
     boil_size_l = batch_size_l * 1.2  # 20% larger
     if batch_size_unit == "l":
@@ -189,8 +193,10 @@ def generate_beerxml(recipe):
         add_text_element(recipe_elem, "DISPLAY_BOIL_SIZE", f"{boil_size_display:.1f} L")
     else:
         boil_size_display = UnitConverter.convert_volume(boil_size_l, "l", "gal")
-        add_text_element(recipe_elem, "DISPLAY_BOIL_SIZE", f"{boil_size_display:.1f} gal")
-    
+        add_text_element(
+            recipe_elem, "DISPLAY_BOIL_SIZE", f"{boil_size_display:.1f} gal"
+        )
+
     add_text_element(recipe_elem, "BOIL_SIZE", f"{boil_size_l:.2f}")
     add_text_element(recipe_elem, "BOIL_TIME", str(recipe.boil_time or 60))
     add_text_element(recipe_elem, "EFFICIENCY", str(recipe.efficiency or 75))
@@ -353,11 +359,13 @@ def parse_recipe_element(recipe_elem):
 
         # Detect original unit system from DISPLAY_BATCH_SIZE
         display_batch_size = get_text_content(recipe_elem, "DISPLAY_BATCH_SIZE")
-        detected_unit_system = UnitConverter.detect_unit_system_from_display_batch_size(display_batch_size)
-        
+        detected_unit_system = UnitConverter.detect_unit_system_from_display_batch_size(
+            display_batch_size
+        )
+
         # Get batch size in liters (BeerXML standard)
         batch_size_l = float(get_text_content(recipe_elem, "BATCH_SIZE") or 19)
-        
+
         # Convert batch size based on detected original unit system
         if detected_unit_system == "metric":
             # Recipe was originally in metric - keep as liters
@@ -365,7 +373,9 @@ def parse_recipe_element(recipe_elem):
             recipe["batch_size_unit"] = "l"
         else:
             # Recipe was originally imperial or detection failed - convert to gallons (default behavior)
-            recipe["batch_size"] = UnitConverter.convert_volume(batch_size_l, "l", "gal")
+            recipe["batch_size"] = UnitConverter.convert_volume(
+                batch_size_l, "l", "gal"
+            )
             recipe["batch_size_unit"] = "gal"
 
         # Parse ingredients with detected unit system
@@ -413,7 +423,7 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
         try:
             # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
-            
+
             # Convert to appropriate unit based on detected system
             if detected_unit_system == "metric":
                 # Convert to grams for metric system
@@ -464,7 +474,7 @@ def parse_hops(recipe_elem, detected_unit_system=None):
         try:
             # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
-            
+
             # Convert to appropriate unit based on detected system
             if detected_unit_system == "metric":
                 # Convert to grams for metric system
@@ -515,7 +525,9 @@ def parse_yeasts(recipe_elem, detected_unit_system=None):
                 unit = "g"
             else:
                 # Amount is in packages - normalize to practical amounts
-                final_amount = UnitConverter.normalize_yeast_amount_to_packages(amount, "pkg")
+                final_amount = UnitConverter.normalize_yeast_amount_to_packages(
+                    amount, "pkg"
+                )
                 unit = "pkg"
 
             yeast = {
