@@ -96,6 +96,58 @@ class UnitConverter:
         return cls.convert_volume(amount, unit, "l")
 
     @classmethod
+    def detect_unit_system_from_display_batch_size(cls, display_batch_size):
+        """
+        Detect the original unit system from DISPLAY_BATCH_SIZE field
+        Returns 'metric' for liters, 'imperial' for gallons, None if ambiguous
+        """
+        if not display_batch_size or not isinstance(display_batch_size, str):
+            return None
+
+        display_lower = display_batch_size.lower().strip()
+
+        # Check for imperial indicators first (more specific patterns)
+        imperial_indicators = ["gal", "gallon", "gallons"]
+        for indicator in imperial_indicators:
+            if indicator in display_lower:
+                return "imperial"
+
+        # Check for metric indicators
+        metric_indicators = ["l", "liter", "liters", "litre", "litres"]
+        for indicator in metric_indicators:
+            if indicator in display_lower:
+                return "metric"
+
+        return None
+
+    @classmethod
+    def normalize_yeast_amount_to_packages(cls, amount, unit):
+        """
+        Normalize yeast amounts to practical package quantities
+        Converts fractional packages to whole numbers for usability
+        """
+        if unit != "pkg" and unit != "package":
+            return amount  # Don't normalize non-package units
+
+        if amount <= 0:
+            return 1  # Minimum 1 package
+
+        # Round to nearest practical package amount
+        if amount < 0.6:
+            return 1
+        elif amount < 1.4:
+            return 1
+        elif amount < 2.4:
+            return 2
+        elif amount < 3.4:
+            return 3
+        elif amount < 4.4:
+            return 4
+        else:
+            # For larger amounts, round to nearest whole number
+            return round(amount)
+
+    @classmethod
     def convert_temperature(cls, temp, from_unit, to_unit):
         """Convert temperature between Fahrenheit and Celsius"""
         if from_unit == to_unit:
