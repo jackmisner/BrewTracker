@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useBlocker } from "react-router";
 import { useUnits } from "../contexts/UnitContext";
 import UserSettingsService from "../services/UserSettingsService";
 import { UserSettings as UserSettingsType } from "../types";
@@ -51,7 +51,7 @@ interface PrivacyForm {
 
 const UserSettings: React.FC = () => {
   const navigate = useNavigate();
-  const { unitSystem, updateUnitSystem, loading: unitsLoading } = useUnits();
+  const { updateUnitSystem } = useUnits();
 
   const [activeTab, setActiveTab] = useState<TabId>("account");
   const [settings, setSettings] = useState<FullUserSettings | null>(null);
@@ -59,6 +59,7 @@ const UserSettings: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   // Form states
   const [profileForm, setProfileForm] = useState<ProfileForm>({
@@ -92,6 +93,25 @@ const UserSettings: React.FC = () => {
     public_recipes_default: false,
   });
 
+  // Track original form values for comparison
+  const [originalProfileForm, setOriginalProfileForm] = useState<ProfileForm>({
+    username: "",
+    email: "",
+  });
+  const [originalPreferencesForm, setOriginalPreferencesForm] = useState<PreferencesForm>({
+    default_batch_size: 5.0,
+    preferred_units: "imperial" as const,
+    timezone: "UTC",
+    email_notifications: true,
+    brew_reminders: true,
+  });
+  const [originalPrivacyForm, setOriginalPrivacyForm] = useState<PrivacyForm>({
+    contribute_anonymous_data: false,
+    share_yeast_performance: false,
+    share_recipe_metrics: false,
+    public_recipes_default: false,
+  });
+
   // Load user settings on mount
   useEffect(() => {
     const loadSettings = async (): Promise<void> => {
@@ -101,21 +121,19 @@ const UserSettings: React.FC = () => {
         setSettings(userSettings);
 
         // Populate forms
-        setProfileForm({
+        const profileData = {
           username: userSettings.user.username || "",
           email: userSettings.user.email || "",
-        });
-
-        setPreferencesForm({
+        };
+        const preferencesData = {
           default_batch_size: userSettings.settings.default_batch_size || 5.0,
           preferred_units: (userSettings.settings.preferred_units as "imperial" | "metric") || "imperial",
           timezone: userSettings.settings.timezone || "UTC",
           email_notifications:
             userSettings.settings.email_notifications !== false,
           brew_reminders: userSettings.settings.brew_reminders !== false,
-        });
-
-        setPrivacyForm({
+        };
+        const privacyData = {
           contribute_anonymous_data:
             userSettings.settings.contribute_anonymous_data || false,
           share_yeast_performance:
@@ -124,7 +142,16 @@ const UserSettings: React.FC = () => {
             userSettings.settings.share_recipe_metrics || false,
           public_recipes_default:
             userSettings.settings.public_recipes_default || false,
-        });
+        };
+
+        setProfileForm(profileData);
+        setPreferencesForm(preferencesData);
+        setPrivacyForm(privacyData);
+
+        // Store original values for comparison
+        setOriginalProfileForm(profileData);
+        setOriginalPreferencesForm(preferencesData);
+        setOriginalPrivacyForm(privacyData);
       } catch (err: any) {
         console.error("Error loading settings:", err);
         setError("Failed to load user settings");
@@ -135,6 +162,22 @@ const UserSettings: React.FC = () => {
 
     loadSettings();
   }, []);
+
+  // Check for unsaved changes
+  const checkForUnsavedChanges = useCallback(() => {
+    const profileChanged = JSON.stringify(profileForm) !== JSON.stringify(originalProfileForm);
+    const preferencesChanged = JSON.stringify(preferencesForm) !== JSON.stringify(originalPreferencesForm);
+    const privacyChanged = JSON.stringify(privacyForm) !== JSON.stringify(originalPrivacyForm);
+    
+    const hasChanges = profileChanged || preferencesChanged || privacyChanged;
+    setHasUnsavedChanges(hasChanges);
+    return hasChanges;
+  }, [profileForm, originalProfileForm, preferencesForm, originalPreferencesForm, privacyForm, originalPrivacyForm]);
+
+  // Update unsaved changes when forms change
+  useEffect(() => {
+    checkForUnsavedChanges();
+  }, [checkForUnsavedChanges]);
 
   // Clear messages after a delay
   useEffect(() => {
@@ -152,6 +195,7 @@ const UserSettings: React.FC = () => {
       setError("");
 
       await UserSettingsService.updateProfile(profileForm);
+      setOriginalProfileForm({ ...profileForm }); // Update original to match saved state
       setSuccessMessage("Profile updated successfully");
     } catch (err: any) {
       setError(err.message || "Failed to update profile");
@@ -189,11 +233,10 @@ const UserSettings: React.FC = () => {
       // Update preferences using the settings service
       await UserSettingsService.updateSettings(preferencesForm as SettingsUpdateData);
 
-      // If units changed, update the global unit context
-      if (preferencesForm.preferred_units !== unitSystem) {
-        await updateUnitSystem(preferencesForm.preferred_units as "imperial" | "metric");
-      }
+      // Update the global unit context with the new preferred units
+      await updateUnitSystem(preferencesForm.preferred_units as "imperial" | "metric");
 
+      setOriginalPreferencesForm({ ...preferencesForm }); // Update original to match saved state
       setSuccessMessage("Preferences updated successfully");
     } catch (err: any) {
       setError(err.message || "Failed to update preferences");
@@ -209,6 +252,7 @@ const UserSettings: React.FC = () => {
       setError("");
 
       await UserSettingsService.updateSettings(privacyForm);
+      setOriginalPrivacyForm({ ...privacyForm }); // Update original to match saved state
       setSuccessMessage("Privacy settings updated successfully");
     } catch (err: any) {
       setError(err.message || "Failed to update privacy settings");
@@ -242,35 +286,37 @@ const UserSettings: React.FC = () => {
     }
   };
 
-  // Handle unit system change with immediate feedback
-  const handleUnitSystemChange = async (newUnitSystem: "imperial" | "metric"): Promise<void> => {
-    try {
-      setSaving(true);
-      setError("");
-
-      // Update form state
-      setPreferencesForm((prev) => ({
-        ...prev,
-        preferred_units: newUnitSystem,
-      }));
-
-      // Update global unit context
-      await updateUnitSystem(newUnitSystem as "imperial" | "metric");
-
-      setSuccessMessage(
-        `Units changed to ${newUnitSystem === "metric" ? "Metric" : "Imperial"}`
-      );
-    } catch (err: any) {
-      setError(err.message || "Failed to update unit system");
-      // Revert form state on error
-      setPreferencesForm((prev) => ({
-        ...prev,
-        preferred_units: unitSystem,
-      }));
-    } finally {
-      setSaving(false);
-    }
+  // Handle unit system change with default batch size
+  const handleUnitSystemChange = (newUnitSystem: "imperial" | "metric"): void => {
+    const defaultBatchSize = newUnitSystem === "metric" ? 19 : 5;
+    
+    setPreferencesForm((prev) => ({
+      ...prev,
+      preferred_units: newUnitSystem,
+      default_batch_size: defaultBatchSize,
+    }));
   };
+
+  // Block navigation when there are unsaved changes
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedChanges && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Handle browser beforeunload event
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+      return undefined;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   if (loading) {
     return <div className="loading-message">Loading settings...</div>;
@@ -284,7 +330,35 @@ const UserSettings: React.FC = () => {
   ];
 
   return (
-    <div className="settings-container">
+    <>
+      {/* Navigation blocking dialog */}
+      {blocker.state === "blocked" && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Unsaved Changes</h3>
+            <p>You have unsaved changes that will be lost. Are you sure you want to leave this page?</p>
+            <div className="modal-actions">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => blocker.reset?.()}
+              >
+                Stay on Page
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={() => {
+                  setHasUnsavedChanges(false);
+                  blocker.proceed?.();
+                }}
+              >
+                Leave Without Saving
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="settings-container">
       <div className="settings-header">
         <h1 className="settings-title">Account Settings</h1>
         <p className="settings-subtitle">Manage your account and preferences</p>
@@ -424,59 +498,57 @@ const UserSettings: React.FC = () => {
             <div className="settings-section">
               <h2 className="section-title">Application Preferences</h2>
 
-              {/* Quick Unit Toggle */}
-              <div className="unit-toggle-section">
-                <h3 className="subsection-title">Unit System</h3>
-                <p className="section-description">
-                  Choose your preferred unit system. This affects all
-                  measurements throughout the app.
-                </p>
-
-                <div className="unit-toggle-container">
-                  <button
-                    type="button"
-                    onClick={() => handleUnitSystemChange("imperial")}
-                    className={`unit-toggle-button ${
-                      unitSystem === "imperial" ? "active" : ""
-                    }`}
-                    disabled={saving || unitsLoading}
-                  >
-                    <span className="unit-toggle-icon">🇺🇸</span>
-                    <div className="unit-toggle-content">
-                      <div className="unit-toggle-title">Imperial</div>
-                      <div className="unit-toggle-description">
-                        Gallons, °F, lb, oz
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleUnitSystemChange("metric")}
-                    className={`unit-toggle-button ${
-                      unitSystem === "metric" ? "active" : ""
-                    }`}
-                    disabled={saving || unitsLoading}
-                  >
-                    <span className="unit-toggle-icon">🌍</span>
-                    <div className="unit-toggle-content">
-                      <div className="unit-toggle-title">Metric</div>
-                      <div className="unit-toggle-description">
-                        Liters, °C, kg, g
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
 
               <form
                 onSubmit={handlePreferencesSubmit}
                 className="settings-form"
               >
+                {/* Unit System Selection */}
+                <div className="form-group">
+                  <label className="form-label">Unit System</label>
+                  <p className="form-help-text">
+                    Choose your preferred unit system. This affects all measurements throughout the app.
+                  </p>
+                  <div className="unit-toggle-container">
+                    <button
+                      type="button"
+                      onClick={() => handleUnitSystemChange("imperial")}
+                      className={`unit-toggle-button ${
+                        preferencesForm.preferred_units === "imperial" ? "active" : ""
+                      }`}
+                      disabled={saving}
+                    >
+                      <span className="unit-toggle-icon">🇺🇸</span>
+                      <div className="unit-toggle-content">
+                        <div className="unit-toggle-title">Imperial</div>
+                        <div className="unit-toggle-description">
+                          Gallons, °F, lb, oz
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUnitSystemChange("metric")}
+                      className={`unit-toggle-button ${
+                        preferencesForm.preferred_units === "metric" ? "active" : ""
+                      }`}
+                      disabled={saving}
+                    >
+                      <span className="unit-toggle-icon">🌍</span>
+                      <div className="unit-toggle-content">
+                        <div className="unit-toggle-title">Metric</div>
+                        <div className="unit-toggle-description">
+                          Liters, °C, kg, g
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
                 <div className="form-group">
                   <label htmlFor="default_batch_size" className="form-label">
                     Default Batch Size (
-                    {unitSystem === "metric" ? "liters" : "gallons"})
+                    {preferencesForm.preferred_units === "metric" ? "liters" : "gallons"})
                   </label>
                   <input
                     type="number"
@@ -495,7 +567,7 @@ const UserSettings: React.FC = () => {
                     disabled={saving}
                   />
                   <small className="form-help-text">
-                    {unitSystem === "metric"
+                    {preferencesForm.preferred_units === "metric"
                       ? "Typical homebrew batch: 19-23 liters"
                       : "Typical homebrew batch: 5 gallons"}
                   </small>
@@ -821,7 +893,8 @@ const UserSettings: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

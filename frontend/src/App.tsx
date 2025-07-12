@@ -1,6 +1,6 @@
 // Misc imports
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from "react-router";
 import { UnitProvider } from "./contexts/UnitContext";
 import ApiService from "./services/api";
 import { User } from "./types";
@@ -24,11 +24,15 @@ import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
+// Authentication context
+const AuthContext = React.createContext<{
+  user: User | null;
+  handleLogin: (userData: User, token: string) => void;
+  handleLogout: () => void;
+}>({ user: null, handleLogin: () => {}, handleLogout: () => {} });
 
-const App: React.FC = () => {
+// Root layout component that provides authentication context
+const RootLayout: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -67,164 +71,131 @@ const App: React.FC = () => {
     window.dispatchEvent(new Event("authChange"));
   };
 
-  // Protected route component
-  const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    if (loading) return <div>Loading...</div>;
-    if (!user) return <Navigate to="/login" replace />;
-    return <>{children}</>;
-  };
+  if (loading) return <div>Loading...</div>;
 
   return (
     <UnitProvider>
-      <Router>
-        <Layout user={user} onLogout={handleLogout}>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                user ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Login onLogin={handleLogin} />
-                )
-              }
-            />
-
-            <Route
-              path="/register"
-              element={
-                user ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Register onLogin={handleLogin} />
-                )
-              }
-            />
-
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <UserSettings />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/ingredients/manage"
-              element={
-                <ProtectedRoute>
-                  <IngredientManager />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/attenuation-analytics"
-              element={
-                <ProtectedRoute>
-                  <AttenuationAnalyticsPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Routes for recipes */}
-            <Route
-              path="/recipes"
-              element={
-                <ProtectedRoute>
-                  <AllRecipes />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Routes for new recipe */}
-            <Route
-              path="/recipes/new"
-              element={
-                <ProtectedRoute>
-                  <RecipeBuilder />
-                </ProtectedRoute>
-              }
-            />
-            {/* Routes for specific recipe */}
-            <Route
-              path="/recipes/:recipeId"
-              element={
-                <ProtectedRoute>
-                  <ViewRecipe />
-                </ProtectedRoute>
-              }
-            />
-            {/* Routes for editing specific recipe */}
-            <Route
-              path="/recipes/:recipeId/edit"
-              element={
-                <ProtectedRoute>
-                  <RecipeBuilder />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Routes for public recipes */}
-            <Route
-              path="/recipes/public"
-              element={
-                <ProtectedRoute>
-                  <PublicRecipes />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Routes for brew sessions */}
-            <Route
-              path="/brew-sessions"
-              element={
-                <ProtectedRoute>
-                  <BrewSessionList />
-                </ProtectedRoute>
-              }
-            />
-            {/* Route for creating a new brew session */}
-            <Route
-              path="/brew-sessions/new"
-              element={
-                <ProtectedRoute>
-                  <CreateBrewSession />
-                </ProtectedRoute>
-              }
-            />
-            {/* Route for viewing a specific brew session */}
-            <Route
-              path="/brew-sessions/:sessionId"
-              element={
-                <ProtectedRoute>
-                  <ViewBrewSession />
-                </ProtectedRoute>
-              }
-            />
-            {/* Route for editing a specific brew session */}
-            <Route
-              path="/brew-sessions/:sessionId/edit"
-              element={
-                <ProtectedRoute>
-                  <EditBrewSession />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Layout>
-      </Router>
+      <Layout user={user} onLogout={handleLogout}>
+        <AuthContext.Provider value={{ user, handleLogin, handleLogout }}>
+          <Outlet />
+        </AuthContext.Provider>
+      </Layout>
     </UnitProvider>
   );
+};
+
+// Protected route component
+const ProtectedRoute: React.FC = () => {
+  const { user } = React.useContext(AuthContext);
+  if (!user) return <Navigate to="/login" replace />;
+  return <Outlet />;
+};
+
+// Auth redirect component for login/register pages
+const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = React.useContext(AuthContext);
+  if (user) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
+// Login page wrapper
+const LoginPage: React.FC = () => {
+  const { handleLogin } = React.useContext(AuthContext);
+  return (
+    <AuthRedirect>
+      <Login onLogin={handleLogin} />
+    </AuthRedirect>
+  );
+};
+
+// Register page wrapper
+const RegisterPage: React.FC = () => {
+  const { handleLogin } = React.useContext(AuthContext);
+  return (
+    <AuthRedirect>
+      <Register onLogin={handleLogin} />
+    </AuthRedirect>
+  );
+};
+
+// Create the router configuration
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "register",
+        element: <RegisterPage />,
+      },
+      {
+        path: "",
+        element: <ProtectedRoute />,
+        children: [
+          {
+            index: true,
+            element: <Dashboard />,
+          },
+          {
+            path: "settings",
+            element: <UserSettings />,
+          },
+          {
+            path: "ingredients/manage",
+            element: <IngredientManager />,
+          },
+          {
+            path: "attenuation-analytics",
+            element: <AttenuationAnalyticsPage />,
+          },
+          {
+            path: "recipes",
+            element: <AllRecipes />,
+          },
+          {
+            path: "recipes/new",
+            element: <RecipeBuilder />,
+          },
+          {
+            path: "recipes/:recipeId",
+            element: <ViewRecipe />,
+          },
+          {
+            path: "recipes/:recipeId/edit",
+            element: <RecipeBuilder />,
+          },
+          {
+            path: "recipes/public",
+            element: <PublicRecipes />,
+          },
+          {
+            path: "brew-sessions",
+            element: <BrewSessionList />,
+          },
+          {
+            path: "brew-sessions/new",
+            element: <CreateBrewSession />,
+          },
+          {
+            path: "brew-sessions/:sessionId",
+            element: <ViewBrewSession />,
+          },
+          {
+            path: "brew-sessions/:sessionId/edit",
+            element: <EditBrewSession />,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
+const App: React.FC = () => {
+  return <RouterProvider router={router} />;
 };
 
 export default App;

@@ -8,6 +8,101 @@ global.TextEncoder = TextEncoder;
 // @ts-ignore - TextDecoder polyfill for Node.js environment
 global.TextDecoder = TextDecoder;
 
+// Mock Request for React Router data router compatibility
+global.Request = class Request {
+  url: string;
+  method: string;
+  headers: Headers;
+  body: any;
+  
+  constructor(input: string | Request, init?: RequestInit) {
+    this.url = typeof input === 'string' ? input : input.url;
+    this.method = init?.method || 'GET';
+    this.headers = new Headers(init?.headers);
+    this.body = init?.body;
+  }
+  
+  clone() {
+    return new Request(this.url, {
+      method: this.method,
+      headers: this.headers,
+      body: this.body,
+    });
+  }
+} as any;
+
+// Mock Response for completeness
+global.Response = class Response {
+  status: number;
+  statusText: string;
+  headers: Headers;
+  body: any;
+  
+  constructor(body?: any, init?: ResponseInit) {
+    this.status = init?.status || 200;
+    this.statusText = init?.statusText || 'OK';
+    this.headers = new Headers(init?.headers);
+    this.body = body;
+  }
+  
+  clone() {
+    return new Response(this.body, {
+      status: this.status,
+      statusText: this.statusText,
+      headers: this.headers,
+    });
+  }
+  
+  json() {
+    return Promise.resolve(JSON.parse(this.body));
+  }
+  
+  text() {
+    return Promise.resolve(this.body);
+  }
+} as any;
+
+// Mock Headers
+global.Headers = class Headers {
+  private map = new Map<string, string>();
+  
+  constructor(init?: HeadersInit) {
+    if (init) {
+      if (Array.isArray(init)) {
+        init.forEach(([key, value]) => this.map.set(key.toLowerCase(), value));
+      } else if (init instanceof Headers) {
+        init.forEach((value, key) => this.map.set(key.toLowerCase(), value));
+      } else {
+        Object.entries(init).forEach(([key, value]) => this.map.set(key.toLowerCase(), value));
+      }
+    }
+  }
+  
+  append(key: string, value: string) {
+    this.map.set(key.toLowerCase(), value);
+  }
+  
+  delete(key: string) {
+    this.map.delete(key.toLowerCase());
+  }
+  
+  get(key: string) {
+    return this.map.get(key.toLowerCase()) || null;
+  }
+  
+  has(key: string) {
+    return this.map.has(key.toLowerCase());
+  }
+  
+  set(key: string, value: string) {
+    this.map.set(key.toLowerCase(), value);
+  }
+  
+  forEach(callback: (value: string, key: string) => void) {
+    this.map.forEach((value, key) => callback(value, key));
+  }
+} as any;
+
 // Mock window.matchMedia (used by some UI libraries)
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -224,7 +319,9 @@ console.error = (...args: any[]) => {
     message.includes('Error fetching beer styles') ||
     message.includes('Error fetching all yeast analytics') ||
     message.includes('Failed to load') ||
-    message.includes('Error getting style-specific analysis')
+    message.includes('Error getting style-specific analysis') ||
+    message.includes('Error loading style guide') ||
+    message.includes('getAllStylesList is not a function')
   )) {
     return;
   }
