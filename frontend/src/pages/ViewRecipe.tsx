@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import RecipeService from "../services/RecipeService";
-import BrewSessionService from "../services/BrewSessionService";
+import { Services } from "../services";
 import CompactRecipeHeader from "../components/CompactRecipeHeader";
 import CompactRecipeInfo from "../components/CompactRecipeInfo";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
@@ -46,7 +45,7 @@ const ViewRecipe: React.FC = () => {
       
       try {
         setLoading(true);
-        const recipeData = await RecipeService.fetchRecipe(recipeId);
+        const recipeData = await Services.recipe.fetchRecipe(recipeId);
         setRecipe(recipeData);
         setIngredients(recipeData?.ingredients || []);
       } catch (err: any) {
@@ -69,9 +68,9 @@ const ViewRecipe: React.FC = () => {
 
         // Fetch sessions, summary, and stats in parallel
         const [sessions, summary, stats] = await Promise.all([
-          BrewSessionService.getBrewSessionsForRecipe(recipeId),
-          BrewSessionService.getBrewSessionSummary(recipeId),
-          BrewSessionService.getBrewingStats(recipeId),
+          Services.brewSession.getBrewSessionsForRecipe(recipeId),
+          Services.brewSession.getBrewSessionSummary(recipeId),
+          Services.brewSession.getBrewingStats(recipeId),
         ]);
 
         setBrewSessions(sessions as ProcessedBrewSession[]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import BrewSessionService from "../../services/BrewSessionService";
+import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import { BrewSession, BrewSessionStatus, UpdateBrewSessionFormData } from "../../types";
 import "../../styles/BrewSessions.css";
@@ -57,7 +57,7 @@ const EditBrewSession: React.FC = () => {
         setLoading(true);
         setError("");
 
-        const sessionData = await BrewSessionService.fetchBrewSession(sessionId);
+        const sessionData = await Services.brewSession.fetchBrewSession(sessionId);
         setSession(sessionData);
 
         // Helper function to safely format date or return empty string for form display
@@ -173,7 +173,7 @@ const EditBrewSession: React.FC = () => {
       }
 
       // Submit update using BrewSessionService
-      const updatedSession = await BrewSessionService.updateBrewSession(
+      const updatedSession = await Services.brewSession.updateBrewSession(
         sessionId,
         data
       );

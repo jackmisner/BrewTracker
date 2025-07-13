@@ -8,7 +8,7 @@ import { UnitProvider } from '../../src/contexts/UnitContext';
 const mockGetAllStylesList = jest.fn();
 const mockCalculateStyleMatch = jest.fn();
 
-jest.mock('../../src/services/BeerStyleService', () => ({
+jest.mock('../../src/services/Data/BeerStyleService', () => ({
   default: {
     getAllStylesList: mockGetAllStylesList,
     calculateStyleMatch: mockCalculateStyleMatch,
@@ -19,10 +19,32 @@ jest.mock('../../src/services/BeerStyleService', () => ({
 const mockGetUserSettings = jest.fn();
 const mockUpdateSettings = jest.fn();
 
-jest.mock('../../src/services/UserSettingsService', () => ({
+jest.mock('../../src/services/User/UserSettingsService', () => ({
   default: {
     getUserSettings: mockGetUserSettings,
     updateSettings: mockUpdateSettings,
+  },
+}));
+
+// Mock Services object with AI services
+jest.mock('../../src/services', () => ({
+  Services: {
+    AI: {
+      cascadingEffects: jest.fn().mockImplementation(() => ({
+        predictChanges: jest.fn().mockReturnValue({}),
+        optimizeRecipe: jest.fn().mockReturnValue(null),
+      })),
+      smartBaseMalt: jest.fn().mockImplementation(() => ({
+        optimizeBaseMalt: jest.fn().mockReturnValue(null),
+      })),
+      enhancedStyleCompliance: jest.fn().mockImplementation(() => ({
+        analyzeCompliance: jest.fn().mockReturnValue(null),
+        generateOptimizationSuggestion: jest.fn().mockReturnValue(null),
+      })),
+    },
+    beerStyle: {
+      getAllStylesList: jest.fn().mockResolvedValue([]),
+    },
   },
 }));
 

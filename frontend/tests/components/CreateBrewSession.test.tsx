@@ -2,8 +2,8 @@
 import React from 'react';
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateBrewSession from "../../src/components/BrewSessions/CreateBrewSession";
-import BrewSessionService from "../../src/services/BrewSessionService";
-import RecipeService from "../../src/services/RecipeService";
+import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
+import RecipeService from "../../src/services/Data/RecipeService";
 import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
 import { renderWithProviders, mockData } from "../testUtils";
 
@@ -11,8 +11,8 @@ import { renderWithProviders, mockData } from "../testUtils";
 jest.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock services and cache manager
-jest.mock("../../src/services/BrewSessionService");
-jest.mock("../../src/services/RecipeService");
+jest.mock("../../src/services/Brewing/BrewSessionService");
+jest.mock("../../src/services/Data/RecipeService");
 jest.mock("../../src/services/CacheManager", () => ({
   invalidateBrewSessionCaches: {
     onCreated: jest.fn(),

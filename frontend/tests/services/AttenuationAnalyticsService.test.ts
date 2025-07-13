@@ -1,4 +1,4 @@
-import attenuationAnalyticsService from '../../src/services/AttenuationAnalyticsService';
+import attenuationAnalyticsService from '../../src/services/Analytics/AttenuationAnalyticsService';
 import ApiService from '../../src/services/api';
 import { AttenuationAnalytics } from '../../src/types';
 

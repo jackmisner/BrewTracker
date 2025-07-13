@@ -1,7 +1,7 @@
 import React from "react";
 import RecipeDefaultsService, {
   useRecipeDefaults,
-} from "../../src/services/RecipeDefaultsService";
+} from "../../src/services/User/RecipeDefaultsService";
 import { renderHook } from "@testing-library/react";
 
 // Mock the UnitContext

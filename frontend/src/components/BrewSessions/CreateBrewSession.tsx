@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import BrewSessionService from "../../services/BrewSessionService";
-import RecipeService from "../../services/RecipeService";
+import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import { Recipe } from "../../types";
 import { formatGravity, formatAbv, formatIbu, formatSrm } from "../../utils/formatUtils";
@@ -39,7 +38,7 @@ const CreateBrewSession: React.FC = () => {
       const fetchRecipeData = async (): Promise<void> => {
         try {
           setLoading(true);
-          const recipeData = await RecipeService.fetchRecipe(recipeId);
+          const recipeData = await Services.recipe.fetchRecipe(recipeId);
           setRecipe(recipeData);
 
           // Pre-populate the session name based on recipe
@@ -83,7 +82,7 @@ const CreateBrewSession: React.FC = () => {
       };
 
       // Create the brew session using the service
-      const newSession = await BrewSessionService.createBrewSession(sessionData);
+      const newSession = await Services.brewSession.createBrewSession(sessionData);
 
       // Invalidate caches to update all related components
       invalidateBrewSessionCaches.onCreated({

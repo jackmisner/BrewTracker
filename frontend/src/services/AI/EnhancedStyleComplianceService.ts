@@ -1,37 +1,6 @@
-import { RecipeMetrics } from '../types';
-import { BeerStyleGuide, StyleRange } from '../types/beer-styles';
-
-export interface StyleCharacteristics {
-  isHopForward: boolean;
-  isMaltForward: boolean;
-  isBalanced: boolean;
-  isDark: boolean;
-  isLight: boolean;
-  complexity: 'simple' | 'moderate' | 'complex';
-  primaryFlavors: string[];
-  secondaryFlavors: string[];
-  keywords: string[];
-}
-
-export interface StyleCompliance {
-  og: { inRange: boolean; deviation: number; target: number; priority: number; currentValue: number };
-  fg: { inRange: boolean; deviation: number; target: number; priority: number; currentValue: number };
-  abv: { inRange: boolean; deviation: number; target: number; priority: number; currentValue: number };
-  ibu: { inRange: boolean; deviation: number; target: number; priority: number; currentValue: number };
-  srm: { inRange: boolean; deviation: number; target: number; priority: number; currentValue: number };
-  overallScore: number;
-  criticalIssues: string[];
-  improvementAreas: string[];
-}
-
-export interface StyleOptimizationTarget {
-  metric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm';
-  currentValue: number;
-  targetValue: number;
-  priority: number;
-  reasoning: string;
-  impactType: 'critical' | 'important' | 'nice-to-have';
-}
+import { RecipeMetrics } from '../../types';
+import { BeerStyleGuide, StyleRange } from '../../types/beer-styles';
+import type { StyleCharacteristics, StyleCompliance, StyleOptimizationTarget } from '../../types/ai';
 
 /**
  * Enhanced Style Compliance Service

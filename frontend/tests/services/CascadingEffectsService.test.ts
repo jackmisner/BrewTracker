@@ -1,4 +1,4 @@
-import CascadingEffectsService from '../../src/services/CascadingEffectsService';
+import CascadingEffectsService from '../../src/services/AI/CascadingEffectsService';
 import { RecipeIngredient, RecipeMetrics } from '../../src/types';
 
 // Mock the Services dependency

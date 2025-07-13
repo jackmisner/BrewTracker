@@ -1,4 +1,4 @@
-import ApiService from "./api";
+import ApiService from "../api";
 import {
   Recipe,
   RecipeIngredient,
@@ -7,7 +7,7 @@ import {
   RecipeScalingData,
   RecipeValidation,
   ID,
-} from "../types";
+} from "../../types";
 
 // Recipe error interface
 interface RecipeError extends Error {

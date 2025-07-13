@@ -9,8 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import ApiService from "../../services/api";
-import brewSessionService from "../../services/BrewSessionService";
+import { Services } from "../../services";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { 
   FermentationEntry, 
@@ -94,14 +93,14 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       setError(""); // Clear any existing errors
 
       // Fetch fermentation data entries
-      const fermentationData = await brewSessionService.getFermentationData(
+      const fermentationData = await Services.brewSession.getFermentationData(
         sessionId
       );
       setFermentationData(fermentationData);
 
       // Fetch fermentation statistics
       try {
-        const statsData = await brewSessionService.getFermentationStats(sessionId);
+        const statsData = await Services.brewSession.getFermentationStats(sessionId);
         if (statsData) {
           setStats(statsData);
         } else {
@@ -222,7 +221,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       };
 
       // Submit data
-      await brewSessionService.addFermentationEntry(
+      await Services.brewSession.addFermentationEntry(
         sessionId,
         entry
       );
@@ -235,7 +234,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
             actual_og: entry.gravity,
           };
 
-          await ApiService.brewSessions.update(sessionId, sessionUpdateData);
+          await Services.brewSession.updateBrewSession(sessionId, sessionUpdateData);
 
           // Notify parent component of the update
           if (onUpdateSession) {
@@ -271,7 +270,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   const handleDelete = async (index: number): Promise<void> => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        await ApiService.brewSessions.deleteFermentationEntry(sessionId, index);
+        await Services.brewSession.deleteFermentationEntry(sessionId, index);
         fetchFermentationData(); // Refresh data
       } catch (err: any) {
         console.error("Error deleting fermentation entry:", err);
@@ -307,7 +306,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         updateData.actual_abv = (sessionData.actual_og - latestGravityEntry.gravity) * 131.25;
       }
 
-      await ApiService.brewSessions.update(sessionId, updateData);
+      await Services.brewSession.updateBrewSession(sessionId, updateData);
 
       // Notify parent component of the update
       if (onUpdateSession) {

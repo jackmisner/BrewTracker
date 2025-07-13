@@ -65,7 +65,14 @@ export interface UpdateRecipeRequest extends Partial<RecipeFormData> {}
 
 export interface CloneRecipeResponse extends ApiResponse<Recipe> {
 
-  
+}
+
+export interface ClonePublicRecipeRequest {
+  originalAuthor: string;
+}
+
+export interface ClonePublicRecipeResponse extends ApiResponse<Recipe> {
+
 }
 
 export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {

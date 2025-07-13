@@ -21,7 +21,7 @@ afterAll(() => {
 });
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/UserSettingsService", () => ({
+jest.mock("../../src/services/User/UserSettingsService", () => ({
   getUserSettings: jest.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",

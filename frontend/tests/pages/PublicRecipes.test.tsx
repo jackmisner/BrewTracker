@@ -12,6 +12,7 @@ jest.mock("../../src/services/api", () => ({
   recipes: {
     getPublic: jest.fn(),
     clone: jest.fn(),
+    clonePublic: jest.fn(),
   },
 }));
 
@@ -202,7 +203,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone Recipe");
+      const cloneButtons = screen.getAllByText("Clone");
       expect(cloneButtons).toHaveLength(3);
     });
 
@@ -406,8 +407,8 @@ describe("PublicRecipes", () => {
   });
 
   describe("Recipe cloning", () => {
-    it("calls clone API when clone button is clicked", async () => {
-      (ApiService.recipes.clone as jest.Mock).mockResolvedValue({
+    it("calls clonePublic API when clone button is clicked", async () => {
+      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
         data: { recipe_id: "cloned-recipe-id" },
       });
 
@@ -417,14 +418,14 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone Recipe");
+      const cloneButtons = screen.getAllByText("Clone");
       fireEvent.click(cloneButtons[0]);
 
-      expect(ApiService.recipes.clone).toHaveBeenCalledWith("recipe-1");
+      expect(ApiService.recipes.clonePublic).toHaveBeenCalledWith("recipe-1", "brewer1");
     });
 
     it("navigates to edit page after successful clone", async () => {
-      (ApiService.recipes.clone as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
         status: 201,
         data: { recipe_id: "cloned-recipe-id" },
       });
@@ -435,7 +436,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone Recipe");
+      const cloneButtons = screen.getAllByText("Clone");
       fireEvent.click(cloneButtons[0]);
 
       await waitFor(() => {
@@ -447,7 +448,7 @@ describe("PublicRecipes", () => {
 
     it("shows alert when clone fails", async () => {
       const alertSpy = jest.spyOn(window, "alert").mockImplementation();
-      (ApiService.recipes.clone as jest.Mock).mockRejectedValue(new Error("Clone failed"));
+      (ApiService.recipes.clonePublic as jest.Mock).mockRejectedValue(new Error("Clone failed"));
 
       renderWithProviders(<PublicRecipes />);
 
@@ -455,7 +456,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone Recipe");
+      const cloneButtons = screen.getAllByText("Clone");
       fireEvent.click(cloneButtons[0]);
 
       await waitFor(() => {
@@ -557,7 +558,7 @@ describe("PublicRecipes", () => {
       });
 
       expect(screen.queryByTestId(/recipe-card/)).not.toBeInTheDocument();
-      expect(screen.queryByText("Clone Recipe")).not.toBeInTheDocument();
+      expect(screen.queryByText("Clone")).not.toBeInTheDocument();
     });
   });
 

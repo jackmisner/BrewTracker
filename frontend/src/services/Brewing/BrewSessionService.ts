@@ -1,9 +1,9 @@
-import ApiService from "./api";
+import ApiService from "../api";
 import {
   BrewSession,
   ID,
   GravityStabilizationAnalysis,
-} from "../types";
+} from "../../types";
 
 // Service-specific interfaces
 interface BrewSessionValidation {
@@ -342,6 +342,21 @@ class BrewSessionService {
       console.error("Error adding fermentation entry:", error);
       throw this.createBrewSessionError(
         "Failed to add fermentation entry",
+        error
+      );
+    }
+  }
+
+  /**
+   * Delete fermentation entry
+   */
+  async deleteFermentationEntry(sessionId: ID, entryIndex: number): Promise<void> {
+    try {
+      await ApiService.brewSessions.deleteFermentationEntry(sessionId, entryIndex);
+    } catch (error) {
+      console.error("Error deleting fermentation entry:", error);
+      throw this.createBrewSessionError(
+        "Failed to delete fermentation entry",
         error
       );
     }

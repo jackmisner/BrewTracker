@@ -1,4 +1,4 @@
-import BrewSessionService from "../../src/services/BrewSessionService";
+import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service

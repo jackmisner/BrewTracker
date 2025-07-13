@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useRecipeBuilder } from "../hooks/useRecipeBuilder";
 import BeerXMLImportExport from "../components/BeerXML/BeerXMLImportExport";
-import beerXMLService from "../services/BeerXML/BeerXMLService";
 import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
 import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
 import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
 import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
 import AISuggestions from "../components/RecipeBuilder/AISuggestions";
-import Services from "../services";
+import { Services } from "../services";
 import { Recipe, RecipeIngredient } from "../types";
 import "../styles/RecipeBuilder.css";
 
@@ -155,10 +154,10 @@ function RecipeBuilder(): React.ReactElement {
       }
 
       // Export using backend service
-      const exportResult = await beerXMLService.exportRecipe(recipe.recipe_id);
+      const exportResult = await Services.BeerXML.service.exportRecipe(recipe.recipe_id);
 
       // Download the file
-      beerXMLService.downloadBeerXML(
+      Services.BeerXML.service.downloadBeerXML(
         exportResult.xmlContent,
         exportResult.filename
       );

@@ -11,6 +11,8 @@ BrewTracker is a full-stack web application that enables homebrewers to:
 - Track brewing sessions and fermentation progress
 - Analyze yeast performance with real-world attenuation data
 - Browse and share recipes with advanced search and filtering
+- Get AI-powered recipe suggestions for style compliance and optimization
+- Share recipes publicly with proper attribution and access control
 - View recipe statistics and brewing history
 
 ## 🏗️ Project Structure
@@ -23,100 +25,108 @@ This repository contains two applications:
 ```
 homebrew-tracker/
 ├── backend/
-│   ├── app.py                                      # Flask application factory with auto-seeding, CORS, and blueprint registration
-│   ├── config.py                                   # Environment-specific configuration classes (development, testing, production)
-│   ├── data/                                       # Static JSON data files for ingredients and beer style guides
-│   ├── models/                                     # Database models
+│   ├── app.py                                            # Flask application factory with auto-seeding, CORS, and blueprint registration
+│   ├── config.py                                         # Environment-specific configuration classes (development, testing, production)
+│   ├── data/                                             # Static JSON data files for ingredients and beer style guides
+│   ├── models/                                           # Database models
 │   │   ├── __init__.py
-│   │   └── mongo_models.py                         # MongoEngine ODM models with validation, relationships, and business logic
-│   ├── routes/                                     # Flask blueprints for API endpoints
+│   │   └── mongo_models.py                               # MongoEngine ODM models with validation, relationships, and business logic
+│   ├── routes/                                           # Flask blueprints for API endpoints
 │   │   ├── __init__.py
-│   │   ├── auth.py                                 # User authentication and authorization endpoints
-│   │   ├── beer_styles.py                          # Beer style guide and analysis endpoints
-│   │   ├── beerxml.py                              # BeerXML import/export functionality endpoints
-│   │   ├── brew_sessions.py                        # Brew session tracking and fermentation management endpoints
-│   │   ├── ingredients.py                          # Ingredient CRUD operations, search endpoints, and yeast attenuation analytics
-│   │   ├── recipes.py                              # Recipe CRUD operations and calculation endpoints
-│   │   └── user_settings.py                        # User preferences and account management endpoints
-│   ├── seeds/                                      # Database seeding scripts
-│   │   ├── seed_ingredients.py                     # Seeds ingredients from JSON data
-│   │   └── seed_beer_styles.py                     # Seeds beer style guides from JSON data
-│   ├── services/                                   # Business logic layer
+│   │   ├── auth.py                                       # User authentication and authorization endpoints
+│   │   ├── beer_styles.py                                # Beer style guide and analysis endpoints
+│   │   ├── beerxml.py                                    # BeerXML import/export functionality endpoints
+│   │   ├── brew_sessions.py                              # Brew session tracking and fermentation management endpoints
+│   │   ├── ingredients.py                                # Ingredient CRUD operations, search endpoints, and yeast attenuation analytics
+│   │   ├── recipes.py                                    # Recipe CRUD operations and calculation endpoints
+│   │   └── user_settings.py                              # User preferences and account management endpoints
+│   ├── seeds/                                            # Database seeding scripts
+│   │   ├── seed_ingredients.py                           # Seeds ingredients from JSON data
+│   │   └── seed_beer_styles.py                           # Seeds beer style guides from JSON data
+│   ├── services/                                         # Business logic layer
 │   │   ├── __init__.py
-│   │   └── mongodb_service.py                      # Database abstraction layer with connection management and query utilities
-│   ├── tests/                                      # pytest test suite for backend functionality
-│   ├── utils/                                      # Utility functions
+│   │   └── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
+│   ├── tests/                                            # pytest test suite for backend functionality
+│   ├── utils/                                            # Utility functions
 │   │   ├── __init__.py
-│   │   ├── brewing_calculation_core.py             # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations)
-│   │   ├── recipe_orm_calculator.py                # Recipe calculations integrated with MongoDB models and validation
-│   │   ├── recipe_api_calculator.py                # Real-time recipe calculations for API endpoints without database persistence
-│   │   └── unit_conversions.py                     # Metric/imperial conversion utilities for weight, volume, and temperature
-│   ├── requirements.txt                            # Python package dependencies for backend
-│   └── .env                                        # Environment variables for database URI, JWT secrets, and Flask configuration
+│   │   ├── brewing_calculation_core.py                   # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations)
+│   │   ├── recipe_orm_calculator.py                      # Recipe calculations integrated with MongoDB models and validation
+│   │   ├── recipe_api_calculator.py                      # Real-time recipe calculations for API endpoints without database persistence
+│   │   └── unit_conversions.py                           # Metric/imperial conversion utilities for weight, volume, and temperature
+│   ├── requirements.txt                                  # Python package dependencies for backend
+│   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
 ├── frontend/
 │   ├── public/
-│   │   ├── index.html                              # Main HTML template for React application
+│   │   ├── index.html                                    # Main HTML template for React application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── BeerXML/                            # BeerXML import/export components with ingredient matching and validation
-│   │   │   ├── BrewSessions/                       # Brew session management with fermentation tracking and progress monitoring
-│   │   │   ├── Header/                             # Application header with responsive navigation and user authentication status
-│   │   │   ├── RecipeBuilder/                      # Complex recipe creation interface with real-time calculations and ingredient management
-│   │   │   ├── CompactRecipeCard.tsx               # Unified recipe display component with SRM color swatches and metrics grid
-│   │   │   ├── RecipeActions.tsx                   # Action buttons for recipe operations (edit, delete, clone, share)
-│   │   │   └── SearchableSelect.ts                 # Fuzzy search component with Fuse.js for intelligent ingredient matching and suggestions
+│   │   │   ├── BeerXML/                                  # BeerXML import/export components with ingredient matching and validation
+│   │   │   ├── BrewSessions/                             # Brew session management with fermentation tracking and progress monitoring
+│   │   │   ├── Header/                                   # Application header with responsive navigation and user authentication status
+│   │   │   ├── RecipeBuilder/                            # Complex recipe creation interface with real-time calculations, ingredient management, and AI suggestions
+│   │   │   ├── CompactRecipeCard.tsx                     # Unified recipe display component with SRM color swatches, metrics grid, and action filtering
+│   │   │   ├── RecipeActions.tsx                         # Action buttons for recipe operations with public recipe access control (edit, delete, clone, share)
+│   │   │   └── SearchableSelect.ts                       # Fuzzy search component with Fuse.js for intelligent ingredient matching and suggestions
 │   │   ├── contexts/
-│   │   │   └── UnitContext.ts                      # React context for global metric/imperial unit preference management
-│   │   ├── hooks/                                  # Custom React hooks for state management and business logic
-│   │   │   ├── index.ts                            # Central export for all custom hooks
-│   │   │   └── useRecipeBuilder.ts                 # Recipe builder state management and validation logic
-│   │   ├── images/                                 # Static image assets (logos, icons, placeholders)
+│   │   │   └── UnitContext.ts                            # React context for global metric/imperial unit preference management
+│   │   ├── hooks/                                        # Custom React hooks for state management and business logic
+│   │   │   ├── index.ts                                  # Central export for all custom hooks
+│   │   │   └── useRecipeBuilder.ts                       # Recipe builder state management and validation logic
+│   │   ├── images/                                       # Static image assets (logos, icons, placeholders)
 │   │   ├── pages/
-│   │   │   ├── AllRecipes.tsx                      # Personal recipe library with advanced fuzzy search, 14 sorting criteria, and unified compact design
-│   │   │   ├── AttenuationAnalytics.tsx            # Yeast attenuation analytics dashboard with real-world performance data
-│   │   │   ├── Dashboard.tsx                       # User dashboard with recent activity, quick stats, and navigation shortcuts
-│   │   │   ├── IngredientManager.tsx               # Ingredient database management with creation, editing, and bulk operations
-│   │   │   ├── Login.tsx                           # User authentication login page
-│   │   │   ├── PublicRecipes.tsx                   # Community recipe sharing with unified design, search, sorting, and style filtering
-│   │   │   ├── RecipeBuilder.tsx                   # Create and edit recipes with ingredient management
-│   │   │   ├── Register.tsx                        # User registration page with account creation form
-│   │   │   ├── UserSettings.tsx                    # User preferences for units, account details, and application settings
-│   │   │   └── ViewRecipe.tsx                      # Detailed recipe view with calculations, brew sessions, and sharing options
-│   │   ├── services/                               # TypeScript service layer for API communication and business logic
-│   │   │   ├── BeerXML/                            # BeerXML format handling services
-│   │   │   │   ├── BeerXMLService.ts               # BeerXML import/export and format conversion
-│   │   │   │   └── IngredientMatchingService.ts    # Ingredient mapping and matching for BeerXML imports
-│   │   │   ├── api.ts                              # Low-level HTTP client with authentication and error handling
-│   │   │   ├── index.ts                            # Central export hub for all service modules
-│   │   │   ├── AttenuationAnalyticsService.ts      # Yeast attenuation analytics and real-world performance data management
-│   │   │   ├── BeerStyleService.ts                 # Beer style matching and analysis against BJCP guidelines
-│   │   │   ├── BrewSessionService.ts               # Brew session tracking and fermentation data management
-│   │   │   ├── CacheManager.ts                     # Client-side caching for improved performance
-│   │   │   ├── IngredientService.ts                # Ingredient search, CRUD operations, and database management
-│   │   │   ├── MetricService.ts                    # Recipe calculations (OG, FG, ABV, IBU, SRM) and analysis
-│   │   │   ├── RecipeDefaultsService.ts            # Default value generation based on user preferences and recipe type
-│   │   │   ├── RecipeService.ts                    # Recipe CRUD operations, cloning, and sharing functionality
-│   │   │   └── UserSettingsService.ts              # User preferences, account management, and settings persistence
-│   │   ├── styles/                                 # CSS for various frontend components
-│   │   ├── types/                                  # Comprehensive TypeScript type definitions for BrewTracker
-│   │   │   ├── api.ts                              # API request/response interface definitions
-│   │   │   ├── beer-styles.ts                      # Beer style guide and analysis type definitions
-│   │   │   ├── brew-session.ts                     # Brew session and fermentation tracking types
-│   │   │   ├── common.ts                           # Shared utility types and common interfaces
-│   │   │   ├── globals.d.ts                        # Global TypeScript declarations and module augmentations
-│   │   │   ├── index.ts                            # Central export for all type definitions
-│   │   │   ├── metrics.ts                          # Brewing calculation and measurement types
-│   │   │   ├── recipe.ts                           # Recipe, ingredient, and calculation type definitions
-│   │   │   ├── units.ts                            # Unit system and conversion type definitions
-│   │   │   └── user.ts                             # User account and settings type definitions
+│   │   │   ├── AllRecipes.tsx                            # Personal recipe library with advanced fuzzy search, 14 sorting criteria, and unified compact design
+│   │   │   ├── AttenuationAnalytics.tsx                  # Yeast attenuation analytics dashboard with real-world performance data
+│   │   │   ├── Dashboard.tsx                             # User dashboard with recent activity, quick stats, and navigation shortcuts
+│   │   │   ├── IngredientManager.tsx                     # Ingredient database management with creation, editing, and bulk operations
+│   │   │   ├── Login.tsx                                 # User authentication login page
+│   │   │   ├── PublicRecipes.tsx                         # Community recipe sharing with unified design, search, sorting, style filtering, and access control
+│   │   │   ├── RecipeBuilder.tsx                         # Create and edit recipes with ingredient management
+│   │   │   ├── Register.tsx                              # User registration page with account creation form
+│   │   │   ├── UserSettings.tsx                          # User preferences for units, account details, and application settings
+│   │   │   └── ViewRecipe.tsx                            # Detailed recipe view with calculations, brew sessions, and sharing options
+│   │   ├── services/                                     # TypeScript service layer for API communication and business logic
+│   │   │   ├── api.ts                                    # Low-level HTTP client with authentication and error handling
+│   │   │   ├── index.ts                                  # Central export hub for all service modules
+│   │   │   ├── CacheManager.ts                           # Client-side caching for improved performance
+│   │   │   ├── Analytics/                                # Data analysis and insights
+│   │   │   │   ├── AttenuationAnalyticsService.ts        # Yeast attenuation analytics and real-world performance data management
+│   │   │   │   └── MetricService.ts                      # Recipe calculations (OG, FG, ABV, IBU, SRM) and analysis
+│   │   │   ├── AI/                                       # AI recipe suggestion services
+│   │   │   │    ├── EnhancedStyleComplianceService.ts    # BJCP style analysis and multi-metric optimization
+│   │   │   │    ├── SmartBaseMaltService.ts              # Intelligent base malt selection and grain bill recommendations
+│   │   │   │    └── CascadingEffectsService.ts           # Recipe change prediction and impact analysis
+│   │   │   ├── BeerXML/                                  # BeerXML format handling services
+│   │   │   │   ├── BeerXMLService.ts                     # BeerXML import/export and format conversion
+│   │   │   │   └── IngredientMatchingService.ts          # Ingredient mapping and matching for BeerXML imports
+│   │   │   ├── Brewing/                                  # Brewing process management
+│   │   │   │   └── BrewSessionService.ts                 # Brew session tracking and fermentation data management
+│   │   │   ├── Data/                                     # Core data management
+│   │   │   │   ├── BeerStyleService.ts                   # Beer style matching and analysis against BJCP guidelines
+│   │   │   │   ├── IngredientService.ts                  # Ingredient search, CRUD operations, and database management
+│   │   │   │   └── RecipeService.ts                      # Recipe CRUD operations, cloning, sharing functionality, and public recipe access control
+│   │   │   └── User/                                     # User-specific services
+│   │   │       ├── RecipeDefaultsService.ts              # Default value generation based on user preferences and recipe type
+│   │   │       └── UserSettingsService.ts                # User preferences, account management, and settings persistence
+│   │   ├── styles/                                       # CSS for various frontend components
+│   │   ├── types/                                        # Comprehensive TypeScript type definitions for BrewTracker
+│   │   │   ├── api.ts                                    # API request/response interface definitions
+│   │   │   ├── beer-styles.ts                            # Beer style guide and analysis type definitions
+│   │   │   ├── brew-session.ts                           # Brew session and fermentation tracking types
+│   │   │   ├── common.ts                                 # Shared utility types and common interfaces
+│   │   │   ├── globals.d.ts                              # Global TypeScript declarations and module augmentations
+│   │   │   ├── index.ts                                  # Central export for all type definitions
+│   │   │   ├── metrics.ts                                # Brewing calculation and measurement types
+│   │   │   ├── recipe.ts                                 # Recipe, ingredient, and calculation type definitions
+│   │   │   ├── units.ts                                  # Unit system and conversion type definitions
+│   │   │   └── user.ts                                   # User account and settings type definitions
 │   │   ├── utils/
-│   │   │   └── formatUtils.ts                      # Utility functions for unit formatting and display
-│   │   ├── App.tsx                                 # Main React application component with routing and global providers
-│   │   └── index.tsx                               # React application entry point and DOM rendering
-│   ├── tests/                                      # Jest + TypeScript tests for React components and utilities
-│   ├── package.json                                # Node.js dependencies, scripts, and project configuration
-│   └── .env                                        # Environment variables for API URLs and frontend configuration
-└── README.md                                       # The document you are currently reading!
+│   │   │   └── formatUtils.ts                            # Utility functions for unit formatting and display
+│   │   ├── App.tsx                                       # Main React application component with routing and global providers
+│   │   └── index.tsx                                     # React application entry point and DOM rendering
+│   ├── tests/                                            # Jest + TypeScript tests for React components and utilities
+│   ├── package.json                                      # Node.js dependencies, scripts, and project configuration
+│   └── .env                                              # Environment variables for API URLs and frontend configuration
+└── README.md                                             # The document you are currently reading!
 ```
 
 ## 📋 Requirements
@@ -258,6 +268,8 @@ Visit `http://localhost:3000` to access the application.
   - Recipe cloning with version control and parent-child relationships
   - Advanced recipe browsing with fuzzy search and 14 sorting criteria
   - Unified compact recipe cards with SRM color visualization
+  - AI-powered recipe suggestions for style compliance and optimization
+  - Public recipe access control with attribution and unlinked cloning
 
 - 📊 Brewing Metrics & Analytics
 
@@ -275,10 +287,11 @@ Visit `http://localhost:3000` to access the application.
 
 - 🌐 Community Features
 
-  - Public/private recipe visibility with sharing controls
+  - Public/private recipe visibility with sharing controls and access management
   - Community recipe library with advanced search and filtering
-  - Recipe cloning from public submissions
+  - Recipe cloning from public submissions with proper attribution
   - User attribution and recipe discovery
+  - Unlinked public recipe cloning for independent recipe development
 
 - 🔧 Advanced Tools
 
@@ -286,6 +299,7 @@ Visit `http://localhost:3000` to access the application.
   - Beer style analysis against BJCP guidelines
   - Ingredient database management with search capabilities
   - Metric/Imperial unit conversion and user preferences
+  - AI recipe suggestions with style compliance optimization and intelligent ingredient recommendations
 
 - 👥 User Experience
   - Secure JWT-based authentication
@@ -314,7 +328,7 @@ Visit `http://localhost:3000` to access the application.
 
 ### Test Coverage Overview
 
-- **Frontend**: 1,577 tests with Jest and React Testing Library
+- **Frontend**: 1,671 tests with Jest and React Testing Library
 - **Backend**: 271 tests with pytest and mongomock
 - **Coverage Target**: 70% minimum for both frontend and backend
 - **Total Test Suite**: Comprehensive end-to-end testing including component, service, and integration tests
@@ -324,7 +338,7 @@ Visit `http://localhost:3000` to access the application.
 ```bash
 cd frontend
 
-# Run all tests (1,577 tests)
+# Run all tests (1,671 tests)
 npm test
 
 # Run tests with coverage reporting
@@ -391,6 +405,39 @@ The yeast attenuation analytics feature is **fully implemented** and ready for p
 - 🚀 **Batch Comparisons**: Performance analysis across different batch sizes
 
 The infrastructure is complete and waiting for real-world brewing data to deliver valuable insights to the homebrewing community.
+
+## 🤖 AI Recipe Suggestions
+
+### Feature Status: Production Ready ✅
+
+The AI recipe suggestions system is **fully implemented** and actively helping brewers create better, more balanced recipes that meet BJCP style guidelines.
+
+#### What's Implemented:
+
+- ✅ **Style Compliance Analysis**: Full BJCP integration with multi-metric optimization (OG, FG, ABV, IBU, SRM)
+- ✅ **Smart Base Malt Selection**: Intelligent malt recommendations based on beer style characteristics
+- ✅ **Ingredient Addition System**: Automatic Blackprinz malt addition for color adjustment when needed
+- ✅ **Hop Timing Optimization**: IBU-focused hop timing suggestions with conservative brewing approach
+- ✅ **Cascading Effects Prediction**: Accurate impact analysis for ingredient changes
+- ✅ **Unified Suggestion System**: Single comprehensive suggestion combining all optimizations
+- ✅ **Quality Control**: Stringent compliance checking with detailed user feedback
+
+#### Key Features:
+
+- 🎯 **Style-Aware Recommendations**: Automatically detects beer style characteristics (hop-forward, malt-forward, color requirements)
+- 🧮 **Real-Time Calculations**: Instant metric predictions for suggested ingredient changes
+- 🔍 **Intelligent Conflict Resolution**: Priority-based merging of multiple optimization suggestions
+- 📊 **Multi-Metric Optimization**: Simultaneous optimization across all brewing metrics
+- ✅ **Comprehensive Validation**: Only shows "recipe looks good" when ALL style ranges are met
+
+#### Technical Architecture:
+
+- **EnhancedStyleComplianceService**: BJCP style analysis and optimization logic
+- **SmartBaseMaltService**: Intelligent grain bill recommendations
+- **CascadingEffectsService**: Recipe change prediction and impact analysis
+- **AISuggestions Component**: Main UI with comprehensive optimization display
+
+The AI suggestions system is actively improving recipe quality and helping brewers understand the relationships between ingredients and brewing metrics.
 
 ## 🤝 Contributing
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import EditBrewSession from "../../src/components/BrewSessions/EditBrewSession";
-import BrewSessionService from "../../src/services/BrewSessionService";
+import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
 import { renderWithProviders, mockData } from "../testUtils";
 
@@ -10,7 +10,7 @@ import { renderWithProviders, mockData } from "../testUtils";
 jest.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock services and cache manager
-jest.mock("../../src/services/BrewSessionService", () => ({
+jest.mock("../../src/services/Brewing/BrewSessionService", () => ({
   fetchBrewSession: jest.fn(),
   updateBrewSession: jest.fn(),
 }));

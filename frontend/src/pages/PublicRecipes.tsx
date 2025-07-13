@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router";
 import Fuse from "fuse.js";
 import ApiService from "../services/api";
 import CompactRecipeCard from "../components/CompactRecipeCard";
-import { Recipe, ID } from "../types";
+import RecipeActions from "../components/RecipeActions";
+import { Recipe } from "../types";
 import "../styles/PublicRecipes.css";
 
 interface Pagination {
@@ -20,7 +20,6 @@ interface PublicRecipeFilters {
 }
 
 const PublicRecipes: React.FC = () => {
-  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -60,15 +59,6 @@ const PublicRecipes: React.FC = () => {
   }, [currentPage, styleFilter, fetchPublicRecipes]);
 
 
-  const handleCloneRecipe = async (recipeId: ID): Promise<void> => {
-    try {
-      const response = await ApiService.recipes.clone(recipeId);
-
-      navigate(`/recipes/${(response.data as any).recipe_id}/edit`);
-    } catch (err: any) {
-      alert("Failed to clone recipe: " + err.message);
-    }
-  };
 
   // Create Fuse instance for client-side fuzzy search
   const fuse = useMemo(() => {
@@ -283,18 +273,22 @@ const PublicRecipes: React.FC = () => {
           <div className="recipes-grid">
             {filteredAndSortedRecipes.map((recipe) => (
               <div key={recipe.recipe_id} className="public-recipe-card-wrapper">
-                <CompactRecipeCard recipe={recipe} />
-                <div className="public-recipe-actions">
+                <CompactRecipeCard 
+                  recipe={recipe} 
+                  showActionsInCard={false}
+                />
+                <div className="public-recipe-info">
                   <span className="public-recipe-author">
                     by {recipe.username || 'Unknown'}
                   </span>
-                  <button
-                    onClick={() => handleCloneRecipe(recipe.recipe_id)}
-                    className="clone-recipe-button"
-                  >
-                    Clone Recipe
-                  </button>
                 </div>
+                <RecipeActions 
+                  recipe={recipe}
+                  isPublicRecipe={true}
+                  originalAuthor={recipe.username || 'Unknown'}
+                  compact={true}
+                  showViewButton={true}
+                />
               </div>
             ))}
           </div>

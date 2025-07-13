@@ -1,10 +1,10 @@
 import CacheManager, {
   invalidateBrewSessionCaches,
 } from "../../src/services/CacheManager";
-import BrewSessionService from "../../src/services/BrewSessionService";
+import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 
 // Mock the BrewSessionService
-jest.mock("../../src/services/BrewSessionService", () => ({
+jest.mock("../../src/services/Brewing/BrewSessionService", () => ({
   clearRecipeCache: jest.fn(),
   clearSessionCache: jest.fn(),
   clearAllRecipeCaches: jest.fn(),

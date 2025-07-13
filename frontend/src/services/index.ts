@@ -3,17 +3,20 @@
  * This provides a clean interface for importing services throughout the application
  */
 
-import ingredientServiceInstance from "./IngredientService";
-import recipeServiceInstance from "./RecipeService";
-import metricServiceInstance from "./MetricService";
-import brewSessionServiceInstance from "./BrewSessionService";
-import BeerStyleService from "./BeerStyleService";
+import ingredientServiceInstance from "./Data/IngredientService";
+import recipeServiceInstance from "./Data/RecipeService";
+import metricServiceInstance from "./Analytics/MetricService";
+import brewSessionServiceInstance from "./Brewing/BrewSessionService";
+import BeerStyleService from "./Data/BeerStyleService";
 import BeerXMLService from "./BeerXML/BeerXMLService";
 import IngredientMatchingService from "./BeerXML/IngredientMatchingService";
 import CacheManager from "./CacheManager";
-import RecipeDefaultsService from "./RecipeDefaultsService";
-import UserSettingsService from "./UserSettingsService";
-import attenuationAnalyticsServiceInstance from "./AttenuationAnalyticsService";
+import RecipeDefaultsService from "./User/RecipeDefaultsService";
+import UserSettingsService from "./User/UserSettingsService";
+import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalyticsService";
+import CascadingEffectsService from "./AI/CascadingEffectsService";
+import EnhancedStyleComplianceService from "./AI/EnhancedStyleComplianceService";
+import SmartBaseMaltService from "./AI/SmartBaseMaltService";
 import { ID } from "../types";
 
 // Service-specific interfaces
@@ -54,10 +57,54 @@ export {
   RecipeDefaultsService,
   UserSettingsService,
   attenuationAnalyticsServiceInstance,
+  CascadingEffectsService,
+  EnhancedStyleComplianceService,
+  SmartBaseMaltService,
 };
 
 // Export as grouped services object for convenience
 export const Services = {
+  // Core infrastructure
+  cache: CacheManager,
+  
+  // Data management services
+  Data: {
+    ingredient: ingredientServiceInstance,
+    recipe: recipeServiceInstance,
+    beerStyle: BeerStyleService,
+  },
+  
+  // Analytics services
+  Analytics: {
+    metrics: metricServiceInstance,
+    attenuationAnalytics: attenuationAnalyticsServiceInstance,
+  },
+  
+  // User services
+  User: {
+    settings: UserSettingsService,
+    recipeDefaults: RecipeDefaultsService,
+  },
+  
+  // Brewing process services
+  Brewing: {
+    brewSession: brewSessionServiceInstance,
+  },
+  
+  // AI services
+  AI: {
+    cascadingEffects: CascadingEffectsService,
+    enhancedStyleCompliance: EnhancedStyleComplianceService,
+    smartBaseMalt: SmartBaseMaltService,
+  },
+  
+  // BeerXML services
+  BeerXML: {
+    service: BeerXMLService,
+    ingredientMatching: IngredientMatchingService,
+  },
+  
+  // Legacy flat access for backward compatibility
   ingredient: ingredientServiceInstance,
   recipe: recipeServiceInstance,
   metrics: metricServiceInstance,
@@ -65,7 +112,6 @@ export const Services = {
   beerStyle: BeerStyleService,
   beerXML: BeerXMLService,
   ingredientMatching: IngredientMatchingService,
-  cache: CacheManager,
   recipeDefaults: RecipeDefaultsService,
   userSettings: UserSettingsService,
   attenuationAnalytics: attenuationAnalyticsServiceInstance,

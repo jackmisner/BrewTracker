@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ingredientMatchingService from "../../services/BeerXML/IngredientMatchingService";
+import { Services } from "../../services";
 import ApiService from "../../services/api";
 import { IngredientType, IngredientUnit } from "../../types";
 import "../../styles/IngredientMatchingReview.css";
@@ -102,7 +102,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     }));
     
     setMatchingSummary(
-      ingredientMatchingService.getMatchingSummary(normalizedResults as any)
+      Services.BeerXML.ingredientMatching.getMatchingSummary(normalizedResults as any)
     );
   }, [matchingResults]);
 

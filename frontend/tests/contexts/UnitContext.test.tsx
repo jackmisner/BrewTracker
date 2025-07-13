@@ -2,10 +2,10 @@ import React from "react";
 import { waitFor, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import { UnitProvider, useUnits } from "../../src/contexts/UnitContext";
-import userSettingsServiceInstance from "../../src/services/UserSettingsService";
+import userSettingsServiceInstance from "../../src/services/User/UserSettingsService";
 
 // Mock the UserSettingsService
-jest.mock("../../src/services/UserSettingsService", () => ({
+jest.mock("../../src/services/User/UserSettingsService", () => ({
   getUserSettings: jest.fn(),
   updateSettings: jest.fn(),
 }));

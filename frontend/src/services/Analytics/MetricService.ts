@@ -1,10 +1,10 @@
-import ApiService from "./api";
+import ApiService from "../api";
 import {
   Recipe,
   RecipeIngredient,
   RecipeMetrics,
   BatchSizeUnit,
-} from "../types";
+} from "../../types";
 
 // Metric service specific interfaces
 interface CalculationData {

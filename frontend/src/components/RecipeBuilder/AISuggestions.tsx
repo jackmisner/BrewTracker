@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Recipe, RecipeIngredient, RecipeMetrics, CreateRecipeIngredientData } from "../../types";
 import { BeerStyleGuide } from "../../types/beer-styles";
-import BeerStyleService from "../../services/BeerStyleService";
-import CascadingEffectsService, { CascadingEffects } from "../../services/CascadingEffectsService";
-import SmartBaseMaltService from "../../services/SmartBaseMaltService";
-import EnhancedStyleComplianceService, { StyleCharacteristics, StyleOptimizationTarget } from "../../services/EnhancedStyleComplianceService";
+import type { CascadingEffects, StyleCharacteristics, StyleOptimizationTarget } from "../../types/ai";
+import { Services } from "../../services";
 import { useUnits } from "../../contexts/UnitContext";
 import { formatIngredientAmount } from "../../utils/formatUtils";
 
@@ -59,9 +57,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const [hasAnalyzed, setHasAnalyzed] = useState<boolean>(false);
   
   // Service instances
-  const cascadingEffectsService = new CascadingEffectsService();
-  const smartBaseMaltService = new SmartBaseMaltService();
-  const enhancedStyleComplianceService = new EnhancedStyleComplianceService();
+  const cascadingEffectsService = new Services.AI.cascadingEffects();
+  const smartBaseMaltService = new Services.AI.smartBaseMalt();
+  const enhancedStyleComplianceService = new Services.AI.enhancedStyleCompliance();
   
   // Unit context for user preferences
   const { unitSystem } = useUnits();
@@ -76,7 +74,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     }
 
     try {
-      const allStyles = await BeerStyleService.getAllStylesList();
+      const allStyles = await Services.beerStyle.getAllStylesList();
       const foundStyle = allStyles.find(
         (style: any) =>
           style.name.toLowerCase() === recipe.style!.toLowerCase() ||
@@ -1201,13 +1199,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     const suggestions: Suggestion[] = [];
     
     try {
-      const allStyles = await BeerStyleService.getAllStylesList();
+      const allStyles = await Services.beerStyle.getAllStylesList();
       const targetStyle = allStyles.find(
         style => style.name.toLowerCase() === styleName.toLowerCase()
       );
 
       if (targetStyle) {
-        const matchResult = BeerStyleService.calculateStyleMatch(targetStyle, metrics);
+        const matchResult = Services.beerStyle.calculateStyleMatch(targetStyle, metrics);
         const changes: IngredientChange[] = [];
 
         // Check IBU compliance

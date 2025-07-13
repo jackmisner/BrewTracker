@@ -1,45 +1,6 @@
-import { Recipe, RecipeIngredient, RecipeMetrics } from "../types";
-import { Services } from "./index";
-
-/**
- * Interface for ingredient change predictions
- */
-interface IngredientChange {
-  ingredientId: string;
-  ingredientName: string;
-  field: string;
-  currentValue: any;
-  suggestedValue: any;
-  // For adding new ingredients
-  isNewIngredient?: boolean;
-  newIngredientData?: any;
-}
-
-/**
- * Interface for predicted metric changes
- */
-interface MetricChange {
-  metric: keyof RecipeMetrics;
-  currentValue: number;
-  predictedValue: number;
-  change: number;
-  changePercent: number;
-}
-
-/**
- * Interface for cascading effects analysis
- */
-interface CascadingEffects {
-  predictedMetrics: RecipeMetrics;
-  metricChanges: MetricChange[];
-  impacts: {
-    og: MetricChange;
-    fg: MetricChange;
-    abv: MetricChange;
-    ibu: MetricChange;
-    srm: MetricChange;
-  };
-}
+import { Recipe, RecipeIngredient, RecipeMetrics } from "../../types";
+import type { CascadingEffects, MetricChange, IngredientChange } from "../../types/ai";
+import { Services } from "../index";
 
 /**
  * Service for calculating cascading effects of ingredient changes
@@ -253,4 +214,4 @@ class CascadingEffectsService {
 }
 
 export default CascadingEffectsService;
-export type { CascadingEffects, MetricChange, IngredientChange };
+// Types are now exported from types/ai.ts

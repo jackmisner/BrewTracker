@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import beerXMLService from "../../services/BeerXML/BeerXMLService";
+import { Services } from "../../services";
 import IngredientMatchingReview from "./IngredientMatchingReview";
 import { Recipe } from "../../types";
 import "../../styles/BeerXMLImportExport.css";
@@ -66,7 +66,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     if (!file) return;
 
     // Validate file using service
-    const validation = beerXMLService.validateFile(file);
+    const validation = Services.BeerXML.service.validateFile(file);
     if (!validation.valid) {
       setImportState((prev) => ({
         ...prev,
@@ -96,12 +96,12 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
 
     try {
       // Read file content
-      const fileContent = await beerXMLService.readFileContent(
+      const fileContent = await Services.BeerXML.service.readFileContent(
         importState.uploadedFile
       );
 
       // Parse BeerXML using backend
-      const parsedRecipes = await beerXMLService.parseBeerXML(fileContent);
+      const parsedRecipes = await Services.BeerXML.service.parseBeerXML(fileContent);
       setImportState((prev) => ({
         ...prev,
         parsedRecipes,
@@ -131,7 +131,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     }));
 
     try {
-      const matchingResults = await beerXMLService.matchIngredients(
+      const matchingResults = await Services.BeerXML.service.matchIngredients(
         importState.selectedRecipe.ingredients
       );
 
@@ -208,10 +208,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     }));
 
     try {
-      const result = await beerXMLService.exportRecipe(recipe.id);
+      const result = await Services.BeerXML.service.exportRecipe(recipe.id);
 
       // Download file
-      beerXMLService.downloadBeerXML(result.xmlContent, result.filename);
+      Services.BeerXML.service.downloadBeerXML(result.xmlContent, result.filename);
 
       if (onExport) {
         onExport({ success: true, filename: result.filename });

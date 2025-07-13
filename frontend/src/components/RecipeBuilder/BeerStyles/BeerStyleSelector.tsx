@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
-import BeerStyleService from "../../../services/BeerStyleService";
+import { Services } from "../../../services";
 import StyleAnalysis from "./StyleAnalysis";
 import { Recipe, RecipeMetrics } from "../../../types";
 import { BeerStyleGuide, StyleSuggestion } from "../../../types/beer-styles";
@@ -111,7 +111,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
         setLoading(true);
         setError(null);
 
-        const allStyles = await BeerStyleService.getAllStylesList();
+        const allStyles = await Services.beerStyle.getAllStylesList();
 
         if (allStyles.length === 0) {
           setError(
@@ -145,7 +145,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     const loadSuggestions = async (): Promise<void> => {
       if (showSuggestions && metrics && !selectedStyle) {
         try {
-          const suggestionsResult = await BeerStyleService.findMatchingStyles(
+          const suggestionsResult = await Services.beerStyle.findMatchingStyles(
             metrics
           );
           setSuggestions(suggestionsResult.slice(0, 5));

@@ -9,6 +9,8 @@ interface RecipeActionsProps {
   showViewButton?: boolean;
   compact?: boolean;
   refreshTrigger?: (() => void) | null;
+  isPublicRecipe?: boolean;
+  originalAuthor?: string;
 }
 
 const RecipeActions: React.FC<RecipeActionsProps> = ({
@@ -17,6 +19,8 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
   showViewButton = true,
   compact = false,
   refreshTrigger = null,
+  isPublicRecipe = false,
+  originalAuthor,
 }) => {
   const navigate = useNavigate();
   const [isCloning, setIsCloning] = useState<boolean>(false);
@@ -33,10 +37,21 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
   const handleClone = async (): Promise<void> => {
     setIsCloning(true);
     try {
-      const response = await ApiService.recipes.clone(recipe.recipe_id);
+      let response;
+      
+      if (isPublicRecipe && originalAuthor) {
+        // For public recipes, clone with attribution
+        response = await ApiService.recipes.clonePublic(recipe.recipe_id, originalAuthor);
+      } else {
+        // For own recipes, use regular clone (linked)
+        response = await ApiService.recipes.clone(recipe.recipe_id);
+      }
 
       if (response.status === 201) {
-        alert(`Recipe cloned successfully!`);
+        const successMessage = isPublicRecipe 
+          ? `Recipe cloned successfully with attribution to ${originalAuthor}!`
+          : `Recipe cloned successfully!`;
+        alert(successMessage);
 
         // Call refreshTrigger if provided (used in RecipeCard)
         if (refreshTrigger) {
@@ -103,9 +118,11 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
         </button>
       )}
 
-      <button className={`${buttonClass} edit-button`} onClick={handleEdit}>
-        {compact ? "Edit" : "Edit Recipe"}
-      </button>
+      {!isPublicRecipe && (
+        <button className={`${buttonClass} edit-button`} onClick={handleEdit}>
+          {compact ? "Edit" : "Edit Recipe"}
+        </button>
+      )}
 
       <button
         className={`${buttonClass} clone-button`}
@@ -121,21 +138,22 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
           : "Clone Recipe"}
       </button>
 
-      <button
-        className={`${buttonClass} delete-button`}
-        onClick={handleDelete}
-        disabled={isDeleting}
-      >
-        {isDeleting
-          ? compact
-            ? "Deleting..."
-            : "Deleting Recipe..."
-          : compact
-          ? "Delete"
-          : "Delete Recipe"}
-      </button>
+      {!isPublicRecipe && (
+        <button
+          className={`${buttonClass} delete-button`}
+          onClick={handleDelete}
+          disabled={isDeleting}
+        >
+          {isDeleting
+            ? compact
+              ? "Deleting..."
+              : "Deleting Recipe..."
+            : compact
+            ? "Delete"
+            : "Delete Recipe"}
+        </button>
+      )}
 
-      {/* Conditionally render Brew button - can be controlled by a prop if needed */}
       <button className={`${buttonClass} brew-button`} onClick={handleBrew}>
         {compact ? "Brew" : "Brew This Recipe"}
       </button>

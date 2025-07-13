@@ -20,6 +20,7 @@ import {
   CreateRecipeRequest,
   UpdateRecipeRequest,
   CloneRecipeResponse,
+  ClonePublicRecipeResponse,
   RecipeMetricsResponse,
   CalculateMetricsPreviewRequest,
   CalculateMetricsPreviewResponse,
@@ -173,6 +174,9 @@ const ApiService = {
     
     clone: (id: ID): Promise<AxiosResponse<CloneRecipeResponse>> => 
       api.post(`/recipes/${id}/clone`),
+    
+    clonePublic: (id: ID, originalAuthor: string): Promise<AxiosResponse<ClonePublicRecipeResponse>> => 
+      api.post(`/recipes/${id}/clone-public`, { originalAuthor }),
     
     getVersionHistory: (id: ID): Promise<AxiosResponse<RecipeVersionHistoryResponse>> => 
       api.get(`/recipes/${id}/versions`),

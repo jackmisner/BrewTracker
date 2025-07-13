@@ -6,14 +6,50 @@ import { BrowserRouter } from "react-router";
 import { UnitProvider } from "../../src/contexts/UnitContext";
 import RecipeBuilder from "../../src/pages/RecipeBuilder";
 import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
+import { Services } from "../../src/services";
 
 // Mock the useRecipeBuilder hook
 jest.mock("../../src/hooks/useRecipeBuilder");
 
 // Mock UserSettingsService to prevent network calls
-jest.mock("../../src/services/UserSettingsService", () => ({
+jest.mock("../../src/services/User/UserSettingsService", () => ({
   getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
   updateUserSettings: jest.fn(() => Promise.resolve()),
+}));
+
+// Mock Services object with new organized structure
+jest.mock("../../src/services", () => ({
+  Services: {
+    AI: {
+      cascadingEffects: jest.fn().mockImplementation(() => ({
+        predictChanges: jest.fn().mockReturnValue({}),
+        optimizeRecipe: jest.fn().mockReturnValue(null),
+      })),
+      smartBaseMalt: jest.fn().mockImplementation(() => ({
+        optimizeBaseMalt: jest.fn().mockReturnValue(null),
+      })),
+      enhancedStyleCompliance: jest.fn().mockImplementation(() => ({
+        analyzeCompliance: jest.fn().mockReturnValue(null),
+        generateOptimizationSuggestion: jest.fn().mockReturnValue(null),
+      })),
+    },
+    BeerXML: {
+      service: {
+        exportRecipe: jest.fn(),
+        downloadBeerXML: jest.fn(),
+      },
+    },
+    ingredient: {
+      clearCache: jest.fn(),
+    },
+    beerStyle: {
+      getAllStylesList: jest.fn().mockResolvedValue([]),
+    },
+  },
+  // Legacy flat access for backward compatibility
+  ingredient: {
+    clearCache: jest.fn(),
+  },
 }));
 
 // Mock BeerXML components and services
@@ -48,11 +84,6 @@ jest.mock("../../src/services/BeerXML/BeerXMLService", () => ({
   downloadBeerXML: jest.fn(),
 }));
 
-jest.mock("../../src/services", () => ({
-  ingredient: {
-    clearCache: jest.fn(),
-  },
-}));
 
 jest.mock("../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis", () => {
   return function MockStyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }: any) {
@@ -911,9 +942,9 @@ describe("RecipeBuilder", () => {
 
     test("handles BeerXML export", async () => {
       const user = userEvent.setup();
-      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const { Services } = require("../../src/services");
       
-      beerXMLService.exportRecipe.mockResolvedValue({
+      Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
         filename: "test-recipe.xml"
       });
@@ -927,8 +958,8 @@ describe("RecipeBuilder", () => {
       const exportButton = screen.getByText("📤 Export");
       await user.click(exportButton);
 
-      expect(beerXMLService.exportRecipe).toHaveBeenCalledWith("test-recipe-123");
-      expect(beerXMLService.downloadBeerXML).toHaveBeenCalledWith(
+      expect(Services.BeerXML.service.exportRecipe).toHaveBeenCalledWith("test-recipe-123");
+      expect(Services.BeerXML.service.downloadBeerXML).toHaveBeenCalledWith(
         "<xml>test</xml>",
         "test-recipe.xml"
       );
@@ -936,11 +967,11 @@ describe("RecipeBuilder", () => {
 
     test("handles BeerXML export without recipe_id (saves first)", async () => {
       const user = userEvent.setup();
-      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const { Services } = require("../../src/services");
       
       mockHookReturn.recipe.recipe_id = null;
       mockHookReturn.saveRecipe = jest.fn().mockResolvedValue({ recipe_id: "new-recipe-123" });
-      beerXMLService.exportRecipe.mockResolvedValue({
+      Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
         filename: "test-recipe.xml"
       });
@@ -987,9 +1018,9 @@ describe("RecipeBuilder", () => {
 
     test("shows exporting status", async () => {
       const user = userEvent.setup();
-      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const { Services } = require("../../src/services");
       
-      beerXMLService.exportRecipe.mockImplementation(() => new Promise(() => {})); // Never resolves
+      Services.BeerXML.service.exportRecipe.mockImplementation(() => new Promise(() => {})); // Never resolves
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
       (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
@@ -1032,9 +1063,9 @@ describe("RecipeBuilder", () => {
 
     test("shows success message after export", async () => {
       const user = userEvent.setup({ delay: null });
-      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const { Services } = require("../../src/services");
       
-      beerXMLService.exportRecipe.mockResolvedValue({
+      Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
         filename: "test-recipe.xml"
       });
@@ -1066,13 +1097,13 @@ describe("RecipeBuilder", () => {
 
     test("handles export error gracefully", async () => {
       const user = userEvent.setup({ delay: null });
-      const beerXMLService = require("../../src/services/BeerXML/BeerXMLService");
+      const { Services } = require("../../src/services");
       const originalAlert = window.alert;
       const originalConsoleError = console.error;
       window.alert = jest.fn();
       console.error = jest.fn();
       
-      beerXMLService.exportRecipe.mockRejectedValue(new Error("Export failed"));
+      Services.BeerXML.service.exportRecipe.mockRejectedValue(new Error("Export failed"));
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
       (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);

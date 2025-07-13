@@ -4,10 +4,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import BeerStyleSelector from '../../src/components/RecipeBuilder/BeerStyles/BeerStyleSelector';
-import BeerStyleService from '../../src/services/BeerStyleService';
+import BeerStyleService from '../../src/services/Data/BeerStyleService';
 
 // Mock the BeerStyleService
-jest.mock('../../src/services/BeerStyleService', () => ({
+jest.mock('../../src/services/Data/BeerStyleService', () => ({
   getAllStylesList: jest.fn(),
   findMatchingStyles: jest.fn(),
   getStyleCategories: jest.fn(),
