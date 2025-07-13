@@ -1,4 +1,4 @@
-import EnhancedStyleComplianceService from '../../src/services/EnhancedStyleComplianceService';
+import EnhancedStyleComplianceService from '../../src/services/AI/EnhancedStyleComplianceService';
 import { RecipeMetrics } from '../../src/types';
 import { BeerStyleGuide, StyleRange } from '../../src/types/beer-styles';
 

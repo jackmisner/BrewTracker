@@ -1,4 +1,4 @@
-import UserSettingsService from "../../src/services/UserSettingsService";
+import UserSettingsService from "../../src/services/User/UserSettingsService";
 import ApiService from "../../src/services/api";
 
 // Mock the ApiService
@@ -826,7 +826,7 @@ describe("UserSettingsService", () => {
 
       // Import again to simulate different module
       const { default: AnotherInstance } = await import(
-        "../../src/services/UserSettingsService"
+        "../../src/services/User/UserSettingsService"
       );
 
       expect(AnotherInstance).toBe(UserSettingsService);

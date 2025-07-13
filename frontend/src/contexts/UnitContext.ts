@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import userSettingsServiceInstance from "../services/UserSettingsService";
+import { Services } from "../services";
 import {
   UnitSystem,
   MeasurementType,
@@ -81,7 +81,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   useEffect(() => {
     const loadUnitPreference = async (): Promise<void> => {
       try {
-        const settings = await userSettingsServiceInstance.getUserSettings();
+        const settings = await Services.userSettings.getUserSettings();
         const preferredUnits: UnitSystem = settings.settings?.preferred_units || "imperial";
         setUnitSystem(preferredUnits);
       } catch (err) {
@@ -102,7 +102,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
       setUnitSystem(newSystem);
 
       // Persist to backend
-      await userSettingsServiceInstance.updateSettings({
+      await Services.userSettings.updateSettings({
         preferred_units: newSystem,
       });
     } catch (err) {

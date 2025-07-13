@@ -1,4 +1,4 @@
-import SmartBaseMaltService from '../../src/services/SmartBaseMaltService';
+import SmartBaseMaltService from '../../src/services/AI/SmartBaseMaltService';
 import { Recipe, RecipeIngredient } from '../../src/types/recipe';
 
 describe('SmartBaseMaltService', () => {

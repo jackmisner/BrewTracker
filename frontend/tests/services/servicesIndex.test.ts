@@ -10,16 +10,19 @@ import {
   RecipeDefaultsService,
   UserSettingsService,
   attenuationAnalyticsServiceInstance,
+  CascadingEffectsService,
+  EnhancedStyleComplianceService,
+  SmartBaseMaltService,
   Services,
   ServiceUtils,
 } from "../../src/services/index";
 
 // Mock all the service instances
-jest.mock("../../src/services/IngredientService");
-jest.mock("../../src/services/RecipeService");
-jest.mock("../../src/services/MetricService");
-jest.mock("../../src/services/BrewSessionService");
-jest.mock("../../src/services/BeerStyleService");
+jest.mock("../../src/services/Data/IngredientService");
+jest.mock("../../src/services/Data/RecipeService");
+jest.mock("../../src/services/Analytics/MetricService");
+jest.mock("../../src/services/Brewing/BrewSessionService");
+jest.mock("../../src/services/Data/BeerStyleService");
 
 describe("Services Index", () => {
   let consoleErrorSpy: any;
@@ -41,20 +44,42 @@ describe("Services Index", () => {
       expect(brewSessionServiceInstance).toBeDefined();
     });
 
-    test("exports Services object with all services", () => {
-      expect(Services).toEqual({
-        ingredient: ingredientServiceInstance,
-        recipe: recipeServiceInstance,
-        metrics: metricServiceInstance,
-        brewSession: brewSessionServiceInstance,
-        beerStyle: BeerStyleService,
-        beerXML: BeerXMLService,
-        ingredientMatching: IngredientMatchingService,
-        cache: CacheManager,
-        recipeDefaults: RecipeDefaultsService,
-        userSettings: UserSettingsService,
-        attenuationAnalytics: attenuationAnalyticsServiceInstance,
-      });
+    test("exports Services object with new organized structure", () => {
+      // Test the new organized structure
+      expect(Services.Data.ingredient).toBe(ingredientServiceInstance);
+      expect(Services.Data.recipe).toBe(recipeServiceInstance);
+      expect(Services.Data.beerStyle).toBe(BeerStyleService);
+      
+      expect(Services.Analytics.metrics).toBe(metricServiceInstance);
+      expect(Services.Analytics.attenuationAnalytics).toBe(attenuationAnalyticsServiceInstance);
+      
+      expect(Services.User.settings).toBe(UserSettingsService);
+      expect(Services.User.recipeDefaults).toBe(RecipeDefaultsService);
+      
+      expect(Services.Brewing.brewSession).toBe(brewSessionServiceInstance);
+      
+      expect(Services.AI.cascadingEffects).toBe(CascadingEffectsService);
+      expect(Services.AI.enhancedStyleCompliance).toBe(EnhancedStyleComplianceService);
+      expect(Services.AI.smartBaseMalt).toBe(SmartBaseMaltService);
+      
+      expect(Services.BeerXML.service).toBe(BeerXMLService);
+      expect(Services.BeerXML.ingredientMatching).toBe(IngredientMatchingService);
+      
+      expect(Services.cache).toBe(CacheManager);
+    });
+
+    test("exports Services object with backward compatibility", () => {
+      // Test backward compatibility with flat structure
+      expect(Services.ingredient).toBe(ingredientServiceInstance);
+      expect(Services.recipe).toBe(recipeServiceInstance);
+      expect(Services.metrics).toBe(metricServiceInstance);
+      expect(Services.brewSession).toBe(brewSessionServiceInstance);
+      expect(Services.beerStyle).toBe(BeerStyleService);
+      expect(Services.beerXML).toBe(BeerXMLService);
+      expect(Services.ingredientMatching).toBe(IngredientMatchingService);
+      expect(Services.recipeDefaults).toBe(RecipeDefaultsService);
+      expect(Services.userSettings).toBe(UserSettingsService);
+      expect(Services.attenuationAnalytics).toBe(attenuationAnalyticsServiceInstance);
     });
 
     test("exports ServiceUtils", () => {
@@ -268,17 +293,17 @@ describe("Services Index", () => {
       const originalMetrics = metricServiceInstance;
 
       // Mock the imports to return null (simulate missing services)
-      jest.doMock("../../src/services/IngredientService", () => null);
-      jest.doMock("../../src/services/MetricService", () => null);
+      jest.doMock("../../src/services/Data/IngredientService", () => null);
+      jest.doMock("../../src/services/Analytics/MetricService", () => null);
 
       expect(() => ServiceUtils.clearAllCaches()).not.toThrow();
 
       // Restore
       jest.doMock(
-        "../../src/services/IngredientService",
+        "../../src/services/Data/IngredientService",
         () => originalIngredient
       );
-      jest.doMock("../../src/services/MetricService", () => originalMetrics);
+      jest.doMock("../../src/services/Analytics/MetricService", () => originalMetrics);
     });
 
     test("healthCheck handles service method that doesn't exist", async () => {

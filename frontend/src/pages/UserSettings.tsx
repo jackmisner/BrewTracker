@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useBlocker } from "react-router";
 import { useUnits } from "../contexts/UnitContext";
-import UserSettingsService from "../services/UserSettingsService";
+import { Services } from "../services";
 import { UserSettings as UserSettingsType } from "../types";
 import "../styles/UserSettings.css";
 
@@ -14,7 +14,7 @@ interface Tab {
 }
 
 // Use the FullUserSettings type from the service
-type FullUserSettings = Awaited<ReturnType<typeof UserSettingsService.getUserSettings>>;
+type FullUserSettings = Awaited<ReturnType<typeof Services.userSettings.getUserSettings>>;
 
 interface SettingsUpdateData extends Partial<UserSettingsType> {}
 
@@ -117,7 +117,7 @@ const UserSettings: React.FC = () => {
     const loadSettings = async (): Promise<void> => {
       try {
         setLoading(true);
-        const userSettings = await UserSettingsService.getUserSettings();
+        const userSettings = await Services.userSettings.getUserSettings();
         setSettings(userSettings);
 
         // Populate forms
@@ -194,7 +194,7 @@ const UserSettings: React.FC = () => {
       setSaving(true);
       setError("");
 
-      await UserSettingsService.updateProfile(profileForm);
+      await Services.userSettings.updateProfile(profileForm);
       setOriginalProfileForm({ ...profileForm }); // Update original to match saved state
       setSuccessMessage("Profile updated successfully");
     } catch (err: any) {
@@ -210,7 +210,7 @@ const UserSettings: React.FC = () => {
       setSaving(true);
       setError("");
 
-      await UserSettingsService.changePassword(passwordForm);
+      await Services.userSettings.changePassword(passwordForm);
       setSuccessMessage("Password changed successfully");
       setPasswordForm({
         current_password: "",
@@ -231,7 +231,7 @@ const UserSettings: React.FC = () => {
       setError("");
 
       // Update preferences using the settings service
-      await UserSettingsService.updateSettings(preferencesForm as SettingsUpdateData);
+      await Services.userSettings.updateSettings(preferencesForm as SettingsUpdateData);
 
       // Update the global unit context with the new preferred units
       await updateUnitSystem(preferencesForm.preferred_units as "imperial" | "metric");
@@ -251,7 +251,7 @@ const UserSettings: React.FC = () => {
       setSaving(true);
       setError("");
 
-      await UserSettingsService.updateSettings(privacyForm);
+      await Services.userSettings.updateSettings(privacyForm);
       setOriginalPrivacyForm({ ...privacyForm }); // Update original to match saved state
       setSuccessMessage("Privacy settings updated successfully");
     } catch (err: any) {
@@ -275,7 +275,7 @@ const UserSettings: React.FC = () => {
       setSaving(true);
       setError("");
 
-      await UserSettingsService.deleteAccount(deleteForm);
+      await Services.userSettings.deleteAccount(deleteForm);
       // Logout and redirect
       localStorage.removeItem("token");
       window.dispatchEvent(new Event("authChange"));

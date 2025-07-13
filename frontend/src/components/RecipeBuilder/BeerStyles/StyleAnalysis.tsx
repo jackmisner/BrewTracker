@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import BeerStyleService from "../../../services/BeerStyleService";
+import { Services } from "../../../services";
 import { Recipe, RecipeMetrics } from "../../../types";
 import { BeerStyleGuide, StyleSuggestion as BeerStyleSuggestion } from "../../../types/beer-styles";
 import {
@@ -48,7 +48,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       setError(null);
 
       // Get all styles to find the matching one
-      const allStyles = await BeerStyleService.getAllStylesList();
+      const allStyles = await Services.beerStyle.getAllStylesList();
       const selectedStyle = allStyles.find(
         (style: any) =>
           style.name.toLowerCase() === recipe.style!.toLowerCase() ||
@@ -57,7 +57,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
 
       if (selectedStyle) {
         // Calculate real-time match using the current metrics
-        const matchResult = BeerStyleService.calculateStyleMatch(
+        const matchResult = Services.beerStyle.calculateStyleMatch(
           selectedStyle,
           metrics
         );
@@ -75,7 +75,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       }
 
       // Also get style suggestions
-      const suggestionsResult = await BeerStyleService.findMatchingStyles(
+      const suggestionsResult = await Services.beerStyle.findMatchingStyles(
         metrics
       );
       setSuggestions(suggestionsResult.slice(0, 5));
@@ -92,7 +92,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       setLoading(true);
       setError(null);
 
-      const suggestionsResult = await BeerStyleService.findMatchingStyles(
+      const suggestionsResult = await Services.beerStyle.findMatchingStyles(
         metrics!
       );
       setSuggestions(suggestionsResult.slice(0, 5));

@@ -1,4 +1,4 @@
-import BeerStyleService from "../../src/services/BeerStyleService";
+import BeerStyleService from "../../src/services/Data/BeerStyleService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service

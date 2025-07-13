@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { GravityStabilizationAnalysis, ID } from "../../types";
-import brewSessionService from "../../services/BrewSessionService";
+import { Services } from "../../services";
 import { formatGravity, formatPercentage } from "../../utils/formatUtils";
 
 interface GravityStabilizationAnalysisProps {
@@ -21,7 +21,7 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
       setLoading(true);
       setError("");
       
-      const result = await brewSessionService.analyzeFermentationCompletion(sessionId);
+      const result = await Services.brewSession.analyzeFermentationCompletion(sessionId);
       setAnalysis(result);
     } catch (err: any) {
       console.error("Error fetching gravity stabilization analysis:", err);

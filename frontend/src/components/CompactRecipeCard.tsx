@@ -5,9 +5,13 @@ import { formatGravity, formatAbv, formatIbu, formatSrm, getSrmColour } from "..
 
 interface CompactRecipeCardProps {
   recipe: Recipe;
+  showActionsInCard?: boolean;
 }
 
-const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({ recipe }) => {
+const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({ 
+  recipe, 
+  showActionsInCard = true 
+}) => {
   const navigate = useNavigate();
 
   const handleView = (): void => {
@@ -67,26 +71,28 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({ recipe }) => {
       </div>
 
       {/* Actions */}
-      <div className="compact-card-actions">
-        <button
-          onClick={handleView}
-          className="compact-action-button view"
-        >
-          View
-        </button>
-        <button
-          onClick={handleEdit}
-          className="compact-action-button edit"
-        >
-          Edit
-        </button>
-        <button
-          onClick={handleBrew}
-          className="compact-action-button brew"
-        >
-          Brew
-        </button>
-      </div>
+      {showActionsInCard && (
+        <div className="compact-card-actions">
+          <button
+            onClick={handleView}
+            className="compact-action-button view"
+          >
+            View
+          </button>
+          <button
+            onClick={handleEdit}
+            className="compact-action-button edit"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleBrew}
+            className="compact-action-button brew"
+          >
+            Brew
+          </button>
+        </div>
+      )}
     </div>
   );
 };

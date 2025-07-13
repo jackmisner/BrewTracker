@@ -8,20 +8,20 @@ import {
   scenarios,
 } from "../../tests/testUtils";
 import ViewRecipe from "../../src/pages/ViewRecipe";
-import RecipeService from "../../src/services/RecipeService";
-import BrewSessionService from "../../src/services/BrewSessionService";
+import RecipeService from "../../src/services/Data/RecipeService";
+import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 
 // Mock the services
-jest.mock("../../src/services/RecipeService");
-jest.mock("../../src/services/BrewSessionService");
-jest.mock("../../src/services/BeerStyleService", () => ({
+jest.mock("../../src/services/Data/RecipeService");
+jest.mock("../../src/services/Brewing/BrewSessionService");
+jest.mock("../../src/services/Data/BeerStyleService", () => ({
   getAllStylesList: jest.fn(() => Promise.resolve([])),
   getStyleCategories: jest.fn(() => Promise.resolve({})),
   getRecipeStyleAnalysis: jest.fn(() => Promise.resolve(null)),
   findMatchingStyles: jest.fn(() => Promise.resolve([])),
 }));
 
-jest.mock("../../src/services/UserSettingsService", () => ({
+jest.mock("../../src/services/User/UserSettingsService", () => ({
   getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
   updateUserSettings: jest.fn(() => Promise.resolve()),
 }));

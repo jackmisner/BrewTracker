@@ -1,4 +1,4 @@
-import ApiService from "./api";
+import ApiService from "../api";
 import {
   Ingredient,
   IngredientsByType,
@@ -6,7 +6,7 @@ import {
   IngredientType,
   CreateRecipeIngredientData,
   ID,
-} from "../types";
+} from "../../types";
 
 // Validation result interface
 interface ValidationResult {

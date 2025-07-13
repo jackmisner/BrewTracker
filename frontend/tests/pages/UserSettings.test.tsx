@@ -2,12 +2,12 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import UserSettings from "../../src/pages/UserSettings";
-import UserSettingsService from "../../src/services/UserSettingsService";
+import UserSettingsService from "../../src/services/User/UserSettingsService";
 import { UnitProvider } from "../../src/contexts/UnitContext";
 import { renderWithProviders, mockData, scenarios } from "../testUtils";
 
 // Mock the UserSettingsService
-jest.mock("../../src/services/UserSettingsService", () => ({
+jest.mock("../../src/services/User/UserSettingsService", () => ({
   getUserSettings: jest.fn(),
   updateProfile: jest.fn(),
   changePassword: jest.fn(),

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import BrewSessionService from "../../services/BrewSessionService";
-import RecipeService from "../../services/RecipeService";
+import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
@@ -31,14 +30,14 @@ const ViewBrewSession: React.FC = () => {
         setLoading(true);
         setError("");
 
-        // Fetch the brew session using BrewSessionService
-        const sessionData = await BrewSessionService.fetchBrewSession(sessionId);
+        // Fetch the brew session using Services
+        const sessionData = await Services.brewSession.fetchBrewSession(sessionId);
         setSession(sessionData);
 
         // Fetch the related recipe if it exists
         if (sessionData.recipe_id) {
           try {
-            const recipeData = await RecipeService.fetchRecipe(sessionData.recipe_id);
+            const recipeData = await Services.recipe.fetchRecipe(sessionData.recipe_id);
             setRecipe(recipeData);
           } catch (recipeErr: any) {
             console.warn("Could not fetch associated recipe:", recipeErr);
@@ -99,7 +98,7 @@ const ViewBrewSession: React.FC = () => {
             .split("T")[0];
         }
 
-        const updatedSession = await BrewSessionService.updateBrewSession(
+        const updatedSession = await Services.brewSession.updateBrewSession(
           sessionId,
           {
             name: session.name, // Include the existing name to avoid validation error
@@ -141,7 +140,7 @@ const ViewBrewSession: React.FC = () => {
           recipe_id: session.recipe_id,
         };
 
-        await BrewSessionService.deleteBrewSession(sessionId);
+        await Services.brewSession.deleteBrewSession(sessionId);
 
         // Invalidate caches to update all related components
         invalidateBrewSessionCaches.onDeleted(sessionDataForCache);
@@ -188,7 +187,7 @@ const ViewBrewSession: React.FC = () => {
         updateData.actual_abv = (session.actual_og - latestGravityEntry.gravity) * 131.25;
       }
 
-      const updatedSession = await BrewSessionService.updateBrewSession(session.session_id, updateData);
+      const updatedSession = await Services.brewSession.updateBrewSession(session.session_id, updateData);
       
       // Update local state
       setSession(updatedSession);

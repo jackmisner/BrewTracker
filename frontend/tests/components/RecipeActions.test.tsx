@@ -40,6 +40,7 @@ describe("RecipeActions", () => {
     // Reset API mocks
     ApiService.recipes = {
       clone: jest.fn(),
+      clonePublic: jest.fn(),
       delete: jest.fn(),
       getAll: jest.fn(),
       getById: jest.fn(),
@@ -305,5 +306,110 @@ describe("RecipeActions", () => {
     // All other buttons should still be enabled since they're separate operations
     expect(screen.getByText("View Recipe")).not.toBeDisabled();
     expect(screen.getByText("Edit Recipe")).not.toBeDisabled();
+  });
+
+  describe("Public Recipe Mode", () => {
+    const publicRecipeProps = {
+      ...defaultProps,
+      isPublicRecipe: true,
+      originalAuthor: "John Brewer",
+    };
+
+    test("hides Edit and Delete buttons for public recipes", () => {
+      renderWithRouter(<RecipeActions {...publicRecipeProps} />);
+
+      expect(screen.getByText("View Recipe")).toBeInTheDocument();
+      expect(screen.getByText("Clone Recipe")).toBeInTheDocument();
+      expect(screen.getByText("Brew This Recipe")).toBeInTheDocument();
+      
+      expect(screen.queryByText("Edit Recipe")).not.toBeInTheDocument();
+      expect(screen.queryByText("Delete Recipe")).not.toBeInTheDocument();
+    });
+
+    test("uses clonePublic API for public recipe cloning", async () => {
+      window.alert = jest.fn();
+      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
+        status: 201,
+        data: { recipe_id: "new-recipe-456" },
+      });
+
+      renderWithRouter(<RecipeActions {...publicRecipeProps} />);
+
+      fireEvent.click(screen.getByText("Clone Recipe"));
+
+      await waitFor(() => {
+        expect(ApiService.recipes.clonePublic).toHaveBeenCalledWith(
+          "test-recipe-123",
+          "John Brewer"
+        );
+      });
+
+      expect(window.alert).toHaveBeenCalledWith(
+        "Recipe cloned successfully with attribution to John Brewer!"
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("/recipes/new-recipe-456/edit");
+    });
+
+    test("shows compact buttons for public recipes", () => {
+      const compactPublicProps = {
+        ...publicRecipeProps,
+        compact: true,
+      };
+
+      renderWithRouter(<RecipeActions {...compactPublicProps} />);
+
+      expect(screen.getByText("View")).toBeInTheDocument();
+      expect(screen.getByText("Clone")).toBeInTheDocument();
+      expect(screen.getByText("Brew")).toBeInTheDocument();
+      
+      expect(screen.queryByText("Edit")).not.toBeInTheDocument();
+      expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+    });
+
+    test("handles clonePublic API error", async () => {
+      window.alert = jest.fn();
+      const mockError = {
+        response: { data: { error: "Clone failed" } },
+      };
+      (ApiService.recipes.clonePublic as jest.Mock).mockRejectedValue(mockError);
+
+      renderWithRouter(<RecipeActions {...publicRecipeProps} />);
+
+      fireEvent.click(screen.getByText("Clone Recipe"));
+
+      await waitFor(() => {
+        expect(ApiService.recipes.clonePublic).toHaveBeenCalledWith(
+          "test-recipe-123",
+          "John Brewer"
+        );
+      });
+
+      expect(window.alert).toHaveBeenCalledWith(
+        "Failed to clone recipe: Clone failed"
+      );
+    });
+
+    test("falls back to regular clone when originalAuthor is not provided", async () => {
+      window.alert = jest.fn();
+      (ApiService.recipes.clone as jest.Mock).mockResolvedValue({
+        status: 201,
+        data: { recipe_id: "new-recipe-789" },
+      });
+
+      const propsWithoutAuthor = {
+        ...defaultProps,
+        isPublicRecipe: true,
+        // originalAuthor is undefined
+      };
+
+      renderWithRouter(<RecipeActions {...propsWithoutAuthor} />);
+
+      fireEvent.click(screen.getByText("Clone Recipe"));
+
+      await waitFor(() => {
+        expect(ApiService.recipes.clone).toHaveBeenCalledWith("test-recipe-123");
+        expect(ApiService.recipes.clonePublic).not.toHaveBeenCalled();
+      });
+    });
   });
 });

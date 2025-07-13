@@ -1,5 +1,5 @@
-import BrewSessionService from "./BrewSessionService";
-import attenuationAnalyticsServiceInstance from "./AttenuationAnalyticsService";
+import BrewSessionService from "./Brewing/BrewSessionService";
+import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalyticsService";
 import { ID } from "../types";
 
 // Service-specific interfaces

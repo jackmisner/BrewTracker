@@ -1,6 +1,6 @@
-import { Recipe, RecipeIngredient } from '../types';
-import { BeerStyleGuide } from '../types/beer-styles';
-import BeerStyleService from './BeerStyleService';
+import { Recipe, RecipeIngredient } from '../../types';
+import { BeerStyleGuide } from '../../types/beer-styles';
+import BeerStyleService from '../Data/BeerStyleService';
 
 /**
  * Interface for base malt selection analysis

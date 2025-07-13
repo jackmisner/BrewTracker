@@ -1,4 +1,4 @@
-import MetricService from "../../src/services/MetricService";
+import MetricService from "../../src/services/Analytics/MetricService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service

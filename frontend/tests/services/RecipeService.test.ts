@@ -1,4 +1,4 @@
-import RecipeService from "../../src/services/RecipeService";
+import RecipeService from "../../src/services/Data/RecipeService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service

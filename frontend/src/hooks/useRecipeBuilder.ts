@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "../services";
 import { useUnits } from "../contexts/UnitContext";
-import beerStyleServiceInstance from "../services/BeerStyleService";
 import {
   Recipe,
   RecipeIngredient,
@@ -1062,7 +1061,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       // Refresh style analysis after style change
       if (state.recipe.recipe_id) {
         try {
-          const analysis = await beerStyleServiceInstance.getRecipeStyleAnalysis(
+          const analysis = await Services.beerStyle.getRecipeStyleAnalysis(
             state.recipe.recipe_id
           );
           setStyleAnalysis(analysis);
@@ -1079,10 +1078,10 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
     try {
       const [analysis, suggestions] = await Promise.all([
-        beerStyleServiceInstance
+        Services.beerStyle
           .getRecipeStyleAnalysis(state.recipe.recipe_id)
           .catch(() => null),
-        beerStyleServiceInstance
+        Services.beerStyle
           .findMatchingStyles(state.metrics)
           .catch(() => []),
       ]);
