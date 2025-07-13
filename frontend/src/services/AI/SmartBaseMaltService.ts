@@ -993,7 +993,7 @@ class SmartBaseMaltService {
   generateProportionalBaseMaltAdjustments(
     currentBaseMalts: RecipeIngredient[],
     totalAdjustmentAmount: number,
-    styleGuide?: BeerStyleGuide
+    _styleGuide?: BeerStyleGuide
   ): Array<{ malt: RecipeIngredient; currentAmount: number; suggestedAmount: number; adjustmentAmount: number }> {
     
     if (currentBaseMalts.length === 0) {

@@ -2,14 +2,12 @@ import { Recipe, RecipeIngredient, RecipeMetrics } from '../../types';
 import { BeerStyleGuide } from '../../types/beer-styles';
 import type { 
   StyleCompliance, 
-  StyleOptimizationTarget, 
-  AdjustmentPhase, 
   AdjustmentStrategy, 
   IngredientAdjustment, 
   AdjustmentPlan,
-  IngredientChange,
-  MetricChange 
+  IngredientChange
 } from '../../types/ai';
+import { AdjustmentPhase } from '../../types/ai';
 
 /**
  * Hierarchical Adjustment Service
@@ -105,13 +103,13 @@ export default class HierarchicalAdjustmentService {
    * Based on expert pattern: "Base gravity first via base malt adjustments"
    */
   private generateBaseGravityAdjustment(
-    recipe: Recipe,
+    _recipe: Recipe,
     ingredients: RecipeIngredient[],
     metrics: RecipeMetrics,
     ogCompliance: { inRange: boolean; deviation: number; target: number; currentValue: number },
-    style: BeerStyleGuide
+    _style: BeerStyleGuide
   ): IngredientAdjustment | null {
-    const baseMalts = ingredients.filter(ing => ing.type === 'grain' && ing.grain_type === 'base');
+    const baseMalts = ingredients.filter(ing => ing.type === 'grain' && ing.grain_type === 'base_malt');
     if (baseMalts.length === 0) return null;
 
     const targetOG = ogCompliance.target;
@@ -139,7 +137,7 @@ export default class HierarchicalAdjustmentService {
     };
 
     const ingredientChanges: IngredientChange[] = [{
-      ingredientId: primaryBaseMalt.id,
+      ingredientId: primaryBaseMalt.id || '',
       ingredientName: primaryBaseMalt.name,
       field: 'amount',
       currentValue: primaryBaseMalt.amount,
@@ -208,7 +206,7 @@ export default class HierarchicalAdjustmentService {
    * Based on expert pattern: "ABV through yeast selection and gravity management"
    */
   private generateAlcoholAdjustment(
-    recipe: Recipe,
+    _recipe: Recipe,
     ingredients: RecipeIngredient[],
     metrics: RecipeMetrics,
     abvCompliance: { inRange: boolean; deviation: number; target: number; currentValue: number },
@@ -237,7 +235,7 @@ export default class HierarchicalAdjustmentService {
     const suggestedYeast = this.selectYeastForABVAdjustment(abvDifference, style);
     
     const ingredientChanges: IngredientChange[] = [{
-      ingredientId: currentYeast.id,
+      ingredientId: currentYeast.id || '',
       ingredientName: currentYeast.name,
       field: 'ingredient_id',
       currentValue: currentYeast.ingredient_id,
@@ -263,11 +261,11 @@ export default class HierarchicalAdjustmentService {
    * Based on expert pattern: "Adjust timing rather than just amounts when possible"
    */
   private generateHopAdjustment(
-    recipe: Recipe,
+    _recipe: Recipe,
     ingredients: RecipeIngredient[],
     metrics: RecipeMetrics,
     ibuCompliance: { inRange: boolean; deviation: number; target: number; currentValue: number },
-    style: BeerStyleGuide
+    _style: BeerStyleGuide
   ): IngredientAdjustment | null {
     const targetIBU = ibuCompliance.target;
     const currentIBU = ibuCompliance.currentValue;
@@ -277,7 +275,7 @@ export default class HierarchicalAdjustmentService {
     if (hops.length === 0) return null;
 
     // Expert pattern: Prefer timing adjustments over amount changes
-    const bittering_hops = hops.filter(hop => hop.use === 'Boil' && hop.time >= 45);
+    const bittering_hops = hops.filter(hop => hop.use === 'Boil' && (hop.time || 60) >= 45);
     
     let strategy: AdjustmentStrategy;
     let ingredientChanges: IngredientChange[] = [];
@@ -296,7 +294,7 @@ export default class HierarchicalAdjustmentService {
 
       const primaryBitteringHop = bittering_hops[0];
       ingredientChanges = [{
-        ingredientId: primaryBitteringHop.id,
+        ingredientId: primaryBitteringHop.id || '',
         ingredientName: primaryBitteringHop.name,
         field: 'time',
         currentValue: primaryBitteringHop.time,
@@ -318,7 +316,7 @@ export default class HierarchicalAdjustmentService {
       const adjustmentAmount = this.calculateHopAdjustment(ibuDifference, primaryHop.alpha_acid || 5);
       
       ingredientChanges = [{
-        ingredientId: primaryHop.id,
+        ingredientId: primaryHop.id || '',
         ingredientName: primaryHop.name,
         field: 'amount',
         currentValue: primaryHop.amount,
@@ -348,7 +346,7 @@ export default class HierarchicalAdjustmentService {
     return Math.max(minIncrement, Math.min(maxIncrement, Math.round(adjustment * 2) / 2));
   }
 
-  private generateColorIncreaseStrategy(srmDifference: number, style: BeerStyleGuide): AdjustmentStrategy {
+  private generateColorIncreaseStrategy(srmDifference: number, _style: BeerStyleGuide): AdjustmentStrategy {
     // Expert patterns: Munich Dark for moderate increases, Blackprinz for precise additions
     const grainType = srmDifference > 5 ? 'Munich Dark' : 'Blackprinz';
     
@@ -363,7 +361,7 @@ export default class HierarchicalAdjustmentService {
     };
   }
 
-  private generateColorDecreaseStrategy(srmDifference: number, style: BeerStyleGuide): AdjustmentStrategy {
+  private generateColorDecreaseStrategy(srmDifference: number, _style: BeerStyleGuide): AdjustmentStrategy {
     return {
       phase: AdjustmentPhase.COLOR_BALANCE,
       targetMetric: 'srm',
@@ -375,7 +373,7 @@ export default class HierarchicalAdjustmentService {
     };
   }
 
-  private generateColorIncreaseChanges(srmDifference: number, ingredients: RecipeIngredient[], recipe: Recipe): IngredientChange[] {
+  private generateColorIncreaseChanges(srmDifference: number, _ingredients: RecipeIngredient[], _recipe: Recipe): IngredientChange[] {
     // Expert pattern: Add specialty grains for color
     const grainType = srmDifference > 5 ? 'Munich Dark' : 'Blackprinz';
     const amount = this.calculateColorGrainAmount(srmDifference);
@@ -410,7 +408,7 @@ export default class HierarchicalAdjustmentService {
     const reductionAmount = this.calculateColorReduction(Math.abs(srmDifference), reductionGrain);
     
     return [{
-      ingredientId: reductionGrain.id,
+      ingredientId: reductionGrain.id || '',
       ingredientName: reductionGrain.name,
       field: 'amount',
       currentValue: reductionGrain.amount,
@@ -418,7 +416,7 @@ export default class HierarchicalAdjustmentService {
     }];
   }
 
-  private selectYeastForABVAdjustment(abvDifference: number, style: BeerStyleGuide): { id: string; name: string } {
+  private selectYeastForABVAdjustment(abvDifference: number, _style: BeerStyleGuide): { id: string; name: string } {
     // Expert pattern: Yeast swaps for attenuation control
     if (abvDifference > 0) {
       // Need higher attenuation
@@ -458,7 +456,7 @@ export default class HierarchicalAdjustmentService {
     return Math.min(grain.amount, grain.amount * reductionFactor);
   }
 
-  private predictMetricChanges(baseMetrics: RecipeMetrics, strategy: AdjustmentStrategy, magnitude: number): RecipeMetrics {
+  private predictMetricChanges(baseMetrics: RecipeMetrics, strategy: AdjustmentStrategy, _magnitude: number): RecipeMetrics {
     // Simplified prediction - in real implementation, this would use CascadingEffectsService
     const predicted = { ...baseMetrics };
     

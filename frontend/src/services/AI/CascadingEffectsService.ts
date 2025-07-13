@@ -313,7 +313,7 @@ class CascadingEffectsService {
    */
   private analyzeMetricInteractions(
     metricChanges: MetricChange[],
-    ingredientChanges: IngredientChange[]
+    _ingredientChanges: IngredientChange[]
   ): MetricChange[] {
     
     const enhancedChanges = [...metricChanges];

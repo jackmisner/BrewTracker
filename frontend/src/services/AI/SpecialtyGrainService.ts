@@ -158,21 +158,21 @@ export default class SpecialtyGrainService {
    */
   private generateColorIncreaseStrategy(
     srmIncrease: number,
-    currentColorGrains: RecipeIngredient[],
-    styleGuide?: BeerStyleGuide,
-    totalGrainWeight: number = 10
+    _currentColorGrains: RecipeIngredient[],
+    _styleGuide?: BeerStyleGuide,
+    _totalGrainWeight: number = 10
   ): ColorAdjustmentStrategy {
     
     // Expert pattern decision tree based on SRM increase magnitude
     if (srmIncrease <= 2) {
       // Small adjustment - use Blackprinz (expert pattern from Recipe 4)
-      return this.generateBlackprinzAddition(srmIncrease, totalGrainWeight, styleGuide);
+      return this.generateBlackprinzAddition(srmIncrease, _totalGrainWeight, _styleGuide);
     } else if (srmIncrease <= 8) {
       // Moderate adjustment - use Munich Dark (expert preference for flavor balance)
-      return this.generateMunichDarkAddition(srmIncrease, totalGrainWeight, styleGuide);
+      return this.generateMunichDarkAddition(srmIncrease, _totalGrainWeight, _styleGuide);
     } else {
       // Large adjustment - use traditional dark grains
-      return this.generateDarkGrainAddition(srmIncrease, totalGrainWeight, styleGuide);
+      return this.generateDarkGrainAddition(srmIncrease, _totalGrainWeight, _styleGuide);
     }
   }
 
@@ -181,8 +181,8 @@ export default class SpecialtyGrainService {
    */
   private generateBlackprinzAddition(
     srmIncrease: number,
-    totalGrainWeight: number,
-    styleGuide?: BeerStyleGuide
+    _totalGrainWeight: number,
+    _styleGuide?: BeerStyleGuide
   ): ColorAdjustmentStrategy {
     
     // Expert pattern: 25g increments for precise control
@@ -210,8 +210,8 @@ export default class SpecialtyGrainService {
    */
   private generateMunichDarkAddition(
     srmIncrease: number,
-    totalGrainWeight: number,
-    styleGuide?: BeerStyleGuide
+    _totalGrainWeight: number,
+    _styleGuide?: BeerStyleGuide
   ): ColorAdjustmentStrategy {
     
     // Munich Dark provides both color and flavor enhancement
@@ -239,13 +239,13 @@ export default class SpecialtyGrainService {
    */
   private generateDarkGrainAddition(
     srmIncrease: number,
-    totalGrainWeight: number,
+    _totalGrainWeight: number,
     styleGuide?: BeerStyleGuide
   ): ColorAdjustmentStrategy {
     
     // For large color increases, use traditional dark grains
     const grainChoice = this.selectDarkGrainForStyle(styleGuide);
-    const grainChars = this.SPECIALTY_GRAIN_CHARACTERISTICS[grainChoice];
+    const grainChars = this.SPECIALTY_GRAIN_CHARACTERISTICS[grainChoice as keyof typeof this.SPECIALTY_GRAIN_CHARACTERISTICS];
     
     // Calculate amount needed
     const srmPerPound = grainChars.color / 100; // Rough calculation
@@ -269,7 +269,7 @@ export default class SpecialtyGrainService {
   private generateColorDecreaseStrategy(
     srmDecrease: number,
     currentColorGrains: RecipeIngredient[],
-    styleGuide?: BeerStyleGuide
+    _styleGuide?: BeerStyleGuide
   ): ColorAdjustmentStrategy | null {
     
     // Expert pattern: Reduce the darkest grain first (Recipe 2: Midnight Wheat reduction)
@@ -312,8 +312,8 @@ export default class SpecialtyGrainService {
   private generateColorIncreaseAlternatives(
     srmIncrease: number,
     currentColorGrains: RecipeIngredient[],
-    styleGuide?: BeerStyleGuide,
-    totalGrainWeight: number = 10
+    _styleGuide?: BeerStyleGuide,
+    _totalGrainWeight: number = 10
   ): ColorAdjustmentStrategy[] {
     
     const alternatives: ColorAdjustmentStrategy[] = [];
@@ -336,7 +336,7 @@ export default class SpecialtyGrainService {
     // Alternative 2: Different approach based on current color grains
     if (currentColorGrains.length === 0) {
       // No existing color grains - suggest Munich Dark as base
-      alternatives.push(this.generateMunichDarkAddition(srmIncrease, totalGrainWeight, styleGuide));
+      alternatives.push(this.generateMunichDarkAddition(srmIncrease, 10, undefined));
     }
 
     return alternatives;
@@ -348,7 +348,7 @@ export default class SpecialtyGrainService {
   private generateColorDecreaseAlternatives(
     srmDecrease: number,
     currentColorGrains: RecipeIngredient[],
-    styleGuide?: BeerStyleGuide
+    _styleGuide?: BeerStyleGuide
   ): ColorAdjustmentStrategy[] {
     
     const alternatives: ColorAdjustmentStrategy[] = [];
@@ -397,7 +397,7 @@ export default class SpecialtyGrainService {
         newIngredientData: {
           type: 'grain',
           grain_type: 'specialty',
-          color: this.SPECIALTY_GRAIN_CHARACTERISTICS[strategy.grainName]?.color || 50,
+          color: this.SPECIALTY_GRAIN_CHARACTERISTICS[strategy.grainName as keyof typeof this.SPECIALTY_GRAIN_CHARACTERISTICS]?.color || 50,
           use: 'Mash',
           unit: strategy.unit
         }
@@ -411,7 +411,7 @@ export default class SpecialtyGrainService {
       if (!existingGrain) return [];
       
       return [{
-        ingredientId: existingGrain.id,
+        ingredientId: existingGrain.id || '',
         ingredientName: existingGrain.name,
         field: 'amount',
         currentValue: existingGrain.amount,

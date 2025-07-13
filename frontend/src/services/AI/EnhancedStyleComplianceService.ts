@@ -1,6 +1,7 @@
 import { RecipeMetrics } from '../../types';
 import { BeerStyleGuide, StyleRange } from '../../types/beer-styles';
-import type { StyleCharacteristics, StyleCompliance, StyleOptimizationTarget, AdjustmentPhase } from '../../types/ai';
+import type { StyleCharacteristics, StyleCompliance, StyleOptimizationTarget } from '../../types/ai';
+import { AdjustmentPhase } from '../../types/ai';
 
 /**
  * Enhanced Style Compliance Service
@@ -411,7 +412,6 @@ export default class EnhancedStyleComplianceService {
   analyzeDependencies(targets: StyleOptimizationTarget[]): { dependencies: string[]; conflicts: string[]; recommendedOrder: AdjustmentPhase[] } {
     const dependencies: string[] = [];
     const conflicts: string[] = [];
-    const phases: AdjustmentPhase[] = [];
 
     // Map targets to adjustment phases based on expert methodology
     const phaseMap = new Map<string, AdjustmentPhase>();
@@ -474,7 +474,7 @@ export default class EnhancedStyleComplianceService {
    * Prevents inappropriate ingredient suggestions based on style guidelines
    */
   validateStyleAuthenticity(metric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm', adjustmentType: string, style: BeerStyleGuide): { isValid: boolean; reason?: string } {
-    const styleName = style.style_name?.toLowerCase() || '';
+    const styleName = style.name?.toLowerCase() || '';
     
     // German style authenticity checks
     if (styleName.includes('german') || styleName.includes('helles') || styleName.includes('märzen') || styleName.includes('bock')) {
@@ -523,7 +523,7 @@ export default class EnhancedStyleComplianceService {
     metric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm',
     deviation: number,
     adjustmentType: string,
-    style: BeerStyleGuide
+    _style: BeerStyleGuide
   ): 'high' | 'medium' | 'low' {
     // High confidence for patterns directly observed in expert adjustments
     if (metric === 'og' && adjustmentType === 'base_malt_incremental' && deviation < 0.02) {

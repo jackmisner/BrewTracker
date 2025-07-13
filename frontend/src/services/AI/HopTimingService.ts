@@ -240,7 +240,7 @@ export default class HopTimingService {
    */
   private selectHopForTimingAdjustment(
     hops: RecipeIngredient[],
-    ibuDifference: number
+    _ibuDifference: number
   ): RecipeIngredient | null {
     
     // Expert pattern: Prefer bittering hops for timing adjustments
@@ -282,7 +282,6 @@ export default class HopTimingService {
     
     const currentUtilization = this.getUtilization(currentTiming, originalGravity);
     const currentIBU = this.calculateHopIBU(hop, currentUtilization, batchSize);
-    const targetIBU = currentIBU + targetIBUChange;
 
     // Find timing that gets closest to target IBU
     let bestTiming = currentTiming;
@@ -377,7 +376,6 @@ export default class HopTimingService {
   ): string {
     
     const direction = suggestedTiming > currentTiming ? 'increase' : 'decrease';
-    const timingChange = Math.abs(suggestedTiming - currentTiming);
     
     let reasoning = `${direction === 'increase' ? 'Increase' : 'Decrease'} ${hop.name} timing `;
     reasoning += `from ${currentTiming} to ${suggestedTiming} minutes `;
@@ -440,7 +438,7 @@ export default class HopTimingService {
    */
   convertToIngredientChange(strategy: HopTimingStrategy): IngredientChange {
     return {
-      ingredientId: strategy.targetHop.id,
+      ingredientId: strategy.targetHop.id || '',
       ingredientName: strategy.targetHop.name,
       field: 'time',
       currentValue: strategy.currentTiming,
