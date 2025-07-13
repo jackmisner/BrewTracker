@@ -1,6 +1,6 @@
 import { RecipeMetrics } from '../../types';
 import { BeerStyleGuide, StyleRange } from '../../types/beer-styles';
-import type { StyleCharacteristics, StyleCompliance, StyleOptimizationTarget } from '../../types/ai';
+import type { StyleCharacteristics, StyleCompliance, StyleOptimizationTarget, AdjustmentPhase } from '../../types/ai';
 
 /**
  * Enhanced Style Compliance Service
@@ -402,5 +402,152 @@ export default class EnhancedStyleComplianceService {
     }
     
     return reasoning;
+  }
+
+  /**
+   * Analyzes dependencies between adjustment phases to prevent conflicts
+   * Based on expert patterns: base gravity affects ABV, specialty grains affect color AND gravity
+   */
+  analyzeDependencies(targets: StyleOptimizationTarget[]): { dependencies: string[]; conflicts: string[]; recommendedOrder: AdjustmentPhase[] } {
+    const dependencies: string[] = [];
+    const conflicts: string[] = [];
+    const phases: AdjustmentPhase[] = [];
+
+    // Map targets to adjustment phases based on expert methodology
+    const phaseMap = new Map<string, AdjustmentPhase>();
+    targets.forEach(target => {
+      switch (target.metric) {
+        case 'og':
+          phaseMap.set('og', AdjustmentPhase.BASE_GRAVITY);
+          break;
+        case 'srm':
+          phaseMap.set('srm', AdjustmentPhase.COLOR_BALANCE);
+          break;
+        case 'abv':
+          phaseMap.set('abv', AdjustmentPhase.ALCOHOL_CONTENT);
+          break;
+        case 'ibu':
+          phaseMap.set('ibu', AdjustmentPhase.HOP_BALANCE);
+          break;
+      }
+    });
+
+    // Analyze dependencies based on expert patterns
+    if (phaseMap.has('og') && phaseMap.has('abv')) {
+      dependencies.push('ABV adjustments depend on OG changes - adjust base gravity first');
+    }
+
+    if (phaseMap.has('og') && phaseMap.has('srm')) {
+      dependencies.push('Color additions (specialty grains) will affect gravity - coordinate adjustments');
+    }
+
+    if (phaseMap.has('srm') && phaseMap.has('abv')) {
+      dependencies.push('Specialty grain additions affect both color and alcohol potential');
+    }
+
+    // Detect potential conflicts
+    if (targets.filter(t => t.impactType === 'critical').length > 2) {
+      conflicts.push('Multiple critical adjustments may create cascading effects - consider iterative approach');
+    }
+
+    if (phaseMap.has('og') && phaseMap.has('ibu') && targets.length > 3) {
+      conflicts.push('Complex multi-metric adjustment - hop balance may need re-adjustment after gravity changes');
+    }
+
+    // Recommended order based on expert methodology
+    const recommendedOrder: AdjustmentPhase[] = [
+      AdjustmentPhase.BASE_GRAVITY,
+      AdjustmentPhase.COLOR_BALANCE,
+      AdjustmentPhase.ALCOHOL_CONTENT,
+      AdjustmentPhase.HOP_BALANCE
+    ].filter(phase => Array.from(phaseMap.values()).includes(phase));
+
+    return {
+      dependencies,
+      conflicts,
+      recommendedOrder
+    };
+  }
+
+  /**
+   * Validates if an adjustment conflicts with style authenticity
+   * Prevents inappropriate ingredient suggestions based on style guidelines
+   */
+  validateStyleAuthenticity(metric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm', adjustmentType: string, style: BeerStyleGuide): { isValid: boolean; reason?: string } {
+    const styleName = style.style_name?.toLowerCase() || '';
+    
+    // German style authenticity checks
+    if (styleName.includes('german') || styleName.includes('helles') || styleName.includes('märzen') || styleName.includes('bock')) {
+      if (adjustmentType.includes('adjunct') && metric === 'og') {
+        return { 
+          isValid: false, 
+          reason: 'German styles traditionally use all-malt grain bills - avoid adjunct additions' 
+        };
+      }
+      
+      if (adjustmentType.includes('american') && metric === 'ibu') {
+        return { 
+          isValid: false, 
+          reason: 'German styles should use traditional European hop varieties' 
+        };
+      }
+    }
+
+    // American IPA authenticity checks
+    if (styleName.includes('american') && styleName.includes('ipa')) {
+      if (adjustmentType.includes('crystal') && metric === 'srm') {
+        return { 
+          isValid: true, 
+          reason: 'Crystal malt additions appropriate for American IPA complexity' 
+        };
+      }
+    }
+
+    // Stout authenticity checks
+    if (styleName.includes('stout')) {
+      if (adjustmentType.includes('roasted') && metric === 'srm') {
+        return { 
+          isValid: true, 
+          reason: 'Roasted grain management essential for stout color balance' 
+        };
+      }
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Calculates confidence level for adjustment suggestions based on expert patterns
+   */
+  calculateAdjustmentConfidence(
+    metric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm',
+    deviation: number,
+    adjustmentType: string,
+    style: BeerStyleGuide
+  ): 'high' | 'medium' | 'low' {
+    // High confidence for patterns directly observed in expert adjustments
+    if (metric === 'og' && adjustmentType === 'base_malt_incremental' && deviation < 0.02) {
+      return 'high'; // Expert pattern: small base malt adjustments
+    }
+
+    if (metric === 'srm' && adjustmentType === 'specialty_grain_addition' && deviation < 10) {
+      return 'high'; // Expert pattern: specialty grain color control
+    }
+
+    if (metric === 'ibu' && adjustmentType === 'hop_timing' && deviation < 10) {
+      return 'high'; // Expert pattern: timing over amount changes
+    }
+
+    // Medium confidence for established brewing principles
+    if (metric === 'abv' && adjustmentType === 'yeast_swap') {
+      return 'medium'; // Expert pattern: yeast for attenuation control
+    }
+
+    // Lower confidence for complex or style-specific adjustments
+    if (deviation > 0.5 || adjustmentType.includes('complex')) {
+      return 'low';
+    }
+
+    return 'medium';
   }
 }

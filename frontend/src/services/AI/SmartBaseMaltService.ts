@@ -802,6 +802,233 @@ class SmartBaseMaltService {
     
     return [...new Set(flavors)];
   }
+
+  /**
+   * Generate incremental base malt adjustment following expert patterns
+   * Based on observed pattern: 0.25-1 lb increments (Recipe 1: Flaked Corn 3 -> 3.5lbs)
+   */
+  generateIncrementalBaseMaltAdjustment(
+    currentBaseMalts: RecipeIngredient[],
+    targetOGChange: number,
+    styleGuide?: BeerStyleGuide
+  ): { malt: RecipeIngredient; currentAmount: number; suggestedAmount: number; adjustmentAmount: number; reasoning: string } | null {
+    
+    if (currentBaseMalts.length === 0) {
+      return null;
+    }
+
+    // Expert pattern: Select primary base malt for adjustment
+    let primaryMalt = this.selectPrimaryBaseMaltForAdjustment(currentBaseMalts, styleGuide);
+    
+    // Calculate incremental adjustment amount (expert pattern: 0.25-1 lb increments)
+    const adjustmentAmount = this.calculateIncrementalAdjustmentAmount(targetOGChange);
+    
+    // Convert current amount to pounds for calculation
+    const currentAmountLbs = this.convertToPounds(primaryMalt.amount, primaryMalt.unit || 'lb');
+    const suggestedAmountLbs = currentAmountLbs + adjustmentAmount;
+    
+    // Convert back to original unit
+    const suggestedAmount = this.convertFromPounds(suggestedAmountLbs, primaryMalt.unit || 'lb');
+    
+    const reasoning = this.generateIncrementalAdjustmentReasoning(
+      primaryMalt, 
+      adjustmentAmount, 
+      targetOGChange, 
+      styleGuide
+    );
+
+    return {
+      malt: primaryMalt,
+      currentAmount: primaryMalt.amount,
+      suggestedAmount,
+      adjustmentAmount,
+      reasoning
+    };
+  }
+
+  /**
+   * Select primary base malt for incremental adjustment based on expert patterns
+   */
+  private selectPrimaryBaseMaltForAdjustment(
+    baseMalts: RecipeIngredient[],
+    styleGuide?: BeerStyleGuide
+  ): RecipeIngredient {
+    
+    // Expert pattern priority order for adjustments:
+    // 1. Largest quantity base malt (most impact)
+    // 2. Style-appropriate base malt
+    // 3. Most fermentable base malt
+
+    // Sort by amount (largest first)
+    const maltsByAmount = [...baseMalts].sort((a, b) => {
+      const aLbs = this.convertToPounds(a.amount, a.unit || 'lb');
+      const bLbs = this.convertToPounds(b.amount, b.unit || 'lb');
+      return bLbs - aLbs;
+    });
+
+    // If we have style guidance, prioritize style-appropriate malts
+    if (styleGuide) {
+      const styleAppropriate = maltsByAmount.find(malt => 
+        this.isMaltStyleAppropriate(malt, styleGuide)
+      );
+      
+      if (styleAppropriate) {
+        return styleAppropriate;
+      }
+    }
+
+    // Default to largest base malt (expert pattern from Recipe 1 and 4)
+    return maltsByAmount[0];
+  }
+
+  /**
+   * Calculate incremental adjustment amount following expert patterns
+   * Expert observed increments: 0.5 lb (Recipe 1: Flaked Corn), 0.25-1 lb range
+   */
+  private calculateIncrementalAdjustmentAmount(targetOGChange: number): number {
+    
+    // Expert pattern: Conservative incremental changes
+    // Rough correlation: 0.001 OG change ≈ 0.5 lb base malt adjustment
+    const baseAdjustment = Math.abs(targetOGChange) * 500;
+    
+    // Round to brewing-friendly increments (0.25 lb steps)
+    let increment = Math.round(baseAdjustment * 4) / 4;
+    
+    // Expert constraints: minimum 0.25 lb, maximum 1.0 lb per step
+    increment = Math.max(0.25, Math.min(1.0, increment));
+    
+    // Direction based on target change
+    return targetOGChange > 0 ? increment : -increment;
+  }
+
+  /**
+   * Check if a malt is appropriate for the given style
+   */
+  private isMaltStyleAppropriate(malt: RecipeIngredient, styleGuide: BeerStyleGuide): boolean {
+    const maltName = malt.name.toLowerCase();
+    const styleName = styleGuide.name.toLowerCase();
+    
+    // Style-specific malt appropriateness patterns
+    if (styleName.includes('ipa') || styleName.includes('pale ale')) {
+      return maltName.includes('2-row') || maltName.includes('pale');
+    }
+    
+    if (styleName.includes('stout') || styleName.includes('porter')) {
+      return maltName.includes('maris otter') || maltName.includes('2-row');
+    }
+    
+    if (styleName.includes('lager') || styleName.includes('pilsner')) {
+      return maltName.includes('pilsner') || maltName.includes('lager');
+    }
+    
+    if (styleName.includes('wheat')) {
+      return maltName.includes('wheat') || maltName.includes('pilsner');
+    }
+    
+    // Default: 2-Row and Pale are generally appropriate
+    return maltName.includes('2-row') || maltName.includes('pale');
+  }
+
+  /**
+   * Convert weight from pounds to specified unit
+   */
+  private convertFromPounds(pounds: number, targetUnit: string): number {
+    switch (targetUnit.toLowerCase()) {
+      case 'g':
+        return pounds / 0.00220462;
+      case 'kg':
+        return pounds / 2.20462;
+      case 'oz':
+        return pounds * 16;
+      case 'lb':
+      default:
+        return pounds;
+    }
+  }
+
+  /**
+   * Generate reasoning for incremental adjustment
+   */
+  private generateIncrementalAdjustmentReasoning(
+    malt: RecipeIngredient,
+    adjustmentAmount: number,
+    targetOGChange: number,
+    styleGuide?: BeerStyleGuide
+  ): string {
+    
+    const direction = adjustmentAmount > 0 ? 'increase' : 'decrease';
+    const magnitude = Math.abs(adjustmentAmount);
+    const maltName = malt.name;
+    
+    let reasoning = `${direction === 'increase' ? 'Increase' : 'Decrease'} ${maltName} by ${magnitude} lb `;
+    
+    if (targetOGChange > 0) {
+      reasoning += `to raise original gravity by ${(targetOGChange * 1000).toFixed(0)} points`;
+    } else {
+      reasoning += `to lower original gravity by ${(Math.abs(targetOGChange) * 1000).toFixed(0)} points`;
+    }
+    
+    // Add style-specific reasoning if available
+    if (styleGuide) {
+      reasoning += ` for ${styleGuide.name} style compliance`;
+      
+      // Add style-specific benefits
+      if (styleGuide.name.toLowerCase().includes('ipa') && maltName.toLowerCase().includes('2-row')) {
+        reasoning += '. 2-Row provides clean backdrop for hop character';
+      } else if (styleGuide.name.toLowerCase().includes('stout') && maltName.toLowerCase().includes('maris otter')) {
+        reasoning += '. Maris Otter adds complementary biscuit notes to roasted flavors';
+      }
+    }
+    
+    // Add expert pattern note
+    reasoning += `. Following expert pattern of incremental ${magnitude} lb adjustments`;
+    
+    return reasoning;
+  }
+
+  /**
+   * Generate proportional base malt increases across multiple malts
+   * Based on expert pattern: maintaining ratios while adjusting total base malt
+   */
+  generateProportionalBaseMaltAdjustments(
+    currentBaseMalts: RecipeIngredient[],
+    totalAdjustmentAmount: number,
+    styleGuide?: BeerStyleGuide
+  ): Array<{ malt: RecipeIngredient; currentAmount: number; suggestedAmount: number; adjustmentAmount: number }> {
+    
+    if (currentBaseMalts.length === 0) {
+      return [];
+    }
+
+    // Calculate total current base malt weight
+    const totalCurrentWeight = currentBaseMalts.reduce((sum, malt) => 
+      sum + this.convertToPounds(malt.amount, malt.unit || 'lb'), 0
+    );
+
+    // Generate proportional adjustments
+    const adjustments = currentBaseMalts.map(malt => {
+      const currentAmountLbs = this.convertToPounds(malt.amount, malt.unit || 'lb');
+      const proportion = currentAmountLbs / totalCurrentWeight;
+      const maltAdjustmentLbs = totalAdjustmentAmount * proportion;
+      
+      // Round to quarter-pound increments (expert pattern)
+      const roundedAdjustmentLbs = Math.round(maltAdjustmentLbs * 4) / 4;
+      const suggestedAmountLbs = currentAmountLbs + roundedAdjustmentLbs;
+      
+      // Convert back to original unit
+      const suggestedAmount = this.convertFromPounds(suggestedAmountLbs, malt.unit || 'lb');
+      
+      return {
+        malt,
+        currentAmount: malt.amount,
+        suggestedAmount,
+        adjustmentAmount: roundedAdjustmentLbs
+      };
+    });
+
+    // Filter out adjustments smaller than 0.25 lb (expert minimum)
+    return adjustments.filter(adj => Math.abs(adj.adjustmentAmount) >= 0.25);
+  }
 }
 
 export default SmartBaseMaltService;
