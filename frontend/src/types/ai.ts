@@ -16,7 +16,15 @@ export interface IngredientChange {
   suggestedValue: any;
   // For adding new ingredients
   isNewIngredient?: boolean;
-  newIngredientData?: any;
+  newIngredientData?: {
+    name?: string;
+    amount?: number | string;
+    type?: string;
+    grain_type?: string;
+    color?: number;
+    use?: string;
+    unit?: string;
+  };
 }
 
 /**

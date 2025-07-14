@@ -395,6 +395,8 @@ export default class SpecialtyGrainService {
         suggestedValue: strategy.amount,
         isNewIngredient: true,
         newIngredientData: {
+          name: strategy.grainName,
+          amount: strategy.amount,
           type: 'grain',
           grain_type: 'specialty',
           color: this.SPECIALTY_GRAIN_CHARACTERISTICS[strategy.grainName as keyof typeof this.SPECIALTY_GRAIN_CHARACTERISTICS]?.color || 50,

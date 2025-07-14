@@ -910,7 +910,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         for (const importIngredient of ingredientsToImport) {
           // Create ingredient data object with all properties including name
           const ingredientData: CreateRecipeIngredientData = {
-            ingredient_id: importIngredient.ingredient_id,
+            ingredient_id: importIngredient.ingredient_id || undefined,
             name: importIngredient.name, // Include the name!
             amount: importIngredient.amount,
             unit: importIngredient.unit,

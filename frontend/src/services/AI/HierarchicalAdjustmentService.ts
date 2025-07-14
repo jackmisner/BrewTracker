@@ -386,10 +386,13 @@ export default class HierarchicalAdjustmentService {
       suggestedValue: amount,
       isNewIngredient: true,
       newIngredientData: {
+        name: grainType,
+        amount: amount,
         type: 'grain',
         grain_type: 'specialty',
         color: srmDifference > 5 ? 9 : 450, // Munich Dark ~9L, Blackprinz ~450L
-        use: 'Mash'
+        use: 'Mash',
+        unit: 'lb'
       }
     }];
   }
