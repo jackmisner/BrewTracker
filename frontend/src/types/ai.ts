@@ -16,7 +16,15 @@ export interface IngredientChange {
   suggestedValue: any;
   // For adding new ingredients
   isNewIngredient?: boolean;
-  newIngredientData?: any;
+  newIngredientData?: {
+    name?: string;
+    amount?: number | string;
+    type?: string;
+    grain_type?: string;
+    color?: number;
+    use?: string;
+    unit?: string;
+  };
 }
 
 /**
@@ -84,4 +92,48 @@ export interface StyleOptimizationTarget {
   priority: number;
   reasoning: string;
   impactType: 'critical' | 'important' | 'nice-to-have';
+}
+
+/**
+ * Adjustment phase priorities based on expert brewing methodology
+ */
+export enum AdjustmentPhase {
+  BASE_GRAVITY = 1,    // OG corrections via base malt adjustments
+  COLOR_BALANCE = 2,   // SRM corrections via specialty grain modifications  
+  ALCOHOL_CONTENT = 3, // ABV through yeast selection and gravity management
+  HOP_BALANCE = 4      // IBU adjustments, usually last to avoid cascading changes
+}
+
+/**
+ * Adjustment strategy for incremental recipe changes
+ */
+export interface AdjustmentStrategy {
+  phase: AdjustmentPhase;
+  targetMetric: 'og' | 'fg' | 'abv' | 'ibu' | 'srm';
+  approach: 'incremental' | 'ingredient_swap' | 'timing_change' | 'addition';
+  confidenceLevel: 'high' | 'medium' | 'low';
+  reasoning: string;
+  estimatedImpact: number; // Expected change in target metric
+  cascadingEffects: string[]; // Other metrics that will be affected
+}
+
+/**
+ * Ingredient adjustment recommendation
+ */
+export interface IngredientAdjustment {
+  strategy: AdjustmentStrategy;
+  ingredientChanges: IngredientChange[];
+  expectedResults: RecipeMetrics;
+  validationChecks: string[]; // Things to verify after applying
+}
+
+/**
+ * Multi-step adjustment plan following expert methodology
+ */
+export interface AdjustmentPlan {
+  phases: IngredientAdjustment[];
+  totalSteps: number;
+  estimatedCompliance: number; // Predicted style compliance after all steps
+  dependencies: string[]; // Adjustments that depend on others
+  warnings: string[]; // Potential issues or conflicts
 }

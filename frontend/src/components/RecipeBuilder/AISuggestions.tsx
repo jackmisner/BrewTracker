@@ -1298,7 +1298,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         if (change.isNewIngredient && change.newIngredientData) {
           // For new ingredients, create the full ingredient data
           const newIngredientData: Partial<RecipeIngredient> = {
-            ingredient_id: change.ingredientId, // Use the generated ID
+            ingredient_id: null as any, // Let server generate proper ObjectID
             name: change.newIngredientData.name!,
             type: 'grain' as const,
             amount: Number(change.newIngredientData.amount!),

@@ -17,6 +17,9 @@ import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalytic
 import CascadingEffectsService from "./AI/CascadingEffectsService";
 import EnhancedStyleComplianceService from "./AI/EnhancedStyleComplianceService";
 import SmartBaseMaltService from "./AI/SmartBaseMaltService";
+import HierarchicalAdjustmentService from "./AI/HierarchicalAdjustmentService";
+import SpecialtyGrainService from "./AI/SpecialtyGrainService";
+import HopTimingService from "./AI/HopTimingService";
 import { ID } from "../types";
 
 // Service-specific interfaces
@@ -60,6 +63,9 @@ export {
   CascadingEffectsService,
   EnhancedStyleComplianceService,
   SmartBaseMaltService,
+  HierarchicalAdjustmentService,
+  SpecialtyGrainService,
+  HopTimingService,
 };
 
 // Export as grouped services object for convenience
@@ -96,6 +102,9 @@ export const Services = {
     cascadingEffects: CascadingEffectsService,
     enhancedStyleCompliance: EnhancedStyleComplianceService,
     smartBaseMalt: SmartBaseMaltService,
+    hierarchicalAdjustment: HierarchicalAdjustmentService,
+    specialtyGrain: SpecialtyGrainService,
+    hopTiming: HopTimingService,
   },
   
   // BeerXML services

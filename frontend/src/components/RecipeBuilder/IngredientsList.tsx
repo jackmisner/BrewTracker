@@ -561,10 +561,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                               </span>
                             </div>
                           )}
-                          <AttenuationBadge 
-                            ingredientId={ingredient.ingredient_id}
-                            className="compact"
-                          />
+                          {ingredient.ingredient_id && (
+                            <AttenuationBadge 
+                              ingredientId={ingredient.ingredient_id}
+                              className="compact"
+                            />
+                          )}
                         </div>
                       )}
                     </div>
@@ -743,10 +745,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                               </span>
                             </div>
                           )}
-                          <AttenuationBadge 
-                            ingredientId={ingredient.ingredient_id}
-                            className="compact"
-                          />
+                          {ingredient.ingredient_id && (
+                            <AttenuationBadge 
+                              ingredientId={ingredient.ingredient_id}
+                              className="compact"
+                            />
+                          )}
                         </div>
                       )}
                     </div>
