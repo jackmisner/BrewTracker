@@ -758,7 +758,7 @@ class TestBeerXMLEndpoints:
         )
         assert pale_malt is not None
         assert pale_malt["type"] == "grain"
-        assert pale_malt["unit"] == "lb"
+        assert pale_malt["unit"] == "oz"  # Base unit for imperial after migration
 
         dry_hop = next((ing for ing in ingredients if ing["use"] == "dry-hop"), None)
         assert dry_hop is not None

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from mongoengine.connection import ConnectionFailure, get_connection
 
 import config
 from models.mongo_models import BeerStyleGuide, Ingredient
+from routes.ai_routes import ai_bp
 from routes.attenuation_analytics import attenuation_analytics_bp
 from routes.auth import auth_bp
 from routes.beer_styles import beer_styles_bp
@@ -23,10 +25,10 @@ def create_app(config_class=None):
     app = Flask(__name__)
 
     # Determine configuration based on environment
+    env = os.getenv("FLASK_ENV", "development")
     if config_class:
         app.config.from_object(config_class)
     else:
-        env = os.getenv("FLASK_ENV", "development")
         if env == "production":
             app.config.from_object(config.ProductionConfig)
             # Validate required environment variables in production
@@ -35,6 +37,16 @@ def create_app(config_class=None):
             app.config.from_object(config.TestConfig)
         else:
             app.config.from_object(config.Config)
+
+    # Configure logging for development debugging
+    if env == "development":
+        logging.basicConfig(level=logging.INFO)
+        app.logger.setLevel(logging.INFO)
+        # Enable AI service logging
+        ai_logger = logging.getLogger("services.ai_service")
+        ai_logger.setLevel(logging.INFO)
+        ai_routes_logger = logging.getLogger("routes.ai_routes")
+        ai_routes_logger.setLevel(logging.INFO)
 
     # Initialize MongoDB connection
     try:
@@ -81,6 +93,7 @@ def create_app(config_class=None):
     print(f"Backend deployment trigger test - {flask_env} mode")
 
     # Register blueprints
+    app.register_blueprint(ai_bp, url_prefix="/api/ai")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(recipes_bp, url_prefix="/api/recipes")
     app.register_blueprint(ingredients_bp, url_prefix="/api/ingredients")
