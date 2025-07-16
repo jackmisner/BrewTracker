@@ -33,6 +33,43 @@ export interface AIAnalysisResponse {
     preferred_units: string;
     default_batch_size: number;
   };
+  // New optimization fields
+  optimization_performed?: boolean;
+  iterations_completed?: number;
+  original_metrics?: RecipeMetrics;
+  optimized_metrics?: RecipeMetrics;
+  optimized_recipe?: {
+    ingredients: RecipeIngredient[];
+    batch_size: number;
+    batch_size_unit: string;
+    efficiency: number;
+  };
+  recipe_changes?: RecipeChange[];
+  optimization_history?: OptimizationHistoryEntry[];
+}
+
+export interface RecipeChange {
+  type: 'ingredient_modified' | 'ingredient_added' | 'ingredient_removed' | 'ingredient_substituted' | 'optimization_summary';
+  ingredient_name?: string;
+  field?: string;
+  original_value?: any;
+  optimized_value?: any;
+  unit?: string;
+  original_ingredient?: string;
+  optimized_ingredient?: string;
+  ingredient_type?: string;
+  amount?: number;
+  change_reason: string;
+  iterations_completed?: number;
+  total_changes?: number;
+  final_compliance?: string;
+}
+
+export interface OptimizationHistoryEntry {
+  iteration: number;
+  applied_changes: any[];
+  metrics_before: RecipeMetrics;
+  metrics_after: RecipeMetrics;
 }
 
 export interface OptimizationTarget {

@@ -30,11 +30,22 @@ interface IngredientChange {
   newIngredientData?: CreateRecipeIngredientData;
 }
 
+interface OptimizationResult {
+  performed: boolean;
+  originalMetrics: any;
+  optimizedMetrics: any;
+  optimizedRecipe: any;
+  recipeChanges: any[];
+  iterationsCompleted: number;
+  remainingSuggestions: any[];
+}
+
 interface AISuggestionsProps {
   recipe: Recipe;
   ingredients: RecipeIngredient[];
   metrics?: RecipeMetrics;
   onBulkIngredientUpdate: (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient> }>) => Promise<void>;
+  onRemoveIngredient?: (ingredientId: string) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -43,6 +54,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   ingredients,
   metrics,
   onBulkIngredientUpdate,
+  onRemoveIngredient,
   disabled = false
 }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -52,6 +64,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   // Style guide is now automatically extracted from recipe.style
   const [hasAnalyzed, setHasAnalyzed] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
 
   // Unit context for user preferences
   const { unitSystem, loading: unitsLoading } = useUnits();
@@ -181,21 +194,49 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       });
 
       console.log('✅ AISuggestions - Received backend response:', {
+        optimizationPerformed: response.optimization_performed || false,
+        iterationsCompleted: response.iterations_completed || 0,
         suggestionsCount: response.suggestions?.length || 0,
-        suggestions: response.suggestions,
-        currentMetrics: response.current_metrics,
+        recipeChangesCount: response.recipe_changes?.length || 0,
+        hasOptimizedRecipe: !!response.optimized_recipe,
         timestamp: new Date().toISOString()
       });
 
-      // Convert backend suggestions to frontend format
-      const convertedSuggestions = convertBackendSuggestions(response.suggestions || []);
-      console.log('🔄 AISuggestions - Converted suggestions:', {
-        originalSuggestions: response.suggestions,
-        convertedSuggestions: convertedSuggestions,
-        timestamp: new Date().toISOString()
-      });
+      // Check if internal optimization was performed
+      if (response.optimization_performed && response.optimized_recipe) {
+        console.log('🎯 AISuggestions - Internal optimization completed:', {
+          originalMetrics: response.original_metrics,
+          optimizedMetrics: response.optimized_metrics,
+          recipeChanges: response.recipe_changes,
+          iterationsCompleted: response.iterations_completed,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Show optimization results instead of individual suggestions
+        setOptimizationResult({
+          performed: true,
+          originalMetrics: response.original_metrics,
+          optimizedMetrics: response.optimized_metrics,
+          optimizedRecipe: response.optimized_recipe,
+          recipeChanges: response.recipe_changes || [],
+          iterationsCompleted: response.iterations_completed || 0,
+          remainingSuggestions: response.suggestions || []
+        });
+        setSuggestions([]); // Clear individual suggestions since we have complete optimization
+      } else {
+        // Fallback to traditional suggestions format
+        console.log('🔄 AISuggestions - Using traditional suggestions format');
+        const convertedSuggestions = convertBackendSuggestions(response.suggestions || []);
+        console.log('🔄 AISuggestions - Converted suggestions:', {
+          originalSuggestions: response.suggestions,
+          convertedSuggestions: convertedSuggestions,
+          timestamp: new Date().toISOString()
+        });
+        
+        setSuggestions(convertedSuggestions);
+        setOptimizationResult(null); // Clear any previous optimization results
+      }
       
-      setSuggestions(convertedSuggestions);
       setHasAnalyzed(true);
 
     } catch (error) {
@@ -474,10 +515,131 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     generateSuggestions();
   };
 
+  // Apply optimized recipe
+  const applyOptimizedRecipe = async (optimization: OptimizationResult): Promise<void> => {
+    if (disabled) return;
+
+    console.log('🔍 AISuggestions - Applying optimized recipe:', {
+      optimization: optimization,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      // Convert optimized recipe ingredients to the format expected by onBulkIngredientUpdate
+      const optimizedIngredients = optimization.optimizedRecipe.ingredients || [];
+      
+      // CRITICAL FIX: Match ingredients by ingredient_id and name to determine which are updates vs new
+      const updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }> = [];
+      const optimizedIngredientIds = new Set();
+      
+      // Process optimized ingredients: update existing ones or add new ones
+      for (const optimizedIng of optimizedIngredients) {
+        // Try to find matching existing ingredient by ingredient_id or name
+        const existingIngredient = ingredients.find(ing => 
+          (ing.ingredient_id === optimizedIng.ingredient_id) ||
+          (ing.name === optimizedIng.name)
+        );
+        
+        if (existingIngredient) {
+          // Update existing ingredient
+          optimizedIngredientIds.add(existingIngredient.id);
+          updates.push({
+            ingredientId: existingIngredient.id!,
+            updatedData: {
+              ingredient_id: optimizedIng.ingredient_id,
+              name: optimizedIng.name,
+              type: optimizedIng.type as any,
+              amount: optimizedIng.amount,
+              unit: optimizedIng.unit as any,
+              grain_type: optimizedIng.grain_type,
+              color: optimizedIng.color,
+              potential: optimizedIng.potential,
+              alpha_acid: optimizedIng.alpha_acid,
+              time: optimizedIng.time,
+              use: optimizedIng.use,
+              attenuation: optimizedIng.attenuation
+            },
+            isNewIngredient: false
+          });
+        } else {
+          // Add new ingredient (not in original recipe)
+          const newIngredientId = `optimized-${Date.now()}-${Math.random()}`;
+          optimizedIngredientIds.add(newIngredientId);
+          updates.push({
+            ingredientId: newIngredientId,
+            updatedData: {
+              ingredient_id: optimizedIng.ingredient_id,
+              name: optimizedIng.name,
+              type: optimizedIng.type as any,
+              amount: optimizedIng.amount,
+              unit: optimizedIng.unit as any,
+              grain_type: optimizedIng.grain_type,
+              color: optimizedIng.color,
+              potential: optimizedIng.potential,
+              alpha_acid: optimizedIng.alpha_acid,
+              time: optimizedIng.time,
+              use: optimizedIng.use,
+              attenuation: optimizedIng.attenuation
+            },
+            isNewIngredient: true
+          });
+        }
+      }
+
+      console.log('🔄 AISuggestions - Prepared optimized recipe updates:', {
+        updates: updates,
+        existingIngredients: ingredients.length,
+        optimizedIngredients: optimizedIngredients.length,
+        updateCount: updates.filter(u => !u.isNewIngredient).length,
+        newCount: updates.filter(u => u.isNewIngredient).length,
+        timestamp: new Date().toISOString()
+      });
+
+      // Apply the updates first
+      await onBulkIngredientUpdate(updates);
+      
+      // Remove ingredients that are not in the optimized recipe
+      const ingredientsToRemove = ingredients.filter(ing => !optimizedIngredientIds.has(ing.id));
+      if (ingredientsToRemove.length > 0 && onRemoveIngredient) {
+        console.log('🔄 AISuggestions - Removing ingredients not in optimized recipe:', {
+          ingredientsToRemove: ingredientsToRemove.map(ing => ing.name),
+          timestamp: new Date().toISOString()
+        });
+        
+        // Remove ingredients that are not in the optimized recipe
+        for (const ingredient of ingredientsToRemove) {
+          console.log(`🔄 Removing ${ingredient.name} from recipe`);
+          await onRemoveIngredient(ingredient.id!);
+        }
+      } else if (ingredientsToRemove.length > 0) {
+        console.log('🔄 AISuggestions - Cannot remove ingredients (no onRemoveIngredient prop):', {
+          ingredientsToRemove: ingredientsToRemove.map(ing => ing.name),
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      console.log('✅ AISuggestions - Applied optimized recipe successfully');
+      
+      // Clear the optimization result and show success message
+      setOptimizationResult(null);
+      setHasAnalyzed(false);
+      alert(`Optimized recipe applied successfully! Recipe was improved through ${optimization.iterationsCompleted} iterations.`);
+
+    } catch (error) {
+      console.error('❌ AISuggestions - Error applying optimized recipe:', {
+        error: error,
+        message: error instanceof Error ? error.message : 'Failed to apply optimized recipe',
+        timestamp: new Date().toISOString()
+      });
+      setError(error instanceof Error ? error.message : 'Failed to apply optimized recipe');
+    }
+  };
+
   // Clear suggestions
   const clearSuggestions = (): void => {
     setSuggestions([]);
     setAppliedSuggestions(new Set());
+    setOptimizationResult(null);
     setHasAnalyzed(false);
     setError(null);
   };
@@ -542,7 +704,113 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             </div>
           )}
 
-          {hasAnalyzed && !analyzing && suggestions.length === 0 && !error && (
+          {hasAnalyzed && !analyzing && optimizationResult && (
+            <div style={{ background: 'white', border: '2px solid #28a745', borderRadius: '8px', padding: '20px', marginBottom: '20px' }}>
+              <h4 style={{ color: '#28a745', marginTop: 0 }}>🎯 Recipe Optimization Complete!</h4>
+              <p>Internal optimization completed in <strong>{optimizationResult.iterationsCompleted} iterations</strong></p>
+              
+              {/* Metrics comparison */}
+              <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
+                <h5>Metrics Improvement</h5>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px' }}>
+                  {Object.entries(optimizationResult.originalMetrics || {}).map(([metric, originalValue]) => {
+                    const optimizedValue = optimizationResult.optimizedMetrics?.[metric];
+                    const isImproved = originalValue !== optimizedValue;
+                    return (
+                      <div key={metric} style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12px', color: '#666' }}>{metric}</div>
+                        <div style={{ color: isImproved ? '#28a745' : '#666' }}>
+                          {originalValue} → {optimizedValue}
+                          {isImproved && <span style={{ fontSize: '12px', marginLeft: '5px' }}>✓</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recipe changes summary */}
+              {optimizationResult.recipeChanges.length > 0 && (
+                <div style={{ background: '#e9ecef', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
+                  <h5>Changes Made ({optimizationResult.recipeChanges.length})</h5>
+                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {optimizationResult.recipeChanges.map((change, idx) => (
+                      <div key={idx} style={{ padding: '8px', background: 'white', marginBottom: '8px', borderRadius: '4px', borderLeft: '3px solid #007bff' }}>
+                        {change.type === 'ingredient_modified' && (
+                          <div>
+                            <strong>{change.ingredient_name}:</strong> {change.field} changed from {change.original_value} to {change.optimized_value} {change.unit}
+                          </div>
+                        )}
+                        {change.type === 'ingredient_added' && (
+                          <div>
+                            <strong>Added:</strong> {change.ingredient_name} ({change.amount} {change.unit})
+                          </div>
+                        )}
+                        {change.type === 'ingredient_substituted' && (
+                          <div>
+                            <strong>Substituted:</strong> {change.original_ingredient} → {change.optimized_ingredient}
+                          </div>
+                        )}
+                        {change.type === 'optimization_summary' && (
+                          <div>
+                            <strong>Summary:</strong> {change.final_compliance} ({change.iterations_completed} iterations)
+                          </div>
+                        )}
+                        <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', marginTop: '4px' }}>
+                          {change.change_reason}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Apply button */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => applyOptimizedRecipe(optimizationResult)}
+                  disabled={disabled}
+                  style={{
+                    background: disabled ? '#ccc' : '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Apply Optimized Recipe
+                </button>
+                <button
+                  onClick={() => setOptimizationResult(null)}
+                  style={{
+                    background: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Keep Original Recipe
+                </button>
+              </div>
+
+              {/* Remaining suggestions if any */}
+              {optimizationResult.remainingSuggestions.length > 0 && (
+                <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #dee2e6' }}>
+                  <h5>Additional Fine-tuning Available ({optimizationResult.remainingSuggestions.length})</h5>
+                  <p style={{ fontSize: '14px', color: '#666' }}>
+                    These minor adjustments can be applied after accepting the optimized recipe.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasAnalyzed && !analyzing && suggestions.length === 0 && !optimizationResult && !error && (
             <div style={{ textAlign: 'center', padding: '20px', color: '#28a745' }}>
               <p>✅ Recipe analysis complete - no suggestions needed!</p>
               <p>Your recipe looks well-balanced for the current style.</p>

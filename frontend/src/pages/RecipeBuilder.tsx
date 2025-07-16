@@ -444,6 +444,7 @@ function RecipeBuilder(): React.ReactElement {
             ingredients: ingredients,
             metrics: metrics,
             onBulkIngredientUpdate: bulkUpdateIngredients,
+            onRemoveIngredient: removeIngredient,
             disabled: addingIngredient || updatingIngredient || saving,
           }),
 

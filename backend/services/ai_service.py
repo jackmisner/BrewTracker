@@ -261,8 +261,13 @@ class RecipeAnalysisEngine:
                 )
                 break
 
-        # Generate final analysis with any remaining suggestions
-        final_metrics = self._calculate_recipe_metrics(current_recipe)
+        # Generate final analysis
+        original_metrics = self._calculate_recipe_metrics(
+            recipe_data
+        )  # Original metrics
+        final_metrics = self._calculate_recipe_metrics(
+            current_recipe
+        )  # Optimized metrics
 
         # Final style compliance analysis
         final_style_analysis = None
@@ -273,34 +278,83 @@ class RecipeAnalysisEngine:
                     final_metrics, style_guide
                 )
 
-        # Generate final suggestions (should be minimal or none)
-        enriched_final_recipe = current_recipe.copy()
-        enriched_final_recipe["current_metrics"] = final_metrics
-        enriched_final_recipe["style_analysis"] = final_style_analysis
-
-        final_suggestions = self.suggestion_generator.generate_suggestions(
-            enriched_final_recipe, final_metrics, final_style_analysis, unit_system
+        # Generate recipe transformation summary
+        recipe_changes = self._generate_recipe_transformation_summary(
+            recipe_data, current_recipe, optimization_history
         )
 
-        # Calculate predicted effects for final suggestions
-        for suggestion in final_suggestions:
-            suggestion["predicted_effects"] = self.effects_calculator.calculate_effects(
-                enriched_final_recipe, suggestion.get("changes", [])
+        # Check if significant optimization occurred
+        optimization_occurred = len(optimization_history) > 0
+
+        if optimization_occurred:
+            # Generate minimal remaining suggestions (should be few or none after optimization)
+            enriched_final_recipe = current_recipe.copy()
+            enriched_final_recipe["current_metrics"] = final_metrics
+            enriched_final_recipe["style_analysis"] = final_style_analysis
+
+            remaining_suggestions = self.suggestion_generator.generate_suggestions(
+                enriched_final_recipe, final_metrics, final_style_analysis, unit_system
             )
 
-        logger.info(f"🔄 Final optimization results:")
-        logger.info(f"  - Iterations completed: {len(optimization_history)}")
-        logger.info(f"  - Final metrics: {final_metrics}")
-        logger.info(f"  - Final suggestions: {len(final_suggestions)}")
+            # Calculate predicted effects for remaining suggestions
+            for suggestion in remaining_suggestions:
+                suggestion["predicted_effects"] = (
+                    self.effects_calculator.calculate_effects(
+                        enriched_final_recipe, suggestion.get("changes", [])
+                    )
+                )
 
-        return {
-            "current_metrics": final_metrics,
-            "style_analysis": final_style_analysis,
-            "suggestions": final_suggestions,
-            "optimization_history": optimization_history,
-            "iterations_completed": len(optimization_history),
-            "analysis_timestamp": "2024-01-01T00:00:00Z",
-        }
+            logger.info(f"🔄 Internal optimization completed:")
+            logger.info(f"  - Iterations completed: {len(optimization_history)}")
+            logger.info(f"  - Original metrics: {original_metrics}")
+            logger.info(f"  - Optimized metrics: {final_metrics}")
+            logger.info(f"  - Recipe changes made: {len(recipe_changes)}")
+            logger.info(f"  - Remaining suggestions: {len(remaining_suggestions)}")
+
+            return {
+                "original_metrics": original_metrics,
+                "optimized_metrics": final_metrics,
+                "optimized_recipe": current_recipe,  # Complete optimized recipe
+                "recipe_changes": recipe_changes,  # Summary of all changes
+                "style_analysis": final_style_analysis,
+                "suggestions": remaining_suggestions,  # Should be minimal
+                "optimization_history": optimization_history,
+                "iterations_completed": len(optimization_history),
+                "optimization_performed": True,
+                "analysis_timestamp": "2024-01-01T00:00:00Z",
+            }
+        else:
+            # No optimization occurred - fallback to original behavior
+            logger.info(
+                "🔄 No internal optimization needed - returning original analysis"
+            )
+
+            # Generate suggestions for manual application
+            enriched_recipe = recipe_data.copy()
+            enriched_recipe["current_metrics"] = original_metrics
+            enriched_recipe["style_analysis"] = final_style_analysis
+
+            manual_suggestions = self.suggestion_generator.generate_suggestions(
+                enriched_recipe, original_metrics, final_style_analysis, unit_system
+            )
+
+            # Calculate predicted effects for manual suggestions
+            for suggestion in manual_suggestions:
+                suggestion["predicted_effects"] = (
+                    self.effects_calculator.calculate_effects(
+                        enriched_recipe, suggestion.get("changes", [])
+                    )
+                )
+
+            return {
+                "current_metrics": original_metrics,
+                "style_analysis": final_style_analysis,
+                "suggestions": manual_suggestions,
+                "optimization_history": [],
+                "iterations_completed": 0,
+                "optimization_performed": False,
+                "analysis_timestamp": "2024-01-01T00:00:00Z",
+            }
 
     def _is_recipe_fully_compliant(
         self, style_analysis: Optional[Dict], recipe_data: Dict
@@ -322,6 +376,113 @@ class RecipeAnalysisEngine:
             return False
 
         return True
+
+    def _generate_recipe_transformation_summary(
+        self,
+        original_recipe: Dict,
+        optimized_recipe: Dict,
+        optimization_history: List[Dict],
+    ) -> List[Dict]:
+        """Generate a summary of all changes made during internal optimization"""
+        recipe_changes = []
+
+        # Track ingredient changes by comparing original and optimized recipes
+        original_ingredients = {
+            ing.get("ingredient_id"): ing
+            for ing in original_recipe.get("ingredients", [])
+        }
+        optimized_ingredients = {
+            ing.get("ingredient_id"): ing
+            for ing in optimized_recipe.get("ingredients", [])
+        }
+
+        # Find modified ingredients
+        for ing_id, optimized_ing in optimized_ingredients.items():
+            if ing_id in original_ingredients:
+                original_ing = original_ingredients[ing_id]
+
+                # Check for amount changes
+                if original_ing.get("amount") != optimized_ing.get("amount"):
+                    recipe_changes.append(
+                        {
+                            "type": "ingredient_modified",
+                            "ingredient_name": optimized_ing.get("name"),
+                            "field": "amount",
+                            "original_value": original_ing.get("amount"),
+                            "optimized_value": optimized_ing.get("amount"),
+                            "unit": optimized_ing.get("unit"),
+                            "change_reason": "Recipe optimization to meet style guidelines",
+                        }
+                    )
+
+                # Check for time changes (hops)
+                if original_ing.get("time") != optimized_ing.get("time"):
+                    recipe_changes.append(
+                        {
+                            "type": "ingredient_modified",
+                            "ingredient_name": optimized_ing.get("name"),
+                            "field": "time",
+                            "original_value": original_ing.get("time"),
+                            "optimized_value": optimized_ing.get("time"),
+                            "unit": "min",
+                            "change_reason": "Hop timing optimization for better brewing practice",
+                        }
+                    )
+
+                # Check for ingredient substitutions (yeast changes)
+                if original_ing.get("name") != optimized_ing.get("name"):
+                    recipe_changes.append(
+                        {
+                            "type": "ingredient_substituted",
+                            "original_ingredient": original_ing.get("name"),
+                            "optimized_ingredient": optimized_ing.get("name"),
+                            "ingredient_type": optimized_ing.get("type"),
+                            "change_reason": "Style-appropriate ingredient substitution",
+                        }
+                    )
+            else:
+                # New ingredient added during optimization
+                recipe_changes.append(
+                    {
+                        "type": "ingredient_added",
+                        "ingredient_name": optimized_ing.get("name"),
+                        "amount": optimized_ing.get("amount"),
+                        "unit": optimized_ing.get("unit"),
+                        "ingredient_type": optimized_ing.get("type"),
+                        "change_reason": "Added to meet style requirements",
+                    }
+                )
+
+        # Find removed ingredients
+        for ing_id, original_ing in original_ingredients.items():
+            if ing_id not in optimized_ingredients:
+                recipe_changes.append(
+                    {
+                        "type": "ingredient_removed",
+                        "ingredient_name": original_ing.get("name"),
+                        "amount": original_ing.get("amount"),
+                        "unit": original_ing.get("unit"),
+                        "ingredient_type": original_ing.get("type"),
+                        "change_reason": "Removed during recipe optimization",
+                    }
+                )
+
+        # Add summary from optimization history
+        if optimization_history:
+            recipe_changes.append(
+                {
+                    "type": "optimization_summary",
+                    "iterations_completed": len(optimization_history),
+                    "total_changes": sum(
+                        len(hist.get("applied_changes", []))
+                        for hist in optimization_history
+                    ),
+                    "final_compliance": "Recipe optimized to meet style guidelines",
+                    "change_reason": f"Internal optimization completed in {len(optimization_history)} iterations",
+                }
+            )
+
+        return recipe_changes
 
     def _select_best_suggestion_for_internal_optimization(
         self, suggestions: List[Dict], applied_fingerprints: set = None
@@ -2981,10 +3142,38 @@ class CascadingEffectsCalculator:
 
         for change in changes:
             if change.get("is_new_ingredient"):
-                # Add new ingredient
-                new_ingredient = change.get("new_ingredient_data", {}).copy()
+                # Add new ingredient with proper database ingredient_id
+                new_ingredient_data = change.get("new_ingredient_data", {})
+                ingredient_name = new_ingredient_data.get("name")
+
+                # Look up ingredient in database to get proper ingredient_id
+                ingredient_id = None
+                if ingredient_name:
+                    try:
+                        # Try to find the ingredient in the database by name
+                        from models.mongo_models import Ingredient
+
+                        db_ingredient = Ingredient.objects(
+                            name__icontains=ingredient_name
+                        ).first()
+                        if db_ingredient:
+                            ingredient_id = str(db_ingredient.id)
+                            logger.info(
+                                f"🔍 Found database ingredient_id {ingredient_id} for {ingredient_name}"
+                            )
+                        else:
+                            logger.warning(
+                                f"🔍 No database ingredient found for {ingredient_name}"
+                            )
+                    except Exception as e:
+                        logger.error(
+                            f"🔍 Error looking up ingredient {ingredient_name}: {str(e)}"
+                        )
+
+                new_ingredient = new_ingredient_data.copy()
                 new_ingredient.update(
                     {
+                        "ingredient_id": ingredient_id,  # Add proper database ingredient_id
                         "amount": change.get("suggested_value"),
                         "unit": change.get("unit", "g"),  # Default to grams for metric
                     }
