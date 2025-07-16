@@ -11,6 +11,7 @@ from models.mongo_models import (
     RecipeIngredient,
     User,
 )
+from utils.unit_conversions import UnitConverter
 
 
 class MongoDBService:
@@ -370,8 +371,21 @@ class MongoDBService:
             recipe = Recipe(**recipe_data)
 
             # Process and add ingredients as embedded documents
+            # Normalize ingredients to base units
+            user_unit_system = (
+                user.get_preferred_units()
+                if user
+                else recipe_data.get("unit_system", "imperial")
+            )
+
             for ing_data in ingredients_data:
-                recipe_ingredient = RecipeIngredient(**ing_data)
+                # Normalize ingredient amounts to base units before saving
+                normalized_ing_data = (
+                    MongoDBService._normalize_ingredient_to_base_units(
+                        ing_data, user_unit_system
+                    )
+                )
+                recipe_ingredient = RecipeIngredient(**normalized_ing_data)
                 recipe.ingredients.append(recipe_ingredient)
 
             # Set creation timestamps
@@ -420,25 +434,37 @@ class MongoDBService:
                 # Clear existing ingredients
                 recipe.ingredients = []
 
-                # Add new ingredients
+                # Get user for unit system preferences
+                user = User.objects(id=recipe.user_id).first()
+                user_unit_system = (
+                    user.get_preferred_units() if user else recipe.unit_system
+                )
+
+                # Add new ingredients with base unit normalization
                 for ing_data in ingredients_data:
+                    # Normalize ingredient to base units
+                    normalized_ing_data = (
+                        MongoDBService._normalize_ingredient_to_base_units(
+                            ing_data, user_unit_system
+                        )
+                    )
                     # Create RecipeIngredient embedded document
                     from models.mongo_models import RecipeIngredient
 
                     # Only include fields that exist in the RecipeIngredient model
                     recipe_ingredient_fields = {
-                        "ingredient_id": ing_data.get("ingredient_id"),
-                        "name": ing_data.get("name"),
-                        "type": ing_data.get("type"),
-                        "grain_type": ing_data.get("grain_type"),
-                        "amount": float(ing_data.get("amount", 0)),
-                        "unit": ing_data.get("unit", ""),
-                        "use": ing_data.get("use", ""),
-                        "time": int(ing_data.get("time", 0)),
-                        "potential": ing_data.get("potential"),
-                        "color": ing_data.get("color"),
-                        "alpha_acid": ing_data.get("alpha_acid"),
-                        "attenuation": ing_data.get("attenuation"),
+                        "ingredient_id": normalized_ing_data.get("ingredient_id"),
+                        "name": normalized_ing_data.get("name"),
+                        "type": normalized_ing_data.get("type"),
+                        "grain_type": normalized_ing_data.get("grain_type"),
+                        "amount": float(normalized_ing_data.get("amount", 0)),
+                        "unit": normalized_ing_data.get("unit", ""),
+                        "use": normalized_ing_data.get("use", ""),
+                        "time": int(normalized_ing_data.get("time", 0)),
+                        "potential": normalized_ing_data.get("potential"),
+                        "color": normalized_ing_data.get("color"),
+                        "alpha_acid": normalized_ing_data.get("alpha_acid"),
+                        "attenuation": normalized_ing_data.get("attenuation"),
                     }
 
                     # Filter out None values to avoid validation errors
@@ -1375,3 +1401,61 @@ class MongoDBService:
 
             traceback.print_exc()
             return None, str(e)
+
+    @staticmethod
+    def _normalize_ingredient_to_base_units(ingredient_data, unit_system):
+        """
+        Normalize ingredient amounts to base units before storing in database
+
+        Args:
+            ingredient_data: Dictionary containing ingredient data
+            unit_system: User's preferred unit system ('metric' or 'imperial')
+
+        Returns:
+            Dictionary with normalized ingredient data
+        """
+        # Make a copy to avoid modifying the original
+        normalized_data = ingredient_data.copy()
+
+        # Only normalize weight-based ingredients
+        ingredient_type = normalized_data.get("type", "")
+        if ingredient_type not in ["grain", "hop", "other"]:
+            # Keep non-weight ingredients as-is (yeast packages, etc.)
+            return normalized_data
+
+        # Check if ingredient has amount and unit
+        if "amount" not in normalized_data or "unit" not in normalized_data:
+            return normalized_data
+
+        current_amount = normalized_data["amount"]
+        current_unit = normalized_data["unit"]
+
+        # Get target base unit for this unit system
+        target_unit = UnitConverter.get_ingredient_target_unit(
+            ingredient_type, unit_system
+        )
+
+        if target_unit and current_unit != target_unit:
+            try:
+                # Convert to base unit
+                normalized_amount, base_unit = UnitConverter.normalize_to_base_unit(
+                    current_amount, current_unit, unit_system
+                )
+
+                # Update the ingredient data
+                normalized_data["amount"] = normalized_amount
+                normalized_data["unit"] = base_unit
+
+                # Log the conversion for debugging
+                print(
+                    f"Normalized ingredient: {normalized_data.get('name', 'Unknown')} - "
+                    f"{current_amount} {current_unit} -> {normalized_amount} {base_unit}"
+                )
+
+            except Exception as e:
+                print(
+                    f"Warning: Could not normalize ingredient {normalized_data.get('name', 'Unknown')}: {e}"
+                )
+                # Keep original values if conversion fails
+
+        return normalized_data

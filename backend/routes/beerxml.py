@@ -430,9 +430,9 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
                 amount = amount_kg * 1000
                 unit = "g"
             else:
-                # Convert to pounds for imperial system (default)
-                amount = UnitConverter.convert_weight(amount_kg, "kg", "lb")
-                unit = "lb"
+                # Convert to ounces for imperial system (base unit consistency)
+                amount = UnitConverter.convert_weight(amount_kg, "kg", "oz")
+                unit = "oz"
 
             # Calculate potential from yield
             yield_pct = float(get_text_content(elem, "YIELD") or 80)

@@ -270,3 +270,132 @@ class UnitConverter:
             return unit_lower in ["c", "f", "celsius", "fahrenheit"]
 
         return False
+
+    @classmethod
+    def get_base_units(cls, unit_system):
+        """Get base units for a given unit system"""
+        if unit_system == "metric":
+            return {"weight": "g", "volume": "ml", "temperature": "C"}
+        else:  # imperial
+            return {"weight": "oz", "volume": "floz", "temperature": "F"}
+
+    @classmethod
+    def normalize_to_base_unit(cls, amount, current_unit, unit_system):
+        """
+        Convert any unit to appropriate base unit for the given unit system
+
+        Args:
+            amount: Amount to convert
+            current_unit: Current unit of the amount
+            unit_system: Target unit system ('metric' or 'imperial')
+
+        Returns:
+            Tuple of (converted_amount, base_unit)
+        """
+        base_units = cls.get_base_units(unit_system)
+        current_unit_lower = current_unit.lower()
+
+        # Determine if it's weight or volume based
+        if current_unit_lower in [key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()]:
+            # It's a weight unit
+            target_unit = base_units["weight"]
+            converted_amount = cls.convert_weight(amount, current_unit, target_unit)
+            return round(converted_amount, 2), target_unit
+
+        elif current_unit_lower in [key.lower() for key in cls.VOLUME_TO_LITERS.keys()]:
+            # It's a volume unit
+            target_unit = base_units["volume"]
+            converted_amount = cls.convert_volume(amount, current_unit, target_unit)
+            return round(converted_amount, 2), target_unit
+
+        else:
+            # Keep non-convertible units as-is (e.g., pkg, tsp, etc.)
+            return amount, current_unit
+
+    @classmethod
+    def convert_for_display(cls, amount, base_unit, user_preference):
+        """
+        Convert from base units to user-friendly display units
+
+        Args:
+            amount: Amount in base units
+            base_unit: Base unit ('g', 'oz', 'ml', 'floz')
+            user_preference: User's preferred unit system ('metric' or 'imperial')
+
+        Returns:
+            Dict with 'amount' and 'unit' keys for display
+        """
+        # For metric base units
+        if base_unit == "g" and user_preference == "metric":
+            if amount >= 1000:
+                return {"amount": round(amount / 1000, 3), "unit": "kg"}
+            else:
+                return {"amount": round(amount, 1), "unit": "g"}
+
+        elif base_unit == "ml" and user_preference == "metric":
+            if amount >= 1000:
+                return {"amount": round(amount / 1000, 2), "unit": "l"}
+            else:
+                return {"amount": round(amount, 1), "unit": "ml"}
+
+        # For imperial base units
+        elif base_unit == "oz" and user_preference == "imperial":
+            if amount >= 16:
+                return {"amount": round(amount / 16, 3), "unit": "lb"}
+            else:
+                return {"amount": round(amount, 2), "unit": "oz"}
+
+        elif base_unit == "floz" and user_preference == "imperial":
+            if amount >= 128:  # 1 gallon = 128 floz
+                return {"amount": round(amount / 128, 2), "unit": "gal"}
+            elif amount >= 32:  # 1 quart = 32 floz
+                return {"amount": round(amount / 32, 2), "unit": "qt"}
+            elif amount >= 16:  # 1 pint = 16 floz
+                return {"amount": round(amount / 16, 2), "unit": "pt"}
+            else:
+                return {"amount": round(amount, 1), "unit": "floz"}
+
+        # Cross-system conversions (base unit doesn't match preference)
+        elif base_unit == "g" and user_preference == "imperial":
+            # Convert grams to imperial display
+            oz_amount = cls.convert_weight(amount, "g", "oz")
+            if oz_amount >= 16:
+                return {"amount": round(oz_amount / 16, 3), "unit": "lb"}
+            else:
+                return {"amount": round(oz_amount, 2), "unit": "oz"}
+
+        elif base_unit == "oz" and user_preference == "metric":
+            # Convert ounces to metric display
+            g_amount = cls.convert_weight(amount, "oz", "g")
+            if g_amount >= 1000:
+                return {"amount": round(g_amount / 1000, 3), "unit": "kg"}
+            else:
+                return {"amount": round(g_amount, 1), "unit": "g"}
+
+        # Default: return as-is
+        return {"amount": round(amount, 2), "unit": base_unit}
+
+    @classmethod
+    def is_base_unit(cls, unit, unit_system):
+        """Check if a unit is already a base unit for the given system"""
+        base_units = cls.get_base_units(unit_system)
+        return unit.lower() in [bu.lower() for bu in base_units.values()]
+
+    @classmethod
+    def get_ingredient_target_unit(cls, ingredient_type, unit_system):
+        """Get the target base unit for a specific ingredient type"""
+        base_units = cls.get_base_units(unit_system)
+
+        # Weight-based ingredients
+        if ingredient_type in ["grain", "hop", "other"]:
+            return base_units["weight"]
+
+        # Volume-based ingredients (rare, but possible)
+        elif ingredient_type == "liquid":
+            return base_units["volume"]
+
+        # Special cases - keep as-is
+        elif ingredient_type == "yeast":
+            return None  # Yeast often uses 'pkg' which we don't convert
+
+        return base_units["weight"]  # Default to weight

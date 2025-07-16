@@ -14,12 +14,7 @@ import CacheManager from "./CacheManager";
 import RecipeDefaultsService from "./User/RecipeDefaultsService";
 import UserSettingsService from "./User/UserSettingsService";
 import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalyticsService";
-import CascadingEffectsService from "./AI/CascadingEffectsService";
-import EnhancedStyleComplianceService from "./AI/EnhancedStyleComplianceService";
-import SmartBaseMaltService from "./AI/SmartBaseMaltService";
-import HierarchicalAdjustmentService from "./AI/HierarchicalAdjustmentService";
-import SpecialtyGrainService from "./AI/SpecialtyGrainService";
-import HopTimingService from "./AI/HopTimingService";
+import aiService from "./AI/AIService";
 import { ID } from "../types";
 
 // Service-specific interfaces
@@ -60,12 +55,7 @@ export {
   RecipeDefaultsService,
   UserSettingsService,
   attenuationAnalyticsServiceInstance,
-  CascadingEffectsService,
-  EnhancedStyleComplianceService,
-  SmartBaseMaltService,
-  HierarchicalAdjustmentService,
-  SpecialtyGrainService,
-  HopTimingService,
+  aiService,
 };
 
 // Export as grouped services object for convenience
@@ -99,12 +89,7 @@ export const Services = {
   
   // AI services
   AI: {
-    cascadingEffects: CascadingEffectsService,
-    enhancedStyleCompliance: EnhancedStyleComplianceService,
-    smartBaseMalt: SmartBaseMaltService,
-    hierarchicalAdjustment: HierarchicalAdjustmentService,
-    specialtyGrain: SpecialtyGrainService,
-    hopTiming: HopTimingService,
+    service: aiService,
   },
   
   // BeerXML services

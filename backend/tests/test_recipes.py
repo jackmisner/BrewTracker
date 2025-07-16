@@ -801,7 +801,9 @@ class TestRecipeEndpointsExtended:
         recipe = response.json["recipe"]
         assert recipe["unit_system"] == "metric"
         assert recipe["batch_size_unit"] == "l"
-        assert recipe["ingredients"][0]["unit"] == "kg"
+        assert (
+            recipe["ingredients"][0]["unit"] == "g"
+        )  # Base unit for metric after migration
 
     def test_recipe_with_empty_ingredients(self, client, authenticated_user):
         """Test creating and updating recipes with empty ingredients list"""

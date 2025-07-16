@@ -209,7 +209,10 @@ class TestMongoDBServiceRecipeMethods:
         assert updated_recipe.description == "Updated description"
         assert updated_recipe.batch_size == 6.0
         assert len(updated_recipe.ingredients) == 1
-        assert updated_recipe.ingredients[0].amount == 12.0
+        assert (
+            updated_recipe.ingredients[0].amount == 192.0
+        )  # 12 lb converted to 192 oz (base unit)
+        assert updated_recipe.ingredients[0].unit == "oz"  # Base unit for imperial
 
     def test_update_recipe_not_found(self):
         """Test updating non-existent recipe"""

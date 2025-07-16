@@ -30,17 +30,23 @@ jest.mock('../../src/services/User/UserSettingsService', () => ({
 jest.mock('../../src/services', () => ({
   Services: {
     AI: {
-      cascadingEffects: jest.fn().mockImplementation(() => ({
-        predictChanges: jest.fn().mockReturnValue({}),
-        optimizeRecipe: jest.fn().mockReturnValue(null),
-      })),
-      smartBaseMalt: jest.fn().mockImplementation(() => ({
-        optimizeBaseMalt: jest.fn().mockReturnValue(null),
-      })),
-      enhancedStyleCompliance: jest.fn().mockImplementation(() => ({
-        analyzeCompliance: jest.fn().mockReturnValue(null),
-        generateOptimizationSuggestion: jest.fn().mockReturnValue(null),
-      })),
+      service: {
+        analyzeRecipe: jest.fn().mockResolvedValue({
+          suggestions: [],
+          current_metrics: {
+            og: 1.050,
+            fg: 1.010,
+            abv: 5.2,
+            ibu: 35,
+            srm: 8
+          }
+        })
+      }
+    },
+    Data: {
+      ingredient: {
+        fetchIngredients: jest.fn().mockResolvedValue({})
+      }
     },
     beerStyle: {
       getAllStylesList: jest.fn().mockResolvedValue([]),
@@ -173,8 +179,8 @@ describe('AISuggestions Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
-      expect(screen.getByText('Analyze Recipe & Suggest Improvements')).toBeInTheDocument();
+      expect(screen.getByText(/AI Recipe Analysis/)).toBeInTheDocument();
+      expect(screen.getByText('Analyze Recipe')).toBeInTheDocument();
     });
   });
 
@@ -189,11 +195,11 @@ describe('AISuggestions Component', () => {
     );
 
     await waitFor(() => {
-      // Find the toggle button specifically 
-      const toggleButton = screen.getByText('−');
+      // Find the toggle button by its role and content
+      const toggleButton = screen.getByRole('button', { name: /AI Recipe Analysis/ });
       // Component is expanded, test collapsing
       fireEvent.click(toggleButton);
-      expect(screen.getByText('+')).toBeInTheDocument();
+      expect(screen.getByText(/▶/)).toBeInTheDocument();
     });
   });
 
@@ -226,9 +232,8 @@ describe('AISuggestions Component', () => {
       />
     );
 
-    expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
+    expect(screen.getByText(/AI Recipe Analysis/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /analyze recipe/i })).toBeDisabled();
-    expect(screen.getByText('Add ingredients to your recipe to get analysis.')).toBeInTheDocument();
   });
 
   it('shows disabled analyze button when no metrics are provided', () => {
@@ -241,7 +246,7 @@ describe('AISuggestions Component', () => {
       />
     );
 
-    expect(screen.getByText('🤖 AI Recipe Analysis')).toBeInTheDocument();
+    expect(screen.getByText(/AI Recipe Analysis/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /analyze recipe/i })).toBeDisabled();
   });
 

@@ -14,6 +14,7 @@ export interface IngredientChange {
   field: string;
   currentValue: any;
   suggestedValue: any;
+  reason?: string;
   // For adding new ingredients
   isNewIngredient?: boolean;
   newIngredientData?: {
