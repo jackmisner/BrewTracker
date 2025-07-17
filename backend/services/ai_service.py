@@ -103,6 +103,235 @@ class RecipeAnalysisEngine:
         darkest = max(base_malts, key=lambda x: x.get("color", 0))
         return darkest
 
+    def _find_caramel_crystal_grains(self) -> List[Dict]:
+        """Get all caramel/crystal grains sorted by color (Lovibond)"""
+        ingredients = self._get_all_ingredients()
+        caramel_crystal_grains = [
+            ing
+            for ing in ingredients
+            if ing.get("type") == "grain"
+            and ing.get("grain_type") == "caramel_crystal"
+            and ing.get("color") is not None
+        ]
+
+        # Sort by color value (Lovibond) for easy selection
+        caramel_crystal_grains.sort(key=lambda x: x.get("color", 0))
+        return caramel_crystal_grains
+
+    def _find_existing_caramel_crystal_in_recipe(
+        self, recipe_data: Dict
+    ) -> Optional[Dict]:
+        """Find existing caramel/crystal grain in recipe"""
+        ingredients = recipe_data.get("ingredients", [])
+
+        # Get all caramel/crystal grains from database for reference
+        caramel_crystal_grains = self._find_caramel_crystal_grains()
+        caramel_crystal_ids = {
+            grain["ingredient_id"] for grain in caramel_crystal_grains
+        }
+
+        # Find first caramel/crystal grain in recipe
+        for ingredient in ingredients:
+            if ingredient.get("ingredient_id") in caramel_crystal_ids:
+                # Return the ingredient with database info merged
+                db_grain = next(
+                    (
+                        grain
+                        for grain in caramel_crystal_grains
+                        if grain["ingredient_id"] == ingredient["ingredient_id"]
+                    ),
+                    None,
+                )
+                if db_grain:
+                    # Merge recipe amount with database properties
+                    return {
+                        **db_grain,
+                        "recipe_amount": ingredient.get("amount", 0),
+                        "recipe_unit": ingredient.get("unit", "g"),
+                        "recipe_use": ingredient.get("use", "mash"),
+                        "recipe_ingredient": ingredient,  # Keep original for modifications
+                    }
+
+        return None
+
+    def _find_best_caramel_crystal_substitute(
+        self, current_grain: Dict, target_lovibond_delta: float
+    ) -> Optional[Dict]:
+        """Find optimal caramel/crystal substitute for SRM adjustment"""
+        caramel_crystal_grains = self._find_caramel_crystal_grains()
+
+        if not caramel_crystal_grains:
+            return None
+
+        current_color = current_grain.get("color", 0)
+        target_color = current_color + target_lovibond_delta
+
+        # Find grain with color closest to target
+        best_substitute = None
+        best_color_diff = float("inf")
+
+        for grain in caramel_crystal_grains:
+            grain_color = grain.get("color", 0)
+
+            # Skip if it's the same grain
+            if grain.get("ingredient_id") == current_grain.get("ingredient_id"):
+                continue
+
+            # Calculate color difference from target
+            color_diff = abs(grain_color - target_color)
+
+            # Prefer grains with similar potential (within 2 points)
+            current_potential = current_grain.get("potential", 1.035)
+            grain_potential = grain.get("potential", 1.035)
+            potential_diff = abs(grain_potential - current_potential)
+
+            # Penalize grains with very different potentials
+            if potential_diff > 0.002:  # More than 2 points potential difference
+                color_diff += potential_diff * 100  # Heavy penalty
+
+            # Update best if this is closer to target
+            if color_diff < best_color_diff:
+                best_color_diff = color_diff
+                best_substitute = grain
+
+        return best_substitute
+
+    def _prepare_grain_data_for_srm(
+        self, recipe_data: Dict
+    ) -> Tuple[List[Tuple], float]:
+        """Extract grain colors and batch size for SRM calculation using Morey's method"""
+        ingredients = recipe_data.get("ingredients", [])
+        grain_colors = []
+
+        # Extract grain data for SRM calculation
+        for ing in ingredients:
+            if ing.get("type") == "grain":
+                # Convert grain weight to pounds
+                amount = ing.get("amount", 0)
+                unit = ing.get("unit", "g")
+                weight_lb = convert_to_pounds(amount, unit)
+
+                # Get grain color (Lovibond)
+                color = ing.get("color", 0)
+
+                # Add to grain colors list
+                grain_colors.append((weight_lb, color))
+
+        # Get batch size and convert to gallons
+        batch_size = float(recipe_data.get("batch_size", 5))
+        batch_size_unit = recipe_data.get("batch_size_unit", "gal")
+
+        from utils.unit_conversions import UnitConverter
+
+        batch_size_gal = UnitConverter.convert_volume(
+            batch_size, batch_size_unit, "gal"
+        )
+
+        return grain_colors, batch_size_gal
+
+    def _calculate_accurate_srm_impact(
+        self, recipe_data: Dict, old_grain: Dict, new_grain: Dict
+    ) -> float:
+        """Calculate accurate SRM impact using Morey's method for grain substitution"""
+        try:
+            # Get current grain data and batch size
+            grain_colors, batch_size_gal = self._prepare_grain_data_for_srm(recipe_data)
+
+            # Calculate current SRM
+            current_srm = calc_srm_core(grain_colors, batch_size_gal)
+
+            # Create modified grain colors list with substitution
+            modified_grain_colors = []
+            old_grain_id = old_grain["ingredient_id"]
+            substitution_made = False
+
+            for ing in recipe_data.get("ingredients", []):
+                if ing.get("type") == "grain":
+                    # Convert grain weight to pounds
+                    amount = ing.get("amount", 0)
+                    unit = ing.get("unit", "g")
+                    weight_lb = convert_to_pounds(amount, unit)
+
+                    # Check if this is the grain being substituted
+                    if ing.get("ingredient_id") == old_grain_id:
+                        # Use new grain color instead
+                        color = new_grain.get("color", 0)
+                        substitution_made = True
+                    else:
+                        # Use original grain color
+                        color = ing.get("color", 0)
+
+                    modified_grain_colors.append((weight_lb, color))
+
+            # Calculate new SRM with substitution
+            if substitution_made:
+                new_srm = calc_srm_core(modified_grain_colors, batch_size_gal)
+                srm_impact = new_srm - current_srm
+                return round(srm_impact, 2)
+            else:
+                # Fallback if substitution couldn't be made
+                return 0.0
+
+        except Exception as e:
+            logger.error(f"Error calculating accurate SRM impact: {str(e)}")
+            # Fallback to rough approximation
+            old_color = old_grain.get("color", 0)
+            new_color = new_grain.get("color", 0)
+            lovibond_delta = new_color - old_color
+            return lovibond_delta * 0.1
+
+    def _create_caramel_crystal_substitution_suggestion(
+        self,
+        old_grain: Dict,
+        new_grain: Dict,
+        amount: float,
+        unit: str,
+        recipe_data: Dict = None,
+    ) -> Dict:
+        """Create caramel/crystal substitution suggestion with accurate SRM impact using Morey's method"""
+        old_color = old_grain.get("color", 0)
+        new_color = new_grain.get("color", 0)
+        lovibond_delta = new_color - old_color
+
+        # Calculate accurate SRM impact using Morey's method
+        if recipe_data:
+            estimated_srm_impact = self._calculate_accurate_srm_impact(
+                recipe_data, old_grain, new_grain
+            )
+        else:
+            # Fallback to rough approximation if no recipe data
+            estimated_srm_impact = lovibond_delta * 0.1
+
+        return {
+            "ingredient_id": old_grain["recipe_ingredient"][
+                "id"
+            ],  # Recipe ingredient ID
+            "ingredient_name": old_grain["recipe_ingredient"]["name"],  # Current name
+            "field": "ingredient_id",  # We're changing the ingredient itself
+            "current_value": old_grain["ingredient_id"],  # Current ingredient DB ID
+            "suggested_value": new_grain["ingredient_id"],  # New ingredient DB ID
+            "unit": unit,
+            "action": "substitute_ingredient",
+            "is_caramel_crystal_substitution": True,
+            "substitution_data": {
+                "old_ingredient": {
+                    "name": old_grain["name"],
+                    "color": old_color,
+                    "potential": old_grain.get("potential", 1.035),
+                },
+                "new_ingredient": {
+                    "name": new_grain["name"],
+                    "color": new_color,
+                    "potential": new_grain.get("potential", 1.035),
+                },
+                "lovibond_delta": lovibond_delta,
+                "estimated_srm_impact": estimated_srm_impact,
+                "amount": amount,
+                "unit": unit,
+            },
+            "reason": f"Substitute {old_grain['name']} ({old_color}°L) with {new_grain['name']} ({new_color}°L) to adjust beer color by approximately {estimated_srm_impact:+.1f} SRM points while maintaining similar fermentability",
+        }
+
     def analyze_recipe(
         self,
         recipe_data: Dict,
@@ -1895,9 +2124,31 @@ class SuggestionGenerator:
         return suggestion.get("changes", []) if suggestion else []
 
     def _determine_color_adjustment_strategy(
-        self, style_analysis: Dict, current_metrics: Dict, srm_difference: float
+        self,
+        style_analysis: Dict,
+        current_metrics: Dict,
+        srm_difference: float,
+        recipe_data: Dict = None,
     ) -> str:
         """Use style compliance to determine the best color adjustment strategy"""
+
+        # PRIORITY 1: Check for caramel/crystal substitution opportunity
+        if recipe_data:
+            existing_caramel_crystal = self._find_existing_caramel_crystal_in_recipe(
+                recipe_data
+            )
+            if existing_caramel_crystal:
+                # Calculate Lovibond delta needed for SRM adjustment
+                # Rough approximation: 1 SRM ≈ 10 Lovibond for crystal malts
+                lovibond_delta = srm_difference * 10
+
+                # Check if we can find a suitable substitute
+                substitute = self._find_best_caramel_crystal_substitute(
+                    existing_caramel_crystal, lovibond_delta
+                )
+                if substitute:
+                    return "caramel_crystal_substitution"
+
         if not style_analysis or not style_analysis.get("compliance"):
             # Fallback to conservative strategy if no style data
             return "base_malt" if srm_difference <= 5 else "mixed"
@@ -2023,14 +2274,37 @@ class SuggestionGenerator:
 
         # Determine strategy based on style compliance, not hardcoded values
         strategy = self._determine_color_adjustment_strategy(
-            style_analysis, current_metrics, srm_difference
+            style_analysis, current_metrics, srm_difference, recipe_data
         )
 
         # Base unit for user's system
         base_unit = "g" if unit_system == "metric" else "oz"
 
         # Get appropriate grains from database based on strategy
-        if strategy == "roasted_grain":
+        if strategy == "caramel_crystal_substitution":
+            # Use caramel/crystal substitution for SRM adjustment
+            existing_caramel_crystal = self._find_existing_caramel_crystal_in_recipe(
+                recipe_data
+            )
+            if existing_caramel_crystal:
+                # Calculate Lovibond delta needed for SRM adjustment
+                lovibond_delta = srm_difference * 10  # Rough approximation
+
+                substitute = self._find_best_caramel_crystal_substitute(
+                    existing_caramel_crystal, lovibond_delta
+                )
+                if substitute:
+                    # Use same amount as existing ingredient
+                    amount = existing_caramel_crystal["recipe_amount"]
+                    unit = existing_caramel_crystal["recipe_unit"]
+
+                    # Create substitution suggestion
+                    change = self._create_caramel_crystal_substitution_suggestion(
+                        existing_caramel_crystal, substitute, amount, unit, recipe_data
+                    )
+                    suggestions.append(change)
+
+        elif strategy == "roasted_grain":
             # Use darkest roasted grain for color correction
             darkest_roasted = self.engine._find_darkest_roasted_grain()
             if darkest_roasted:
