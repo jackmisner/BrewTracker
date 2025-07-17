@@ -10,9 +10,7 @@ import {
   RecipeDefaultsService,
   UserSettingsService,
   attenuationAnalyticsServiceInstance,
-  CascadingEffectsService,
-  EnhancedStyleComplianceService,
-  SmartBaseMaltService,
+  aiService,
   Services,
   ServiceUtils,
 } from "../../src/services/index";
@@ -58,9 +56,7 @@ describe("Services Index", () => {
       
       expect(Services.Brewing.brewSession).toBe(brewSessionServiceInstance);
       
-      expect(Services.AI.cascadingEffects).toBe(CascadingEffectsService);
-      expect(Services.AI.enhancedStyleCompliance).toBe(EnhancedStyleComplianceService);
-      expect(Services.AI.smartBaseMalt).toBe(SmartBaseMaltService);
+      expect(Services.AI.service).toBe(aiService);
       
       expect(Services.BeerXML.service).toBe(BeerXMLService);
       expect(Services.BeerXML.ingredientMatching).toBe(IngredientMatchingService);
