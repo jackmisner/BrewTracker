@@ -33,6 +33,8 @@ homebrew-tracker/
 │   │   └── mongo_models.py                               # MongoEngine ODM models with validation, relationships, and business logic
 │   ├── routes/                                           # Flask blueprints for API endpoints
 │   │   ├── __init__.py
+│   │   ├── ai_routes.py                                  # Automated recipe analysis and suggestion generation endpoints
+│   │   ├── attenuation_analytics.py                      # Real world yeast attenuation analysis and statistics endpoints
 │   │   ├── auth.py                                       # User authentication and authorization endpoints
 │   │   ├── beer_styles.py                                # Beer style guide and analysis endpoints
 │   │   ├── beerxml.py                                    # BeerXML import/export functionality endpoints
@@ -45,6 +47,8 @@ homebrew-tracker/
 │   │   └── seed_beer_styles.py                           # Seeds beer style guides from JSON data
 │   ├── services/                                         # Business logic layer
 │   │   ├── __init__.py
+│   │   ├── ai_service.py                                 # Service for automated recipe analysis and optimization suggestions based on brewing science and BJCP style guidelines.
+│   │   ├── attenuation_service.py                        # Service for collecting and analyzing real-world yeast attenuation data
 │   │   └── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
 │   ├── tests/                                            # pytest test suite for backend functionality
 │   ├── utils/                                            # Utility functions
@@ -92,9 +96,7 @@ homebrew-tracker/
 │   │   │   │   ├── AttenuationAnalyticsService.ts        # Yeast attenuation analytics and real-world performance data management
 │   │   │   │   └── MetricService.ts                      # Recipe calculations (OG, FG, ABV, IBU, SRM) and analysis
 │   │   │   ├── AI/                                       # AI recipe suggestion services
-│   │   │   │    ├── EnhancedStyleComplianceService.ts    # BJCP style analysis and multi-metric optimization
-│   │   │   │    ├── SmartBaseMaltService.ts              # Intelligent base malt selection and grain bill recommendations
-│   │   │   │    └── CascadingEffectsService.ts           # Recipe change prediction and impact analysis
+│   │   │   │    └── AiService.ts                         # Simplified AI Service for Backend API Communication
 │   │   │   ├── BeerXML/                                  # BeerXML format handling services
 │   │   │   │   ├── BeerXMLService.ts                     # BeerXML import/export and format conversion
 │   │   │   │   └── IngredientMatchingService.ts          # Ingredient mapping and matching for BeerXML imports
@@ -416,7 +418,7 @@ The AI recipe suggestions system is **fully implemented** and actively helping b
 
 - ✅ **Style Compliance Analysis**: Full BJCP integration with multi-metric optimization (OG, FG, ABV, IBU, SRM)
 - ✅ **Smart Base Malt Selection**: Intelligent malt recommendations based on beer style characteristics
-- ✅ **Ingredient Addition System**: Automatic Blackprinz malt addition for color adjustment when needed
+- ✅ **Ingredient Addition System**: Smart malt addition for colour adjustments (Munich Dark when SRM is low AND OG/FG is low, Midnight Wheat if SRM is low but OG/FG in range)
 - ✅ **Hop Timing Optimization**: IBU-focused hop timing suggestions with conservative brewing approach
 - ✅ **Cascading Effects Prediction**: Accurate impact analysis for ingredient changes
 - ✅ **Unified Suggestion System**: Single comprehensive suggestion combining all optimizations
@@ -424,7 +426,7 @@ The AI recipe suggestions system is **fully implemented** and actively helping b
 
 #### Key Features:
 
-- 🎯 **Style-Aware Recommendations**: Automatically detects beer style characteristics (hop-forward, malt-forward, color requirements)
+- 🎯 **Style-Aware Recommendations**: Automatically detects beer style characteristics (hop-forward, malt-forward, colour requirements)
 - 🧮 **Real-Time Calculations**: Instant metric predictions for suggested ingredient changes
 - 🔍 **Intelligent Conflict Resolution**: Priority-based merging of multiple optimization suggestions
 - 📊 **Multi-Metric Optimization**: Simultaneous optimization across all brewing metrics
