@@ -508,11 +508,21 @@ describe("useRecipeBuilder", () => {
     });
 
     it("should recalculate metrics after removing ingredient", async () => {
+      // Setup recipe fetch to return recipe with ingredients included
+      const recipeWithIngredients = {
+        ...mockRecipe,
+        ingredients: mockIngredients,
+      };
+      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithIngredients);
+
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
+
+      // Ensure we have ingredients to remove
+      expect(result.current.ingredients).toEqual(mockIngredients);
 
       (Services.metrics.calculateMetricsDebounced as jest.Mock).mockClear();
 

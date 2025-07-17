@@ -61,7 +61,6 @@ class RecipeAnalysisEngine:
                     }
                     for ing in ingredients
                 ]
-                logger.info(f"🔍 Cached {len(self._ingredient_cache)} ingredients")
             except Exception as e:
                 logger.error(f"Failed to fetch ingredients: {e}")
                 self._ingredient_cache = []
@@ -84,9 +83,6 @@ class RecipeAnalysisEngine:
 
         # Return the grain with highest color value
         darkest = max(roasted_grains, key=lambda x: x.get("color", 0))
-        logger.info(
-            f"🔍 Found darkest roasted grain: {darkest['name']} (color: {darkest['color']})"
-        )
         return darkest
 
     def _find_darkest_base_malt(self) -> Optional[Dict]:
@@ -105,9 +101,6 @@ class RecipeAnalysisEngine:
 
         # Return the base malt with highest color value
         darkest = max(base_malts, key=lambda x: x.get("color", 0))
-        logger.info(
-            f"🔍 Found darkest base malt: {darkest['name']} (color: {darkest['color']})"
-        )
         return darkest
 
     def analyze_recipe(
@@ -132,9 +125,8 @@ class RecipeAnalysisEngine:
             return self._optimize_recipe_internally(recipe_data, style_id, unit_system)
 
         except Exception as e:
-            logger.error(f"Iterative optimization failed: {str(e)}")
+            logger.error(f"⚠️ Iterative optimization failed: {str(e)}")
             # Fallback to single-pass if iterative fails
-            logger.info("Falling back to single-pass analysis")
             return self.analyze_recipe_single_pass(recipe_data, style_id, unit_system)
 
     def _optimize_recipe_internally(
@@ -142,15 +134,12 @@ class RecipeAnalysisEngine:
         recipe_data: Dict,
         style_id: Optional[str] = None,
         unit_system: str = "imperial",
-        max_iterations: int = 25,
+        max_iterations: int = 50,
     ) -> Dict:
         """
         Internal iterative optimization system that automatically applies suggestions
         until the recipe reaches equilibrium or maximum iterations.
         """
-        logger.info(
-            f"🔄 Starting internal optimization with max {max_iterations} iterations"
-        )
 
         current_recipe = recipe_data.copy()
         optimization_history = []
@@ -160,7 +149,6 @@ class RecipeAnalysisEngine:
         previous_metrics = None  # Track metric improvements
 
         for iteration in range(max_iterations):
-            logger.info(f"🔄 Optimization iteration {iteration + 1}/{max_iterations}")
 
             # Calculate current metrics
             current_metrics = self._calculate_recipe_metrics(current_recipe)
@@ -174,14 +162,6 @@ class RecipeAnalysisEngine:
                         current_metrics, style_guide
                     )
 
-            logger.info(
-                f"🔄 Iteration {iteration + 1} - Current metrics: {current_metrics}"
-            )
-            if style_analysis:
-                logger.info(
-                    f"🔄 Iteration {iteration + 1} - Style compliance: {style_analysis.get('compliance', {})}"
-                )
-
             # Add current metrics to recipe data for advanced strategies
             enriched_recipe_data = current_recipe.copy()
             enriched_recipe_data["current_metrics"] = current_metrics
@@ -190,10 +170,6 @@ class RecipeAnalysisEngine:
             # Generate suggestions
             suggestions = self.suggestion_generator.generate_suggestions(
                 enriched_recipe_data, current_metrics, style_analysis, unit_system
-            )
-
-            logger.info(
-                f"🔄 Iteration {iteration + 1} - Generated {len(suggestions)} suggestions"
             )
 
             # Check for convergence - no more suggestions means we've reached equilibrium
@@ -211,13 +187,18 @@ class RecipeAnalysisEngine:
                 break
 
             # Check for minimal metric improvements (stop if changes become negligible)
-            if previous_metrics:
+            # Only stop for minimal improvements if recipe is already reasonably compliant
+            if previous_metrics and self._is_recipe_reasonably_compliant(
+                style_analysis
+            ):
                 metric_improvement = self._calculate_metric_improvement(
                     previous_metrics, current_metrics
                 )
-                if metric_improvement < 0.1:  # Less than 0.1% improvement
+                if (
+                    metric_improvement < 0.05
+                ):  # Less than 0.05% improvement and reasonably compliant
                     logger.info(
-                        f"✅ Optimization converged after {iteration + 1} iterations - minimal improvements (${metric_improvement:.2f}%)"
+                        f"✅ Optimization converged after {iteration + 1} iterations - minimal improvements ({metric_improvement:.2f}%) on compliant recipe"
                     )
                     break
 
@@ -257,7 +238,7 @@ class RecipeAnalysisEngine:
                 current_recipe = updated_recipe
             else:
                 logger.info(
-                    f"🔄 Iteration {iteration + 1} - No suitable suggestion found, stopping"
+                    f"🛑 Iteration {iteration + 1} - No suitable suggestion found, stopping optimization loop"
                 )
                 break
 
@@ -287,6 +268,9 @@ class RecipeAnalysisEngine:
         optimization_occurred = len(optimization_history) > 0
 
         if optimization_occurred:
+            logger.info(
+                f"🎯 Optimization completed after {len(optimization_history)} iterations"
+            )
             # Generate minimal remaining suggestions (should be few or none after optimization)
             enriched_final_recipe = current_recipe.copy()
             enriched_final_recipe["current_metrics"] = final_metrics
@@ -303,13 +287,6 @@ class RecipeAnalysisEngine:
                         enriched_final_recipe, suggestion.get("changes", [])
                     )
                 )
-
-            logger.info(f"🔄 Internal optimization completed:")
-            logger.info(f"  - Iterations completed: {len(optimization_history)}")
-            logger.info(f"  - Original metrics: {original_metrics}")
-            logger.info(f"  - Optimized metrics: {final_metrics}")
-            logger.info(f"  - Recipe changes made: {len(recipe_changes)}")
-            logger.info(f"  - Remaining suggestions: {len(remaining_suggestions)}")
 
             return {
                 "original_metrics": original_metrics,
@@ -365,17 +342,46 @@ class RecipeAnalysisEngine:
 
         compliance = style_analysis.get("compliance", {})
 
-        # Check if all metrics are in range
+        # Check if all metrics are in range or very close (allow small deviations)
         for metric, data in compliance.items():
             if not data.get("in_range", False):
-                return False
+                deviation = data.get("deviation", 0)
+                # Allow small deviations that are within brewing tolerances
+                if metric == "og" and deviation > 0.003:  # 0.003 OG points
+                    return False
+                elif metric == "fg" and deviation > 0.003:  # 0.003 FG points
+                    return False
+                elif metric == "abv" and deviation > 0.15:  # 0.15% ABV
+                    return False
+                elif metric == "ibu" and deviation > 1.5:  # 1.5 IBU
+                    return False
+                elif metric == "srm" and deviation > 1.0:  # 1.0 SRM
+                    return False
 
         # Check base malt percentage (must be >= 55%)
-        base_malt_percentage = self._calculate_base_malt_percentage(recipe_data)
+        base_malt_percentage = (
+            self.suggestion_generator._calculate_base_malt_percentage(recipe_data)
+        )
         if base_malt_percentage < 55:
             return False
 
         return True
+
+    def _is_recipe_reasonably_compliant(self, style_analysis: Optional[Dict]) -> bool:
+        """Check if recipe is reasonably compliant (most metrics in range)"""
+        if not style_analysis:
+            return False
+        compliance = style_analysis.get("compliance", {})
+        in_range_count = 0
+        total_count = 0
+
+        for metric, data in compliance.items():
+            total_count += 1
+            if data.get("in_range", False):
+                in_range_count += 1
+
+        # Consider reasonably compliant if at least 80% of metrics are in range
+        return (in_range_count / total_count) >= 0.8 if total_count > 0 else False
 
     def _generate_recipe_transformation_summary(
         self,
@@ -515,12 +521,17 @@ class RecipeAnalysisEngine:
         suggestion_type = suggestion.get("type", "unknown")
         changes = suggestion.get("changes", [])
 
-        # Create fingerprint from key suggestion characteristics
+        # Create fingerprint from key suggestion characteristics including values
         fingerprint_parts = [suggestion_type]
         for change in changes:
             ingredient_name = change.get("ingredient_name", "")
             field = change.get("field", "")
-            fingerprint_parts.append(f"{ingredient_name}:{field}")
+            current_value = change.get("current_value", "")
+            suggested_value = change.get("suggested_value", "")
+            # Include values in fingerprint to allow multiple adjustments to same ingredient
+            fingerprint_parts.append(
+                f"{ingredient_name}:{field}:{current_value}→{suggested_value}"
+            )
 
         return "|".join(fingerprint_parts)
 
@@ -577,13 +588,6 @@ class RecipeAnalysisEngine:
 
             # Generate optimization suggestions
             # logger.info(f"🔍 AI Service - Current metrics: {current_metrics}")
-            if style_analysis:
-                logger.info(
-                    f"🔍 AI Service - Style analysis compliance: {style_analysis.get('compliance', {})}"
-                )
-                logger.info(
-                    f"🔍 AI Service - Optimization targets: {style_analysis.get('optimization_targets', [])}"
-                )
 
             # Add current metrics to recipe data for advanced strategies
             enriched_recipe_data = recipe_data.copy()
@@ -593,8 +597,6 @@ class RecipeAnalysisEngine:
             suggestions = self.suggestion_generator.generate_suggestions(
                 enriched_recipe_data, current_metrics, style_analysis, unit_system
             )
-
-            logger.info(f"🔍 AI Service - Generated {len(suggestions)} suggestions")
 
             # Calculate predicted effects for each suggestion
             for suggestion in suggestions:
@@ -617,28 +619,6 @@ class RecipeAnalysisEngine:
 
     def _calculate_recipe_metrics(self, recipe_data: Dict) -> Dict:
         """Calculate all recipe metrics using existing calculation functions"""
-        # Add debugging for recipe data structure
-        logger.info(f"🔍 AI Service - Recipe data structure:")
-        logger.info(
-            f"  - batch_size: {recipe_data.get('batch_size')} {recipe_data.get('batch_size_unit')}"
-        )
-        logger.info(f"  - efficiency: {recipe_data.get('efficiency')}%")
-        logger.info(f"  - ingredients count: {len(recipe_data.get('ingredients', []))}")
-
-        ingredients = recipe_data.get("ingredients", [])
-        grain_count = 0
-        yeast_count = 0
-        for i, ing in enumerate(ingredients):
-            if ing.get("type") == "grain":
-                grain_count += 1
-                logger.info(
-                    f"  - Grain {grain_count}: {ing.get('name')} - {ing.get('amount')} {ing.get('unit')}, potential: {ing.get('potential')}"
-                )
-            elif ing.get("type") == "yeast":
-                yeast_count += 1
-                logger.info(
-                    f"  - Yeast {yeast_count}: {ing.get('name')} - attenuation: {ing.get('attenuation')}"
-                )
 
         return {
             "og": calculate_og_preview(recipe_data),
@@ -1089,9 +1069,6 @@ class SuggestionGenerator:
     ) -> Dict:
         """Advanced OG adjustment with multi-strategy decision making"""
         og_difference = target_og - current_og
-        logger.info(
-            f"🔍 Advanced OG Adjustment - Current: {current_og:.3f}, Target: {target_og:.3f}, Difference: {og_difference:.3f}"
-        )
 
         # For OG reduction (when current > target), use advanced strategies
         if og_difference < 0:
@@ -1111,11 +1088,6 @@ class SuggestionGenerator:
         og_reduction_needed = current_og - target_og
         current_srm = recipe_data.get("current_metrics", {}).get("srm", 0)
         target_srm_info = self._get_target_srm_from_style(recipe_data)
-
-        logger.info(f"🔍 OG Reduction - Need to reduce by {og_reduction_needed:.3f}")
-        logger.info(
-            f"🔍 OG Reduction - Current SRM: {current_srm}, Target SRM range: {target_srm_info}"
-        )
 
         # Strategy selection decision tree
         strategy = self._select_og_reduction_strategy(
@@ -1356,10 +1328,6 @@ class SuggestionGenerator:
         """Suggest hop adjustments for target IBU"""
         ibu_difference = target_ibu - current_ibu
 
-        logger.info(
-            f"🔍 IBU Adjustment - Current IBU: {current_ibu}, Target: {target_ibu}, Difference: {ibu_difference}"
-        )
-
         # Find all boil hops (any hops used in boil/whirlpool with time > 0)
         boil_hops = [
             ing
@@ -1371,16 +1339,7 @@ class SuggestionGenerator:
             and ing.get("alpha_acid") > 0
         ]
 
-        logger.info(f"🔍 IBU Adjustment - Found {len(boil_hops)} boil hops:")
-        for hop in boil_hops:
-            logger.info(
-                f"  - {hop.get('name')}: {hop.get('amount')}g, {hop.get('time')}min, alpha={hop.get('alpha_acid')}%, use={hop.get('use')}"
-            )
-
         if not boil_hops:
-            logger.info(
-                "🔍 IBU Adjustment - No boil hops found, cannot suggest hop adjustments"
-            )
             return None
 
         # Calculate individual IBU contribution for each hop to find the most impactful one
@@ -1429,17 +1388,10 @@ class SuggestionGenerator:
                 )
 
         if not hop_contributions:
-            logger.info("🔍 IBU Adjustment - No hops with calculable IBU contribution")
             return None
 
         # Sort by IBU contribution (highest first)
         hop_contributions.sort(key=lambda x: x["ibu_contribution"], reverse=True)
-
-        logger.info("🔍 IBU Adjustment - Hop IBU contributions (highest first):")
-        for contrib in hop_contributions:
-            logger.info(
-                f"  - {contrib['hop'].get('name')}: {contrib['ibu_contribution']:.1f} IBU ({contrib['amount_oz']:.2f}oz, {contrib['time_min']}min)"
-            )
 
         # Use the hop with highest IBU contribution as primary target
         primary_hop_data = hop_contributions[0]
@@ -1457,10 +1409,6 @@ class SuggestionGenerator:
         # Convert to base unit for the user's system
         current_amount_base, base_unit = self._convert_to_base_unit(
             current_amount, current_unit, unit_system
-        )
-
-        logger.info(
-            f"🔍 IBU Adjustment - Working with primary hop: {primary_hop.get('name')} ({current_amount_base} {base_unit}, {current_time}min)"
         )
 
         # Strategy 1: Adjust hop amount (proportional to IBU difference)
@@ -1539,8 +1487,6 @@ class SuggestionGenerator:
                         "reason": reason,
                     }
                 )
-
-        logger.info(f"🔍 IBU Adjustment - Generated {len(changes)} changes: {changes}")
 
         if changes:
             action = "Reduce" if need_to_reduce else "Increase"
@@ -1730,7 +1676,6 @@ class SuggestionGenerator:
                 "description": current_yeast.get("description", ""),
             }
             current_yeast_style = self._get_yeast_style_family(current_yeast_dict)
-            logger.info(f"🔍 Current yeast style family: {current_yeast_style}")
 
         suitable_yeasts = []
         tolerance = 5  # ±5% attenuation tolerance
@@ -1755,24 +1700,15 @@ class SuggestionGenerator:
             # Only include yeasts that are both attenuation-suitable and style-compatible
             if attenuation_suitable and yeast_style == current_yeast_style:
                 suitable_yeasts.append(yeast)
-                logger.info(
-                    f"🔍 Compatible yeast found: {yeast.get('name')} ({yeast_style}, {yeast_attenuation}%)"
-                )
 
         # Sort by how close to target attenuation and return top 2-3 options
         suitable_yeasts.sort(
             key=lambda x: abs(x.get("attenuation", 0) - target_attenuation)
         )
 
-        logger.info(
-            f"🔍 Found {len(suitable_yeasts)} style-compatible yeasts for target {target_attenuation}% (direction: {direction}, style: {current_yeast_style})"
-        )
-
-        # If no style-compatible yeasts found, log this and return empty
+        # If no style-compatible yeasts found, return empty
         if not suitable_yeasts:
-            logger.warning(
-                f"🔍 No style-compatible yeasts found for {current_yeast_style} style with target {target_attenuation}%"
-            )
+            return []
 
         return suitable_yeasts[:3]
 
@@ -1943,12 +1879,10 @@ class SuggestionGenerator:
         self, target: Dict, recipe_data: Dict, unit_system: str
     ) -> List[Dict]:
         """Extract IBU adjustment changes for unified suggestion"""
-        logger.info(f"🔍 Getting IBU adjustment changes for target: {target}")
         suggestion = self._suggest_ibu_adjustment(
             target["target_value"], target["current_value"], recipe_data, unit_system
         )
         changes = suggestion.get("changes", []) if suggestion else []
-        logger.info(f"🔍 IBU adjustment returned {len(changes)} changes: {changes}")
         return changes
 
     def _get_fg_adjustment_changes(
@@ -2313,32 +2247,20 @@ class SuggestionGenerator:
         # Strategy 1: High-impact color grains (Blackprinz, Midnight Wheat)
         # Use when SRM is too low AND we need OG reduction
         if target_srm_info and current_srm < target_srm_info["min"]:
-            logger.info(
-                f"🔍 Strategy Selection: High-impact color grains (SRM too low: {current_srm} < {target_srm_info['min']})"
-            )
             return "high_impact_color_grains"
 
         # Strategy 2: Base malt ratio adjustment
         # Use when we have high-gravity specialty malts we can swap out
         dark_specialty_malts = self._find_dark_specialty_malts(recipe_data)
         if dark_specialty_malts and og_reduction_needed > 0.010:
-            logger.info(
-                f"🔍 Strategy Selection: Base malt ratio adjustment (found {len(dark_specialty_malts)} dark specialty malts)"
-            )
             return "base_malt_ratio_adjustment"
 
         # Strategy 3: Combined approach
         # Use for significant gravity reduction needs
         if og_reduction_needed > 0.015:
-            logger.info(
-                f"🔍 Strategy Selection: Combined approach (large reduction needed: {og_reduction_needed:.3f})"
-            )
             return "combined_approach"
 
         # Fallback: Traditional base malt reduction
-        logger.info(
-            f"🔍 Strategy Selection: Traditional base malt reduction (fallback)"
-        )
         return "traditional_base_malt_reduction"
 
     def _apply_high_impact_color_grain_strategy(
@@ -2803,19 +2725,11 @@ class SuggestionGenerator:
         # ABV ≈ (OG - FG) * 131.25, so FG = OG - ABV/131.25
         target_fg = current_og - (target_abv / 131.25)
 
-        logger.info(
-            f"🔍 Yeast Adjustment - Current FG: {current_fg:.3f}, Target FG: {target_fg:.3f}"
-        )
-
         # Calculate required attenuation change
         # Attenuation = (OG - FG) / (OG - 1.000) * 100
         current_attenuation = ((current_og - current_fg) / (current_og - 1.000)) * 100
         target_attenuation = ((current_og - target_fg) / (current_og - 1.000)) * 100
         attenuation_change = target_attenuation - current_attenuation
-
-        logger.info(
-            f"🔍 Yeast Adjustment - Current attenuation: {current_attenuation:.1f}%, Target: {target_attenuation:.1f}%, Change: {attenuation_change:.1f}%"
-        )
 
         # Find current yeast
         current_yeast = None
@@ -2825,7 +2739,6 @@ class SuggestionGenerator:
                 break
 
         if not current_yeast:
-            logger.info(f"🔍 Yeast Adjustment - No yeast found in recipe")
             return None
 
         current_yeast_attenuation = current_yeast.get("attenuation", 75)
@@ -2838,9 +2751,6 @@ class SuggestionGenerator:
         )
 
         if not yeast_recommendations:
-            logger.info(
-                f"🔍 Yeast Adjustment - No suitable yeast recommendations found"
-            )
             return None
 
         changes = []
@@ -2877,10 +2787,6 @@ class SuggestionGenerator:
                 "is_yeast_strain_change": True,
                 "new_yeast_data": best_yeast,  # Include full yeast data for replacement
             }
-        )
-
-        logger.info(
-            f"🔍 Yeast Adjustment - Recommending {best_yeast_name} (Expected ABV: {expected_abv:.1f}%)"
         )
 
         return {
@@ -3083,28 +2989,13 @@ class CascadingEffectsCalculator:
             Predicted new metrics and changes
         """
         try:
-            logger.info(f"🔍 Cascading Effects - Applying {len(changes)} changes")
-            for i, change in enumerate(changes):
-                logger.info(
-                    f"  Change {i+1}: {change.get('ingredient_name')} {change.get('field')} {change.get('current_value')} → {change.get('suggested_value')} {change.get('unit')}"
-                )
 
             # Create modified recipe by applying changes
             modified_recipe = self._apply_changes_to_recipe(original_recipe, changes)
 
-            logger.info(
-                f"🔍 Cascading Effects - Original ingredients: {len(original_recipe.get('ingredients', []))}"
-            )
-            logger.info(
-                f"🔍 Cascading Effects - Modified ingredients: {len(modified_recipe.get('ingredients', []))}"
-            )
-
             # Calculate metrics for both original and modified recipes
             original_metrics = self._calculate_metrics(original_recipe)
             modified_metrics = self._calculate_metrics(modified_recipe)
-
-            logger.info(f"🔍 Cascading Effects - Original metrics: {original_metrics}")
-            logger.info(f"🔍 Cascading Effects - Modified metrics: {modified_metrics}")
 
             # Calculate the differences
             metric_changes = {}
@@ -3209,15 +3100,9 @@ class CascadingEffectsCalculator:
                             else:
                                 # Fallback: just change the field
                                 ing[field] = new_value
-                                logger.info(
-                                    f"🔍 Modified {ing.get('name')}: {field} {old_value} → {new_value}"
-                                )
                         else:
                             # Regular field change
                             ing[field] = new_value
-                            logger.info(
-                                f"🔍 Modified {ing.get('name')}: {field} {old_value} → {new_value}"
-                            )
 
                         found = True
                         break
@@ -3250,15 +3135,9 @@ class CascadingEffectsCalculator:
                                     else:
                                         # Fallback: just change the field
                                         ing[field] = new_value
-                                        logger.info(
-                                            f"🔍 Modified {ing.get('name')} (found by name): {field} {old_value} → {new_value}"
-                                        )
                                 else:
                                     # Regular field change
                                     ing[field] = new_value
-                                    logger.info(
-                                        f"🔍 Modified {ing.get('name')} (found by name): {field} {old_value} → {new_value}"
-                                    )
 
                                 found = True
                                 break

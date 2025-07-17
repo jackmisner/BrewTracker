@@ -90,7 +90,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     if (!Array.isArray(backendChanges)) return [];
     
     return backendChanges.map((change, index) => {
-      console.log('🔄 Converting backend change:', change);
       
       return {
         ingredientId: change.ingredient_id || `change-${index}`,
@@ -154,15 +153,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         boil_time: recipe.boil_time || 60
       };
 
-      console.log('🔍 AISuggestions - Calling backend AI API:', {
-        recipe: {
-          id: recipe.recipe_id,
-          name: recipe.name,
-          style: recipe.style
-        },
-        recipeData,
-        timestamp: new Date().toISOString()
-      });
 
       // Look up style ID from recipe style name for proper style compliance analysis
       let styleId: string | undefined;
@@ -177,9 +167,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           
           if (matchingStyle) {
             styleId = matchingStyle.style_guide_id || matchingStyle.id;
-            console.log('🔍 AISuggestions - Found style ID:', styleId, 'for style:', recipe.style);
-          } else {
-            console.log('🔍 AISuggestions - No matching style found for:', recipe.style);
           }
         } catch (error) {
           console.warn('🔍 AISuggestions - Failed to lookup style:', error);
@@ -193,24 +180,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         unit_system: unitSystem
       });
 
-      console.log('✅ AISuggestions - Received backend response:', {
-        optimizationPerformed: response.optimization_performed || false,
-        iterationsCompleted: response.iterations_completed || 0,
-        suggestionsCount: response.suggestions?.length || 0,
-        recipeChangesCount: response.recipe_changes?.length || 0,
-        hasOptimizedRecipe: !!response.optimized_recipe,
-        timestamp: new Date().toISOString()
-      });
 
       // Check if internal optimization was performed
       if (response.optimization_performed && response.optimized_recipe) {
-        console.log('🎯 AISuggestions - Internal optimization completed:', {
-          originalMetrics: response.original_metrics,
-          optimizedMetrics: response.optimized_metrics,
-          recipeChanges: response.recipe_changes,
-          iterationsCompleted: response.iterations_completed,
-          timestamp: new Date().toISOString()
-        });
         
         // Show optimization results instead of individual suggestions
         setOptimizationResult({
@@ -225,13 +197,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         setSuggestions([]); // Clear individual suggestions since we have complete optimization
       } else {
         // Fallback to traditional suggestions format
-        console.log('🔄 AISuggestions - Using traditional suggestions format');
         const convertedSuggestions = convertBackendSuggestions(response.suggestions || []);
-        console.log('🔄 AISuggestions - Converted suggestions:', {
-          originalSuggestions: response.suggestions,
-          convertedSuggestions: convertedSuggestions,
-          timestamp: new Date().toISOString()
-        });
         
         setSuggestions(convertedSuggestions);
         setOptimizationResult(null); // Clear any previous optimization results
@@ -264,11 +230,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const applySuggestion = async (suggestion: Suggestion): Promise<void> => {
     if (disabled) return;
 
-    console.log('🔍 AISuggestions - Applying suggestion:', {
-      suggestion: suggestion,
-      changes: suggestion.changes,
-      timestamp: new Date().toISOString()
-    });
 
     try {
       // Prepare bulk updates - handle async ingredient lookups first
@@ -328,7 +289,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         if (!existingIngredient) {
           // Special case: If this is an ingredient that was added during internal optimization,
           // treat it as a new ingredient addition instead of a modification
-          console.log(`🔍 AISuggestions - Ingredient ${change.ingredientName} not found in current recipe, treating as new ingredient addition`);
           
           // Fetch ingredients from database to find the missing ingredient
           if (!hasNewIngredients) {
@@ -391,13 +351,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               use: existingIngredient.use || 'primary'
             };
             
-            console.log('🔧 AISuggestions - Replacing yeast ingredient:', {
-              original: existingIngredient.name,
-              originalAttenuation: existingIngredient.attenuation,
-              new: newYeastData.name,
-              newAttenuation: newYeastData.attenuation,
-              timestamp: new Date().toISOString()
-            });
             
             return {
               ingredientId: existingIngredient.id || change.ingredientId,
@@ -412,13 +365,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               unit: existingIngredient.unit
             };
             
-            console.log('🔧 AISuggestions - Updating yeast name and attenuation:', {
-              original: existingIngredient.name,
-              originalAttenuation: existingIngredient.attenuation,
-              new: suggestedName,
-              newAttenuation: suggestedAttenuation,
-              timestamp: new Date().toISOString()
-            });
             
             return {
               ingredientId: existingIngredient.id || change.ingredientId,
@@ -445,13 +391,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           if (change.unit && change.field === 'amount') {
             // For amount changes, use the backend's suggested unit to ensure unit consistency
             updateData.unit = change.unit as any;
-            console.log('🔧 AISuggestions - Using backend suggested unit:', {
-              ingredient: change.ingredientName,
-              originalUnit: existingIngredient.unit,
-              backendUnit: change.unit,
-              amount: change.suggestedValue,
-              timestamp: new Date().toISOString()
-            });
           } else {
             // For non-amount changes or when no backend unit provided, keep original unit
             updateData.unit = existingIngredient.unit;
@@ -474,19 +413,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         };
       }));
 
-      console.log('🔄 AISuggestions - Prepared updates:', {
-        updates: updates,
-        timestamp: new Date().toISOString()
-      });
-
       // Apply all changes as a single bulk update
       await onBulkIngredientUpdate(updates);
-
-      console.log('✅ AISuggestions - Applied suggestion successfully:', {
-        suggestionId: suggestion.id,
-        appliedChanges: updates.length,
-        timestamp: new Date().toISOString()
-      });
 
       // Mark suggestion as applied
       setAppliedSuggestions(prev => new Set(prev).add(suggestion.id));
@@ -519,26 +447,31 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const applyOptimizedRecipe = async (optimization: OptimizationResult): Promise<void> => {
     if (disabled) return;
 
-    console.log('🔍 AISuggestions - Applying optimized recipe:', {
-      optimization: optimization,
-      timestamp: new Date().toISOString()
-    });
 
     try {
       // Convert optimized recipe ingredients to the format expected by onBulkIngredientUpdate
       const optimizedIngredients = optimization.optimizedRecipe.ingredients || [];
       
+      
       // CRITICAL FIX: Match ingredients by ingredient_id and name to determine which are updates vs new
       const updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }> = [];
       const optimizedIngredientIds = new Set();
+      // console.log('🔄 AISuggestions - Applying optimized recipe:', {
+      //   optimization: optimization,
+      //   optimizedIngredients: optimizedIngredients.map((ing: { name: any; }) => ing.name),
+      //   timestamp: new Date().toISOString()
+      // });
       
       // Process optimized ingredients: update existing ones or add new ones
       for (const optimizedIng of optimizedIngredients) {
+        
         // Try to find matching existing ingredient by ingredient_id or name
         const existingIngredient = ingredients.find(ing => 
           (ing.ingredient_id === optimizedIng.ingredient_id) ||
           (ing.name === optimizedIng.name)
         );
+        
+        
         
         if (existingIngredient) {
           // Update existing ingredient
@@ -586,44 +519,39 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      console.log('🔄 AISuggestions - Prepared optimized recipe updates:', {
-        updates: updates,
-        existingIngredients: ingredients.length,
-        optimizedIngredients: optimizedIngredients.length,
-        updateCount: updates.filter(u => !u.isNewIngredient).length,
-        newCount: updates.filter(u => u.isNewIngredient).length,
-        timestamp: new Date().toISOString()
-      });
+      // CRITICAL FIX: Calculate what ingredients existed before the bulk update
+      // This prevents using stale ingredients list that doesn't include newly added ingredients
+      const existingIngredientIds = new Set(ingredients.map(ing => ing.id));
 
       // Apply the updates first
       await onBulkIngredientUpdate(updates);
       
+      // CRITICAL FIX: Add delay to allow React state updates to propagate
+      // The ingredients prop is stale due to React closure, need to wait for parent re-render
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       // Remove ingredients that are not in the optimized recipe
-      const ingredientsToRemove = ingredients.filter(ing => !optimizedIngredientIds.has(ing.id));
+      // Use the original ingredients list but filter based on calculated post-update state
+      const ingredientsToRemove = ingredients.filter(ing => 
+        // Only consider ingredients that existed before the update (not newly added ones)
+        existingIngredientIds.has(ing.id) && 
+        // And are not part of the optimized recipe
+        !optimizedIngredientIds.has(ing.id)
+      );
       if (ingredientsToRemove.length > 0 && onRemoveIngredient) {
-        console.log('🔄 AISuggestions - Removing ingredients not in optimized recipe:', {
-          ingredientsToRemove: ingredientsToRemove.map(ing => ing.name),
-          timestamp: new Date().toISOString()
-        });
-        
         // Remove ingredients that are not in the optimized recipe
         for (const ingredient of ingredientsToRemove) {
-          console.log(`🔄 Removing ${ingredient.name} from recipe`);
           await onRemoveIngredient(ingredient.id!);
         }
-      } else if (ingredientsToRemove.length > 0) {
-        console.log('🔄 AISuggestions - Cannot remove ingredients (no onRemoveIngredient prop):', {
-          ingredientsToRemove: ingredientsToRemove.map(ing => ing.name),
-          timestamp: new Date().toISOString()
-        });
       }
 
-      console.log('✅ AISuggestions - Applied optimized recipe successfully');
       
       // Clear the optimization result and show success message
       setOptimizationResult(null);
       setHasAnalyzed(false);
-      alert(`Optimized recipe applied successfully! Recipe was improved through ${optimization.iterationsCompleted} iterations.`);
+      
+      
+      // alert(`Optimized recipe applied successfully! Recipe was improved through ${optimization.iterationsCompleted} iterations.`);
 
     } catch (error) {
       console.error('❌ AISuggestions - Error applying optimized recipe:', {
