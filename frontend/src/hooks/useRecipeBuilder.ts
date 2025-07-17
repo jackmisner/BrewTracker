@@ -490,7 +490,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         throw error;
       }
     },
-    [] // Remove state dependencies to prevent stale closures
+    [state.recipe] // Remove state dependencies to prevent stale closures
   );
 
   // Bulk update ingredients
@@ -498,8 +498,8 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     async (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }>): Promise<void> => {
       try {
         // Use functional setState to access current state and avoid stale closures
-        let currentIngredients: RecipeIngredient[] = [];
         let currentRecipe: Recipe = state.recipe;
+        let currentIngredients: RecipeIngredient[] = [];
         
         setState((prev) => {
           currentIngredients = prev.ingredients;
@@ -510,6 +510,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             error: null,
           };
         });
+
 
         // Apply all updates to the current ingredients
         let updatedIngredients = [...currentIngredients];
@@ -533,7 +534,6 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               attenuation: updatedData.attenuation,
               improved_attenuation_estimate: updatedData.improved_attenuation_estimate,
             };
-
             // Validate the new ingredient data
             const validation = Services.ingredient.validateIngredientData(
               newIngredient.type,
@@ -561,6 +561,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               throw new Error(`Ingredient with ID ${ingredientId} not found`);
             }
 
+
             // Validate the updated ingredient data
             const validation = Services.ingredient.validateIngredientData(
               existingIngredient.type,
@@ -587,7 +588,6 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }
 
         const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
-
         // Update state immediately for better UX
         setState((prev) => ({
           ...prev,
@@ -622,7 +622,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         throw error;
       }
     },
-    [] // Remove state dependencies to prevent stale closures
+    [state.recipe] // Remove state dependencies to prevent stale closures
   );
 
   // Remove ingredient
@@ -630,9 +630,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     async (ingredientId: string): Promise<void> => {
       try {
         // Use functional setState to access current state and avoid stale closures
-        let currentIngredients: RecipeIngredient[] = [];
         let currentRecipe: Recipe = state.recipe;
-        
+        let currentIngredients: RecipeIngredient[] = state.recipe.ingredients;
+
         setState((prev) => {
           currentIngredients = prev.ingredients;
           currentRecipe = prev.recipe;
@@ -672,7 +672,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }));
       }
     },
-    [] // Remove state dependencies to prevent stale closures
+    [state.recipe] // Remove state dependencies to prevent stale closures
   );
 
   // Scale recipe

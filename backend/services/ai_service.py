@@ -128,13 +128,14 @@ class RecipeAnalysisEngine:
             Complete analysis including compliance, suggestions, and predicted effects
         """
         try:
+            logger.info("🚀 Starting iterative optimization system")
             # Use enhanced iterative optimization system
             return self._optimize_recipe_internally(recipe_data, style_id, unit_system)
 
         except Exception as e:
-            logger.error(f"Iterative optimization failed: {str(e)}")
+            logger.error(f"⚠️ Iterative optimization failed: {str(e)}")
             # Fallback to single-pass if iterative fails
-            logger.info("Falling back to single-pass analysis")
+            logger.info("⬇️ Falling back to single-pass analysis")
             return self.analyze_recipe_single_pass(recipe_data, style_id, unit_system)
 
     def _optimize_recipe_internally(
@@ -142,7 +143,7 @@ class RecipeAnalysisEngine:
         recipe_data: Dict,
         style_id: Optional[str] = None,
         unit_system: str = "imperial",
-        max_iterations: int = 25,
+        max_iterations: int = 50,
     ) -> Dict:
         """
         Internal iterative optimization system that automatically applies suggestions
@@ -211,13 +212,18 @@ class RecipeAnalysisEngine:
                 break
 
             # Check for minimal metric improvements (stop if changes become negligible)
-            if previous_metrics:
+            # Only stop for minimal improvements if recipe is already reasonably compliant
+            if previous_metrics and self._is_recipe_reasonably_compliant(
+                style_analysis
+            ):
                 metric_improvement = self._calculate_metric_improvement(
                     previous_metrics, current_metrics
                 )
-                if metric_improvement < 0.1:  # Less than 0.1% improvement
+                if (
+                    metric_improvement < 0.05
+                ):  # Less than 0.05% improvement and reasonably compliant
                     logger.info(
-                        f"✅ Optimization converged after {iteration + 1} iterations - minimal improvements (${metric_improvement:.2f}%)"
+                        f"✅ Optimization converged after {iteration + 1} iterations - minimal improvements ({metric_improvement:.2f}%) on compliant recipe"
                     )
                     break
 
@@ -257,7 +263,7 @@ class RecipeAnalysisEngine:
                 current_recipe = updated_recipe
             else:
                 logger.info(
-                    f"🔄 Iteration {iteration + 1} - No suitable suggestion found, stopping"
+                    f"🛑 Iteration {iteration + 1} - No suitable suggestion found, stopping optimization loop"
                 )
                 break
 
@@ -287,6 +293,9 @@ class RecipeAnalysisEngine:
         optimization_occurred = len(optimization_history) > 0
 
         if optimization_occurred:
+            logger.info(
+                f"🎯 Optimization completed after {len(optimization_history)} iterations"
+            )
             # Generate minimal remaining suggestions (should be few or none after optimization)
             enriched_final_recipe = current_recipe.copy()
             enriched_final_recipe["current_metrics"] = final_metrics
@@ -294,6 +303,9 @@ class RecipeAnalysisEngine:
 
             remaining_suggestions = self.suggestion_generator.generate_suggestions(
                 enriched_final_recipe, final_metrics, final_style_analysis, unit_system
+            )
+            logger.info(
+                f"🔍 Generated {len(remaining_suggestions)} remaining suggestions after optimization"
             )
 
             # Calculate predicted effects for remaining suggestions
@@ -365,17 +377,46 @@ class RecipeAnalysisEngine:
 
         compliance = style_analysis.get("compliance", {})
 
-        # Check if all metrics are in range
+        # Check if all metrics are in range or very close (allow small deviations)
         for metric, data in compliance.items():
             if not data.get("in_range", False):
-                return False
+                deviation = data.get("deviation", 0)
+                # Allow small deviations that are within brewing tolerances
+                if metric == "og" and deviation > 0.003:  # 0.003 OG points
+                    return False
+                elif metric == "fg" and deviation > 0.003:  # 0.003 FG points
+                    return False
+                elif metric == "abv" and deviation > 0.15:  # 0.15% ABV
+                    return False
+                elif metric == "ibu" and deviation > 1.5:  # 1.5 IBU
+                    return False
+                elif metric == "srm" and deviation > 1.0:  # 1.0 SRM
+                    return False
 
         # Check base malt percentage (must be >= 55%)
-        base_malt_percentage = self._calculate_base_malt_percentage(recipe_data)
+        base_malt_percentage = (
+            self.suggestion_generator._calculate_base_malt_percentage(recipe_data)
+        )
         if base_malt_percentage < 55:
             return False
 
         return True
+
+    def _is_recipe_reasonably_compliant(self, style_analysis: Optional[Dict]) -> bool:
+        """Check if recipe is reasonably compliant (most metrics in range)"""
+        if not style_analysis:
+            return False
+        compliance = style_analysis.get("compliance", {})
+        in_range_count = 0
+        total_count = 0
+
+        for metric, data in compliance.items():
+            total_count += 1
+            if data.get("in_range", False):
+                in_range_count += 1
+
+        # Consider reasonably compliant if at least 80% of metrics are in range
+        return (in_range_count / total_count) >= 0.8 if total_count > 0 else False
 
     def _generate_recipe_transformation_summary(
         self,
@@ -515,12 +556,17 @@ class RecipeAnalysisEngine:
         suggestion_type = suggestion.get("type", "unknown")
         changes = suggestion.get("changes", [])
 
-        # Create fingerprint from key suggestion characteristics
+        # Create fingerprint from key suggestion characteristics including values
         fingerprint_parts = [suggestion_type]
         for change in changes:
             ingredient_name = change.get("ingredient_name", "")
             field = change.get("field", "")
-            fingerprint_parts.append(f"{ingredient_name}:{field}")
+            current_value = change.get("current_value", "")
+            suggested_value = change.get("suggested_value", "")
+            # Include values in fingerprint to allow multiple adjustments to same ingredient
+            fingerprint_parts.append(
+                f"{ingredient_name}:{field}:{current_value}→{suggested_value}"
+            )
 
         return "|".join(fingerprint_parts)
 

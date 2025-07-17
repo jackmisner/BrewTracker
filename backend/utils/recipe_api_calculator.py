@@ -21,14 +21,14 @@ def calculate_og_preview(recipe_data):
     efficiency = float(recipe_data.get("efficiency", 75))
     ingredients = recipe_data.get("ingredients", [])
 
-    logger.info(
-        f"🔍 OG Calculation - Recipe data: batch_size={batch_size} {batch_size_unit}, efficiency={efficiency}%"
-    )
-    logger.info(f"🔍 OG Calculation - Found {len(ingredients)} ingredients")
+    # logger.info(
+    #     f"🔍 OG Calculation - Recipe data: batch_size={batch_size} {batch_size_unit}, efficiency={efficiency}%"
+    # )
+    # logger.info(f"🔍 OG Calculation - Found {len(ingredients)} ingredients")
 
     # Convert batch size to gallons for calculation
     batch_size_gal = UnitConverter.convert_volume(batch_size, batch_size_unit, "gal")
-    logger.info(f"🔍 OG Calculation - Batch size in gallons: {batch_size_gal}")
+    # logger.info(f"🔍 OG Calculation - Batch size in gallons: {batch_size_gal}")
 
     total_points = 0.0
     grain_count = 0
@@ -39,25 +39,25 @@ def calculate_og_preview(recipe_data):
             unit = ing.get("unit", "lb")
             potential = float(ing.get("potential", 0))
 
-            logger.info(
-                f"🔍 OG Calculation - Grain {grain_count}: {ing.get('name', 'Unknown')} - {amount} {unit}, potential: {potential}"
-            )
+            # logger.info(
+            #     f"🔍 OG Calculation - Grain {grain_count}: {ing.get('name', 'Unknown')} - {amount} {unit}, potential: {potential}"
+            # )
 
             weight_lb = convert_to_pounds(amount, unit)
             points_contribution = weight_lb * potential
             total_points += points_contribution
 
-            logger.info(
-                f"  → Weight in lbs: {weight_lb}, Points contribution: {points_contribution}"
-            )
+            # logger.info(
+            #     f"  → Weight in lbs: {weight_lb}, Points contribution: {points_contribution}"
+            # )
 
-    logger.info(
-        f"🔍 OG Calculation - Total points: {total_points}, Grain count: {grain_count}"
-    )
+    # logger.info(
+    #     f"🔍 OG Calculation - Total points: {total_points}, Grain count: {grain_count}"
+    # )
 
     # Use simplified calc_og_core (always expects gallons)
     og_result = calc_og_core(total_points, batch_size_gal, efficiency)
-    logger.info(f"🔍 OG Calculation - Final OG: {og_result}")
+    # logger.info(f"🔍 OG Calculation - Final OG: {og_result}")
 
     return og_result
 
@@ -69,7 +69,7 @@ def calculate_fg_preview(recipe_data):
     logger = logging.getLogger(__name__)
 
     ingredients = recipe_data.get("ingredients", [])
-    logger.info(f"🔍 FG Calculation - Found {len(ingredients)} ingredients")
+    # logger.info(f"🔍 FG Calculation - Found {len(ingredients)} ingredients")
 
     # Find yeast with highest attenuation
     max_attenuation = 0
@@ -78,19 +78,19 @@ def calculate_fg_preview(recipe_data):
         if ing.get("type") == "yeast":
             yeast_count += 1
             attenuation = ing.get("attenuation")
-            logger.info(
-                f"🔍 FG Calculation - Yeast {yeast_count}: {ing.get('name', 'Unknown')} - attenuation: {attenuation}"
-            )
+            # logger.info(
+            #     f"🔍 FG Calculation - Yeast {yeast_count}: {ing.get('name', 'Unknown')} - attenuation: {attenuation}"
+            # )
             if attenuation:
                 max_attenuation = max(max_attenuation, float(attenuation))
 
-    logger.info(f"🔍 FG Calculation - Max attenuation found: {max_attenuation}%")
+    # logger.info(f"🔍 FG Calculation - Max attenuation found: {max_attenuation}%")
 
     og = calculate_og_preview(recipe_data)
-    logger.info(f"🔍 FG Calculation - OG: {og:.3f}, Attenuation: {max_attenuation}%")
+    # logger.info(f"🔍 FG Calculation - OG: {og:.3f}, Attenuation: {max_attenuation}%")
 
     fg_result = calc_fg_core(og, max_attenuation)
-    logger.info(f"🔍 FG Calculation - Final FG: {fg_result}")
+    # logger.info(f"🔍 FG Calculation - Final FG: {fg_result}")
 
     return fg_result
 
@@ -104,10 +104,10 @@ def calculate_abv_preview(recipe_data):
     og = calculate_og_preview(recipe_data)
     fg = calculate_fg_preview(recipe_data)
 
-    logger.info(f"🔍 ABV Calculation - OG: {og:.3f}, FG: {fg:.3f}")
+    # logger.info(f"🔍 ABV Calculation - OG: {og:.3f}, FG: {fg:.3f}")
 
     abv_result = calc_abv_core(og, fg)
-    logger.info(f"🔍 ABV Calculation - Final ABV: {abv_result}%")
+    # logger.info(f"🔍 ABV Calculation - Final ABV: {abv_result}%")
 
     return abv_result
 
