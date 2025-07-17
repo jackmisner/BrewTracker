@@ -142,9 +142,13 @@ def get_suggestions():
                 )
 
         # Generate suggestions
+        logger.info(
+            f"🔍 Generating suggestions for recipe with {len(recipe_data.get('ingredients', []))} ingredients"
+        )
         suggestions = analysis_engine.suggestion_generator.generate_suggestions(
             recipe_data, current_metrics, style_analysis, unit_system
         )
+        logger.info(f"🔍 Generated {len(suggestions)} suggestions")
 
         return (
             jsonify(
