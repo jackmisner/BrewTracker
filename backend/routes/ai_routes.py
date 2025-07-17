@@ -61,8 +61,6 @@ def analyze_recipe():
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        # logger.info(f"🔍 AI Route - Received analyze_recipe request: {data}")
-
         recipe_data = data.get("recipe_data")
         if not recipe_data:
             return jsonify({"error": "recipe_data is required"}), 400
@@ -77,13 +75,6 @@ def analyze_recipe():
         if unit_system not in ["metric", "imperial"]:
             unit_system = "imperial"  # Default fallback
 
-        # logger.info(
-        #     f"🔍 AI Route - Processing analysis with unit_system: {unit_system}"
-        # )
-        # logger.info(
-        #     f"🔍 AI Route - Recipe_data (already in user's preferred units): {recipe_data}"
-        # )
-
         # The frontend already sends recipe data in the user's preferred units,
         # so no conversion is needed here. The previous conversion was causing
         # batch size to be incorrectly converted from liters to gallons to liters again.
@@ -94,8 +85,6 @@ def analyze_recipe():
             style_id=style_id,
             unit_system=unit_system,
         )
-
-        # logger.info(f"✅ AI Route - Analysis result: {analysis_result}")
 
         # Add metadata
         analysis_result["unit_system"] = unit_system

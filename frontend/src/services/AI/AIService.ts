@@ -160,21 +160,10 @@ export class AIService {
    * Analyze a recipe and get comprehensive AI suggestions
    */
   async analyzeRecipe(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
-    console.log('🔍 AI Service - Analyze Recipe Request:', {
-      method: 'POST',
-      endpoint: '/ai/analyze-recipe',
-      payload: request,
-      timestamp: new Date().toISOString()
-    });
     
     try {
       const response = await ApiService.ai.analyzeRecipe(request);
       
-      console.log('✅ AI Service - Analyze Recipe Response:', {
-        status: response.status,
-        response: response.data,
-        timestamp: new Date().toISOString()
-      });
       
       return response.data;
     } catch (error: any) {
@@ -193,21 +182,10 @@ export class AIService {
    * Get AI suggestions for a recipe
    */
   async getSuggestions(request: AISuggestionsRequest): Promise<AISuggestionsResponse> {
-    console.log('🔍 AI Service - Get Suggestions Request:', {
-      method: 'POST',
-      endpoint: '/ai/suggestions',
-      payload: request,
-      timestamp: new Date().toISOString()
-    });
     
     try {
       const response = await ApiService.ai.getSuggestions(request);
       
-      console.log('✅ AI Service - Get Suggestions Response:', {
-        status: response.status,
-        response: response.data,
-        timestamp: new Date().toISOString()
-      });
       
       return response.data;
     } catch (error: any) {
@@ -226,21 +204,10 @@ export class AIService {
    * Calculate cascading effects of recipe changes
    */
   async calculateEffects(request: AIEffectsRequest): Promise<AIEffectsResponse> {
-    console.log('🔍 AI Service - Calculate Effects Request:', {
-      method: 'POST',
-      endpoint: '/ai/effects',
-      payload: request,
-      timestamp: new Date().toISOString()
-    });
     
     try {
       const response = await ApiService.ai.calculateEffects(request);
       
-      console.log('✅ AI Service - Calculate Effects Response:', {
-        status: response.status,
-        response: response.data,
-        timestamp: new Date().toISOString()
-      });
       
       return response.data;
     } catch (error: any) {
