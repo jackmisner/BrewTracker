@@ -82,6 +82,8 @@ if __name__ == "__main__":
 
     # Default values for standalone execution
     mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/brewtracker")
-    json_file_path = Path(__file__).parent.parent / "data" / "brewtracker.ingredients.json"
+    json_file_path = (
+        Path(__file__).parent.parent / "data" / "brewtracker.ingredients.json"
+    )
 
     seed_ingredients(mongo_uri, json_file_path)
