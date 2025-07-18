@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from mongoengine import connect, disconnect
 from mongoengine.connection import ConnectionFailure, get_connection
@@ -46,6 +47,15 @@ def seed_ingredients(mongo_uri, json_file_path):
                 clean_data.pop("_id", None)  # Remove _id field if it exists
                 clean_data.pop("__v", None)  # Remove version field if it exists
 
+                # Handle MongoDB date format conversion
+                if "last_attenuation_update" in clean_data:
+                    date_field = clean_data["last_attenuation_update"]
+                    if isinstance(date_field, dict) and "$date" in date_field:
+                        # Convert MongoDB date format to Python datetime
+                        clean_data["last_attenuation_update"] = datetime.fromisoformat(
+                            date_field["$date"].replace("Z", "+00:00")
+                        )
+
                 # Create ingredient object with cleaned data
                 ingredient = Ingredient(**clean_data)
                 ingredient.save()
@@ -72,6 +82,8 @@ if __name__ == "__main__":
 
     # Default values for standalone execution
     mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/brewtracker")
-    json_file_path = Path(__file__).parent / "data" / "brewtracker.ingredients.json"
+    json_file_path = (
+        Path(__file__).parent.parent / "data" / "brewtracker.ingredients.json"
+    )
 
     seed_ingredients(mongo_uri, json_file_path)
