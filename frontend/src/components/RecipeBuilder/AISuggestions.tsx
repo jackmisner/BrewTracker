@@ -452,30 +452,82 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       // Convert optimized recipe ingredients to the format expected by onBulkIngredientUpdate
       const optimizedIngredients = optimization.optimizedRecipe.ingredients || [];
       
+      console.log('🔍 DEBUG: Frontend recipe reconciliation starting:');
+      console.log('🔍 DEBUG: Current ingredients in frontend:', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
+      console.log('🔍 DEBUG: Optimized ingredients from backend:', optimizedIngredients.map((ing: any) => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
       
       // CRITICAL FIX: Match ingredients by ingredient_id and name to determine which are updates vs new
       const updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }> = [];
       const optimizedIngredientIds = new Set();
-      // console.log('🔄 AISuggestions - Applying optimized recipe:', {
-      //   optimization: optimization,
-      //   optimizedIngredients: optimizedIngredients.map((ing: { name: any; }) => ing.name),
-      //   timestamp: new Date().toISOString()
-      // });
       
       // Process optimized ingredients: update existing ones or add new ones
       for (const optimizedIng of optimizedIngredients) {
+        console.log(`🔍 DEBUG: Processing optimized ingredient: ${optimizedIng.name} (${optimizedIng.type}) use='${optimizedIng.use}' time=${optimizedIng.time}`);
         
-        // Try to find matching existing ingredient by ingredient_id or name
-        const existingIngredient = ingredients.find(ing => 
-          (ing.ingredient_id === optimizedIng.ingredient_id) ||
-          (ing.name === optimizedIng.name)
-        );
+        // Try to find matching existing ingredient with improved hop matching
+        const existingIngredient = ingredients.find(ing => {
+          // For hops, check if this is a modification of an existing hop by looking at recipe changes
+          if (optimizedIng.type === 'hop' && ing.type === 'hop') {
+            // First try exact match (name + use + time)
+            const exactMatch = ing.name === optimizedIng.name && 
+                              ing.use === optimizedIng.use && 
+                              ing.time === optimizedIng.time;
+            
+            if (exactMatch) {
+              console.log(`🔍 DEBUG: Hop exact match: ${ing.name} use='${ing.use}' time=${ing.time}`);
+              return true;
+            }
+            
+            // Check if this is a timing modification of the same hop
+            const isTimingModification = ing.ingredient_id === optimizedIng.ingredient_id && 
+                                        ing.use === optimizedIng.use && 
+                                        ing.name === optimizedIng.name &&
+                                        ing.time !== optimizedIng.time;
+            
+            if (isTimingModification) {
+              // Verify this is actually a timing change from the recipe changes
+              const hasTimingChange = optimization.recipeChanges.some(change => 
+                change.ingredient_name === ing.name &&
+                change.ingredient_type === 'hop' &&
+                change.ingredient_use === ing.use &&
+                change.ingredient_time === ing.time &&
+                change.field === 'time'
+              );
+              
+              console.log(`🔍 DEBUG: Hop timing modification check: ${ing.name} use='${ing.use}' time=${ing.time}->${optimizedIng.time} => ${hasTimingChange}`);
+              return hasTimingChange;
+            }
+            
+            console.log(`🔍 DEBUG: Hop no match: ${ing.name} use='${ing.use}' time=${ing.time} vs ${optimizedIng.name} use='${optimizedIng.use}' time=${optimizedIng.time}`);
+            return false;
+          }
+          
+          // For non-hops, try exact ingredient_id match first
+          if (ing.ingredient_id === optimizedIng.ingredient_id) {
+            console.log(`🔍 DEBUG: Found ingredient by ID match: ${ing.name}`);
+            return true;
+          }
+          
+          // For non-hops, name match is sufficient
+          const matches = ing.name === optimizedIng.name;
+          if (matches) {
+            console.log(`🔍 DEBUG: Found ingredient by name match: ${ing.name}`);
+          }
+          return matches;
+        });
+        
+        console.log(`🔍 DEBUG: Match result for ${optimizedIng.name}: ${existingIngredient ? 'FOUND' : 'NOT FOUND'}`);
+        
         
         
         
         if (existingIngredient) {
           // Update existing ingredient
-          optimizedIngredientIds.add(existingIngredient.id);
+          // CRITICAL FIX: Use unique identifier for hops that combines ingredient_id + use + time
+          const uniqueKey = optimizedIng.type === 'hop' 
+            ? `${optimizedIng.ingredient_id}-${optimizedIng.use}-${optimizedIng.time}`
+            : existingIngredient.id;
+          optimizedIngredientIds.add(uniqueKey);
           updates.push({
             ingredientId: existingIngredient.id!,
             updatedData: {
@@ -497,7 +549,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         } else {
           // Add new ingredient (not in original recipe)
           const newIngredientId = `optimized-${Date.now()}-${Math.random()}`;
-          optimizedIngredientIds.add(newIngredientId);
+          // CRITICAL FIX: Use unique identifier for hops that combines ingredient_id + use + time
+          const uniqueKey = optimizedIng.type === 'hop' 
+            ? `${optimizedIng.ingredient_id}-${optimizedIng.use}-${optimizedIng.time}`
+            : newIngredientId;
+          optimizedIngredientIds.add(uniqueKey);
           updates.push({
             ingredientId: newIngredientId,
             updatedData: {
@@ -521,27 +577,60 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       // CRITICAL FIX: Calculate what ingredients existed before the bulk update
       // This prevents using stale ingredients list that doesn't include newly added ingredients
-      const existingIngredientIds = new Set(ingredients.map(ing => ing.id));
+      // Use unique keys for hops that combine ingredient_id + use + time
+      const existingIngredientIds = new Set(ingredients.map(ing => {
+        return ing.type === 'hop' 
+          ? `${ing.ingredient_id}-${ing.use}-${ing.time}`
+          : ing.id;
+      }));
 
       // Apply the updates first
+      console.log('🔍 DEBUG: About to apply updates:', updates.map(u => `${u.updatedData.name} (${u.updatedData.type}) amount=${u.updatedData.amount} time=${u.updatedData.time} isNew=${u.isNewIngredient}`));
       await onBulkIngredientUpdate(updates);
       
       // CRITICAL FIX: Add delay to allow React state updates to propagate
       // The ingredients prop is stale due to React closure, need to wait for parent re-render
       await new Promise(resolve => setTimeout(resolve, 50));
       
+      console.log('🔍 DEBUG: Ingredients after bulk update (before removal check):', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
+      
       // Remove ingredients that are not in the optimized recipe
-      // Use the original ingredients list but filter based on calculated post-update state
-      const ingredientsToRemove = ingredients.filter(ing => 
-        // Only consider ingredients that existed before the update (not newly added ones)
-        existingIngredientIds.has(ing.id) && 
-        // And are not part of the optimized recipe
-        !optimizedIngredientIds.has(ing.id)
-      );
+      // SAFETY CHECK: Only remove ingredients that have explicit removal actions
+      console.log('🔍 DEBUG: Checking for ingredients to remove:');
+      console.log('🔍 DEBUG: existingIngredientIds:', Array.from(existingIngredientIds));
+      console.log('🔍 DEBUG: optimizedIngredientIds:', Array.from(optimizedIngredientIds));
+      console.log('🔍 DEBUG: Using unique key system for hops (ingredient_id-use-time)');
+      
+      const ingredientsToRemove = ingredients.filter(ing => {
+        const uniqueKey = ing.type === 'hop' 
+          ? `${ing.ingredient_id}-${ing.use}-${ing.time}`
+          : ing.id;
+        const existed = existingIngredientIds.has(uniqueKey);
+        const inOptimized = optimizedIngredientIds.has(uniqueKey);
+        const shouldRemove = existed && !inOptimized;
+        console.log(`🔍 DEBUG: ${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time}: uniqueKey=${uniqueKey}, existed=${existed}, inOptimized=${inOptimized}, shouldRemove=${shouldRemove}`);
+        return shouldRemove;
+      });
+      
+      console.log('🔍 DEBUG: ingredientsToRemove:', ingredientsToRemove.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time}`));
+      
       if (ingredientsToRemove.length > 0 && onRemoveIngredient) {
-        // Remove ingredients that are not in the optimized recipe
+        // Safety check: Look for explicit removal actions in the recipe changes
+        const explicitRemovals = new Set();
+        optimization.recipeChanges.forEach(change => {
+          if (change.type === 'ingredient_removed' || (change as any).action === 'remove') {
+            explicitRemovals.add(change.ingredient_name);
+          }
+        });
+        
+        // Only remove ingredients that are explicitly marked for removal
         for (const ingredient of ingredientsToRemove) {
-          await onRemoveIngredient(ingredient.id!);
+          if (explicitRemovals.has(ingredient.name)) {
+            console.log(`✅ Removing ingredient with explicit removal action: ${ingredient.name}`);
+            await onRemoveIngredient(ingredient.id!);
+          } else {
+            console.warn(`⚠️ Prevented accidental removal of ingredient: ${ingredient.name} (no explicit removal action found)`);
+          }
         }
       }
 
@@ -550,6 +639,10 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       setOptimizationResult(null);
       setHasAnalyzed(false);
       
+      // Add a small delay to allow UI updates to propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🔍 DEBUG: Final ingredients after all changes:', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
       
       // alert(`Optimized recipe applied successfully! Recipe was improved through ${optimization.iterationsCompleted} iterations.`);
 
@@ -634,7 +727,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
           {hasAnalyzed && !analyzing && optimizationResult && (
             <div style={{ background: 'white', border: '2px solid #28a745', borderRadius: '8px', padding: '20px', marginBottom: '20px' }}>
-              <h4 style={{ color: '#28a745', marginTop: 0 }}>🎯 Recipe Optimization Complete!</h4>
+              <h4 style={{ color: '#28a745', marginTop: 0 }}>Recipe Optimization Complete!</h4>
               <p>Internal optimization completed in <strong>{optimizationResult.iterationsCompleted} iterations</strong></p>
               
               {/* Metrics comparison */}
@@ -660,7 +753,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               {/* Recipe changes summary */}
               {optimizationResult.recipeChanges.length > 0 && (
                 <div style={{ background: '#e9ecef', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
-                  <h5>Changes Made ({optimizationResult.recipeChanges.length})</h5>
+                  <h5>Changes Made ({optimizationResult.recipeChanges.length-1})</h5>
                   <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     {optimizationResult.recipeChanges.map((change, idx) => (
                       <div key={idx} style={{ padding: '8px', background: 'white', marginBottom: '8px', borderRadius: '4px', borderLeft: '3px solid #007bff' }}>
