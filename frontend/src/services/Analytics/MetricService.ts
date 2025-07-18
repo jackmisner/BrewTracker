@@ -86,6 +86,7 @@ class MetricService {
     ingredients: RecipeIngredient[]
   ): Promise<RecipeMetrics> {
     try {
+
       const calculationData = this.prepareCalculationData(
         recipeData,
         ingredients
@@ -136,7 +137,7 @@ class MetricService {
       boil_time: parseInt((recipeData.boil_time || 60).toString()),
       ingredients: this.formatIngredientsForCalculation(ingredients),
     };
-
+    console.log("Prepared calculation data:", calculationData);
     return calculationData;
   }
 

@@ -736,7 +736,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }));
       }
     },
-    [] // Remove state dependencies to prevent stale closures
+    [state.recipe] // Remove state dependencies to prevent stale closures
   );
 
   // Save recipe
@@ -801,7 +801,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         throw error;
       }
     },
-    [recipeId, navigate] // Keep only dependencies that don't change during operations
+    [state.recipe, state.metrics, recipeId, navigate] // Keep only dependencies that don't change during operations
   );
 
   // Manually recalculate metrics
@@ -839,7 +839,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         calculatingMetrics: false,
       }));
     }
-  }, []); // Remove state dependencies to prevent stale closures
+  }, [state.recipe]); // Remove state dependencies to prevent stale closures
 
   // Clear error
   const clearError = useCallback((): void => {
@@ -991,6 +991,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     async (recipeData: Partial<Recipe>): Promise<void> => {
       try {
         // Clean up the imported data before applying
+
         const cleanedRecipeData = { ...recipeData };
         
         // Round batch size to reasonable precision (2 decimal places)
@@ -1000,7 +1001,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         
         // Update the recipe state with all imported data at once
         const updatedRecipe = { ...state.recipe, ...cleanedRecipeData };
-        
+
         setState((prev) => ({
           ...prev,
           recipe: updatedRecipe,
@@ -1021,6 +1022,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         
         if (hasCalculationFieldChanges && state.ingredients.length > 0) {
           try {
+
             setState((prev) => ({ ...prev, calculatingMetrics: true }));
 
             const metrics = await Services.metrics.calculateMetricsDebounced(
