@@ -376,6 +376,33 @@ class TestRecipeIngredient:
         assert ing_dict["use"] == "boil"
         assert ing_dict["time"] == 60
         assert ing_dict["alpha_acid"] == 5.5
+        # Test new 'id' field for React key uniqueness
+        expected_id = f"hop-{ingredient_id}-boil-60"
+        assert ing_dict["id"] == expected_id
+
+    def test_recipe_ingredient_compound_id_to_dict(self):
+        """Test converting recipe ingredient with compound ID to dictionary"""
+        compound_id = "Cascade_boil_60_68515f66d6b61a5de3de081d"
+        recipe_ingredient = RecipeIngredient(
+            ingredient_id=compound_id,
+            name="Cascade",
+            type="hop",
+            amount=1.0,
+            unit="oz",
+            use="boil",
+            time=60,
+            alpha_acid=5.5,
+        )
+
+        ing_dict = recipe_ingredient.to_dict()
+
+        assert isinstance(ing_dict, dict)
+        assert ing_dict["ingredient_id"] == compound_id
+        assert ing_dict["name"] == "Cascade"
+        assert ing_dict["type"] == "hop"
+        # Test that compound ID is preserved in frontend ID
+        expected_id = f"hop-{compound_id}"
+        assert ing_dict["id"] == expected_id
 
 
 class TestRecipe:

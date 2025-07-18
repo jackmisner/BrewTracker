@@ -532,17 +532,19 @@ describe("RecipeService", () => {
       const rawRecipe = {
         name: "Test Recipe",
         ingredients: [
-          { ingredient_id: 1, name: "Ingredient 1" },
+          { ingredient_id: 1, name: "Ingredient 1", type: "grain" },
           { _id: "mongo-id", name: "Ingredient 2" },
           { name: "Ingredient 3" }, // No ID
+          { id: "hop-Cascade_boil_60_12345", name: "Ingredient 4" }, // Backend-provided ID
         ],
       };
 
       const result = recipeService.processRecipeData(rawRecipe);
 
-      expect(result.ingredients[0].id).toBe("ing-1");
+      expect(result.ingredients[0].id).toBe("grain-1");
       expect(result.ingredients[1].id).toBe("mongo-id");
       expect(result.ingredients[2].id).toMatch(/^existing-/);
+      expect(result.ingredients[3].id).toBe("hop-Cascade_boil_60_12345"); // Uses backend-provided ID
     });
 
     test("handles null recipe", () => {
