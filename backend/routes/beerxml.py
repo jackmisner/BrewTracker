@@ -439,6 +439,7 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
             potential = (yield_pct / 100) * 46
 
             fermentable = {
+                "ingredient_id": str(ObjectId()),  # Generate unique ID
                 "name": get_text_content(elem, "NAME") or "Unknown Fermentable",
                 "type": "grain",
                 "amount": amount,
@@ -486,6 +487,7 @@ def parse_hops(recipe_elem, detected_unit_system=None):
                 unit = "oz"
 
             hop = {
+                "ingredient_id": str(ObjectId()),  # Generate unique ID
                 "name": get_text_content(elem, "NAME") or "Unknown Hop",
                 "type": "hop",
                 "amount": amount,
@@ -531,6 +533,7 @@ def parse_yeasts(recipe_elem, detected_unit_system=None):
                 unit = "pkg"
 
             yeast = {
+                "ingredient_id": str(ObjectId()),  # Generate unique ID
                 "name": get_text_content(elem, "NAME") or "Unknown Yeast",
                 "type": "yeast",
                 "amount": final_amount,
@@ -589,6 +592,7 @@ def parse_misc(recipe_elem, detected_unit_system=None):
                     unit = "floz"
 
             misc = {
+                "ingredient_id": str(ObjectId()),  # Generate unique ID
                 "name": get_text_content(elem, "NAME") or "Unknown Misc",
                 "type": "other",
                 "amount": final_amount,
