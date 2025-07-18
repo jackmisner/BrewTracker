@@ -86,7 +86,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
         abbrev: "L",
         min: "1",
         max: "380",
-        step: "1",
+        step: "0.5",
         placeholder: "19",
         typical: "Typical homebrew batch: 19-23 L",
       };
