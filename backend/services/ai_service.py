@@ -446,10 +446,25 @@ class RecipeAnalysisEngine:
                 )
                 applied_suggestion_fingerprints.add(suggestion_fingerprint)
 
-                # Apply the suggestion to the recipe
-                updated_recipe = self._apply_suggestion_to_recipe(
-                    current_recipe, best_suggestion
-                )
+                # Apply the suggestion to the recipe with error handling
+                try:
+                    updated_recipe = self._apply_suggestion_to_recipe(
+                        current_recipe, best_suggestion
+                    )
+
+                    # Validate that the recipe was actually modified
+                    if updated_recipe == current_recipe:
+                        logger.warning(
+                            f"🔄 Iteration {iteration + 1} - Recipe unchanged after applying suggestion, stopping optimization"
+                        )
+                        break
+
+                except Exception as e:
+                    logger.error(
+                        f"🔄 Iteration {iteration + 1} - Error applying suggestion: {str(e)}"
+                    )
+                    logger.error(f"🔄 Suggestion details: {best_suggestion}")
+                    break
 
                 # Store the optimization step
                 metrics_after = self._calculate_recipe_metrics(updated_recipe)
@@ -1443,8 +1458,17 @@ class SuggestionGenerator:
             return None
 
         # Create unified suggestion
-        primary_metrics = [t["metric"].upper() for t in resolved_targets[:2]]
-        title = f"Optimize Recipe for {' & '.join(primary_metrics)}"
+        if len(resolved_targets) <= 2:
+            primary_metrics = [t["metric"].upper() for t in resolved_targets]
+            title = f"Optimize Recipe for {' & '.join(primary_metrics)}"
+        elif len(resolved_targets) == 3:
+            primary_metrics = [t["metric"].upper() for t in resolved_targets]
+            title = f"Optimize Recipe for {', '.join(primary_metrics[:-1])} & {primary_metrics[-1]}"
+        else:
+            # For 4+ metrics, use a more general title
+            title = (
+                f"Comprehensive Recipe Optimization ({len(resolved_targets)} metrics)"
+            )
 
         return {
             "type": "unified_optimization",
@@ -1480,7 +1504,7 @@ class SuggestionGenerator:
         # Sort by priority
         resolved.sort(key=lambda x: x.get("priority", 0), reverse=True)
 
-        return resolved[:3]  # Limit to top 3 targets for unified suggestion
+        return resolved  # Include ALL targets for comprehensive 1-cycle optimization
 
     def _convert_abv_target_to_og(self, abv_target: Dict) -> Dict:
         """Convert ABV optimization target to OG target"""
@@ -1932,6 +1956,9 @@ class SuggestionGenerator:
                         {
                             "ingredient_id": primary_hop.get("ingredient_id"),
                             "ingredient_name": primary_hop.get("name"),
+                            "ingredient_type": primary_hop.get("type", "hop"),
+                            "ingredient_use": primary_hop.get("use"),
+                            "ingredient_time": primary_hop.get("time"),
                             "field": "amount",
                             "current_value": current_amount_base,
                             "suggested_value": new_amount_base,
@@ -1972,6 +1999,9 @@ class SuggestionGenerator:
                     {
                         "ingredient_id": primary_hop.get("ingredient_id"),
                         "ingredient_name": primary_hop.get("name"),
+                        "ingredient_type": primary_hop.get("type", "hop"),
+                        "ingredient_use": primary_hop.get("use"),
+                        "ingredient_time": primary_hop.get("time"),
                         "field": "time",
                         "current_value": current_time,
                         "suggested_value": new_time,
@@ -3635,6 +3665,7 @@ class CascadingEffectsCalculator:
                 new_value = change.get("suggested_value")
 
                 found = False
+                # Try to find ingredient by exact ingredient_id match first
                 for ing in modified_ingredients:
                     if ing.get("ingredient_id") == ingredient_id:
                         old_value = ing.get(field)
@@ -3664,40 +3695,86 @@ class CascadingEffectsCalculator:
                         found = True
                         break
 
-                # Fallback: Try to find by ingredient name if ingredient_id is None
-                if not found and ingredient_id is None:
+                # Enhanced fallback: Try smarter matching when exact ID match fails
+                if not found:
                     ingredient_name = change.get("ingredient_name")
+                    ingredient_type = change.get("ingredient_type")
+                    ingredient_use = change.get("ingredient_use")
+                    ingredient_time = change.get("ingredient_time")
+
+                    logger.info(
+                        f"🔍 Exact ID match failed for {ingredient_id}, trying smart matching for {ingredient_name}"
+                    )
+
+                    # Try to find by name first (simple case)
                     if ingredient_name:
                         for ing in modified_ingredients:
                             if ing.get("name") == ingredient_name:
-                                old_value = ing.get(field)
-
-                                # Special handling for yeast strain changes - replace entire yeast ingredient
-                                if (
-                                    change.get("is_yeast_strain_change")
-                                    and field == "ingredient_id"
-                                ):
-                                    new_yeast_data = change.get("new_yeast_data")
-                                    if new_yeast_data:
-                                        # Replace the entire yeast ingredient with database yeast data
-                                        ing["ingredient_id"] = new_yeast_data.get("id")
-                                        ing["name"] = new_yeast_data.get("name")
-                                        ing["attenuation"] = new_yeast_data.get(
-                                            "attenuation"
-                                        )
-                                        ing["type"] = new_yeast_data.get("type")
+                                # For hops, check if we need to disambiguate by use/time
+                                if ingredient_type == "hop":
+                                    # Check if this is the right hop addition by use and time
+                                    if (
+                                        ingredient_use
+                                        and ing.get("use") == ingredient_use
+                                        and ingredient_time is not None
+                                        and ing.get("time") == ingredient_time
+                                    ):
                                         logger.info(
-                                            f"🔍 Replaced yeast ingredient (found by name): {old_value} → {new_yeast_data.get('name')} (attenuation: {new_yeast_data.get('attenuation')}%)"
+                                            f"🔍 Found hop by name+use+time: {ingredient_name} {ingredient_use} {ingredient_time}min"
                                         )
-                                    else:
-                                        # Fallback: just change the field
-                                        ing[field] = new_value
+                                        found = True
+                                    elif (
+                                        ingredient_use
+                                        and ing.get("use") == ingredient_use
+                                    ):
+                                        logger.info(
+                                            f"🔍 Found hop by name+use: {ingredient_name} {ingredient_use}"
+                                        )
+                                        found = True
+                                    elif not ingredient_use and not ingredient_time:
+                                        # No specific use/time specified, take first match
+                                        logger.info(
+                                            f"🔍 Found hop by name only: {ingredient_name}"
+                                        )
+                                        found = True
                                 else:
-                                    # Regular field change
-                                    ing[field] = new_value
+                                    # Non-hop ingredient, name match is sufficient
+                                    logger.info(
+                                        f"🔍 Found {ingredient_type} by name: {ingredient_name}"
+                                    )
+                                    found = True
 
-                                found = True
-                                break
+                                if found:
+                                    old_value = ing.get(field)
+
+                                    # Special handling for yeast strain changes - replace entire yeast ingredient
+                                    if (
+                                        change.get("is_yeast_strain_change")
+                                        and field == "ingredient_id"
+                                    ):
+                                        new_yeast_data = change.get("new_yeast_data")
+                                        if new_yeast_data:
+                                            # Replace the entire yeast ingredient with database yeast data
+                                            ing["ingredient_id"] = new_yeast_data.get(
+                                                "id"
+                                            )
+                                            ing["name"] = new_yeast_data.get("name")
+                                            ing["attenuation"] = new_yeast_data.get(
+                                                "attenuation"
+                                            )
+                                            ing["type"] = new_yeast_data.get("type")
+                                            logger.info(
+                                                f"🔍 Replaced yeast ingredient (found by name): {old_value} → {new_yeast_data.get('name')} (attenuation: {new_yeast_data.get('attenuation')}%)"
+                                            )
+                                        else:
+                                            # Fallback: just change the field
+                                            ing[field] = new_value
+                                    else:
+                                        # Regular field change
+                                        ing[field] = new_value
+
+                                    found = True
+                                    break
 
                 if not found:
                     logger.warning(

@@ -253,8 +253,25 @@ class RecipeIngredient(EmbeddedDocument):
     attenuation = FloatField()
 
     def to_dict(self):
+        # Generate frontend-compatible ID for React key uniqueness
+        ingredient_id_str = str(self.ingredient_id)
+
+        # Check if ingredient_id is already a compound ID (contains underscores and context)
+        if "_" in ingredient_id_str and len(ingredient_id_str.split("_")) >= 3:
+            # Compound ID like "Cascade_boil_60_68515f66d6b61a5de3de081d" - use as-is for unique ID
+            frontend_id = f"{self.type}-{ingredient_id_str}"
+        else:
+            # Simple ObjectId - create unique ID with usage context to prevent duplicates
+            # Include use and time to ensure uniqueness for same ingredient used multiple times
+            use_context = f"{self.use or 'none'}"
+            time_context = f"{self.time or 0}"
+            frontend_id = (
+                f"{self.type}-{ingredient_id_str}-{use_context}-{time_context}"
+            )
+
         return {
-            "ingredient_id": str(self.ingredient_id),
+            "id": frontend_id,  # Add frontend-compatible ID for React keys
+            "ingredient_id": ingredient_id_str,  # Keep original for backend operations
             "name": self.name,
             "type": self.type,
             "grain_type": self.grain_type,
