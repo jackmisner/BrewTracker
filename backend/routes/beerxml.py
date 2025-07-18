@@ -438,9 +438,16 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
             yield_pct = float(get_text_content(elem, "YIELD") or 80)
             potential = (yield_pct / 100) * 46
 
+            fermentable_name = get_text_content(elem, "NAME") or "Unknown Fermentable"
+
+            # Generate unique compound ID for recipe ingredient
+            # Format: fermentablename_type_uniqueid
+            fermentable_type = get_text_content(elem, "TYPE") or "grain"
+            compound_id = f"{fermentable_name.replace(' ', '_')}_{fermentable_type}_{str(ObjectId())}"
+
             fermentable = {
-                "ingredient_id": str(ObjectId()),  # Generate unique ID
-                "name": get_text_content(elem, "NAME") or "Unknown Fermentable",
+                "ingredient_id": compound_id,  # Generate unique compound ID
+                "name": fermentable_name,
                 "type": "grain",
                 "amount": amount,
                 "unit": unit,
@@ -486,14 +493,24 @@ def parse_hops(recipe_elem, detected_unit_system=None):
                 amount = UnitConverter.convert_weight(amount_kg, "kg", "oz")
                 unit = "oz"
 
+            hop_name = get_text_content(elem, "NAME") or "Unknown Hop"
+            hop_use = map_xml_use_to_hop(get_text_content(elem, "USE"))
+            hop_time = int(get_text_content(elem, "TIME") or 0)
+
+            # Generate unique compound ID for recipe ingredient (not database ingredient)
+            # Format: hopname_use_time_uniqueid to ensure uniqueness for duplicate hops
+            compound_id = (
+                f"{hop_name.replace(' ', '_')}_{hop_use}_{hop_time}_{str(ObjectId())}"
+            )
+
             hop = {
-                "ingredient_id": str(ObjectId()),  # Generate unique ID
-                "name": get_text_content(elem, "NAME") or "Unknown Hop",
+                "ingredient_id": compound_id,  # Generate unique compound ID
+                "name": hop_name,
                 "type": "hop",
                 "amount": amount,
                 "unit": unit,
-                "use": map_xml_use_to_hop(get_text_content(elem, "USE")),
-                "time": int(get_text_content(elem, "TIME") or 0),
+                "use": hop_use,
+                "time": hop_time,
                 "alpha_acid": float(get_text_content(elem, "ALPHA") or 0),
                 "beerxml_data": {
                     "origin": get_text_content(elem, "ORIGIN"),
@@ -532,9 +549,18 @@ def parse_yeasts(recipe_elem, detected_unit_system=None):
                 )
                 unit = "pkg"
 
+            yeast_name = get_text_content(elem, "NAME") or "Unknown Yeast"
+
+            # Generate unique compound ID for recipe ingredient
+            # Format: yeastname_type_uniqueid
+            yeast_type = get_text_content(elem, "TYPE") or "ale"
+            compound_id = (
+                f"{yeast_name.replace(' ', '_')}_{yeast_type}_{str(ObjectId())}"
+            )
+
             yeast = {
-                "ingredient_id": str(ObjectId()),  # Generate unique ID
-                "name": get_text_content(elem, "NAME") or "Unknown Yeast",
+                "ingredient_id": compound_id,  # Generate unique compound ID
+                "name": yeast_name,
                 "type": "yeast",
                 "amount": final_amount,
                 "unit": unit,
@@ -591,14 +617,22 @@ def parse_misc(recipe_elem, detected_unit_system=None):
                     final_amount = UnitConverter.convert_volume(amount, "l", "floz")
                     unit = "floz"
 
+            misc_name = get_text_content(elem, "NAME") or "Unknown Misc"
+            misc_use = map_xml_use_to_misc(get_text_content(elem, "USE"))
+            misc_time = int(get_text_content(elem, "TIME") or 0)
+
+            # Generate unique compound ID for recipe ingredient
+            # Format: miscname_use_time_uniqueid
+            compound_id = f"{misc_name.replace(' ', '_')}_{misc_use}_{misc_time}_{str(ObjectId())}"
+
             misc = {
-                "ingredient_id": str(ObjectId()),  # Generate unique ID
-                "name": get_text_content(elem, "NAME") or "Unknown Misc",
+                "ingredient_id": compound_id,  # Generate unique compound ID
+                "name": misc_name,
                 "type": "other",
                 "amount": final_amount,
                 "unit": unit,
-                "use": map_xml_use_to_misc(get_text_content(elem, "USE")),
-                "time": int(get_text_content(elem, "TIME") or 0),
+                "use": misc_use,
+                "time": misc_time,
                 "beerxml_data": {
                     "type": get_text_content(elem, "TYPE"),
                     "use_for": get_text_content(elem, "USE_FOR"),

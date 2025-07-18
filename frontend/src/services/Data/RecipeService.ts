@@ -283,11 +283,11 @@ class RecipeService {
         (ingredient: any): RecipeIngredient => ({
           ...ingredient,
           id:
-            ingredient.id ||
+            ingredient.id || // Use backend-provided ID first (prevents double-prefixing)
             (ingredient._id
               ? String(ingredient._id)
               : ingredient.ingredient_id
-              ? `ing-${String(ingredient.ingredient_id)}`
+              ? `${ingredient.type || 'ing'}-${String(ingredient.ingredient_id)}`
               : `existing-${Date.now()}-${Math.random()
                   .toString(36)
                   .substr(2, 9)}`),
