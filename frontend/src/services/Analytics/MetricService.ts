@@ -86,6 +86,7 @@ class MetricService {
     ingredients: RecipeIngredient[]
   ): Promise<RecipeMetrics> {
     try {
+
       const calculationData = this.prepareCalculationData(
         recipeData,
         ingredients

@@ -646,17 +646,18 @@ class RecipeAnalysisEngine:
             for ing in optimized_recipe.get("ingredients", [])
         }
 
-        # Find modified ingredients
+        # Find modified ingredients and consolidate multiple changes per ingredient
         for ing_id, optimized_ing in optimized_ingredients.items():
             if ing_id in original_ingredients:
                 original_ing = original_ingredients[ing_id]
 
+                # Collect all changes for this ingredient
+                ingredient_changes = []
+
                 # Check for amount changes
                 if original_ing.get("amount") != optimized_ing.get("amount"):
-                    recipe_changes.append(
+                    ingredient_changes.append(
                         {
-                            "type": "ingredient_modified",
-                            "ingredient_name": optimized_ing.get("name"),
                             "field": "amount",
                             "original_value": original_ing.get("amount"),
                             "optimized_value": optimized_ing.get("amount"),
@@ -667,10 +668,8 @@ class RecipeAnalysisEngine:
 
                 # Check for time changes (hops)
                 if original_ing.get("time") != optimized_ing.get("time"):
-                    recipe_changes.append(
+                    ingredient_changes.append(
                         {
-                            "type": "ingredient_modified",
-                            "ingredient_name": optimized_ing.get("name"),
                             "field": "time",
                             "original_value": original_ing.get("time"),
                             "optimized_value": optimized_ing.get("time"),
@@ -678,6 +677,42 @@ class RecipeAnalysisEngine:
                             "change_reason": "Hop timing optimization for better brewing practice",
                         }
                     )
+
+                # If there are multiple changes to the same ingredient, consolidate them
+                if len(ingredient_changes) > 1:
+                    # Create a consolidated change with multiple fields
+                    consolidated_change = {
+                        "type": "ingredient_modified",
+                        "ingredient_name": optimized_ing.get("name"),
+                        "ingredient_id": ing_id,
+                        "ingredient_type": optimized_ing.get("type"),
+                        "ingredient_use": optimized_ing.get("use"),
+                        "ingredient_time": original_ing.get(
+                            "time"
+                        ),  # Use original time for matching
+                        "changes": ingredient_changes,  # Multiple field changes
+                        "change_reason": f"Multiple optimizations: {', '.join([c['change_reason'] for c in ingredient_changes])}",
+                    }
+                    recipe_changes.append(consolidated_change)
+                elif len(ingredient_changes) == 1:
+                    # Single change, create individual change object
+                    single_change = ingredient_changes[0]
+                    change_obj = {
+                        "type": "ingredient_modified",
+                        "ingredient_name": optimized_ing.get("name"),
+                        "ingredient_id": ing_id,
+                        "ingredient_type": optimized_ing.get("type"),
+                        "ingredient_use": optimized_ing.get("use"),
+                        "ingredient_time": original_ing.get(
+                            "time"
+                        ),  # Use original time for matching
+                        "field": single_change["field"],
+                        "original_value": single_change["original_value"],
+                        "optimized_value": single_change["optimized_value"],
+                        "unit": single_change["unit"],
+                        "change_reason": single_change["change_reason"],
+                    }
+                    recipe_changes.append(change_obj)
 
                 # Check for ingredient substitutions (yeast changes)
                 if original_ing.get("name") != optimized_ing.get("name"):
@@ -1649,7 +1684,12 @@ class SuggestionGenerator:
             if ing.get("type") == "grain" and ing.get("grain_type") == "base_malt"
         ]
 
+        logger.info(
+            f"🔍 ABV Increase: Target OG {target_og:.3f}, found {len(base_malts)} base malts"
+        )
+
         if not base_malts:
+            logger.warning("🔍 ABV Increase: No base malts found - cannot increase OG")
             return None
 
         changes = []
@@ -1658,6 +1698,12 @@ class SuggestionGenerator:
         total_base_weight = sum(
             convert_to_pounds(ing.get("amount", 0), ing.get("unit", "lb"))
             for ing in base_malts
+        )
+
+        # Determine multiplier for small vs large OG changes
+        multiplier = 25 if og_difference < 0.010 else 10
+        logger.info(
+            f"🔍 ABV Increase: Total base weight {total_base_weight:.2f}lbs, OG increase needed: {og_difference:.3f} (using {multiplier}x multiplier)"
         )
 
         for malt in base_malts:
@@ -1679,9 +1725,16 @@ class SuggestionGenerator:
                 current_weight_lb / total_base_weight if total_base_weight > 0 else 0
             )
 
-            # Calculate needed adjustment (simplified brewing math)
-            adjustment_lb = (og_difference * 10) * proportion  # Rough approximation
-            new_weight_lb = max(0.5, current_weight_lb + adjustment_lb)
+            # Calculate needed adjustment using the determined multiplier
+            adjustment_lb = (og_difference * multiplier) * proportion
+            # Use minimum viable amount to prevent unintended ingredient removal
+            minimum_viable = self._get_minimum_viable_amount("grain", unit_system)
+            minimum_viable_lb = (
+                minimum_viable / 453.592
+                if unit_system == "metric"
+                else minimum_viable / 16
+            )
+            new_weight_lb = max(minimum_viable_lb, current_weight_lb + adjustment_lb)
 
             # Convert back to base unit and round
             if unit_system == "metric":
@@ -1694,8 +1747,9 @@ class SuggestionGenerator:
             )
             min_change = self._get_minimum_change_for_system(unit_system)
 
-            # Only suggest meaningful changes
-            if abs(new_amount_base - current_amount_base) >= min_change:
+            # Check if change is above minimum threshold
+            change_amount = abs(new_amount_base - current_amount_base)
+            if change_amount >= min_change:
                 changes.append(
                     {
                         "ingredient_id": malt.get("ingredient_id"),
@@ -1707,8 +1761,16 @@ class SuggestionGenerator:
                         "reason": f"Increase base malt to reach target OG of {target_og:.3f}",
                     }
                 )
+                logger.info(
+                    f"✅ ABV Increase: {malt.get('name')} {current_amount_base:.1f} -> {new_amount_base:.1f} {base_unit}"
+                )
+            else:
+                logger.warning(
+                    f"❌ ABV Increase: {malt.get('name')} change {change_amount:.1f}{base_unit} below minimum {min_change}"
+                )
 
         if changes:
+            logger.info(f"✅ ABV Increase: Generated {len(changes)} base malt changes")
             return {
                 "type": "og_increase",
                 "title": f"Increase Base Malts for Target OG ({target_og:.3f})",
@@ -1718,6 +1780,9 @@ class SuggestionGenerator:
                 "priority": 5,
             }
 
+        logger.warning(
+            "❌ ABV Increase: No viable changes generated - adjustments too small"
+        )
         return None
 
     def _suggest_srm_adjustment(
@@ -1806,7 +1871,11 @@ class SuggestionGenerator:
                 reduction_factor = min(
                     0.5, abs(srm_difference) / current_srm
                 )  # Max 50% reduction
-                new_amount_base = max(0, current_amount_base * (1 - reduction_factor))
+                # Use minimum viable amount to prevent unintended ingredient removal
+                minimum_viable = self._get_minimum_viable_amount("grain", unit_system)
+                new_amount_base = max(
+                    minimum_viable, current_amount_base * (1 - reduction_factor)
+                )
                 new_amount_base = self._round_to_brewing_increments(
                     new_amount_base, unit_system
                 )
@@ -1814,17 +1883,41 @@ class SuggestionGenerator:
                 min_change = self._get_minimum_change_for_system(unit_system)
 
                 if abs(new_amount_base - current_amount_base) >= min_change:
-                    changes.append(
-                        {
-                            "ingredient_id": grain.get("ingredient_id"),
-                            "ingredient_name": grain.get("name"),
-                            "field": "amount",
-                            "current_value": current_amount_base,  # In base unit (g or oz)
-                            "suggested_value": new_amount_base,  # In base unit (g or oz)
-                            "unit": base_unit,  # "g" for metric, "oz" for imperial
-                            "reason": f"Reduce {grain.get('name')} to achieve target SRM",
-                        }
-                    )
+                    # Check if dramatic SRM reduction is needed and this is a small amount grain
+                    dramatic_reduction_needed = (
+                        abs(srm_difference) > 5
+                    )  # More than 5 SRM units
+                    is_small_amount = current_amount_base <= (
+                        minimum_viable * 2
+                    )  # Less than 2x minimum viable
+
+                    if dramatic_reduction_needed and is_small_amount:
+                        # Suggest explicit removal for dramatic SRM reduction
+                        changes.append(
+                            {
+                                "ingredient_id": grain.get("ingredient_id"),
+                                "ingredient_name": grain.get("name"),
+                                "field": "amount",
+                                "current_value": current_amount_base,
+                                "suggested_value": 0,  # Explicit removal
+                                "unit": base_unit,
+                                "action": "remove",  # Mark as intentional removal
+                                "reason": f"Remove {grain.get('name')} for dramatic SRM reduction (from {current_srm:.1f} to {target_srm:.1f})",
+                            }
+                        )
+                    else:
+                        # Regular reduction (not removal)
+                        changes.append(
+                            {
+                                "ingredient_id": grain.get("ingredient_id"),
+                                "ingredient_name": grain.get("name"),
+                                "field": "amount",
+                                "current_value": current_amount_base,  # In base unit (g or oz)
+                                "suggested_value": new_amount_base,  # In base unit (g or oz)
+                                "unit": base_unit,  # "g" for metric, "oz" for imperial
+                                "reason": f"Reduce {grain.get('name')} to achieve target SRM",
+                            }
+                        )
 
         if changes:
             return {
@@ -1844,18 +1937,38 @@ class SuggestionGenerator:
         """Suggest hop adjustments for target IBU"""
         ibu_difference = target_ibu - current_ibu
 
-        # Find all boil hops (any hops used in boil/whirlpool with time > 0)
-        boil_hops = [
+        # Find all boil hops (only boil hops, not whirlpool/dry hop)
+        all_hops = [
             ing
             for ing in recipe_data.get("ingredients", [])
             if ing.get("type") == "hop"
-            and ing.get("use") in ["boil", "whirlpool"]
+        ]
+
+        # DEBUG: Log all hops and their use types
+        logger.info(f"🔍 DEBUG: All hops in recipe ({len(all_hops)}):")
+        for hop in all_hops:
+            logger.info(
+                f"  - {hop.get('name', 'Unknown')}: use='{hop.get('use')}', time={hop.get('time', 0)}, alpha_acid={hop.get('alpha_acid', 0)}"
+            )
+
+        boil_hops = [
+            ing
+            for ing in all_hops
+            if ing.get("use") == "boil"
             and ing.get("time", 0) > 0
             and ing.get("alpha_acid") is not None
             and ing.get("alpha_acid") > 0
         ]
 
+        # DEBUG: Log filtered boil hops
+        logger.info(f"🔍 DEBUG: Filtered boil hops ({len(boil_hops)}):")
+        for hop in boil_hops:
+            logger.info(
+                f"  - {hop.get('name', 'Unknown')}: use='{hop.get('use')}', time={hop.get('time', 0)}, alpha_acid={hop.get('alpha_acid', 0)}"
+            )
+
         if not boil_hops:
+            logger.info(f"🔍 DEBUG: No boil hops found, returning None")
             return None
 
         # Calculate individual IBU contribution for each hop to find the most impactful one
@@ -1927,74 +2040,55 @@ class SuggestionGenerator:
             current_amount, current_unit, unit_system
         )
 
-        # Strategy 1: Adjust hop amount (proportional to IBU difference)
-        if current_ibu > 0:
-            # Calculate adjustment factor based on the primary hop's contribution
-            primary_contribution = primary_hop_data["ibu_contribution"]
-            adjustment_needed = abs(ibu_difference)
+        # Get recipe boil time to respect the maximum
+        recipe_boil_time = recipe_data.get("boil_time", 60)  # Default to 60 minutes
 
-            # If this hop contributes most of the IBU, we can adjust it proportionally
-            if primary_contribution > 0:
-                # Calculate how much to adjust this hop to get the desired IBU change
-                adjustment_factor = 1.0 + (ibu_difference / primary_contribution)
-                adjustment_factor = max(
-                    0.1, adjustment_factor
-                )  # Don't go below 10% of original
-
-                new_amount_base = current_amount_base * adjustment_factor
-                new_amount_base = self._round_to_brewing_increments(
-                    new_amount_base, unit_system
+        # Two-phase approach for IBU increases: timing optimization first, then amount adjustment
+        if not need_to_reduce:  # Only for IBU increases
+            # Phase 1: Timing optimization to full boil time
+            if current_time < recipe_boil_time and current_time >= 15:
+                # Calculate IBU contribution at current timing
+                current_amount_oz = UnitConverter.convert_to_ounces(
+                    primary_hop.get("amount", 0), primary_hop.get("unit", "oz")
                 )
 
-                # Ensure minimum change threshold
-                min_change = self._get_minimum_change_for_system(unit_system)
-                if abs(new_amount_base - current_amount_base) >= min_change:
-                    action = "Reduce" if need_to_reduce else "Increase"
-                    reason = f"{action} {primary_hop.get('name')} amount to reach target IBU of {target_ibu:.1f}"
-
-                    changes.append(
-                        {
-                            "ingredient_id": primary_hop.get("ingredient_id"),
-                            "ingredient_name": primary_hop.get("name"),
-                            "ingredient_type": primary_hop.get("type", "hop"),
-                            "ingredient_use": primary_hop.get("use"),
-                            "ingredient_time": primary_hop.get("time"),
-                            "field": "amount",
-                            "current_value": current_amount_base,
-                            "suggested_value": new_amount_base,
-                            "unit": base_unit,
-                            "reason": reason,
-                        }
-                    )
-
-        # Strategy 2: Adjust boil time (often more practical than amount changes)
-        if (
-            current_time >= 15
-        ):  # Only suggest timing changes for hops with reasonable boil times
-            # Calculate target time based on utilization relationship
-            if need_to_reduce:
-                # Reduce boil time to reduce IBU
-                time_reduction_factor = (
-                    target_ibu / current_ibu if current_ibu > 0 else 0.8
+                # Calculate OG from recipe ingredients
+                from utils.brewing_calculation_core import (
+                    calc_og_core,
+                    convert_to_pounds,
                 )
-                new_time = max(5, current_time * time_reduction_factor)
-            else:
-                # Increase boil time to increase IBU (up to reasonable limits)
-                time_increase_factor = (
-                    target_ibu / current_ibu if current_ibu > 0 else 1.2
+
+                # Calculate grain points from ingredients
+                total_points = 0
+                for ing in recipe_data.get("ingredients", []):
+                    if ing.get("type") == "grain":
+                        amount = float(ing.get("amount", 0))
+                        unit = ing.get("unit", "g")
+                        potential = float(ing.get("potential", 0))
+
+                        weight_lb = convert_to_pounds(amount, unit)
+                        points_contribution = weight_lb * potential
+                        total_points += points_contribution
+
+                og = calc_og_core(
+                    total_points,
+                    batch_size_gal,
+                    float(recipe_data.get("efficiency", 75)),
                 )
-                new_time = min(
-                    90, current_time * time_increase_factor
-                )  # Max 90 minutes
 
-            # Round to nearest 5-minute interval for brewing convenience
-            new_time = self._round_to_5_minute_interval(new_time)
+                current_ibu_contribution = self._calculate_hop_ibu_contribution(
+                    primary_hop, current_amount_oz, current_time, og, batch_size_gal
+                )
 
-            # Only suggest if it's a meaningful change (at least 5 minutes)
-            if abs(new_time - current_time) >= 5:
-                action = "Reduce" if need_to_reduce else "Increase"
-                reason = f"Alternative: {action.lower()} {primary_hop.get('name')} boil time to {new_time} minutes to achieve target IBU"
+                # Calculate IBU contribution at full boil time
+                optimized_ibu_contribution = self._calculate_hop_ibu_contribution(
+                    primary_hop, current_amount_oz, recipe_boil_time, og, batch_size_gal
+                )
 
+                # Calculate the IBU gain from timing optimization
+                timing_ibu_gain = optimized_ibu_contribution - current_ibu_contribution
+
+                # Phase 1: Timing optimization
                 changes.append(
                     {
                         "ingredient_id": primary_hop.get("ingredient_id"),
@@ -2004,11 +2098,129 @@ class SuggestionGenerator:
                         "ingredient_time": primary_hop.get("time"),
                         "field": "time",
                         "current_value": current_time,
-                        "suggested_value": new_time,
+                        "suggested_value": recipe_boil_time,
                         "unit": "min",
-                        "reason": reason,
+                        "reason": f"Phase 1: Optimize {primary_hop.get('name')} timing to full boil time ({recipe_boil_time} min) for maximum hop utilization (+{timing_ibu_gain:.1f} IBU)",
                     }
                 )
+
+                # Phase 2: Amount adjustment for remaining IBU gap
+                remaining_ibu_gap = ibu_difference - timing_ibu_gain
+                if remaining_ibu_gap > 0.5:  # If there's still a meaningful gap
+                    # Calculate amount adjustment needed for remaining gap
+                    if optimized_ibu_contribution > 0:
+                        amount_adjustment_factor = 1.0 + (
+                            remaining_ibu_gap / optimized_ibu_contribution
+                        )
+                        amount_adjustment_factor = max(0.1, amount_adjustment_factor)
+
+                        new_amount_base = current_amount_base * amount_adjustment_factor
+                        new_amount_base = self._round_to_brewing_increments(
+                            new_amount_base, unit_system, "hop"
+                        )
+
+                        # Ensure minimum change threshold
+                        min_change = self._get_minimum_change_for_system(unit_system)
+                        if abs(new_amount_base - current_amount_base) >= min_change:
+                            changes.append(
+                                {
+                                    "ingredient_id": primary_hop.get("ingredient_id"),
+                                    "ingredient_name": primary_hop.get("name"),
+                                    "ingredient_type": primary_hop.get("type", "hop"),
+                                    "ingredient_use": primary_hop.get("use"),
+                                    "ingredient_time": primary_hop.get("time"),
+                                    "field": "amount",
+                                    "current_value": current_amount_base,
+                                    "suggested_value": new_amount_base,
+                                    "unit": base_unit,
+                                    "reason": f"Phase 2: Increase {primary_hop.get('name')} amount to reach target IBU (+{remaining_ibu_gap:.1f} IBU remaining)",
+                                }
+                            )
+            else:
+                # Fallback: Direct amount adjustment (when timing can't be optimized)
+                if current_ibu > 0:
+                    primary_contribution = primary_hop_data["ibu_contribution"]
+                    if primary_contribution > 0:
+                        adjustment_factor = 1.0 + (
+                            ibu_difference / primary_contribution
+                        )
+                        adjustment_factor = max(0.1, adjustment_factor)
+
+                        new_amount_base = current_amount_base * adjustment_factor
+                        new_amount_base = self._round_to_brewing_increments(
+                            new_amount_base, unit_system, "hop"
+                        )
+
+                        min_change = self._get_minimum_change_for_system(unit_system)
+                        if abs(new_amount_base - current_amount_base) >= min_change:
+                            changes.append(
+                                {
+                                    "ingredient_id": primary_hop.get("ingredient_id"),
+                                    "ingredient_name": primary_hop.get("name"),
+                                    "ingredient_type": primary_hop.get("type", "hop"),
+                                    "ingredient_use": primary_hop.get("use"),
+                                    "ingredient_time": primary_hop.get("time"),
+                                    "field": "amount",
+                                    "current_value": current_amount_base,
+                                    "suggested_value": new_amount_base,
+                                    "unit": base_unit,
+                                    "reason": f"Increase {primary_hop.get('name')} amount to reach target IBU of {target_ibu:.1f} (timing already optimized)",
+                                }
+                            )
+        else:
+            # For IBU reductions, use the simpler approach
+            # Strategy 1: Adjust hop amount (proportional to IBU difference)
+            if current_ibu > 0:
+                primary_contribution = primary_hop_data["ibu_contribution"]
+                if primary_contribution > 0:
+                    adjustment_factor = 1.0 + (ibu_difference / primary_contribution)
+                    adjustment_factor = max(0.1, adjustment_factor)
+
+                    new_amount_base = current_amount_base * adjustment_factor
+                    new_amount_base = self._round_to_brewing_increments(
+                        new_amount_base, unit_system, "hop"
+                    )
+
+                    min_change = self._get_minimum_change_for_system(unit_system)
+                    if abs(new_amount_base - current_amount_base) >= min_change:
+                        changes.append(
+                            {
+                                "ingredient_id": primary_hop.get("ingredient_id"),
+                                "ingredient_name": primary_hop.get("name"),
+                                "ingredient_type": primary_hop.get("type", "hop"),
+                                "ingredient_use": primary_hop.get("use"),
+                                "ingredient_time": primary_hop.get("time"),
+                                "field": "amount",
+                                "current_value": current_amount_base,
+                                "suggested_value": new_amount_base,
+                                "unit": base_unit,
+                                "reason": f"Reduce {primary_hop.get('name')} amount to reach target IBU of {target_ibu:.1f}",
+                            }
+                        )
+
+            # Strategy 2: Adjust boil time for reductions
+            if current_time >= 15:
+                time_reduction_factor = (
+                    target_ibu / current_ibu if current_ibu > 0 else 0.8
+                )
+                new_time = max(5, current_time * time_reduction_factor)
+                new_time = self._round_to_5_minute_interval(new_time, recipe_boil_time)
+
+                if abs(new_time - current_time) >= 5:
+                    changes.append(
+                        {
+                            "ingredient_id": primary_hop.get("ingredient_id"),
+                            "ingredient_name": primary_hop.get("name"),
+                            "ingredient_type": primary_hop.get("type", "hop"),
+                            "ingredient_use": primary_hop.get("use"),
+                            "ingredient_time": primary_hop.get("time"),
+                            "field": "time",
+                            "current_value": current_time,
+                            "suggested_value": new_time,
+                            "unit": "min",
+                            "reason": f"Alternative: Reduce {primary_hop.get('name')} boil time to {new_time} minutes to achieve target IBU",
+                        }
+                    )
 
         if changes:
             action = "Reduce" if need_to_reduce else "Increase"
@@ -2081,6 +2293,7 @@ class SuggestionGenerator:
                             "suggested_attenuation": attenuation,
                             "reason": reason,
                             "is_yeast_strain_change": True,
+                            "action": "substitute",  # Mark as substitution, not removal
                             "new_yeast_data": yeast,  # Include full yeast data for replacement
                         }
                     )
@@ -2101,9 +2314,9 @@ class SuggestionGenerator:
 
         if changes:
             return {
-                "type": "fg_adjustment",
-                "title": f"Switch Yeast Strain for Target FG ({target_fg:.3f})",
-                "description": f"Current FG ({current_fg:.3f}) requires different yeast attenuation",
+                "type": "yeast_substitution",
+                "title": f"Yeast Substitution for Target FG ({target_fg:.3f})",
+                "description": f"Replace yeast strain - current FG ({current_fg:.3f}) requires different yeast attenuation",
                 "confidence": "medium",
                 "changes": changes,
                 "priority": 2,
@@ -2356,21 +2569,24 @@ class SuggestionGenerator:
 
         return None
 
-    def _round_to_5_minute_interval(self, time_minutes: float) -> int:
+    def _round_to_5_minute_interval(
+        self, time_minutes: float, max_boil_time: float = 90
+    ) -> int:
         """Round hop timing to nearest 5-minute interval for brewing convenience"""
         # Round to nearest 5-minute interval
         rounded = round(time_minutes / 5) * 5
-        # Ensure minimum of 5 minutes and maximum of 90 minutes
-        return max(5, min(90, int(rounded)))
+        # Ensure minimum of 5 minutes and maximum of recipe boil time
+        return max(5, min(int(max_boil_time), int(rounded)))
 
-    def _round_to_brewing_increments(self, amount: float, unit_system: str) -> float:
+    def _round_to_brewing_increments(
+        self, amount: float, unit_system: str, ingredient_type: str = "grain"
+    ) -> float:
         """Round amount to brewing-friendly increments"""
-        if unit_system == "metric":
-            # Round grams to 25g increments
-            return round(amount / 25) * 25
-        else:
-            # Round ounces to 0.25oz increments
-            return round(amount * 4) / 4
+        from utils.unit_conversions import UnitConverter
+
+        return UnitConverter.round_to_brewing_precision(
+            amount, ingredient_type, unit_system
+        )
 
     def _get_minimum_change_for_system(self, unit_system: str) -> float:
         """Get minimum meaningful change for the unit system"""
@@ -2378,6 +2594,53 @@ class SuggestionGenerator:
             return 25  # 25g minimum change
         else:
             return 0.25  # 0.25oz minimum change
+
+    def _get_minimum_viable_amount(
+        self, ingredient_type: str, unit_system: str
+    ) -> float:
+        """Get minimum viable amount to prevent ingredient removal based on measurement capability"""
+        if ingredient_type == "hop":
+            # Hops: smallest measurable amount
+            if unit_system == "metric":
+                return 5  # 5g minimum
+            else:
+                return 0.25  # 0.25oz minimum
+        elif ingredient_type == "grain":
+            # Grains: smallest measurable amount
+            if unit_system == "metric":
+                return 25  # 25g minimum (1oz equivalent)
+            else:
+                return 1.0  # 1oz minimum
+        else:
+            # Other ingredients: use grain defaults
+            if unit_system == "metric":
+                return 25  # 25g minimum
+            else:
+                return 1.0  # 1oz minimum
+
+    def _calculate_hop_ibu_contribution(
+        self,
+        hop: Dict,
+        amount_oz: float,
+        time_min: int,
+        og: float,
+        batch_size_gal: float,
+    ) -> float:
+        """Calculate IBU contribution for a specific hop at given amount and timing"""
+        alpha_acid = float(hop.get("alpha_acid", 0))
+
+        if time_min <= 0 or alpha_acid <= 0 or amount_oz <= 0:
+            return 0.0
+
+        # Basic utilization factor (simplified Tinseth formula)
+        if hop.get("use") == "whirlpool":
+            utilization = min(0.30, time_min * 0.01)  # Lower utilization for whirlpool
+        else:
+            utilization = min(0.30, time_min * 0.006)  # Standard boil utilization
+
+        # IBU calculation: (amount_oz * alpha_acid * utilization * 75) / batch_size_gal
+        ibu_contribution = (amount_oz * alpha_acid * utilization * 75) / batch_size_gal
+        return ibu_contribution
 
     def _get_og_adjustment_changes(
         self, target: Dict, recipe_data: Dict, unit_system: str
@@ -2401,10 +2664,18 @@ class SuggestionGenerator:
         self, target: Dict, recipe_data: Dict, unit_system: str
     ) -> List[Dict]:
         """Extract IBU adjustment changes for unified suggestion"""
+        logger.info(
+            f"🔍 IBU adjustment requested: target={target['target_value']}, current={target['current_value']}"
+        )
         suggestion = self._suggest_ibu_adjustment(
             target["target_value"], target["current_value"], recipe_data, unit_system
         )
         changes = suggestion.get("changes", []) if suggestion else []
+        logger.info(f"🔍 IBU adjustment changes generated: {len(changes)} changes")
+        for i, change in enumerate(changes):
+            logger.info(
+                f"🔍   Change {i+1}: {change.get('ingredient_name')} ({change.get('ingredient_type')}) use='{change.get('ingredient_use')}' time={change.get('ingredient_time')} - {change.get('field')} from {change.get('current_value')} to {change.get('suggested_value')}"
+            )
         return changes
 
     def _get_fg_adjustment_changes(
@@ -2763,8 +3034,26 @@ class SuggestionGenerator:
             )
         else:
             # For ABV increase, prefer OG increase (traditional approach)
+            logger.info(
+                f"🔍 ABV Adjustment - Processing ABV increase from {current_abv:.1f}% to {target_abv:.1f}%"
+            )
+
+            # Check if OG is in range to understand constraints
+            style_analysis = recipe_data.get("style_analysis", {})
+            og_compliance = style_analysis.get("compliance", {}).get("og", {})
+            og_in_range = og_compliance.get("in_range", False)
+            og_style_range = og_compliance.get("style_range", {})
+
+            logger.info(
+                f"🔍 ABV Adjustment - Current OG: {current_og:.3f}, OG in range: {og_in_range}, Style range: {og_style_range}"
+            )
+
             estimated_og_change = abv_difference * 0.007
             target_og = current_og + estimated_og_change
+
+            logger.info(
+                f"🔍 ABV Adjustment - Estimated OG change: {estimated_og_change:.3f}, Target OG: {target_og:.3f}"
+            )
 
             return self._suggest_og_adjustment(
                 target_og, current_og, recipe_data, unit_system
@@ -3372,14 +3661,15 @@ class SuggestionGenerator:
                 "expected_abv": expected_abv,
                 "reason": reason,
                 "is_yeast_strain_change": True,
+                "action": "substitute",  # Mark as substitution, not removal
                 "new_yeast_data": best_yeast,  # Include full yeast data for replacement
             }
         )
 
         return {
-            "type": "abv_yeast_adjustment",
-            "title": f"Switch Yeast for Target ABV ({target_abv:.1f}%)",
-            "description": f"Use lower attenuation yeast to raise FG and reduce ABV while keeping OG in style range",
+            "type": "yeast_substitution",
+            "title": f"Yeast Substitution for Target ABV ({target_abv:.1f}%)",
+            "description": f"Replace yeast strain - use lower attenuation yeast to raise FG and reduce ABV while keeping OG in style range",
             "confidence": "high",
             "changes": changes,
             "priority": 5,
@@ -3618,7 +3908,13 @@ class CascadingEffectsCalculator:
         modified_recipe = copy.deepcopy(recipe)
         modified_ingredients = modified_recipe.get("ingredients", [])
 
+        logger.info(
+            f"🔍 Applying {len(changes)} changes to recipe with {len(modified_ingredients)} ingredients"
+        )
         for change in changes:
+            logger.info(
+                f"🔍 Processing change: {change.get('ingredient_name')} ({change.get('ingredient_type')}) use='{change.get('ingredient_use')}' time={change.get('ingredient_time')} - {change.get('field')} = {change.get('suggested_value')}"
+            )
             if change.get("is_new_ingredient"):
                 # Add new ingredient with proper database ingredient_id
                 new_ingredient_data = change.get("new_ingredient_data", {})
@@ -3705,6 +4001,9 @@ class CascadingEffectsCalculator:
                     logger.info(
                         f"🔍 Exact ID match failed for {ingredient_id}, trying smart matching for {ingredient_name}"
                     )
+                    logger.info(
+                        f"🔍 Change details: type={ingredient_type}, use={ingredient_use}, time={ingredient_time}, field={field}, value={new_value}"
+                    )
 
                     # Try to find by name first (simple case)
                     if ingredient_name:
@@ -3712,6 +4011,9 @@ class CascadingEffectsCalculator:
                             if ing.get("name") == ingredient_name:
                                 # For hops, check if we need to disambiguate by use/time
                                 if ingredient_type == "hop":
+                                    logger.info(
+                                        f"🔍 Examining hop match: {ingredient_name} - recipe has use='{ing.get('use')}' time={ing.get('time')}, looking for use='{ingredient_use}' time={ingredient_time}"
+                                    )
                                     # Check if this is the right hop addition by use and time
                                     if (
                                         ingredient_use
@@ -3723,6 +4025,7 @@ class CascadingEffectsCalculator:
                                             f"🔍 Found hop by name+use+time: {ingredient_name} {ingredient_use} {ingredient_time}min"
                                         )
                                         found = True
+                                        break
                                     elif (
                                         ingredient_use
                                         and ing.get("use") == ingredient_use
@@ -3731,18 +4034,25 @@ class CascadingEffectsCalculator:
                                             f"🔍 Found hop by name+use: {ingredient_name} {ingredient_use}"
                                         )
                                         found = True
+                                        break
                                     elif not ingredient_use and not ingredient_time:
                                         # No specific use/time specified, take first match
                                         logger.info(
                                             f"🔍 Found hop by name only: {ingredient_name}"
                                         )
                                         found = True
+                                        break
+                                    else:
+                                        logger.info(
+                                            f"🔍 Hop match rejected: {ingredient_name} - use/time mismatch"
+                                        )
                                 else:
                                     # Non-hop ingredient, name match is sufficient
                                     logger.info(
                                         f"🔍 Found {ingredient_type} by name: {ingredient_name}"
                                     )
                                     found = True
+                                    break
 
                                 if found:
                                     old_value = ing.get(field)

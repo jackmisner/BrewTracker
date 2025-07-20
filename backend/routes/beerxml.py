@@ -427,11 +427,17 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
             # Convert to appropriate unit based on detected system
             if detected_unit_system == "metric":
                 # Convert to grams for metric system
-                amount = amount_kg * 1000
+                amount = UnitConverter.round_to_brewing_precision(
+                    amount_kg * 1000, "grain", "metric"
+                )
                 unit = "g"
             else:
                 # Convert to ounces for imperial system (base unit consistency)
-                amount = UnitConverter.convert_weight(amount_kg, "kg", "oz")
+                amount = UnitConverter.round_to_brewing_precision(
+                    UnitConverter.convert_weight(amount_kg, "kg", "oz"),
+                    "grain",
+                    "imperial",
+                )
                 unit = "oz"
 
             # Calculate potential from yield
@@ -486,11 +492,17 @@ def parse_hops(recipe_elem, detected_unit_system=None):
             # Convert to appropriate unit based on detected system
             if detected_unit_system == "metric":
                 # Convert to grams for metric system
-                amount = amount_kg * 1000
+                amount = UnitConverter.round_to_brewing_precision(
+                    amount_kg * 1000, "hop", "metric"
+                )
                 unit = "g"
             else:
                 # Convert to ounces for imperial system (default)
-                amount = UnitConverter.convert_weight(amount_kg, "kg", "oz")
+                amount = UnitConverter.round_to_brewing_precision(
+                    UnitConverter.convert_weight(amount_kg, "kg", "oz"),
+                    "hop",
+                    "imperial",
+                )
                 unit = "oz"
 
             hop_name = get_text_content(elem, "NAME") or "Unknown Hop"

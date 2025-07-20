@@ -57,7 +57,11 @@ class UnitConverter:
 
         # Convert to grams first, then to target unit
         grams = amount * cls.WEIGHT_TO_GRAMS.get(from_unit_lower, 1.0)
-        return grams / cls.WEIGHT_TO_GRAMS.get(to_unit_lower, 1.0)
+        result = grams / cls.WEIGHT_TO_GRAMS.get(to_unit_lower, 1.0)
+
+        # Round to reasonable precision to avoid floating point errors
+        # For weights: 6 decimal places is sufficient for brewing precision
+        return round(result, 6)
 
     @classmethod
     def convert_to_pounds(cls, amount, unit):
@@ -83,7 +87,11 @@ class UnitConverter:
 
         # Convert to liters first, then to target unit
         liters = amount * cls.VOLUME_TO_LITERS.get(from_unit_lower, 1.0)
-        return liters / cls.VOLUME_TO_LITERS.get(to_unit_lower, 1.0)
+        result = liters / cls.VOLUME_TO_LITERS.get(to_unit_lower, 1.0)
+
+        # Round to reasonable precision to avoid floating point errors
+        # For volumes: 6 decimal places is sufficient for brewing precision
+        return round(result, 6)
 
     @classmethod
     def convert_to_gallons(cls, amount, unit):
@@ -94,6 +102,55 @@ class UnitConverter:
     def convert_to_liters(cls, amount, unit):
         """Convert various volume units to liters"""
         return cls.convert_volume(amount, unit, "l")
+
+    @classmethod
+    def round_to_brewing_precision(
+        cls, amount, ingredient_type="general", unit_system="imperial", unit="oz"
+    ):
+        """
+        Round amounts to brewing-friendly precision to avoid floating point errors
+
+        Args:
+            amount: The amount to round
+            ingredient_type: Type of ingredient (hop, grain, yeast, etc.)
+            unit_system: "imperial" or "metric"
+            unit: The unit of measurement
+
+        Returns:
+            Rounded amount with appropriate precision for brewing
+        """
+        if amount == 0:
+            return 0.0
+
+        # Imperial units (stored as oz for weight)
+        if unit_system == "imperial":
+            if ingredient_type == "grain":
+                # Grains: Integer oz (no decimal places)
+                return float(round(amount))
+            elif ingredient_type == "hop":
+                # Hops: 2 decimal places, normalized to nearest 0.25 oz
+                return round(round(amount * 4) / 4, 2)
+            elif ingredient_type == "yeast":
+                # Yeast: Integer quantities (no decimal places)
+                return float(round(amount))
+            else:
+                # General: 2 decimal places
+                return round(amount, 2)
+
+        # Metric units (stored as g for weight)
+        else:  # metric
+            if ingredient_type == "grain":
+                # Grains: Integers rounded to nearest 25g
+                return float(round(amount / 25) * 25)
+            elif ingredient_type == "hop":
+                # Hops: Integers rounded to nearest 5g
+                return float(round(amount / 5) * 5)
+            elif ingredient_type == "yeast":
+                # Yeast: Integer quantities
+                return float(round(amount))
+            else:
+                # General: round to nearest gram
+                return float(round(amount))
 
     @classmethod
     def detect_unit_system_from_display_batch_size(cls, display_batch_size):
@@ -244,6 +301,15 @@ class UnitConverter:
                     converted["amount"], current_unit, target_unit
                 )
                 converted["unit"] = target_unit
+
+                # Apply brewing precision rounding based on ingredient type
+                ingredient_type = converted.get("type", "general")
+                converted["amount"] = cls.round_to_brewing_precision(
+                    converted["amount"],
+                    ingredient_type,
+                    target_unit_system,
+                    target_unit,
+                )
 
             elif current_unit.lower() in [
                 key.lower() for key in cls.VOLUME_TO_LITERS.keys()

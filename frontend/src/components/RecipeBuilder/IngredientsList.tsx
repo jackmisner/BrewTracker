@@ -9,7 +9,10 @@ import "../../styles/AttenuationAnalytics.css";
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];
   onRemove: (ingredientId: string) => void;
-  onUpdate: (ingredientId: string, updatedIngredient: RecipeIngredient) => Promise<void>;
+  onUpdate: (
+    ingredientId: string,
+    updatedIngredient: RecipeIngredient
+  ) => Promise<void>;
   isEditing: boolean;
   compact?: boolean;
 }
@@ -25,12 +28,12 @@ interface ValidationResult {
   value?: any;
 }
 
-const IngredientsList: React.FC<IngredientsListProps> = ({ 
-  ingredients, 
-  onRemove, 
-  onUpdate, 
+const IngredientsList: React.FC<IngredientsListProps> = ({
+  ingredients,
+  onRemove,
+  onUpdate,
   isEditing,
-  compact = false
+  compact = false,
 }) => {
   const { formatValue } = useUnits();
 
@@ -54,7 +57,10 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     if (editingCell.ingredientId && inputRef.current) {
       inputRef.current.focus();
       // Only call select() on input elements that support it
-      if (inputRef.current instanceof HTMLInputElement && typeof inputRef.current.select === "function") {
+      if (
+        inputRef.current instanceof HTMLInputElement &&
+        typeof inputRef.current.select === "function"
+      ) {
         inputRef.current.select();
       }
     }
@@ -70,7 +76,10 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   }
 
   // Determine if a field should be editable for a given ingredient type
-  const isFieldEditable = (ingredientType: IngredientType, field: string): boolean => {
+  const isFieldEditable = (
+    ingredientType: IngredientType,
+    field: string
+  ): boolean => {
     const editableFields: Record<IngredientType | "adjunct", string[]> = {
       grain: ["amount", "color"],
       hop: ["amount", "use", "time", "alpha_acid"],
@@ -83,7 +92,11 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   };
 
   // Start editing a cell
-  const startEdit = (ingredientId: string, field: string, currentValue: any): void => {
+  const startEdit = (
+    ingredientId: string,
+    field: string,
+    currentValue: any
+  ): void => {
     if (!isEditing || !ingredientId) return; // Only allow editing when in edit mode and ID exists
 
     // Find the ingredient to check if field is editable
@@ -108,7 +121,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   const saveEdit = async (): Promise<void> => {
     const { ingredientId, field } = editingCell;
     if (!ingredientId || !field) return;
-    
+
     const ingredient = ingredients.find((ing) => ing.id === ingredientId);
 
     if (!ingredient) {
@@ -138,7 +151,11 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   };
 
   // Validate field value based on type
-  const validateField = (field: string, value: string, ingredient: RecipeIngredient): ValidationResult => {
+  const validateField = (
+    field: string,
+    value: string,
+    ingredient: RecipeIngredient
+  ): ValidationResult => {
     // Check if this field should be editable for this ingredient type
     if (!isFieldEditable(ingredient.type, field)) {
       return {
@@ -286,7 +303,9 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     displayValue: React.ReactNode
   ): React.ReactNode => {
     const isEditingThisCell =
-      editingCell.ingredientId === ingredient.id && editingCell.field === field && ingredient.id;
+      editingCell.ingredientId === ingredient.id &&
+      editingCell.field === field &&
+      ingredient.id;
     const fieldIsEditable = isFieldEditable(ingredient.type, field);
 
     if (!isEditingThisCell) {
@@ -298,7 +317,9 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
       return (
         <span
           className="editable-cell"
-          onClick={() => ingredient.id && startEdit(ingredient.id, field, currentValue)}
+          onClick={() =>
+            ingredient.id && startEdit(ingredient.id, field, currentValue)
+          }
           title="Click to edit"
         >
           {displayValue}
@@ -394,7 +415,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     if (ingredient.amount === undefined || ingredient.amount === null) {
       return "0 " + (ingredient.unit || "");
     }
-    
+
     const amount = parseFloat(ingredient.amount.toString());
     const unit = ingredient.unit;
 
@@ -404,7 +425,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     let measurementType = "weight";
     if (ingredient.type === "hop") {
       measurementType = "hop_weight";
-    } else if (ingredient.type === "other" ) {
+    } else if (ingredient.type === "other") {
       measurementType = "other";
     }
 
@@ -471,21 +492,22 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   };
 
   // Group ingredients by type for compact display
-  const groupedIngredients: { [key: string]: RecipeIngredient[] } = sortedIngredients.reduce((acc, ingredient) => {
-    const type = ingredient.type || "other";
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(ingredient);
-    return acc;
-  }, {} as { [key: string]: RecipeIngredient[] });
+  const groupedIngredients: { [key: string]: RecipeIngredient[] } =
+    sortedIngredients.reduce((acc, ingredient) => {
+      const type = ingredient.type || "other";
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(ingredient);
+      return acc;
+    }, {} as { [key: string]: RecipeIngredient[] });
 
   // Render ingredients in compact card format
   const renderCompactIngredients = () => {
     return (
       <div className={compact ? "ingredients-compact-container" : "card"}>
         <h3 className="card-title">Recipe Ingredients</h3>
-        
+
         <div className="ingredients-compact-grid">
           {Object.entries(groupedIngredients).map(([type, items]) => (
             <div key={type} className="ingredient-type-section">
@@ -501,27 +523,30 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                     <div className="ingredient-card-header">
                       <div className="ingredient-card-name">
                         <strong>{ingredient.name}</strong>
-                        {ingredient.type === "grain" && (ingredient as any).grain_type && (
-                          <span className="ingredient-subtype">
-                            {mapGrainType((ingredient as any).grain_type)}
-                          </span>
-                        )}
-                        {ingredient.type === "hop" && (ingredient as any).origin && (
-                          <span className="ingredient-origin">
-                            {(ingredient as any).origin}
-                          </span>
-                        )}
-                        {ingredient.type === "yeast" && (ingredient as any).manufacturer && (
-                          <span className="ingredient-manufacturer">
-                            {(ingredient as any).manufacturer}
-                          </span>
-                        )}
+                        {ingredient.type === "grain" &&
+                          (ingredient as any).grain_type && (
+                            <span className="ingredient-subtype">
+                              {mapGrainType((ingredient as any).grain_type)}
+                            </span>
+                          )}
+                        {ingredient.type === "hop" &&
+                          (ingredient as any).origin && (
+                            <span className="ingredient-origin">
+                              {(ingredient as any).origin}
+                            </span>
+                          )}
+                        {ingredient.type === "yeast" &&
+                          (ingredient as any).manufacturer && (
+                            <span className="ingredient-manufacturer">
+                              {(ingredient as any).manufacturer}
+                            </span>
+                          )}
                       </div>
                       <div className="ingredient-card-amount">
                         <strong>{formatIngredientAmount(ingredient)}</strong>
                       </div>
                     </div>
-                    
+
                     <div className="ingredient-card-details">
                       <div className="ingredient-card-info">
                         <span className="ingredient-detail">
@@ -531,38 +556,54 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                           <strong>Time:</strong> {formatTime(ingredient)}
                         </span>
                       </div>
-                      
-                      {ingredient.type === "hop" && (ingredient as any).alpha_acid && (
-                        <div className="ingredient-card-spec">
-                          <span className="spec-label">AA:</span>
-                          <span className="spec-value">{(ingredient as any).alpha_acid}%</span>
-                        </div>
-                      )}
-                      
-                      {ingredient.type === "grain" && (ingredient as any).color && (
-                        <div className="ingredient-card-spec">
-                          <span className="spec-label">Color:</span>
-                          <span className="spec-value">{(ingredient as any).color}°L</span>
-                        </div>
-                      )}
-                      
+
+                      {ingredient.type === "hop" &&
+                        (ingredient as any).alpha_acid && (
+                          <div className="ingredient-card-spec">
+                            <span className="spec-label">AA:</span>
+                            <span className="spec-value">
+                              {(ingredient as any).alpha_acid}%
+                            </span>
+                          </div>
+                        )}
+
+                      {ingredient.type === "grain" &&
+                        (ingredient as any).color && (
+                          <div className="ingredient-card-spec">
+                            <span className="spec-label">Color:</span>
+                            <span className="spec-value">
+                              {(ingredient as any).color}°L
+                            </span>
+                          </div>
+                        )}
+
                       {ingredient.type === "yeast" && (
                         <div className="ingredient-card-yeast">
-                          {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
+                          {(ingredient.improved_attenuation_estimate ||
+                            ingredient.attenuation) && (
                             <div className="yeast-attenuation">
                               <span className="spec-label">
-                                {ingredient.improved_attenuation_estimate ? "Enhanced Att:" : "Base Att:"}
+                                {ingredient.improved_attenuation_estimate
+                                  ? "Enhanced Att:"
+                                  : "Base Att:"}
                               </span>
                               <span className="spec-value">
-                                {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                {ingredient.improved_attenuation_estimate ||
+                                  ingredient.attenuation}
+                                %
                                 {ingredient.improved_attenuation_estimate && (
-                                  <span className="enhanced-indicator" title="Based on real-world fermentation data">📊</span>
+                                  <span
+                                    className="enhanced-indicator"
+                                    title="Based on real-world fermentation data"
+                                  >
+                                    📊
+                                  </span>
                                 )}
                               </span>
                             </div>
                           )}
                           {ingredient.ingredient_id && (
-                            <AttenuationBadge 
+                            <AttenuationBadge
                               ingredientId={ingredient.ingredient_id}
                               className="compact"
                             />
@@ -628,21 +669,24 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                 <td className="ingredient-name">
                   <div className="ingredient-name-container">
                     <strong>{ingredient.name}</strong>
-                    {ingredient.type === "grain" && (ingredient as any).grain_type && (
-                      <div className="ingredient-subtype">
-                        {mapGrainType((ingredient as any).grain_type)}
-                      </div>
-                    )}
-                    {ingredient.type === "hop" && (ingredient as any).origin && (
-                      <div className="ingredient-origin">
-                        {(ingredient as any).origin}
-                      </div>
-                    )}
-                    {ingredient.type === "yeast" && (ingredient as any).manufacturer && (
-                      <div className="ingredient-manufacturer">
-                        {(ingredient as any).manufacturer}
-                      </div>
-                    )}
+                    {ingredient.type === "grain" &&
+                      (ingredient as any).grain_type && (
+                        <div className="ingredient-subtype">
+                          {mapGrainType((ingredient as any).grain_type)}
+                        </div>
+                      )}
+                    {ingredient.type === "hop" &&
+                      (ingredient as any).origin && (
+                        <div className="ingredient-origin">
+                          {(ingredient as any).origin}
+                        </div>
+                      )}
+                    {ingredient.type === "yeast" &&
+                      (ingredient as any).manufacturer && (
+                        <div className="ingredient-manufacturer">
+                          {(ingredient as any).manufacturer}
+                        </div>
+                      )}
                   </div>
                 </td>
 
@@ -732,21 +776,31 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                       )}
                       {ingredient.type === "yeast" && (
                         <div className="detail-item yeast-attenuation">
-                          {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
+                          {(ingredient.improved_attenuation_estimate ||
+                            ingredient.attenuation) && (
                             <div className="traditional-attenuation">
                               <span className="detail-label">
-                                {ingredient.improved_attenuation_estimate ? "Enhanced Attenuation:" : "Base Attenuation:"}
+                                {ingredient.improved_attenuation_estimate
+                                  ? "Enhanced Attenuation:"
+                                  : "Base Attenuation:"}
                               </span>
                               <span className="detail-value">
-                                {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
+                                {ingredient.improved_attenuation_estimate ||
+                                  ingredient.attenuation}
+                                %
                                 {ingredient.improved_attenuation_estimate && (
-                                  <span className="enhanced-indicator" title="Based on real-world fermentation data">📊</span>
+                                  <span
+                                    className="enhanced-indicator"
+                                    title="Based on real-world fermentation data"
+                                  >
+                                    📊
+                                  </span>
                                 )}
                               </span>
                             </div>
                           )}
                           {ingredient.ingredient_id && (
-                            <AttenuationBadge 
+                            <AttenuationBadge
                               ingredientId={ingredient.ingredient_id}
                               className="compact"
                             />
