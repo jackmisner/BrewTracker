@@ -17,9 +17,9 @@ interface RecipeRefreshEventData {
   recipe_id: ID;
 }
 
-type CacheEventType = 
+type CacheEventType =
   | "brew-session-created"
-  | "brew-session-updated" 
+  | "brew-session-updated"
   | "brew-session-deleted"
   | "cache-cleared"
   | "recipe-refresh";
@@ -48,7 +48,10 @@ class CacheManager {
   /**
    * Remove event listener
    */
-  removeEventListener(event: CacheEventType, callback: CacheEventCallback): void {
+  removeEventListener(
+    event: CacheEventType,
+    callback: CacheEventCallback
+  ): void {
     if (this.eventListeners.has(event)) {
       const listeners = this.eventListeners.get(event)!;
       const index = listeners.indexOf(callback);
@@ -160,7 +163,9 @@ class CacheManager {
     BrewSessionService.clearRecipeCache(recipeId);
 
     // Emit event for components to react
-    this.emit("recipe-refresh", { recipe_id: recipeId } as RecipeRefreshEventData);
+    this.emit("recipe-refresh", {
+      recipe_id: recipeId,
+    } as RecipeRefreshEventData);
   }
 
   /**
