@@ -137,7 +137,7 @@ class MetricService {
       boil_time: parseInt((recipeData.boil_time || 60).toString()),
       ingredients: this.formatIngredientsForCalculation(ingredients),
     };
-    console.log("Prepared calculation data:", calculationData);
+
     return calculationData;
   }
 

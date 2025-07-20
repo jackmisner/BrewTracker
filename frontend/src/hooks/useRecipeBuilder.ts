@@ -511,6 +511,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           };
         });
 
+        // Wait for setState to complete and ensure we have the current ingredients
+        if (currentIngredients.length === 0) {
+          // Fallback: if currentIngredients is still empty, use state.ingredients directly
+          currentIngredients = state.ingredients;
+          console.log(`🔧 DEBUG: Using fallback ingredients array with ${currentIngredients.length} ingredients`);
+        }
 
         // Apply all updates to the current ingredients
         let updatedIngredients = [...currentIngredients];

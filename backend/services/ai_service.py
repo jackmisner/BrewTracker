@@ -635,6 +635,7 @@ class RecipeAnalysisEngine:
     ) -> List[Dict]:
         """Generate a summary of all changes made during internal optimization"""
         recipe_changes = []
+        
 
         # Track ingredient changes by comparing original and optimized recipes
         original_ingredients = {
@@ -646,38 +647,65 @@ class RecipeAnalysisEngine:
             for ing in optimized_recipe.get("ingredients", [])
         }
 
-        # Find modified ingredients
+        # Find modified ingredients and consolidate multiple changes per ingredient
         for ing_id, optimized_ing in optimized_ingredients.items():
             if ing_id in original_ingredients:
                 original_ing = original_ingredients[ing_id]
-
+                
+                # Collect all changes for this ingredient
+                ingredient_changes = []
+                
                 # Check for amount changes
                 if original_ing.get("amount") != optimized_ing.get("amount"):
-                    recipe_changes.append(
-                        {
-                            "type": "ingredient_modified",
-                            "ingredient_name": optimized_ing.get("name"),
-                            "field": "amount",
-                            "original_value": original_ing.get("amount"),
-                            "optimized_value": optimized_ing.get("amount"),
-                            "unit": optimized_ing.get("unit"),
-                            "change_reason": "Recipe optimization to meet style guidelines",
-                        }
-                    )
+                    ingredient_changes.append({
+                        "field": "amount",
+                        "original_value": original_ing.get("amount"),
+                        "optimized_value": optimized_ing.get("amount"),
+                        "unit": optimized_ing.get("unit"),
+                        "change_reason": "Recipe optimization to meet style guidelines",
+                    })
 
                 # Check for time changes (hops)
                 if original_ing.get("time") != optimized_ing.get("time"):
-                    recipe_changes.append(
-                        {
-                            "type": "ingredient_modified",
-                            "ingredient_name": optimized_ing.get("name"),
-                            "field": "time",
-                            "original_value": original_ing.get("time"),
-                            "optimized_value": optimized_ing.get("time"),
-                            "unit": "min",
-                            "change_reason": "Hop timing optimization for better brewing practice",
-                        }
-                    )
+                    ingredient_changes.append({
+                        "field": "time",
+                        "original_value": original_ing.get("time"),
+                        "optimized_value": optimized_ing.get("time"),
+                        "unit": "min",
+                        "change_reason": "Hop timing optimization for better brewing practice",
+                    })
+                
+                # If there are multiple changes to the same ingredient, consolidate them
+                if len(ingredient_changes) > 1:
+                    # Create a consolidated change with multiple fields
+                    consolidated_change = {
+                        "type": "ingredient_modified",
+                        "ingredient_name": optimized_ing.get("name"),
+                        "ingredient_id": ing_id,
+                        "ingredient_type": optimized_ing.get("type"),
+                        "ingredient_use": optimized_ing.get("use"),
+                        "ingredient_time": original_ing.get("time"),  # Use original time for matching
+                        "changes": ingredient_changes,  # Multiple field changes
+                        "change_reason": f"Multiple optimizations: {', '.join([c['change_reason'] for c in ingredient_changes])}",
+                    }
+                    recipe_changes.append(consolidated_change)
+                elif len(ingredient_changes) == 1:
+                    # Single change, create individual change object
+                    single_change = ingredient_changes[0]
+                    change_obj = {
+                        "type": "ingredient_modified",
+                        "ingredient_name": optimized_ing.get("name"),
+                        "ingredient_id": ing_id,
+                        "ingredient_type": optimized_ing.get("type"),
+                        "ingredient_use": optimized_ing.get("use"),
+                        "ingredient_time": original_ing.get("time"),  # Use original time for matching
+                        "field": single_change["field"],
+                        "original_value": single_change["original_value"],
+                        "optimized_value": single_change["optimized_value"],
+                        "unit": single_change["unit"],
+                        "change_reason": single_change["change_reason"],
+                    }
+                    recipe_changes.append(change_obj)
 
                 # Check for ingredient substitutions (yeast changes)
                 if original_ing.get("name") != optimized_ing.get("name"):
@@ -732,6 +760,7 @@ class RecipeAnalysisEngine:
                 }
             )
 
+        
         return recipe_changes
 
     def _select_best_suggestion_for_internal_optimization(
@@ -1585,7 +1614,7 @@ class SuggestionGenerator:
     ) -> Dict:
         """Advanced OG adjustment with multi-strategy decision making"""
         og_difference = target_og - current_og
-
+        
         # For OG reduction (when current > target), use advanced strategies
         if og_difference < 0:
             return self._suggest_og_reduction(
@@ -1641,15 +1670,18 @@ class SuggestionGenerator:
     ) -> Dict:
         """Traditional OG increase via base malt adjustments"""
         og_difference = target_og - current_og
-
+        
         # Find base malts
         base_malts = [
             ing
             for ing in recipe_data.get("ingredients", [])
             if ing.get("type") == "grain" and ing.get("grain_type") == "base_malt"
         ]
+        
+        logger.info(f"🔍 ABV Increase: Target OG {target_og:.3f}, found {len(base_malts)} base malts")
 
         if not base_malts:
+            logger.warning("🔍 ABV Increase: No base malts found - cannot increase OG")
             return None
 
         changes = []
@@ -1659,6 +1691,10 @@ class SuggestionGenerator:
             convert_to_pounds(ing.get("amount", 0), ing.get("unit", "lb"))
             for ing in base_malts
         )
+        
+        # Determine multiplier for small vs large OG changes
+        multiplier = 25 if og_difference < 0.010 else 10
+        logger.info(f"🔍 ABV Increase: Total base weight {total_base_weight:.2f}lbs, OG increase needed: {og_difference:.3f} (using {multiplier}x multiplier)")
 
         for malt in base_malts:
             current_amount = malt.get("amount", 0)
@@ -1679,8 +1715,8 @@ class SuggestionGenerator:
                 current_weight_lb / total_base_weight if total_base_weight > 0 else 0
             )
 
-            # Calculate needed adjustment (simplified brewing math)
-            adjustment_lb = (og_difference * 10) * proportion  # Rough approximation
+            # Calculate needed adjustment using the determined multiplier
+            adjustment_lb = (og_difference * multiplier) * proportion
             # Use minimum viable amount to prevent unintended ingredient removal
             minimum_viable = self._get_minimum_viable_amount("grain", unit_system)
             minimum_viable_lb = (
@@ -1701,8 +1737,9 @@ class SuggestionGenerator:
             )
             min_change = self._get_minimum_change_for_system(unit_system)
 
-            # Only suggest meaningful changes
-            if abs(new_amount_base - current_amount_base) >= min_change:
+            # Check if change is above minimum threshold
+            change_amount = abs(new_amount_base - current_amount_base)
+            if change_amount >= min_change:
                 changes.append(
                     {
                         "ingredient_id": malt.get("ingredient_id"),
@@ -1714,8 +1751,12 @@ class SuggestionGenerator:
                         "reason": f"Increase base malt to reach target OG of {target_og:.3f}",
                     }
                 )
+                logger.info(f"✅ ABV Increase: {malt.get('name')} {current_amount_base:.1f} -> {new_amount_base:.1f} {base_unit}")
+            else:
+                logger.warning(f"❌ ABV Increase: {malt.get('name')} change {change_amount:.1f}{base_unit} below minimum {min_change}")
 
         if changes:
+            logger.info(f"✅ ABV Increase: Generated {len(changes)} base malt changes")
             return {
                 "type": "og_increase",
                 "title": f"Increase Base Malts for Target OG ({target_og:.3f})",
@@ -1725,6 +1766,7 @@ class SuggestionGenerator:
                 "priority": 5,
             }
 
+        logger.warning("❌ ABV Increase: No viable changes generated - adjustments too small")
         return None
 
     def _suggest_srm_adjustment(
@@ -2976,8 +3018,20 @@ class SuggestionGenerator:
             )
         else:
             # For ABV increase, prefer OG increase (traditional approach)
+            logger.info(f"🔍 ABV Adjustment - Processing ABV increase from {current_abv:.1f}% to {target_abv:.1f}%")
+            
+            # Check if OG is in range to understand constraints
+            style_analysis = recipe_data.get("style_analysis", {})
+            og_compliance = style_analysis.get("compliance", {}).get("og", {})
+            og_in_range = og_compliance.get("in_range", False)
+            og_style_range = og_compliance.get("style_range", {})
+            
+            logger.info(f"🔍 ABV Adjustment - Current OG: {current_og:.3f}, OG in range: {og_in_range}, Style range: {og_style_range}")
+            
             estimated_og_change = abv_difference * 0.007
             target_og = current_og + estimated_og_change
+            
+            logger.info(f"🔍 ABV Adjustment - Estimated OG change: {estimated_og_change:.3f}, Target OG: {target_og:.3f}")
 
             return self._suggest_og_adjustment(
                 target_og, current_og, recipe_data, unit_system

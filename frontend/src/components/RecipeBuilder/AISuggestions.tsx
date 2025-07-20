@@ -44,7 +44,8 @@ interface AISuggestionsProps {
   recipe: Recipe;
   ingredients: RecipeIngredient[];
   metrics?: RecipeMetrics;
-  onBulkIngredientUpdate: (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient> }>) => Promise<void>;
+  onBulkIngredientUpdate: (updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }>) => Promise<void>;
+  onUpdateIngredient: (ingredientId: string, updatedData: Partial<RecipeIngredient>) => Promise<void>;
   onRemoveIngredient?: (ingredientId: string) => Promise<void>;
   disabled?: boolean;
 }
@@ -54,6 +55,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   ingredients,
   metrics,
   onBulkIngredientUpdate,
+  onUpdateIngredient,
   onRemoveIngredient,
   disabled = false
 }) => {
@@ -89,9 +91,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const convertBackendChangesToFrontend = (backendChanges: any[]): IngredientChange[] => {
     if (!Array.isArray(backendChanges)) return [];
     
+    console.log('🔄 DEBUG: convertBackendChangesToFrontend input', { backendChanges });
+    
     return backendChanges.map((change, index) => {
+      console.log(`🔄 DEBUG: Converting backend change ${index}`, { change });
       
-      return {
+      const frontendChange = {
         ingredientId: change.ingredient_id || `change-${index}`,
         ingredientName: change.ingredient_name || change.name || 'Unknown Ingredient',
         field: change.field || 'amount',
@@ -120,6 +125,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           use: change.use || change.new_ingredient_data?.use
         } as CreateRecipeIngredientData & { type: string } : undefined
       };
+      
+      console.log(`✅ DEBUG: Converted to frontend change ${index}`, { 
+        original: change,
+        converted: frontendChange 
+      });
+      
+      return frontendChange;
     });
   };
 
@@ -180,6 +192,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         unit_system: unitSystem
       });
 
+      console.log('🤖 DEBUG: Backend AI response', { 
+        response,
+        optimizationPerformed: response.optimization_performed,
+        suggestionsCount: response.suggestions?.length || 0
+      });
 
       // Check if internal optimization was performed
       if (response.optimization_performed && response.optimized_recipe) {
@@ -230,25 +247,55 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const applySuggestion = async (suggestion: Suggestion): Promise<void> => {
     if (disabled) return;
 
+    console.log('🔍 DEBUG: AISuggestions.applySuggestion started', {
+      suggestionId: suggestion.id,
+      suggestionTitle: suggestion.title,
+      changesCount: suggestion.changes.length,
+      changes: suggestion.changes,
+      currentIngredients: ingredients.map(ing => ({ 
+        id: ing.id, 
+        name: ing.name, 
+        type: ing.type, 
+        amount: ing.amount, 
+        unit: ing.unit,
+        use: ing.use,
+        time: ing.time 
+      }))
+    });
+
+    // ANALYSIS: Check if we have multiple changes for the same ingredient
+    const changesByIngredient = suggestion.changes.reduce((acc, change) => {
+      const key = `${change.ingredientName}_${change.ingredientId}`;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(change);
+      return acc;
+    }, {} as Record<string, typeof suggestion.changes>);
+
+    console.log('🔍 DEBUG: Changes grouped by ingredient', { 
+      changesByIngredient,
+      multipleChangesForSameIngredient: Object.values(changesByIngredient).some(changes => changes.length > 1)
+    });
 
     try {
-      // Prepare bulk updates - handle async ingredient lookups first
-      let response: any = {};
-      
-      // Only fetch ingredients if we have new ingredients to add
-      const hasNewIngredients = suggestion.changes.some(change => change.isNewIngredient);
-      if (hasNewIngredients) {
-        response = await Services.Data.ingredient.fetchIngredients();
-      }
-
-      const updates = await Promise.all(suggestion.changes.map(async (change) => {
+      // Process each change separately for better error handling and clearer logic
+      for (const [index, change] of suggestion.changes.entries()) {
+        console.log(`🔍 DEBUG: Processing change ${index + 1}/${suggestion.changes.length}`, {
+          change,
+          isNewIngredient: change.isNewIngredient,
+          ingredientId: change.ingredientId,
+          ingredientName: change.ingredientName,
+          field: change.field,
+          currentValue: change.currentValue,
+          suggestedValue: change.suggestedValue
+        });
         // Handle new ingredient additions
         if (change.isNewIngredient && change.newIngredientData) {
-          // Search for the ingredient by name in the grouped structure
-          // The service returns a grouped structure: { grain: [], hop: [], yeast: [], other: [] }
+          // Fetch available ingredients for new ingredient addition
+          const availableIngredients = await Services.Data.ingredient.fetchIngredients();
+          
           // Get the type from the backend suggestion, defaulting to 'grain'
           const ingredientType = (change.newIngredientData as any).type || 'grain';
-          const ingredientGroup = response[ingredientType as keyof typeof response] || [];
+          const ingredientGroup = availableIngredients[ingredientType as keyof typeof availableIngredients] || [];
           
           const foundIngredient = ingredientGroup.find((ing: any) => 
             ing.name.toLowerCase().includes(change.newIngredientData!.name!.toLowerCase()) ||
@@ -259,78 +306,151 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             throw new Error(`Ingredient "${change.newIngredientData.name}" not found in database. Please add this ingredient manually from the ingredients list.`);
           }
 
-          // For new ingredients, create the full ingredient data using the found ingredient
+          // For new ingredients, use bulk update with the isNewIngredient flag
           const newIngredientData: Partial<RecipeIngredient> = {
             ingredient_id: foundIngredient.ingredient_id,
-            name: foundIngredient.name, // Use the exact name from database
+            name: foundIngredient.name,
             type: foundIngredient.type as any,
             amount: Number(change.newIngredientData.amount!),
             unit: change.newIngredientData.unit! as any,
             grain_type: foundIngredient.grain_type,
             color: foundIngredient.color,
             potential: foundIngredient.potential || 1.035,
-            use: 'mash'
+            use: change.newIngredientData.use || (foundIngredient.type === 'hop' ? 'boil' : 'mash'),
+            time: change.newIngredientData.time || (foundIngredient.type === 'hop' ? 60 : undefined),
+            alpha_acid: foundIngredient.alpha_acid,
+            attenuation: foundIngredient.attenuation
           };
 
-          return {
+          await onBulkIngredientUpdate([{
             ingredientId: change.ingredientId,
             updatedData: newIngredientData,
             isNewIngredient: true
-          };
+          }]);
+          continue;
         }
 
-        // Handle existing ingredient modifications
-        // Try to find by ingredient_id first, then by name as fallback
+        // Handle existing ingredient modifications using the direct update mechanism
+        // Find the existing ingredient by ID first, then by name as fallback
+        console.log('🔍 DEBUG: Looking for existing ingredient', {
+          searchingForId: change.ingredientId,
+          searchingForName: change.ingredientName,
+          availableIngredients: ingredients.map(ing => ({ 
+            id: ing.id, 
+            name: ing.name, 
+            type: ing.type, 
+            use: ing.use, 
+            time: ing.time 
+          }))
+        });
+
         let existingIngredient = ingredients.find(ing => ing.id === change.ingredientId);
+        console.log('🔍 DEBUG: Found by ID?', { 
+          found: !!existingIngredient, 
+          ingredient: existingIngredient ? { 
+            id: existingIngredient.id, 
+            name: existingIngredient.name, 
+            use: existingIngredient.use, 
+            time: existingIngredient.time 
+          } : null 
+        });
+
         if (!existingIngredient) {
           // Fallback: find by name if ID match fails
           existingIngredient = ingredients.find(ing => ing.name === change.ingredientName);
+          console.log('🔍 DEBUG: Found by name?', { 
+            found: !!existingIngredient, 
+            ingredient: existingIngredient ? { 
+              id: existingIngredient.id, 
+              name: existingIngredient.name, 
+              use: existingIngredient.use, 
+              time: existingIngredient.time 
+            } : null 
+          });
         }
+
+        // ENHANCED HOP MATCHING: For hops, try to find by name + current use + current time
+        // This handles cases where the backend sends a generic ingredient ID but we need to match
+        // the specific hop addition (since hops can appear multiple times with different use/time)
+        if (!existingIngredient && change.ingredientName) {
+          const hopCandidates = ingredients.filter(ing => 
+            ing.name === change.ingredientName && ing.type === 'hop'
+          );
+          
+          console.log('🔍 DEBUG: Hop candidates found', { 
+            candidates: hopCandidates.map(hop => ({
+              id: hop.id,
+              name: hop.name,
+              use: hop.use,
+              time: hop.time,
+              amount: hop.amount
+            }))
+          });
+
+          // Try to match by current value if it's provided
+          if (hopCandidates.length > 0 && change.currentValue !== undefined) {
+            if (change.field === 'amount') {
+              // Match by current amount
+              existingIngredient = hopCandidates.find(hop => hop.amount === change.currentValue);
+            } else if (change.field === 'time') {
+              // Match by current time
+              existingIngredient = hopCandidates.find(hop => hop.time === change.currentValue);
+            }
+            
+            console.log('🔍 DEBUG: Enhanced hop matching result', {
+              field: change.field,
+              currentValue: change.currentValue,
+              found: !!existingIngredient,
+              ingredient: existingIngredient ? {
+                id: existingIngredient.id,
+                name: existingIngredient.name,
+                use: existingIngredient.use,
+                time: existingIngredient.time,
+                amount: existingIngredient.amount
+              } : null
+            });
+          }
+
+          // If still not found and only one hop candidate, use it
+          if (!existingIngredient && hopCandidates.length === 1) {
+            existingIngredient = hopCandidates[0];
+            console.log('🔍 DEBUG: Using single hop candidate', {
+              ingredient: {
+                id: existingIngredient.id,
+                name: existingIngredient.name,
+                use: existingIngredient.use,
+                time: existingIngredient.time
+              }
+            });
+          }
+        }
+
         if (!existingIngredient) {
-          // Special case: If this is an ingredient that was added during internal optimization,
-          // treat it as a new ingredient addition instead of a modification
-          
-          // Fetch ingredients from database to find the missing ingredient
-          if (!hasNewIngredients) {
-            response = await Services.Data.ingredient.fetchIngredients();
-          }
-          
-          // Search for the ingredient by name in all ingredient types
-          let foundIngredient: any = null;
-          const ingredientTypes = ['grain', 'hop', 'yeast', 'other'];
-          
-          for (const type of ingredientTypes) {
-            const ingredientGroup = response[type as keyof typeof response] || [];
-            foundIngredient = ingredientGroup.find((ing: any) => 
-              ing.name.toLowerCase().includes(change.ingredientName.toLowerCase()) ||
-              change.ingredientName.toLowerCase().includes(ing.name.toLowerCase())
-            );
-            if (foundIngredient) break;
-          }
-
-          if (!foundIngredient) {
-            throw new Error(`Ingredient "${change.ingredientName}" not found in database. This ingredient may have been added during optimization but couldn't be located.`);
-          }
-
-          // Create new ingredient data using the found ingredient
-          const newIngredientData: Partial<RecipeIngredient> = {
-            ingredient_id: foundIngredient.ingredient_id,
-            name: foundIngredient.name,
-            type: foundIngredient.type as any,
-            amount: Number(change.suggestedValue),
-            unit: change.unit || 'g' as any,
-            grain_type: foundIngredient.grain_type,
-            color: foundIngredient.color,
-            potential: foundIngredient.potential || 1.035,
-            use: 'mash'
-          };
-
-          return {
-            ingredientId: change.ingredientId,
-            updatedData: newIngredientData,
-            isNewIngredient: true
-          };
+          console.error('❌ DEBUG: Ingredient not found!', {
+            searchedId: change.ingredientId,
+            searchedName: change.ingredientName,
+            availableIngredients: ingredients.map(ing => ({ id: ing.id, name: ing.name }))
+          });
+          throw new Error(`Ingredient "${change.ingredientName}" not found in recipe. Cannot modify non-existent ingredient.`);
         }
+
+        console.log('✅ DEBUG: Found existing ingredient to modify', {
+          foundIngredient: {
+            id: existingIngredient.id,
+            name: existingIngredient.name,
+            type: existingIngredient.type,
+            amount: existingIngredient.amount,
+            unit: existingIngredient.unit,
+            use: existingIngredient.use,
+            time: existingIngredient.time
+          },
+          changeToApply: {
+            field: change.field,
+            currentValue: change.currentValue,
+            suggestedValue: change.suggestedValue,
+            unit: change.unit
+          }
+        });
 
         // Special handling for yeast strain changes - replace entire yeast ingredient
         if ((change as any).is_yeast_strain_change && change.field === 'ingredient_id') {
@@ -339,7 +459,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           const suggestedAttenuation = (change as any).suggested_attenuation;
           
           if (newYeastData) {
-            // Replace the entire yeast ingredient with database yeast data
+            // Replace the entire yeast ingredient using direct update
             const updateData: Partial<RecipeIngredient> = {
               ingredient_id: newYeastData.id,
               name: newYeastData.name,
@@ -351,70 +471,52 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               use: existingIngredient.use || 'primary'
             };
             
-            
-            return {
-              ingredientId: existingIngredient.id || change.ingredientId,
-              updatedData: updateData
-            };
+            await onUpdateIngredient(existingIngredient.id!, updateData);
+            continue;
           } else if (suggestedName && suggestedAttenuation) {
             // Fallback: update name and attenuation manually
             const updateData: Partial<RecipeIngredient> = {
               name: suggestedName,
-              attenuation: suggestedAttenuation,
-              ingredient_id: existingIngredient.ingredient_id,
-              unit: existingIngredient.unit
+              attenuation: suggestedAttenuation
             };
             
-            
-            return {
-              ingredientId: existingIngredient.id || change.ingredientId,
-              updatedData: updateData
-            };
+            await onUpdateIngredient(existingIngredient.id!, updateData);
+            continue;
           }
         }
 
-        // Regular field change handling
+        // Regular field change handling - use direct ingredient update
         const updateData: Partial<RecipeIngredient> = {
           [change.field]: change.suggestedValue,
         };
 
-        // Add required validation fields only if they're not being changed
-        if ((change.field as string) !== 'ingredient_id') {
-          updateData.ingredient_id = existingIngredient.ingredient_id;
-        }
-        
-        // CRITICAL FIX: When backend provides a unit, use it instead of the original unit
-        // This handles the case where backend sends amounts in base units (g/oz) but 
-        // original ingredient was in different units (kg/lb)
-        if ((change.field as string) !== 'unit') {
-          // Check if the backend suggestion includes a unit (from dual-system conversion)
-          if (change.unit && change.field === 'amount') {
-            // For amount changes, use the backend's suggested unit to ensure unit consistency
-            updateData.unit = change.unit as any;
-          } else {
-            // For non-amount changes or when no backend unit provided, keep original unit
-            updateData.unit = existingIngredient.unit;
-          }
+        // When backend provides a unit (for amount changes), use it for consistency
+        if (change.unit && change.field === 'amount') {
+          updateData.unit = change.unit as any;
         }
 
-        // Include hop-specific fields if it's a hop
-        if (existingIngredient.type === 'hop') {
-          if (change.field !== 'use') {
-            updateData.use = existingIngredient.use;
-          }
-          if (change.field !== 'time') {
-            updateData.time = existingIngredient.time;
-          }
+        console.log('🔧 DEBUG: About to call onUpdateIngredient', {
+          ingredientId: existingIngredient.id,
+          updateData,
+          functionExists: typeof onUpdateIngredient === 'function'
+        });
+
+        // Use the direct update mechanism that leverages existing validation and state management
+        try {
+          await onUpdateIngredient(existingIngredient.id!, updateData);
+          console.log('✅ DEBUG: onUpdateIngredient call succeeded', {
+            ingredientId: existingIngredient.id,
+            updateData
+          });
+        } catch (updateError) {
+          console.error('❌ DEBUG: onUpdateIngredient call failed', {
+            ingredientId: existingIngredient.id,
+            updateData,
+            error: updateError
+          });
+          throw updateError;
         }
-
-        return {
-          ingredientId: existingIngredient.id || change.ingredientId, // Use the actual ingredient ID from the found ingredient
-          updatedData: updateData
-        };
-      }));
-
-      // Apply all changes as a single bulk update
-      await onBulkIngredientUpdate(updates);
+      }
 
       // Mark suggestion as applied
       setAppliedSuggestions(prev => new Set(prev).add(suggestion.id));
@@ -449,202 +551,259 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
 
     try {
-      // Convert optimized recipe ingredients to the format expected by onBulkIngredientUpdate
-      const optimizedIngredients = optimization.optimizedRecipe.ingredients || [];
+      // BETTER APPROACH: Use the recipe changes to apply individual updates
+      // This is much more reliable than trying to match optimized ingredients
+      const recipeChanges = optimization.recipeChanges || [];
       
-      console.log('🔍 DEBUG: Frontend recipe reconciliation starting:');
-      console.log('🔍 DEBUG: Current ingredients in frontend:', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
-      console.log('🔍 DEBUG: Optimized ingredients from backend:', optimizedIngredients.map((ing: any) => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
+      // Filter out summary changes and process only ingredient modifications (both single field and consolidated)
+      const ingredientChanges = recipeChanges.filter(change => 
+        change.type === 'ingredient_modified' && 
+        change.ingredient_name && 
+        (change.field || (change.changes && Array.isArray(change.changes)))  // Accept both formats
+      );
       
-      // CRITICAL FIX: Match ingredients by ingredient_id and name to determine which are updates vs new
-      const updates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient>; isNewIngredient?: boolean }> = [];
-      const optimizedIngredientIds = new Set();
+      console.log('🔧 DEBUG: Found ingredient changes to apply', { 
+        ingredientChanges,
+        changeCount: ingredientChanges.length 
+      });
+
+      // UNIFIED APPROACH: Process all ingredient changes as a single bulk update
+      // This eliminates race conditions between hop and grain processing
+      console.log(`🔧 DEBUG: Processing all ${ingredientChanges.length} ingredient changes as unified bulk update`);
+      const allBulkUpdates: Array<{ ingredientId: string; updatedData: Partial<RecipeIngredient> }> = [];
       
-      // Process optimized ingredients: update existing ones or add new ones
-      for (const optimizedIng of optimizedIngredients) {
-        console.log(`🔍 DEBUG: Processing optimized ingredient: ${optimizedIng.name} (${optimizedIng.type}) use='${optimizedIng.use}' time=${optimizedIng.time}`);
+      for (const change of ingredientChanges) {
+        const isConsolidatedChange = change.changes && Array.isArray(change.changes);
         
-        // Try to find matching existing ingredient with improved hop matching
-        const existingIngredient = ingredients.find(ing => {
-          // For hops, check if this is a modification of an existing hop by looking at recipe changes
-          if (optimizedIng.type === 'hop' && ing.type === 'hop') {
-            // First try exact match (name + use + time)
-            const exactMatch = ing.name === optimizedIng.name && 
-                              ing.use === optimizedIng.use && 
-                              ing.time === optimizedIng.time;
-            
-            if (exactMatch) {
-              console.log(`🔍 DEBUG: Hop exact match: ${ing.name} use='${ing.use}' time=${ing.time}`);
-              return true;
-            }
-            
-            // Check if this is a timing modification of the same hop
-            const isTimingModification = ing.ingredient_id === optimizedIng.ingredient_id && 
-                                        ing.use === optimizedIng.use && 
-                                        ing.name === optimizedIng.name &&
-                                        ing.time !== optimizedIng.time;
-            
-            if (isTimingModification) {
-              // Verify this is actually a timing change from the recipe changes
-              const hasTimingChange = optimization.recipeChanges.some(change => 
-                change.ingredient_name === ing.name &&
-                change.ingredient_type === 'hop' &&
-                change.ingredient_use === ing.use &&
-                change.ingredient_time === ing.time &&
-                change.field === 'time'
-              );
-              
-              console.log(`🔍 DEBUG: Hop timing modification check: ${ing.name} use='${ing.use}' time=${ing.time}->${optimizedIng.time} => ${hasTimingChange}`);
-              return hasTimingChange;
-            }
-            
-            console.log(`🔍 DEBUG: Hop no match: ${ing.name} use='${ing.use}' time=${ing.time} vs ${optimizedIng.name} use='${optimizedIng.use}' time=${optimizedIng.time}`);
-            return false;
+        if (isConsolidatedChange) {
+          console.log(`🔧 DEBUG: Processing consolidated change: ${change.ingredient_name} with ${change.changes.length} field modifications`);
+        } else {
+          console.log(`🔧 DEBUG: Processing single change: ${change.ingredient_name} ${change.field} ${change.original_value} -> ${change.optimized_value}`);
+        }
+        
+        // Find target ingredient using appropriate matching logic
+        let targetIngredient: any = null;
+        
+        if (change.ingredient_type === 'hop') {
+          // For hops, match by name + use + original time (to target the right hop addition)
+          targetIngredient = ingredients.find(ing => 
+            ing.name === change.ingredient_name &&
+            ing.type === 'hop' &&
+            ing.use === change.ingredient_use &&
+            ing.time === change.ingredient_time  // Match the ORIGINAL time before optimization
+          );
+        } else {
+          // For non-hops, match by ingredient_id first (most reliable), then fall back to name
+          if (change.ingredient_id) {
+            targetIngredient = ingredients.find(ing => ing.ingredient_id === change.ingredient_id && ing.name === change.ingredient_name);
           }
-          
-          // For non-hops, try exact ingredient_id match first
-          if (ing.ingredient_id === optimizedIng.ingredient_id) {
-            console.log(`🔍 DEBUG: Found ingredient by ID match: ${ing.name}`);
-            return true;
+          if (!targetIngredient) {
+            targetIngredient = ingredients.find(ing => ing.name === change.ingredient_name);
           }
-          
-          // For non-hops, name match is sufficient
-          const matches = ing.name === optimizedIng.name;
-          if (matches) {
-            console.log(`🔍 DEBUG: Found ingredient by name match: ${ing.name}`);
-          }
-          return matches;
+        }
+        
+        console.log(`🔧 DEBUG: Change targeting ${change.ingredient_type} ${change.ingredient_name}`, {
+          found: !!targetIngredient
         });
-        
-        console.log(`🔍 DEBUG: Match result for ${optimizedIng.name}: ${existingIngredient ? 'FOUND' : 'NOT FOUND'}`);
-        
-        
-        
-        
-        if (existingIngredient) {
-          // Update existing ingredient
-          // CRITICAL FIX: Use unique identifier for hops that combines ingredient_id + use + time
-          const uniqueKey = optimizedIng.type === 'hop' 
-            ? `${optimizedIng.ingredient_id}-${optimizedIng.use}-${optimizedIng.time}`
-            : existingIngredient.id;
-          optimizedIngredientIds.add(uniqueKey);
-          updates.push({
-            ingredientId: existingIngredient.id!,
-            updatedData: {
-              ingredient_id: optimizedIng.ingredient_id,
-              name: optimizedIng.name,
-              type: optimizedIng.type as any,
-              amount: optimizedIng.amount,
-              unit: optimizedIng.unit as any,
-              grain_type: optimizedIng.grain_type,
-              color: optimizedIng.color,
-              potential: optimizedIng.potential,
-              alpha_acid: optimizedIng.alpha_acid,
-              time: optimizedIng.time,
-              use: optimizedIng.use,
-              attenuation: optimizedIng.attenuation
-            },
-            isNewIngredient: false
+
+        if (targetIngredient) {
+          // Find the actual ingredient in the ingredients array to get the correct ID
+          const actualIngredient = ingredients.find(ing => 
+            ing.ingredient_id === targetIngredient.ingredient_id && 
+            ing.name === targetIngredient.name &&
+            ing.use === targetIngredient.use &&
+            ing.time === targetIngredient.time
+          );
+          
+          if (!actualIngredient) {
+            console.error(`❌ DEBUG: Could not find actual ingredient in array for ${targetIngredient.name}`);
+            continue;
+          }
+          
+          let updateData: Partial<RecipeIngredient>;
+          
+          if (isConsolidatedChange) {
+            // Handle consolidated change with multiple fields
+            updateData = {
+              // Include essential fields from existing ingredient to pass validation
+              ingredient_id: targetIngredient.ingredient_id,
+              use: targetIngredient.use,
+              time: targetIngredient.time  // Start with current time
+            };
+            
+            // Apply all field changes
+            for (const fieldChange of change.changes) {
+              updateData[fieldChange.field as keyof RecipeIngredient] = fieldChange.optimized_value;
+              
+              // Add unit if specified (for amount changes)
+              if (fieldChange.field === 'amount' && fieldChange.unit) {
+                updateData.unit = fieldChange.unit as any;
+              }
+            }
+            
+            console.log(`🔧 DEBUG: Preparing consolidated changes for ${targetIngredient.name}`, {
+              ingredientId: actualIngredient.id,
+              fieldCount: change.changes.length,
+              fields: change.changes.map((c: any) => `${c.field}: ${c.original_value} -> ${c.optimized_value}`),
+              updateData
+            });
+          } else {
+            // Handle single field change
+            updateData = {
+              // Include essential fields from existing ingredient to pass validation
+              ingredient_id: targetIngredient.ingredient_id,
+              use: targetIngredient.use,
+              time: targetIngredient.time,
+              [change.field]: change.optimized_value,
+            };
+
+            // Add unit if specified (for amount changes)
+            if (change.field === 'amount' && change.unit) {
+              updateData.unit = change.unit as any;
+            }
+
+            console.log(`🔧 DEBUG: Preparing single change for ${targetIngredient.name}`, {
+              ingredientId: actualIngredient.id,
+              field: change.field,
+              oldValue: change.original_value,
+              newValue: change.optimized_value,
+              updateData
+            });
+          }
+          
+          allBulkUpdates.push({
+            ingredientId: actualIngredient.id!, // Use the actual ingredient ID from the array
+            updatedData: updateData
           });
         } else {
-          // Add new ingredient (not in original recipe)
-          const newIngredientId = `optimized-${Date.now()}-${Math.random()}`;
-          // CRITICAL FIX: Use unique identifier for hops that combines ingredient_id + use + time
-          const uniqueKey = optimizedIng.type === 'hop' 
-            ? `${optimizedIng.ingredient_id}-${optimizedIng.use}-${optimizedIng.time}`
-            : newIngredientId;
-          optimizedIngredientIds.add(uniqueKey);
-          updates.push({
-            ingredientId: newIngredientId,
-            updatedData: {
-              ingredient_id: optimizedIng.ingredient_id,
-              name: optimizedIng.name,
-              type: optimizedIng.type as any,
-              amount: optimizedIng.amount,
-              unit: optimizedIng.unit as any,
-              grain_type: optimizedIng.grain_type,
-              color: optimizedIng.color,
-              potential: optimizedIng.potential,
-              alpha_acid: optimizedIng.alpha_acid,
-              time: optimizedIng.time,
-              use: optimizedIng.use,
-              attenuation: optimizedIng.attenuation
-            },
+          console.warn(`⚠️ DEBUG: Could not find ingredient to modify: ${change.ingredient_name}`);
+        }
+      }
+      
+      // Apply ALL changes as a single bulk update
+      if (allBulkUpdates.length > 0) {
+        try {
+          console.log(`🔧 DEBUG: Applying ${allBulkUpdates.length} total changes (hops + grains) as unified bulk update`);
+          await onBulkIngredientUpdate(allBulkUpdates);
+          console.log(`✅ DEBUG: Successfully applied ${allBulkUpdates.length} changes via unified bulk update`);
+        } catch (updateError) {
+          console.error(`❌ DEBUG: Failed to apply unified bulk update`, { updateError });
+          throw updateError;
+        }
+      }
+
+      // Handle ingredient additions (for new ingredients suggested by AI)
+      const ingredientAdditions = recipeChanges.filter(change => 
+        change.type === 'ingredient_added' && change.ingredient_name
+      );
+      
+      console.log('🔧 DEBUG: Found ingredient additions to apply', { 
+        ingredientAdditions,
+        additionCount: ingredientAdditions.length 
+      });
+
+      for (const addition of ingredientAdditions) {
+        console.log(`🔧 DEBUG: Processing addition: ${addition.ingredient_name}`);
+        
+        // Fetch available ingredients for new ingredient addition
+        const availableIngredients = await Services.Data.ingredient.fetchIngredients();
+        
+        // Get the type from the addition, defaulting to 'grain'
+        const ingredientType = addition.ingredient_type || 'grain';
+        const ingredientGroup = availableIngredients[ingredientType as keyof typeof availableIngredients] || [];
+        
+        const foundIngredient = ingredientGroup.find((ing: any) => 
+          ing.name.toLowerCase().includes(addition.ingredient_name.toLowerCase()) ||
+          addition.ingredient_name.toLowerCase().includes(ing.name.toLowerCase())
+        );
+
+        if (!foundIngredient) {
+          console.error(`❌ DEBUG: Ingredient "${addition.ingredient_name}" not found in database for addition`);
+          continue;
+        }
+
+        // For new ingredients, use bulk update with the isNewIngredient flag
+        const newIngredientData: Partial<RecipeIngredient> = {
+          ingredient_id: foundIngredient.ingredient_id,
+          name: foundIngredient.name,
+          type: foundIngredient.type as any,
+          amount: Number(addition.amount),
+          unit: addition.unit as any,
+          grain_type: foundIngredient.grain_type,
+          color: foundIngredient.color,
+          potential: foundIngredient.potential || 1.035,
+          use: addition.use || (foundIngredient.type === 'hop' ? 'boil' : 'mash'),
+          time: addition.time || (foundIngredient.type === 'hop' ? 60 : undefined),
+          alpha_acid: foundIngredient.alpha_acid,
+          attenuation: foundIngredient.attenuation
+        };
+
+        try {
+          await onBulkIngredientUpdate([{
+            ingredientId: `addition-${Date.now()}-${Math.random()}`,
+            updatedData: newIngredientData,
             isNewIngredient: true
+          }]);
+          console.log(`✅ DEBUG: Successfully added new ingredient ${addition.ingredient_name}`);
+        } catch (addError) {
+          console.error(`❌ DEBUG: Failed to add ${addition.ingredient_name}`, { addError });
+          throw addError;
+        }
+      }
+
+      // Handle ingredient removals (for substitutions and eliminations)
+      const ingredientRemovals = recipeChanges.filter(change => 
+        change.type === 'ingredient_removed' && change.ingredient_name
+      );
+      
+      console.log('🔧 DEBUG: Found ingredient removals to apply', { 
+        ingredientRemovals,
+        removalCount: ingredientRemovals.length 
+      });
+
+      for (const removal of ingredientRemovals) {
+        console.log(`🔧 DEBUG: Processing removal: ${removal.ingredient_name}`);
+        
+        // Find the specific ingredient to remove using the same matching logic
+        let targetIngredient: any = null;
+        
+        if (removal.ingredient_type === 'hop') {
+          // For hops, match by name + use + time
+          targetIngredient = ingredients.find(ing => 
+            ing.name === removal.ingredient_name &&
+            ing.type === 'hop' &&
+            ing.use === removal.ingredient_use &&
+            ing.time === removal.ingredient_time
+          );
+        } else {
+          // For non-hops, match by name
+          targetIngredient = ingredients.find(ing => ing.name === removal.ingredient_name);
+        }
+
+        if (targetIngredient && onRemoveIngredient) {
+          try {
+            await onRemoveIngredient(targetIngredient.id!);
+            console.log(`✅ DEBUG: Successfully removed ingredient ${removal.ingredient_name}`);
+          } catch (removeError) {
+            console.error(`❌ DEBUG: Failed to remove ${removal.ingredient_name}`, { removeError });
+            throw removeError;
+          }
+        } else {
+          console.warn(`⚠️ DEBUG: Could not find ingredient to remove: ${removal.ingredient_name}`, {
+            hasRemoveFunction: !!onRemoveIngredient
           });
         }
       }
+      
 
-      // CRITICAL FIX: Calculate what ingredients existed before the bulk update
-      // This prevents using stale ingredients list that doesn't include newly added ingredients
-      // Use unique keys for hops that combine ingredient_id + use + time
-      const existingIngredientIds = new Set(ingredients.map(ing => {
-        return ing.type === 'hop' 
-          ? `${ing.ingredient_id}-${ing.use}-${ing.time}`
-          : ing.id;
-      }));
 
-      // Apply the updates first
-      console.log('🔍 DEBUG: About to apply updates:', updates.map(u => `${u.updatedData.name} (${u.updatedData.type}) amount=${u.updatedData.amount} time=${u.updatedData.time} isNew=${u.isNewIngredient}`));
-      await onBulkIngredientUpdate(updates);
-      
-      // CRITICAL FIX: Add delay to allow React state updates to propagate
-      // The ingredients prop is stale due to React closure, need to wait for parent re-render
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      console.log('🔍 DEBUG: Ingredients after bulk update (before removal check):', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
-      
-      // Remove ingredients that are not in the optimized recipe
-      // SAFETY CHECK: Only remove ingredients that have explicit removal actions
-      console.log('🔍 DEBUG: Checking for ingredients to remove:');
-      console.log('🔍 DEBUG: existingIngredientIds:', Array.from(existingIngredientIds));
-      console.log('🔍 DEBUG: optimizedIngredientIds:', Array.from(optimizedIngredientIds));
-      console.log('🔍 DEBUG: Using unique key system for hops (ingredient_id-use-time)');
-      
-      const ingredientsToRemove = ingredients.filter(ing => {
-        const uniqueKey = ing.type === 'hop' 
-          ? `${ing.ingredient_id}-${ing.use}-${ing.time}`
-          : ing.id;
-        const existed = existingIngredientIds.has(uniqueKey);
-        const inOptimized = optimizedIngredientIds.has(uniqueKey);
-        const shouldRemove = existed && !inOptimized;
-        console.log(`🔍 DEBUG: ${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time}: uniqueKey=${uniqueKey}, existed=${existed}, inOptimized=${inOptimized}, shouldRemove=${shouldRemove}`);
-        return shouldRemove;
-      });
-      
-      console.log('🔍 DEBUG: ingredientsToRemove:', ingredientsToRemove.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time}`));
-      
-      if (ingredientsToRemove.length > 0 && onRemoveIngredient) {
-        // Safety check: Look for explicit removal actions in the recipe changes
-        const explicitRemovals = new Set();
-        optimization.recipeChanges.forEach(change => {
-          if (change.type === 'ingredient_removed' || (change as any).action === 'remove') {
-            explicitRemovals.add(change.ingredient_name);
-          }
-        });
-        
-        // Only remove ingredients that are explicitly marked for removal
-        for (const ingredient of ingredientsToRemove) {
-          if (explicitRemovals.has(ingredient.name)) {
-            console.log(`✅ Removing ingredient with explicit removal action: ${ingredient.name}`);
-            await onRemoveIngredient(ingredient.id!);
-          } else {
-            console.warn(`⚠️ Prevented accidental removal of ingredient: ${ingredient.name} (no explicit removal action found)`);
-          }
-        }
-      }
 
       
       // Clear the optimization result and show success message
       setOptimizationResult(null);
       setHasAnalyzed(false);
       
-      // Add a small delay to allow UI updates to propagate
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('🔍 DEBUG: Final ingredients after all changes:', ingredients.map(ing => `${ing.name} (${ing.type}) use='${ing.use}' time=${ing.time} amount=${ing.amount}`));
-      
-      // alert(`Optimized recipe applied successfully! Recipe was improved through ${optimization.iterationsCompleted} iterations.`);
+      console.log('✅ DEBUG: applyOptimizedRecipe completed successfully using recipe changes');
 
     } catch (error) {
       console.error('❌ AISuggestions - Error applying optimized recipe:', {
