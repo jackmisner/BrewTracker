@@ -33,6 +33,14 @@ interface IngredientChange {
   // For adding new ingredients
   isNewIngredient?: boolean;
   newIngredientData?: CreateRecipeIngredientData;
+  // For consolidated changes (multiple field changes for same ingredient)
+  changes?: Array<{
+    field: string;
+    original_value: any;
+    optimized_value: any;
+    unit?: string;
+    change_reason: string;
+  }>;
 }
 
 interface OptimizationResult {
@@ -89,7 +97,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   // Convert backend API suggestions to frontend format
   const convertBackendSuggestions = useCallback(
     (backendSuggestions: any[]): Suggestion[] => {
-      return backendSuggestions.map((suggestion, index) => ({
+      // Filter out optimization_summary suggestions
+      const filteredSuggestions = backendSuggestions.filter(
+        (suggestion) => suggestion.type !== "optimization_summary"
+      );
+      
+      return filteredSuggestions.map((suggestion, index) => ({
         id: `backend-${index}`,
         type: suggestion.type || "general",
         title: suggestion.title || "Recipe Improvement",
@@ -158,6 +171,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 use: change.use || change.new_ingredient_data?.use,
               } as CreateRecipeIngredientData & { type: string })
             : undefined,
+        // Handle consolidated changes (multiple field changes for same ingredient)
+        changes: change.changes && Array.isArray(change.changes) ? change.changes : undefined,
       };
 
       return frontendChange;
@@ -979,10 +994,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   }}
                 >
                   <h5>
-                    Changes Made ({optimizationResult.recipeChanges.length - 1})
+                    Changes Made ({optimizationResult.recipeChanges.filter((change: any) => change.type !== "optimization_summary").length})
                   </h5>
                   <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-                    {optimizationResult.recipeChanges.map((change, idx) => (
+                    {optimizationResult.recipeChanges
+                      .filter((change: any) => change.type !== "optimization_summary")
+                      .map((change, idx) => (
                       <div
                         key={idx}
                         style={{
@@ -996,8 +1013,51 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                         {change.type === "ingredient_modified" && (
                           <div>
                             <strong>{change.ingredient_name}:</strong>{" "}
-                            {change.field} changed from {change.original_value}{" "}
-                            to {change.optimized_value} {change.unit}
+                            {change.changes && Array.isArray(change.changes) ? (
+                              // Consolidated changes - multiple field changes
+                              <div style={{ marginTop: "8px" }}>
+                                {change.changes.map((fieldChange: any, fieldIdx: number) => (
+                                  <div
+                                    key={fieldIdx}
+                                    style={{
+                                      marginLeft: "16px",
+                                      marginBottom: "4px",
+                                    }}
+                                  >
+                                    <span style={{ fontSize: "14px" }}>
+                                      • {fieldChange.field} changed from{" "}
+                                      {fieldChange.field === "amount" ? 
+                                        formatIngredientAmount(
+                                          fieldChange.original_value,
+                                          fieldChange.unit || "g",
+                                          "grain",
+                                          unitSystem
+                                        ) : fieldChange.original_value
+                                      }{" "}
+                                      to{" "}
+                                      {fieldChange.field === "amount" ? 
+                                        formatIngredientAmount(
+                                          fieldChange.optimized_value,
+                                          fieldChange.unit || "g",
+                                          "grain",
+                                          unitSystem
+                                        ) : (
+                                          fieldChange.field === "time" ? 
+                                            `${fieldChange.optimized_value} min` : 
+                                            fieldChange.optimized_value
+                                        )
+                                      }
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              // Single change - original logic
+                              <span>
+                                {change.field} changed from {change.original_value}{" "}
+                                to {change.optimized_value} {change.unit}
+                              </span>
+                            )}
                           </div>
                         )}
                         {change.type === "ingredient_added" && (
@@ -1011,12 +1071,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                             <strong>Substituted:</strong>{" "}
                             {change.original_ingredient} →{" "}
                             {change.optimized_ingredient}
-                          </div>
-                        )}
-                        {change.type === "optimization_summary" && (
-                          <div>
-                            <strong>Summary:</strong> {change.final_compliance}{" "}
-                            ({change.iterations_completed} iterations)
                           </div>
                         )}
                         <div
@@ -1162,56 +1216,101 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                       borderRadius: "4px",
                     }}
                   >
-                    {suggestion.changes.map((change, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          marginBottom: "8px",
-                          padding: "8px",
-                          background: "white",
-                          borderRadius: "4px",
-                          borderLeft: "3px solid #007bff",
-                        }}
-                      >
-                        <strong>{change.ingredientName}:</strong>
-                        {change.isNewIngredient ? (
-                          <span>
-                            {" "}
-                            Add{" "}
-                            {formatIngredientAmount(
-                              change.suggestedValue,
-                              change.newIngredientData?.unit || "g",
-                              "grain",
-                              unitSystem
-                            )}
-                          </span>
-                        ) : (change as any).is_yeast_strain_change &&
-                          change.field === "ingredient_id" ? (
-                          <span>
-                            {" "}
-                            Switch to {(change as any).suggested_name} (
-                            {(change as any).suggested_attenuation}%
-                            attenuation)
-                          </span>
-                        ) : (
-                          <span>
-                            {" "}
-                            Change {change.field} from {change.currentValue} to{" "}
-                            {change.suggestedValue}
-                          </span>
-                        )}
+                    {suggestion.changes.map((change, idx) => {
+                      const isConsolidated = change.changes && Array.isArray(change.changes);
+                      
+                      return (
                         <div
+                          key={idx}
                           style={{
-                            fontSize: "12px",
-                            color: "#666",
-                            fontStyle: "italic",
-                            marginTop: "4px",
+                            marginBottom: "8px",
+                            padding: "8px",
+                            background: "white",
+                            borderRadius: "4px",
+                            borderLeft: "3px solid #007bff",
                           }}
                         >
-                          {change.reason}
+                          <strong>{change.ingredientName}:</strong>
+                          {change.isNewIngredient ? (
+                            <span>
+                              {" "}
+                              Add{" "}
+                              {formatIngredientAmount(
+                                change.suggestedValue,
+                                change.newIngredientData?.unit || "g",
+                                "grain",
+                                unitSystem
+                              )}
+                            </span>
+                          ) : (change as any).is_yeast_strain_change &&
+                            change.field === "ingredient_id" ? (
+                            <span>
+                              {" "}
+                              Switch to {(change as any).suggested_name} (
+                              {(change as any).suggested_attenuation}%
+                              attenuation)
+                            </span>
+                          ) : isConsolidated ? (
+                            // Render consolidated changes (multiple field changes)
+                            <div style={{ marginTop: "8px" }}>
+                              {change.changes!.map((fieldChange, fieldIdx) => (
+                                <div
+                                  key={fieldIdx}
+                                  style={{
+                                    marginLeft: "16px",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  <span style={{ fontSize: "14px" }}>
+                                    • {fieldChange.field} changed from{" "}
+                                    {fieldChange.field === "amount" ? 
+                                      formatIngredientAmount(
+                                        fieldChange.original_value,
+                                        fieldChange.unit || "g",
+                                        "grain",
+                                        unitSystem
+                                      ) : fieldChange.original_value
+                                    }{" "}
+                                    to{" "}
+                                    {fieldChange.field === "amount" ? 
+                                      formatIngredientAmount(
+                                        fieldChange.optimized_value,
+                                        fieldChange.unit || "g",
+                                        "grain",
+                                        unitSystem
+                                      ) : (
+                                        fieldChange.field === "time" ? 
+                                          `${fieldChange.optimized_value} min` : 
+                                          fieldChange.optimized_value
+                                      )
+                                    }
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>
+                              {" "}
+                              Change {change.field} from {change.currentValue} to{" "}
+                              {change.suggestedValue}
+                            </span>
+                          )}
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#666",
+                              fontStyle: "italic",
+                              marginTop: "4px",
+                            }}
+                          >
+                            {isConsolidated ? 
+                              "Multiple optimizations: Recipe optimization to meet style guidelines, Hop timing optimization for better brewing practice" :
+                              change.reason
+                            }
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div
