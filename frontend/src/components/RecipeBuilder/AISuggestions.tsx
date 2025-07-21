@@ -50,7 +50,6 @@ interface OptimizationResult {
   optimizedRecipe: any;
   recipeChanges: any[];
   iterationsCompleted: number;
-  remainingSuggestions: any[];
 }
 
 interface AISuggestionsProps {
@@ -248,7 +247,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           optimizedRecipe: response.optimized_recipe,
           recipeChanges: response.recipe_changes || [],
           iterationsCompleted: response.iterations_completed || 0,
-          remainingSuggestions: response.suggestions || [],
         });
         setSuggestions([]); // Clear individual suggestions since we have complete optimization
       } else {
@@ -983,19 +981,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 </button>
               </div>
 
-              {/* Remaining suggestions if any */}
-              {optimizationResult.remainingSuggestions.length > 0 && (
-                <div className="fine-tuning-section">
-                  <h5>
-                    Additional Fine-tuning Available (
-                    {optimizationResult.remainingSuggestions.length})
-                  </h5>
-                  <p className="no-suggestions-message">
-                    These minor adjustments can be applied after accepting the
-                    optimized recipe.
-                  </p>
-                </div>
-              )}
             </div>
           )}
 

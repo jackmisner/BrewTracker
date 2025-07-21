@@ -33,9 +33,10 @@
   font-weight: bold;
   color: #2d3748;
   padding: 0 0 0 12px;
-  margin-left: 12px;
+  margin-left: 75px;
   margin-top: 12px;
   margin-bottom: 12px;
+  white-space: nowrap;
 }
 
 .ai-suggestions-toggle:hover {
@@ -52,7 +53,7 @@
 .header-controls {
   margin-top: 15px;
   display: flex;
-  gap: 15px;
+  gap: 25px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -562,26 +563,6 @@
   margin-top: 15px;
 }
 
-/* Fine-tuning section */
-.fine-tuning-section {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #dee2e6;
-}
-
-.fine-tuning-section h4,
-.fine-tuning-section h5 {
-  color: #2d3748;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
-
-.fine-tuning-description {
-  color: #718096;
-  font-size: 14px;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
 
 /* Responsive design */
 @media (max-width: 768px) {
