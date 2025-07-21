@@ -11,7 +11,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from models.mongo_models import BeerStyleGuide, Recipe, User
-from services.ai_service import RecipeAnalysisEngine
+from services.ai import RecipeAnalysisEngine
 from utils.unit_conversions import UnitConverter
 
 logger = logging.getLogger(__name__)
