@@ -980,7 +980,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   Keep Original Recipe
                 </button>
               </div>
-
             </div>
           )}
 
