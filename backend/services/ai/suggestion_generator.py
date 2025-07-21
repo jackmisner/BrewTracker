@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from models.mongo_models import Ingredient
 from utils.brewing_calculation_core import (
+    calc_srm_core,
     convert_to_ounces,
     convert_to_pounds,
 )
