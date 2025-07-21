@@ -76,7 +76,9 @@ class UserSettingsService {
   /**
    * Get current user settings
    */
-  async getUserSettings(forceRefresh: boolean = false): Promise<FullUserSettings> {
+  async getUserSettings(
+    forceRefresh: boolean = false
+  ): Promise<FullUserSettings> {
     // Check cache first
     if (!forceRefresh && this.settingsCache && this.isCacheValid()) {
       return this.settingsCache;
@@ -84,7 +86,7 @@ class UserSettingsService {
 
     try {
       const response = await ApiService.user.getSettings();
-      const settings = this.processSettingsData((response.data as any));
+      const settings = this.processSettingsData(response.data as any);
 
       // Update cache
       this.settingsCache = settings;
@@ -100,7 +102,9 @@ class UserSettingsService {
   /**
    * Update user settings
    */
-  async updateSettings(settingsData: SettingsUpdateData): Promise<FullUserSettings> {
+  async updateSettings(
+    settingsData: SettingsUpdateData
+  ): Promise<FullUserSettings> {
     try {
       const validation = this.validateSettings(settingsData);
       if (!validation.isValid) {
@@ -110,7 +114,7 @@ class UserSettingsService {
       const response = await ApiService.user.updateSettings(settingsData);
 
       // Update cache
-      this.settingsCache = this.processSettingsData((response.data as any));
+      this.settingsCache = this.processSettingsData(response.data as any);
       this.cacheTimestamp = Date.now();
 
       return this.settingsCache;
@@ -281,7 +285,9 @@ class UserSettingsService {
   /**
    * Validate account deletion data
    */
-  validateAccountDeletion(confirmationData: AccountDeletionData): ValidationResult {
+  validateAccountDeletion(
+    confirmationData: AccountDeletionData
+  ): ValidationResult {
     const errors: string[] = [];
 
     if (!confirmationData.password) {

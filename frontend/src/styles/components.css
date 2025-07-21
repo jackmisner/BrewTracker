@@ -444,6 +444,15 @@
   color: var(--color-amber-800); 
 }
 
+/* Ingredient-specific type badges should have white text for better contrast */
+.type-badge.grain,
+.type-badge.hop,
+.type-badge.yeast,
+.type-badge.other,
+.type-badge.adjunct {
+  color: white;
+}
+
 .unsaved-indicator {
   color: var(--color-amber-600);
   font-weight: 700;

@@ -194,14 +194,16 @@ class RecipeService {
     metrics?: RecipeMetrics
   ): RecipeFormData {
     const formattedRecipe: RecipeFormData = {
-      id: recipeData.recipe_id || '',
+      id: recipeData.recipe_id || "",
       name: recipeData.name?.trim() || "",
       style: recipeData.style?.trim() || "",
       batch_size: parseFloat((recipeData.batch_size || 0).toString()),
       batch_size_unit: recipeData.batch_size_unit || "gal",
       description: recipeData.description?.trim() || "",
       is_public: Boolean(recipeData.is_public),
-      boil_time: recipeData.boil_time ? parseInt(recipeData.boil_time.toString()) : undefined,
+      boil_time: recipeData.boil_time
+        ? parseInt(recipeData.boil_time.toString())
+        : undefined,
       efficiency: recipeData.efficiency
         ? parseFloat(recipeData.efficiency.toString())
         : undefined,
@@ -254,7 +256,7 @@ class RecipeService {
 
     // Ensure all required fields have defaults
     const processedRecipe: Recipe = {
-      id: rawRecipe.recipe_id || rawRecipe._id || rawRecipe.id || '',
+      id: rawRecipe.recipe_id || rawRecipe._id || rawRecipe.id || "",
       recipe_id: rawRecipe.recipe_id || rawRecipe._id || rawRecipe.id,
       name: rawRecipe.name || "",
       style: rawRecipe.style || "",
@@ -262,8 +264,12 @@ class RecipeService {
       batch_size_unit: rawRecipe.batch_size_unit || "gal",
       description: rawRecipe.description || "",
       is_public: Boolean(rawRecipe.is_public),
-      boil_time: rawRecipe.boil_time ? parseInt(rawRecipe.boil_time.toString()) : 60,
-      efficiency: rawRecipe.efficiency ? parseFloat(rawRecipe.efficiency.toString()) : 75,
+      boil_time: rawRecipe.boil_time
+        ? parseInt(rawRecipe.boil_time.toString())
+        : 60,
+      efficiency: rawRecipe.efficiency
+        ? parseFloat(rawRecipe.efficiency.toString())
+        : 75,
       notes: rawRecipe.notes || "",
       created_at: rawRecipe.created_at,
       updated_at: rawRecipe.updated_at,
@@ -287,7 +293,9 @@ class RecipeService {
             (ingredient._id
               ? String(ingredient._id)
               : ingredient.ingredient_id
-              ? `${ingredient.type || 'ing'}-${String(ingredient.ingredient_id)}`
+              ? `${ingredient.type || "ing"}-${String(
+                  ingredient.ingredient_id
+                )}`
               : `existing-${Date.now()}-${Math.random()
                   .toString(36)
                   .substr(2, 9)}`),
@@ -345,7 +353,7 @@ class RecipeService {
       "efficiency",
       "notes",
     ];
-    
+
     for (const field of fieldsToCompare) {
       if (originalRecipe[field] !== currentRecipe[field]) {
         return true;

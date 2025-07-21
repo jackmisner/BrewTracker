@@ -1,31 +1,31 @@
 // Unit system types
-export type UnitSystem = 'imperial' | 'metric';
+export type UnitSystem = "imperial" | "metric";
 
 // Weight units
-export type WeightUnit = 'oz' | 'lb' | 'g' | 'kg';
+export type WeightUnit = "oz" | "lb" | "g" | "kg";
 
-// Volume units  
-export type VolumeUnit = 'ml' | 'l' | 'fl oz' | 'cup' | 'pt' | 'qt' | 'gal';
+// Volume units
+export type VolumeUnit = "ml" | "l" | "fl oz" | "cup" | "pt" | "qt" | "gal";
 
 // Temperature units
-export type TemperatureUnit = 'f' | 'c' ;
+export type TemperatureUnit = "f" | "c";
 
 // Time units
-export type TimeUnit = 'min' | 'day' ;
+export type TimeUnit = "min" | "day";
 
 // Pressure units
-export type PressureUnit = 'psi' | 'bar' | 'kpa' | 'atm';
+export type PressureUnit = "psi" | "bar" | "kpa" | "atm";
 
 // Measurement type categories
-export type MeasurementType = 
-  | 'weight'
-  | 'volume'
-  | 'temperature'
-  | 'time'
-  | 'pressure'
-  | 'hop_weight'
-  | 'yeast'
-  | 'other';
+export type MeasurementType =
+  | "weight"
+  | "volume"
+  | "temperature"
+  | "time"
+  | "pressure"
+  | "hop_weight"
+  | "yeast"
+  | "other";
 
 // Unit definition with conversion info
 export interface UnitDefinition {
@@ -214,10 +214,27 @@ export interface UnitContextActions {
   updateUnitSystem: (system: UnitSystem) => Promise<void>;
   setError: (error: string | null) => void;
   getPreferredUnit: (measurementType: MeasurementType) => string;
-  convertUnit: (value: number, fromUnit: string, toUnit: string) => UnitConversion;
-  convertForDisplay: (value: number, storageUnit: string, measurementType: MeasurementType) => UnitConversion;
-  convertForStorage: (value: number, displayUnit: string, measurementType: MeasurementType) => UnitConversion;
-  formatValue: (value: number, unit: string, measurementType: MeasurementType, precision?: number) => string;
+  convertUnit: (
+    value: number,
+    fromUnit: string,
+    toUnit: string
+  ) => UnitConversion;
+  convertForDisplay: (
+    value: number,
+    storageUnit: string,
+    measurementType: MeasurementType
+  ) => UnitConversion;
+  convertForStorage: (
+    value: number,
+    displayUnit: string,
+    measurementType: MeasurementType
+  ) => UnitConversion;
+  formatValue: (
+    value: number,
+    unit: string,
+    measurementType: MeasurementType,
+    precision?: number
+  ) => string;
   getUnitSystemLabel: () => string;
   getUnitSystemIcon: () => string;
   getCommonUnits: (measurementType: MeasurementType) => UnitDefinition[];

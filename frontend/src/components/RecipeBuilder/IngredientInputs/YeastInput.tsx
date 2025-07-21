@@ -40,10 +40,10 @@ interface YeastInfo {
   code?: string;
 }
 
-const YeastInput: React.FC<YeastInputProps> = ({ 
-  yeasts, 
-  onAdd, 
-  disabled = false 
+const YeastInput: React.FC<YeastInputProps> = ({
+  yeasts,
+  onAdd,
+  disabled = false,
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
@@ -81,7 +81,9 @@ const YeastInput: React.FC<YeastInputProps> = ({
     distance: 20, // Keep matches close to beginning
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ): void => {
     const { name, value } = e.target;
     setYeastForm((prev) => ({
       ...prev,
@@ -151,7 +153,9 @@ const YeastInput: React.FC<YeastInputProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -235,7 +239,8 @@ const YeastInput: React.FC<YeastInputProps> = ({
     const info: string[] = [];
 
     // Prefer improved attenuation estimate if available
-    const attenuationValue = yeast?.improved_attenuation_estimate || yeastInfo.attenuation;
+    const attenuationValue =
+      yeast?.improved_attenuation_estimate || yeastInfo.attenuation;
     if (attenuationValue) {
       const source = yeast?.improved_attenuation_estimate ? " (enhanced)" : "";
       info.push(`${attenuationValue}% attenuation${source}`);
@@ -248,7 +253,9 @@ const YeastInput: React.FC<YeastInputProps> = ({
         const maxC = Math.round(((yeastInfo.max_temperature - 32) * 5) / 9);
         info.push(`${minC}-${maxC}°C`);
       } else {
-        info.push(`${yeastInfo.min_temperature}-${yeastInfo.max_temperature}°F`);
+        info.push(
+          `${yeastInfo.min_temperature}-${yeastInfo.max_temperature}°F`
+        );
       }
     }
 
@@ -363,7 +370,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
             )}
 
             {/* Attenuation Analytics */}
-            <AttenuationBadge 
+            <AttenuationBadge
               ingredientId={yeastForm.selectedIngredient.ingredient_id}
               className="compact"
               showDetails={true}

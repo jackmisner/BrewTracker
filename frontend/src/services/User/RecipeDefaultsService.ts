@@ -68,7 +68,9 @@ class RecipeDefaultsService {
   /**
    * Get complete default recipe data based on unit system
    */
-  static getDefaultRecipeData(unitSystem: UnitSystem = "imperial"): DefaultRecipeData {
+  static getDefaultRecipeData(
+    unitSystem: UnitSystem = "imperial"
+  ): DefaultRecipeData {
     return {
       name: "",
       style: "",
@@ -265,7 +267,10 @@ export const useRecipeDefaults = () => {
       RecipeDefaultsService.getSuggestedUnits(unitSystem as UnitSystem),
     getTypicalBatchSizes: (): BatchSizeOption[] =>
       RecipeDefaultsService.getTypicalBatchSizes(unitSystem as UnitSystem),
-    getDefaultIngredientAmounts: (ingredientType: IngredientType, batchSize: number): IngredientAmount =>
+    getDefaultIngredientAmounts: (
+      ingredientType: IngredientType,
+      batchSize: number
+    ): IngredientAmount =>
       RecipeDefaultsService.getDefaultIngredientAmounts(
         ingredientType,
         batchSize,
@@ -273,8 +278,7 @@ export const useRecipeDefaults = () => {
       ),
     getBrewingStageDefaults: () =>
       RecipeDefaultsService.getBrewingStageDefaults(unitSystem as UnitSystem),
-    getHopTimingDefaults: () =>
-      RecipeDefaultsService.getHopTimingDefaults(),
+    getHopTimingDefaults: () => RecipeDefaultsService.getHopTimingDefaults(),
     getGrainPercentageDefaults: () =>
       RecipeDefaultsService.getGrainPercentageDefaults(),
   };

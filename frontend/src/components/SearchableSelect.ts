@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
-import { Ingredient } from '../types';
+import { Ingredient } from "../types";
 
 // Processed search result for internal use
 interface ProcessedSearchResult<T> {
@@ -33,7 +33,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   onSelect,
   placeholder = "Search...",
   searchKey = "name",
-  displayKey = "name", 
+  displayKey = "name",
   valueKey = "ingredient_id",
   disabled = false,
   className = "",
@@ -45,7 +45,9 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   const [query, setQuery] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [searchResults, setSearchResults] = useState<ProcessedSearchResult<T>[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    ProcessedSearchResult<T>[]
+  >([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -103,8 +105,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   // Sort options alphabetically for when no query is present
   const sortedOptions = useMemo(() => {
     return [...options].sort((a, b) => {
-      const nameA = (a[displayKey as keyof T] as string || "").toLowerCase();
-      const nameB = (b[displayKey as keyof T] as string || "").toLowerCase();
+      const nameA = ((a[displayKey as keyof T] as string) || "").toLowerCase();
+      const nameB = ((b[displayKey as keyof T] as string) || "").toLowerCase();
       return nameA.localeCompare(nameB);
     });
   }, [options, displayKey]);
@@ -115,21 +117,25 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       const results = fuse.search(query);
 
       // Extract items from Fuse results and limit results
-      const processedResults: ProcessedSearchResult<T>[] = results.slice(0, maxResults).map((result) => ({
-        item: result.item,
-        score: result.score || 0,
-        matches: [...(result.matches || [])],
-      }));
+      const processedResults: ProcessedSearchResult<T>[] = results
+        .slice(0, maxResults)
+        .map((result) => ({
+          item: result.item,
+          score: result.score || 0,
+          matches: [...(result.matches || [])],
+        }));
 
       setSearchResults(processedResults);
       setHighlightedIndex(0);
     } else if (query.length === 0) {
       // Show ALL options when no query, sorted alphabetically
-      const allResults: ProcessedSearchResult<T>[] = sortedOptions.map((item) => ({
-        item,
-        score: 0,
-        matches: [],
-      }));
+      const allResults: ProcessedSearchResult<T>[] = sortedOptions.map(
+        (item) => ({
+          item,
+          score: 0,
+          matches: [],
+        })
+      );
       setSearchResults(allResults);
       setHighlightedIndex(-1);
     } else {
@@ -153,8 +159,10 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   };
 
   // Handle option selection
-  const handleOptionSelect = (resultItem: ProcessedSearchResult<T> | T): void => {
-    const option = 'item' in resultItem ? resultItem.item : resultItem;
+  const handleOptionSelect = (
+    resultItem: ProcessedSearchResult<T> | T
+  ): void => {
+    const option = "item" in resultItem ? resultItem.item : resultItem;
     setQuery(option[displayKey as keyof T] as string);
     setIsOpen(false);
     setHighlightedIndex(-1);
@@ -301,7 +309,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
         spellCheck: false,
       }),
 
-      query && !disabled &&
+      query &&
+        !disabled &&
         React.createElement(
           "button",
           {
@@ -319,13 +328,19 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
         { className: "searchable-select-arrow" },
         React.createElement(
           "svg",
-          { width: "12", height: "8", viewBox: "0 0 12 8", fill: "currentColor" },
+          {
+            width: "12",
+            height: "8",
+            viewBox: "0 0 12 8",
+            fill: "currentColor",
+          },
           React.createElement("path", { d: "M6 8L0 2h12L6 8z" })
         )
       )
     ),
 
-    isOpen && searchResults.length > 0 &&
+    isOpen &&
+      searchResults.length > 0 &&
       React.createElement(
         "div",
         { ref: dropdownRef, className: "searchable-select-dropdown" },
@@ -337,7 +352,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
             "div",
             {
               key: (option[valueKey as keyof T] as string) || index,
-              ref: (el: HTMLDivElement | null) => (optionRefs.current[index] = el),
+              ref: (el: HTMLDivElement | null) =>
+                (optionRefs.current[index] = el),
               className: `searchable-select-option ${
                 index === highlightedIndex ? "highlighted" : ""
               }`,
@@ -347,7 +363,10 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
             React.createElement("div", {
               className: "option-name",
               dangerouslySetInnerHTML: {
-                __html: highlightMatches(option[displayKey as keyof T] as string, matches),
+                __html: highlightMatches(
+                  option[displayKey as keyof T] as string,
+                  matches
+                ),
               },
             }),
 
@@ -355,7 +374,10 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
               React.createElement("div", {
                 className: "option-description",
                 dangerouslySetInnerHTML: {
-                  __html: highlightMatches((option as any).description, matches),
+                  __html: highlightMatches(
+                    (option as any).description,
+                    matches
+                  ),
                 },
               }),
 
@@ -368,7 +390,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
           );
         }),
 
-        query.length >= minQueryLength && searchResults.length === 0 &&
+        query.length >= minQueryLength &&
+          searchResults.length === 0 &&
           React.createElement(
             "div",
             { className: "searchable-select-no-results" },

@@ -45,21 +45,27 @@ const AttenuationAnalyticsPage: React.FC = () => {
 
   const getTopPerformers = () => {
     return analytics
-      .filter(a => attenuationAnalyticsServiceInstance.hasSignificantData(a))
-      .sort((a, b) => (b.actual_attenuation_count || 0) - (a.actual_attenuation_count || 0))
+      .filter((a) => attenuationAnalyticsServiceInstance.hasSignificantData(a))
+      .sort(
+        (a, b) =>
+          (b.actual_attenuation_count || 0) - (a.actual_attenuation_count || 0)
+      )
       .slice(0, 10);
   };
 
   const getMostImprovedEstimates = () => {
     return analytics
-      .filter(a => 
-        a.theoretical_attenuation && 
-        a.actual_attenuation_average && 
-        attenuationAnalyticsServiceInstance.hasSignificantData(a)
+      .filter(
+        (a) =>
+          a.theoretical_attenuation &&
+          a.actual_attenuation_average &&
+          attenuationAnalyticsServiceInstance.hasSignificantData(a)
       )
-      .map(a => ({
+      .map((a) => ({
         ...a,
-        improvement: Math.abs((a.actual_attenuation_average || 0) - (a.theoretical_attenuation || 0))
+        improvement: Math.abs(
+          (a.actual_attenuation_average || 0) - (a.theoretical_attenuation || 0)
+        ),
       }))
       .sort((a, b) => b.improvement - a.improvement)
       .slice(0, 5);
@@ -86,8 +92,8 @@ const AttenuationAnalyticsPage: React.FC = () => {
           <h1>Attenuation Analytics</h1>
           <div className="error-container">
             <p className="error-message">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="retry-button"
             >
               Try Again
@@ -114,23 +120,33 @@ const AttenuationAnalyticsPage: React.FC = () => {
       {systemStats && (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-number">{systemStats.total_yeast_ingredients}</div>
+            <div className="stat-number">
+              {systemStats.total_yeast_ingredients}
+            </div>
             <div className="stat-label">Total Yeast Strains</div>
           </div>
           <div className="stat-card highlight">
-            <div className="stat-number">{systemStats.yeast_with_actual_data}</div>
+            <div className="stat-number">
+              {systemStats.yeast_with_actual_data}
+            </div>
             <div className="stat-label">With Real Data</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">{systemStats.total_attenuation_data_points}</div>
+            <div className="stat-number">
+              {systemStats.total_attenuation_data_points}
+            </div>
             <div className="stat-label">Fermentation Data Points</div>
           </div>
           <div className="stat-card success">
-            <div className="stat-number">{systemStats.high_confidence_yeast}</div>
+            <div className="stat-number">
+              {systemStats.high_confidence_yeast}
+            </div>
             <div className="stat-label">High Confidence Strains</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">{systemStats.data_coverage_percentage}%</div>
+            <div className="stat-number">
+              {systemStats.data_coverage_percentage}%
+            </div>
             <div className="stat-label">Data Coverage</div>
           </div>
         </div>
@@ -151,7 +167,9 @@ const AttenuationAnalyticsPage: React.FC = () => {
                   <div className="yeast-info">
                     <h3 className="yeast-name">{yeast.name}</h3>
                     {yeast.manufacturer && (
-                      <span className="yeast-manufacturer">{yeast.manufacturer}</span>
+                      <span className="yeast-manufacturer">
+                        {yeast.manufacturer}
+                      </span>
                     )}
                     {yeast.code && (
                       <span className="yeast-code">{yeast.code}</span>
@@ -160,18 +178,30 @@ const AttenuationAnalyticsPage: React.FC = () => {
                   <div className="yeast-stats">
                     <div className="stat-item">
                       <span className="stat-label">Data Points:</span>
-                      <span className="stat-value">{yeast.actual_attenuation_count}</span>
+                      <span className="stat-value">
+                        {yeast.actual_attenuation_count}
+                      </span>
                     </div>
                     <div className="stat-item">
                       <span className="stat-label">Avg Attenuation:</span>
                       <span className="stat-value">
-                        {yeast.actual_attenuation_average ? formatAttenuation(yeast.actual_attenuation_average) : '-'}
+                        {yeast.actual_attenuation_average
+                          ? formatAttenuation(yeast.actual_attenuation_average)
+                          : "-"}
                       </span>
                     </div>
                     <div className="stat-item">
                       <span className="stat-label">Confidence:</span>
-                      <span className={`stat-value ${attenuationAnalyticsServiceInstance.getConfidenceLevel(yeast.attenuation_confidence).color}`}>
-                        {attenuationAnalyticsServiceInstance.formatConfidence(yeast.attenuation_confidence)}
+                      <span
+                        className={`stat-value ${
+                          attenuationAnalyticsServiceInstance.getConfidenceLevel(
+                            yeast.attenuation_confidence
+                          ).color
+                        }`}
+                      >
+                        {attenuationAnalyticsServiceInstance.formatConfidence(
+                          yeast.attenuation_confidence
+                        )}
                       </span>
                     </div>
                   </div>
@@ -186,35 +216,55 @@ const AttenuationAnalyticsPage: React.FC = () => {
           <div className="analytics-section">
             <h2>📈 Biggest Prediction Improvements</h2>
             <p className="section-description">
-              Yeast strains where real-world data differs most from manufacturer specs
+              Yeast strains where real-world data differs most from manufacturer
+              specs
             </p>
             <div className="improvement-list">
               {improvedEstimates.map((yeast) => {
-                const difference = attenuationAnalyticsServiceInstance.formatAttenuationDifference(
-                  yeast.theoretical_attenuation,
-                  yeast.actual_attenuation_average
-                );
-                
+                const difference =
+                  attenuationAnalyticsServiceInstance.formatAttenuationDifference(
+                    yeast.theoretical_attenuation,
+                    yeast.actual_attenuation_average
+                  );
+
                 return (
                   <div key={yeast.ingredient_id} className="improvement-card">
                     <div className="improvement-info">
                       <h3 className="yeast-name">{yeast.name}</h3>
                       {yeast.manufacturer && (
-                        <span className="yeast-manufacturer">{yeast.manufacturer}</span>
+                        <span className="yeast-manufacturer">
+                          {yeast.manufacturer}
+                        </span>
                       )}
                     </div>
                     <div className="improvement-stats">
                       <div className="stat-row">
                         <span className="stat-label">Theoretical:</span>
-                        <span className="stat-value">{yeast.theoretical_attenuation ? formatAttenuation(yeast.theoretical_attenuation) : '-'}</span>
+                        <span className="stat-value">
+                          {yeast.theoretical_attenuation
+                            ? formatAttenuation(yeast.theoretical_attenuation)
+                            : "-"}
+                        </span>
                       </div>
                       <div className="stat-row">
                         <span className="stat-label">Actual Average:</span>
-                        <span className="stat-value">{yeast.actual_attenuation_average ? formatAttenuation(yeast.actual_attenuation_average) : '-'}</span>
+                        <span className="stat-value">
+                          {yeast.actual_attenuation_average
+                            ? formatAttenuation(
+                                yeast.actual_attenuation_average
+                              )
+                            : "-"}
+                        </span>
                       </div>
                       <div className="stat-row">
                         <span className="stat-label">Difference:</span>
-                        <span className={`stat-value ${difference.direction === "higher" ? "positive" : "negative"}`}>
+                        <span
+                          className={`stat-value ${
+                            difference.direction === "higher"
+                              ? "positive"
+                              : "negative"
+                          }`}
+                        >
                           {difference.formatted}
                         </span>
                       </div>
@@ -232,8 +282,9 @@ const AttenuationAnalyticsPage: React.FC = () => {
             <div className="no-data-icon">📊</div>
             <h2>No Analytics Data Available</h2>
             <p>
-              As users complete fermentations and share their data, analytics will appear here.
-              Help improve the system by enabling data sharing in your user settings!
+              As users complete fermentations and share their data, analytics
+              will appear here. Help improve the system by enabling data sharing
+              in your user settings!
             </p>
           </div>
         )}

@@ -56,7 +56,9 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>(value || "");
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [selectedStyle, setSelectedStyle] = useState<EnhancedBeerStyle | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<EnhancedBeerStyle | null>(
+    null
+  );
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<StyleSuggestion[]>([]);
@@ -175,8 +177,6 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
       matches: result.matches || [],
     }));
   }, [fuse, searchTerm, styles, loading, minQueryLength, maxResults]);
-
-
 
   // Highlight matches in text
   const highlightMatches = (text: string, matches: any[] = []): string => {
@@ -308,9 +308,9 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     }
   }, [highlightedIndex]);
 
-useEffect(() => {
-  setSearchTerm(value || '');
-}, [value]);
+  useEffect(() => {
+    setSearchTerm(value || "");
+  }, [value]);
 
   if (loading) {
     return (
@@ -368,9 +368,9 @@ useEffect(() => {
           <button
             type="button"
             onClick={() => {
-              setSearchTerm('');
+              setSearchTerm("");
               setSelectedStyle(null);
-              onChange('');
+              onChange("");
               inputRef.current?.focus();
             }}
             className="clear-button"
@@ -385,7 +385,9 @@ useEffect(() => {
             {filteredStyles.map((style, index) => (
               <div
                 key={style.style_guide_id || style.style_id}
-                ref={(el) => { optionRefs.current[index] = el; }}
+                ref={(el) => {
+                  optionRefs.current[index] = el;
+                }}
                 className={`style-option ${
                   index === highlightedIndex ? "highlighted" : ""
                 }`}
@@ -444,76 +446,77 @@ useEffect(() => {
               {selectedStyle.overall_impression}
             </p>
           )}
-          <StyleAnalysis 
-            recipe={recipe} 
-            metrics={metrics ?? undefined} 
-            onStyleSuggestionSelect={() => {}} 
+          <StyleAnalysis
+            recipe={recipe}
+            metrics={metrics ?? undefined}
+            onStyleSuggestionSelect={() => {}}
             variant="main"
             data-testid="style-analysis"
           />
         </div>
       )}
 
-
       {/* Style suggestions when no style is selected */}
-      {showSuggestions &&
-        !selectedStyle &&
-        metrics && (
-          <div className="style-suggestions">
-            <h4>Suggested Styles Based on Current Recipe</h4>
-            {suggestions.length > 0 ? (
-              <div className="suggestions-list">
-                {suggestions.slice(0, 3).map((suggestion, index) => (
-                  <div key={index} className="suggestion-item">
-                    <div className="suggestion-header">
-                      <div className="style-info">
-                        <span className="style-id">
-                          {suggestion.style.style_id}
-                        </span>
-                        <span className="style-name">
-                          {suggestion.style.name}
-                        </span>
-                      </div>
-                      <div className="suggestion-actions">
-                        <span className="match-score">
-                          {Math.round(suggestion.match_percentage)}% match
-                        </span>
-                        <button
-                          onClick={() => {
-                            if (onStyleSuggestionSelect) {
-                              onStyleSuggestionSelect(suggestion.style.name);
-                            } else {
-                              handleStyleSelect(suggestion.style as EnhancedBeerStyle);
-                            }
-                          }}
-                          className="select-style-btn"
-                        >
-                          Select
-                        </button>
-                      </div>
+      {showSuggestions && !selectedStyle && metrics && (
+        <div className="style-suggestions">
+          <h4>Suggested Styles Based on Current Recipe</h4>
+          {suggestions.length > 0 ? (
+            <div className="suggestions-list">
+              {suggestions.slice(0, 3).map((suggestion, index) => (
+                <div key={index} className="suggestion-item">
+                  <div className="suggestion-header">
+                    <div className="style-info">
+                      <span className="style-id">
+                        {suggestion.style.style_id}
+                      </span>
+                      <span className="style-name">
+                        {suggestion.style.name}
+                      </span>
                     </div>
-                    <div className="match-breakdown">
-                      {Object.entries(suggestion.matches).map(
-                        ([spec, matches]) => (
-                          <span
-                            key={spec}
-                            className={`spec-indicator ${
-                              matches ? "match" : "no-match"
-                            }`}
-                          >
-                            {spec.toUpperCase()}
-                          </span>
-                        )
-                      )}
+                    <div className="suggestion-actions">
+                      <span className="match-score">
+                        {Math.round(suggestion.match_percentage)}% match
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (onStyleSuggestionSelect) {
+                            onStyleSuggestionSelect(suggestion.style.name);
+                          } else {
+                            handleStyleSelect(
+                              suggestion.style as EnhancedBeerStyle
+                            );
+                          }
+                        }}
+                        className="select-style-btn"
+                      >
+                        Select
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p>No style suggestions available based on current recipe metrics.</p>
-            )}
-          </div>
-        )}
+                  <div className="match-breakdown">
+                    {Object.entries(suggestion.matches).map(
+                      ([spec, matches]) => (
+                        <span
+                          key={spec}
+                          className={`spec-indicator ${
+                            matches ? "match" : "no-match"
+                          }`}
+                        >
+                          {spec.toUpperCase()}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>
+              No style suggestions available based on current recipe metrics.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

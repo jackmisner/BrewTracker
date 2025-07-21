@@ -5,10 +5,22 @@ import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import FermentationTracker from "./FermentationTracker";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { Recipe, BrewSession } from "../../types";
-import { formatGravity, formatAbv, formatEfficiency, formatAttenuation, formatTemperature } from "../../utils/formatUtils";
+import {
+  formatGravity,
+  formatAbv,
+  formatEfficiency,
+  formatAttenuation,
+  formatTemperature,
+} from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
-type BrewSessionStatus = "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
+type BrewSessionStatus =
+  | "planned"
+  | "in-progress"
+  | "fermenting"
+  | "conditioning"
+  | "completed"
+  | "archived";
 type ActiveTab = "details" | "fermentation" | "notes";
 
 const ViewBrewSession: React.FC = () => {
@@ -31,13 +43,17 @@ const ViewBrewSession: React.FC = () => {
         setError("");
 
         // Fetch the brew session using Services
-        const sessionData = await Services.brewSession.fetchBrewSession(sessionId);
+        const sessionData = await Services.brewSession.fetchBrewSession(
+          sessionId
+        );
         setSession(sessionData);
 
         // Fetch the related recipe if it exists
         if (sessionData.recipe_id) {
           try {
-            const recipeData = await Services.recipe.fetchRecipe(sessionData.recipe_id);
+            const recipeData = await Services.recipe.fetchRecipe(
+              sessionData.recipe_id
+            );
             setRecipe(recipeData);
           } catch (recipeErr: any) {
             console.warn("Could not fetch associated recipe:", recipeErr);
@@ -63,7 +79,9 @@ const ViewBrewSession: React.FC = () => {
     fetchSessionData();
   }, [sessionId, navigate]);
 
-  const updateSessionStatus = async (newStatus: BrewSessionStatus): Promise<void> => {
+  const updateSessionStatus = async (
+    newStatus: BrewSessionStatus
+  ): Promise<void> => {
     if (!session || !sessionId) return;
 
     if (
@@ -179,22 +197,28 @@ const ViewBrewSession: React.FC = () => {
       const updateData: Partial<BrewSession> = {
         status: "completed",
         actual_fg: latestGravityEntry.gravity,
-        fermentation_end_date: new Date().toISOString().split('T')[0], // Today's date
+        fermentation_end_date: new Date().toISOString().split("T")[0], // Today's date
       };
 
       // Calculate ABV if we have OG
       if (session.actual_og) {
-        updateData.actual_abv = (session.actual_og - latestGravityEntry.gravity) * 131.25;
+        updateData.actual_abv =
+          (session.actual_og - latestGravityEntry.gravity) * 131.25;
       }
 
-      const updatedSession = await Services.brewSession.updateBrewSession(session.session_id, updateData);
-      
+      const updatedSession = await Services.brewSession.updateBrewSession(
+        session.session_id,
+        updateData
+      );
+
       // Update local state
       setSession(updatedSession);
-      
+
       // Clear any related caches
-      invalidateBrewSessionCaches.onUpdated({ sessionId: session.session_id, recipeId: session.recipe_id });
-      
+      invalidateBrewSessionCaches.onUpdated({
+        sessionId: session.session_id,
+        recipeId: session.recipe_id,
+      });
     } catch (err: any) {
       console.error("Error updating session to completed:", err);
       setError("Failed to mark session as completed");
@@ -460,9 +484,7 @@ const ViewBrewSession: React.FC = () => {
                 <div className="brew-session-metric">
                   <p className="brew-session-metric-label">ABV</p>
                   <p className="brew-session-metric-value">
-                    {session.actual_abv
-                      ? formatAbv(session.actual_abv)
-                      : "-"}
+                    {session.actual_abv ? formatAbv(session.actual_abv) : "-"}
                   </p>
                   {recipe && recipe.estimated_abv && (
                     <p className="brew-session-metric-est">
@@ -632,17 +654,19 @@ const ViewBrewSession: React.FC = () => {
             )}
 
             {/* Advanced Gravity Analysis */}
-            {session.fermentation_data && 
-             session.fermentation_data.length >= 3 && 
-             session.status === "fermenting" && (
-              <div className="brew-session-section">
-                <h3 className="section-title">Fermentation Completion Analysis</h3>
-                <GravityStabilizationAnalysis 
-                  sessionId={session.session_id}
-                  onSuggestCompletion={handleCompletionSuggestion}
-                />
-              </div>
-            )}
+            {session.fermentation_data &&
+              session.fermentation_data.length >= 3 &&
+              session.status === "fermenting" && (
+                <div className="brew-session-section">
+                  <h3 className="section-title">
+                    Fermentation Completion Analysis
+                  </h3>
+                  <GravityStabilizationAnalysis
+                    sessionId={session.session_id}
+                    onSuggestCompletion={handleCompletionSuggestion}
+                  />
+                </div>
+              )}
           </div>
         )}
       </div>

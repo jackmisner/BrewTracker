@@ -35,10 +35,10 @@ interface HopInputProps {
   disabled?: boolean;
 }
 
-const HopInput: React.FC<HopInputProps> = ({ 
-  hops, 
-  onAdd, 
-  disabled = false 
+const HopInput: React.FC<HopInputProps> = ({
+  hops,
+  onAdd,
+  disabled = false,
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
@@ -85,7 +85,9 @@ const HopInput: React.FC<HopInputProps> = ({
     useExtendedSearch: true, // Allow OR searches like "cascade | centennial"
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ): void => {
     const { name, value } = e.target;
 
     // Create updated form data
@@ -210,7 +212,9 @@ const HopInput: React.FC<HopInputProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {

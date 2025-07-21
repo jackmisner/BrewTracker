@@ -22,12 +22,13 @@ interface VersionHistoryData {
   }>;
 }
 
-const RecipeVersionHistory: React.FC<RecipeVersionHistoryProps> = ({ 
-  recipeId, 
-  version, 
-  parentRecipeId 
+const RecipeVersionHistory: React.FC<RecipeVersionHistoryProps> = ({
+  recipeId,
+  version,
+  parentRecipeId,
 }) => {
-  const [versionHistory, setVersionHistory] = useState<VersionHistoryData | null>(null);
+  const [versionHistory, setVersionHistory] =
+    useState<VersionHistoryData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 

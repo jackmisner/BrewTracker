@@ -1,6 +1,11 @@
 // Misc imports
 import React, { useState, useEffect } from "react";
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from "react-router";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet,
+} from "react-router";
 import { UnitProvider } from "./contexts/UnitContext";
 import ApiService from "./services/api";
 import { User } from "./types";
@@ -92,7 +97,9 @@ const ProtectedRoute: React.FC = () => {
 };
 
 // Auth redirect component for login/register pages
-const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user } = React.useContext(AuthContext);
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;

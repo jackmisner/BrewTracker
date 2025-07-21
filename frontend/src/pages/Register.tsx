@@ -102,7 +102,9 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
     return className;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     if (!e.currentTarget.checkValidity()) {
       e.currentTarget.reportValidity();
@@ -113,7 +115,10 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
 
     // Validate all fields
     Object.keys(formData).forEach((key) => {
-      validateField(key as keyof RegisterFormData, formData[key as keyof RegisterFormData]);
+      validateField(
+        key as keyof RegisterFormData,
+        formData[key as keyof RegisterFormData]
+      );
     });
 
     // Check if there are any validation errors

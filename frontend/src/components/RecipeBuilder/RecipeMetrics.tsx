@@ -32,7 +32,8 @@ const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
   recipe,
   cardView = false,
 }) => {
-  const { unitSystem, formatValue, convertForDisplay, convertUnit } = useUnits();
+  const { unitSystem, formatValue, convertForDisplay, convertUnit } =
+    useUnits();
   const [scaleVolume, setScaleVolume] = useState<string>("");
 
   const getBalanceRatio = (): number => {
@@ -54,7 +55,12 @@ const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
   };
 
   const handleScaleSubmit = (): void => {
-    if (scaleVolume && !isNaN(Number(scaleVolume)) && parseFloat(scaleVolume) > 0 && onScale) {
+    if (
+      scaleVolume &&
+      !isNaN(Number(scaleVolume)) &&
+      parseFloat(scaleVolume) > 0 &&
+      onScale
+    ) {
       const enteredUnit = unitSystem === "metric" ? "l" : "gal";
       const recipeUnit = recipe.batch_size_unit || "gal";
 

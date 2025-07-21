@@ -9,7 +9,7 @@ import {
   MeasurementType,
   UnitConversion,
   IngredientType,
-} from '../types';
+} from "../types";
 
 // Unit conversion functions (standalone versions)
 export const convertUnit = (
@@ -44,9 +44,7 @@ export const convertUnit = (
     convertedValue = numValue * 16;
   } else if (fromUnit === "oz" && toUnit === "lb") {
     convertedValue = numValue / 16;
-  }
-
-  else if (fromUnit === "g" && toUnit === "lb") {
+  } else if (fromUnit === "g" && toUnit === "lb") {
     convertedValue = numValue / 453.592;
   } else if (fromUnit === "lb" && toUnit === "g") {
     convertedValue = numValue * 453.592;
@@ -65,9 +63,7 @@ export const convertUnit = (
     convertedValue = numValue / 1000;
   } else if (fromUnit === "l" && toUnit === "ml") {
     convertedValue = numValue * 1000;
-  }
-
-  else if (fromUnit === "ml" && toUnit === "gal") {
+  } else if (fromUnit === "ml" && toUnit === "gal") {
     convertedValue = numValue / 3785.41;
   } else if (fromUnit === "gal" && toUnit === "ml") {
     convertedValue = numValue * 3785.41;
@@ -158,7 +154,9 @@ export const formatValueStandalone = (
 };
 
 // Enhanced format functions that work with unit context.
-export function formatGravity(gravity: number | string | null | undefined): string {
+export function formatGravity(
+  gravity: number | string | null | undefined
+): string {
   if (!gravity) return "1.000";
   const numGravity = parseFloat(gravity.toString());
   return isNaN(numGravity) ? "1.000" : numGravity.toFixed(3);
@@ -183,19 +181,26 @@ export function formatSrm(srm: number | string | null | undefined): string {
 }
 
 // Brewing-specific percentage formatting functions
-export function formatAttenuation(attenuation: number | string | null | undefined): string {
+export function formatAttenuation(
+  attenuation: number | string | null | undefined
+): string {
   if (!attenuation) return "0.0%";
   const numAttenuation = parseFloat(attenuation.toString());
   return isNaN(numAttenuation) ? "0.0%" : `${numAttenuation.toFixed(1)}%`;
 }
 
-export function formatEfficiency(efficiency: number | string | null | undefined): string {
+export function formatEfficiency(
+  efficiency: number | string | null | undefined
+): string {
   if (!efficiency) return "0.0%";
   const numEfficiency = parseFloat(efficiency.toString());
   return isNaN(numEfficiency) ? "0.0%" : `${numEfficiency.toFixed(1)}%`;
 }
 
-export function formatPercentage(percentage: number | string | null | undefined, decimals: number = 1): string {
+export function formatPercentage(
+  percentage: number | string | null | undefined,
+  decimals: number = 1
+): string {
   if (!percentage) return "0.0%";
   const numPercentage = parseFloat(percentage.toString());
   return isNaN(numPercentage) ? "0.0%" : `${numPercentage.toFixed(decimals)}%`;
@@ -264,7 +269,7 @@ export function formatGrainWeight(
   } else {
     // For grain amounts, be more conservative about converting to larger units
     let targetUnit = unit;
-    
+
     // Convert lb to oz for amounts less than 1 lb
     if (unit === "lb" && numAmount < 1) {
       targetUnit = "oz";
@@ -375,7 +380,9 @@ export function formatIngredientAmount(
 
   // Determine if it's weight or volume based on unit
   const isWeight = ["g", "kg", "oz", "lb"].includes(unit);
-  const isVolume = ["ml", "l", "floz", "cup", "pint", "quart", "gal"].includes(unit);
+  const isVolume = ["ml", "l", "floz", "cup", "pint", "quart", "gal"].includes(
+    unit
+  );
 
   if (isWeight) {
     // Use hop-specific formatting for hops
@@ -415,7 +422,9 @@ export function formatIngredientAmountWithContext(
 
   if (ingredientType === "hop") {
     measurementType = "hop_weight";
-  } else if (["ml", "l", "floz", "cup", "pint", "quart", "gal"].includes(unit)) {
+  } else if (
+    ["ml", "l", "floz", "cup", "pint", "quart", "gal"].includes(unit)
+  ) {
     measurementType = "volume";
   } else if (["pkg", "tsp", "tbsp", "each"].includes(unit)) {
     // Non-convertible units - format as-is
@@ -430,7 +439,11 @@ export function formatIngredientAmountWithContext(
   // Only convert if it makes sense (don't convert small amounts to larger units)
   if (shouldConvertUnit(numAmount, unit, targetUnit)) {
     const converted = convertUnit(numAmount, unit, targetUnit);
-    return formatValueStandalone(converted.value, converted.unit, measurementType);
+    return formatValueStandalone(
+      converted.value,
+      converted.unit,
+      measurementType
+    );
   }
 
   // Otherwise format in original unit
@@ -438,7 +451,11 @@ export function formatIngredientAmountWithContext(
 }
 
 // Helper function to determine if unit conversion makes sense - FIXED
-function shouldConvertUnit(amount: number, fromUnit: string, toUnit: string): boolean {
+function shouldConvertUnit(
+  amount: number,
+  fromUnit: string,
+  toUnit: string
+): boolean {
   // Don't convert if same unit
   if (fromUnit === toUnit) return false;
 
@@ -468,7 +485,7 @@ function shouldConvertUnit(amount: number, fromUnit: string, toUnit: string): bo
   // This is useful for specialty grains that are often less than 1 lb/kg
   if (fromUnit === "kg" && toUnit === "g" && amount < 1) return true;
   if (fromUnit === "lb" && toUnit === "oz" && amount < 1) return true;
-  
+
   // NEVER convert larger units to smaller ones for other cases
   if (fromUnit === "kg" && toUnit === "g") return false;
   if (fromUnit === "lb" && toUnit === "oz") return false;
@@ -477,18 +494,17 @@ function shouldConvertUnit(amount: number, fromUnit: string, toUnit: string): bo
   return true;
 }
 
-
 export function getSrmColour(srm: number | string | null | undefined): string {
   if (!srm) return "#FFE699";
   const numSrm = parseFloat(srm.toString());
   if (isNaN(numSrm) || numSrm < 0) return "#FFE699";
-  
+
   // Round to nearest integer for lookup
   const roundedSrm = Math.round(numSrm);
-  
+
   // Colors for SRM 0-40, anything above 40 returns black
   if (roundedSrm > 40) return "#000000";
-  
+
   const srmColors: string[] = [
     "#FFE699", // SRM 0
     "#FFE699", // SRM 1
@@ -530,18 +546,19 @@ export function getSrmColour(srm: number | string | null | undefined): string {
     "#4A0702", // SRM 37
     "#420601", // SRM 38
     "#3D0601", // SRM 39
-    "#3D0708"  // SRM 40
+    "#3D0708", // SRM 40
   ];
-  
+
   return srmColors[roundedSrm];
 }
 
-
-export function getIbuDescription(ibu: number | string | null | undefined): string {
+export function getIbuDescription(
+  ibu: number | string | null | undefined
+): string {
   if (!ibu) return "No Perceived Bitterness";
   const numIbu = parseFloat(ibu.toString());
   if (isNaN(numIbu)) return "No Perceived Bitterness";
-  
+
   if (numIbu < 5) return "No Perceived Bitterness";
   if (numIbu < 10) return "Very Low Bitterness";
   if (numIbu < 20) return "Low Bitterness";
@@ -551,11 +568,13 @@ export function getIbuDescription(ibu: number | string | null | undefined): stri
   return "Extremely Bitter";
 }
 
-export function getAbvDescription(abv: number | string | null | undefined): string {
+export function getAbvDescription(
+  abv: number | string | null | undefined
+): string {
   if (!abv) return "Session Beer";
   const numAbv = parseFloat(abv.toString());
   if (isNaN(numAbv)) return "Session Beer";
-  
+
   if (numAbv < 3.0) return "Session Beer";
   if (numAbv < 5.0) return "Standard";
   if (numAbv < 7.5) return "High ABV";
@@ -563,11 +582,13 @@ export function getAbvDescription(abv: number | string | null | undefined): stri
   return "Extremely High ABV";
 }
 
-export function getSrmDescription(srm: number | string | null | undefined): string {
+export function getSrmDescription(
+  srm: number | string | null | undefined
+): string {
   if (!srm) return "Pale Straw";
   const numSrm = parseFloat(srm.toString());
   if (isNaN(numSrm)) return "Pale Straw";
-  
+
   if (numSrm < 2) return "Pale Straw";
   if (numSrm < 4) return "Straw";
   if (numSrm < 6) return "Pale Gold";
@@ -581,11 +602,13 @@ export function getSrmDescription(srm: number | string | null | undefined): stri
   return "Opaque Black";
 }
 
-export function getBalanceDescription(ratio: number | string | null | undefined): string {
+export function getBalanceDescription(
+  ratio: number | string | null | undefined
+): string {
   if (!ratio) return "Balanced";
   const numRatio = parseFloat(ratio.toString());
   if (isNaN(numRatio)) return "Balanced";
-  
+
   if (numRatio < 0.3) return "Very Malty";
   if (numRatio < 0.6) return "Malty";
   if (numRatio < 0.8) return "Balanced (Malt)";
@@ -622,18 +645,25 @@ export function getUnitAbbreviation(unit: string): string {
 }
 
 // Time formatting function to convert large minute values to days
-export function formatTime(timeInMinutes: number | string | null | undefined): string {
-  if (timeInMinutes === null || timeInMinutes === undefined || timeInMinutes === "") return "-";
-  
+export function formatTime(
+  timeInMinutes: number | string | null | undefined
+): string {
+  if (
+    timeInMinutes === null ||
+    timeInMinutes === undefined ||
+    timeInMinutes === ""
+  )
+    return "-";
+
   const numTime = parseFloat(timeInMinutes.toString());
   if (isNaN(numTime) || numTime === 0) return "-";
-  
+
   // Convert large minute values to more readable formats
-  if (numTime >= 1440) { // >= 1 day (1440 minutes)
+  if (numTime >= 1440) {
+    // >= 1 day (1440 minutes)
     const days = Math.round(numTime / 1440);
-    return `${days} day${days !== 1 ? 's' : ''}`;
+    return `${days} day${days !== 1 ? "s" : ""}`;
   } else {
     return `${Math.round(numTime)} min`;
   }
 }
-

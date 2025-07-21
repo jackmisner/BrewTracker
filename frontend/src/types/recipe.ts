@@ -1,12 +1,33 @@
-import { ID, BaseEntity } from './common';
+import { ID, BaseEntity } from "./common";
 
 // Enums for better type safety
-export type IngredientType = 'grain' | 'hop' | 'yeast' | 'other';
-export type GrainType = 'base_malt' | 'roasted' | 'caramel_crystal' | 'smoked' | 'adjunct_grain' | 'specialty_malt';
-export type HopUse = 'mash' | 'first_wort' | 'boil' | 'whirlpool' | 'dry_hop' | 'hop_back';
-export type YeastType = 'ale' | 'lager' | 'wild' | 'bacteria';
-export type IngredientUnit = 'oz' | 'lb' | 'g' | 'kg' | 'pkg' | 'tsp' | 'tbsp' | 'ml' | 'l';
-export type BatchSizeUnit = 'gal' | 'l';
+export type IngredientType = "grain" | "hop" | "yeast" | "other";
+export type GrainType =
+  | "base_malt"
+  | "roasted"
+  | "caramel_crystal"
+  | "smoked"
+  | "adjunct_grain"
+  | "specialty_malt";
+export type HopUse =
+  | "mash"
+  | "first_wort"
+  | "boil"
+  | "whirlpool"
+  | "dry_hop"
+  | "hop_back";
+export type YeastType = "ale" | "lager" | "wild" | "bacteria";
+export type IngredientUnit =
+  | "oz"
+  | "lb"
+  | "g"
+  | "kg"
+  | "pkg"
+  | "tsp"
+  | "tbsp"
+  | "ml"
+  | "l";
+export type BatchSizeUnit = "gal" | "l";
 
 // Ingredient creation data interface
 export interface CreateRecipeIngredientData {
@@ -48,15 +69,15 @@ export interface Ingredient extends BaseEntity {
   name: string;
   type: IngredientType;
   description?: string;
-  
+
   // Grain-specific properties
   potential?: number; // Potential gravity points per pound per gallon
   color?: number; // Color in Lovibond
   grain_type?: GrainType;
-  
+
   // Hop-specific properties
   alpha_acid?: number; // Alpha acid percentage
-  
+
   // Yeast-specific properties
   attenuation?: number; // Attenuation percentage (theoretical/manufacturer spec)
   manufacturer?: string;
@@ -64,7 +85,7 @@ export interface Ingredient extends BaseEntity {
   alcohol_tolerance?: number;
   min_temperature?: number;
   max_temperature?: number;
-  
+
   // Real-world attenuation tracking (for yeast only)
   actual_attenuation_average?: number; // Running average of actual attenuation
   actual_attenuation_count?: number; // Number of data points collected
@@ -85,7 +106,7 @@ export interface RecipeIngredient {
   use?: string;
   time?: number; // Time in minutes (boil time, steep time, etc.)
   time_unit?: string;
-  
+
   // Denormalized fields from base ingredient
   potential?: number;
   color?: number;
@@ -97,7 +118,7 @@ export interface RecipeIngredient {
 // Recipe metrics/calculated values
 export interface RecipeMetrics {
   og: number; // Original Gravity
-  fg: number; // Final Gravity  
+  fg: number; // Final Gravity
   abv: number; // Alcohol by Volume
   ibu: number; // International Bitterness Units
   srm: number; // Standard Reference Method (color)
@@ -116,22 +137,22 @@ export interface Recipe extends BaseEntity {
   is_public: boolean;
   version?: number;
   parent_recipe_id?: ID;
-  
+
   // Brewing parameters
   boil_time?: number; // in minutes
   efficiency?: number; // percentage
   notes?: string;
-  
+
   // Calculated/estimated values
   estimated_og?: number;
   estimated_fg?: number;
   estimated_abv?: number;
   estimated_ibu?: number;
   estimated_srm?: number;
-  
+
   // Ingredients
   ingredients: RecipeIngredient[];
-  
+
   // Timestamps
   created_at?: string;
   updated_at?: string;
@@ -205,6 +226,7 @@ export interface RecipeSearchFilters {
 }
 
 // Recipe formdata for API submission
-export interface RecipeFormData extends Omit<Recipe, 'recipe_id' | 'created_at' | 'updated_at'> {
+export interface RecipeFormData
+  extends Omit<Recipe, "recipe_id" | "created_at" | "updated_at"> {
   recipe_id?: ID;
 }

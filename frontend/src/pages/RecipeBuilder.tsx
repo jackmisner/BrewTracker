@@ -80,7 +80,9 @@ function RecipeBuilder(): React.ReactElement {
   /**
    * Handle BeerXML import - UPDATED to handle cache invalidation and avoid race conditions
    */
-  const handleBeerXMLImport = async (importData: BeerXMLImportData): Promise<void> => {
+  const handleBeerXMLImport = async (
+    importData: BeerXMLImportData
+  ): Promise<void> => {
     setBeerXMLState((prev) => ({ ...prev, importing: true }));
 
     try {
@@ -97,7 +99,7 @@ function RecipeBuilder(): React.ReactElement {
       // For new recipes, replace current recipe with imported data
       if (!isEditing) {
         // Import all recipe data at once to avoid timing issues
-        if (importData.recipe && typeof importData.recipe === 'object') {
+        if (importData.recipe && typeof importData.recipe === "object") {
           // Extract recipe data excluding ingredients since they're handled separately
           const { ingredients: _, ...recipeData } = importData.recipe;
           await importRecipeData(recipeData);
@@ -154,7 +156,9 @@ function RecipeBuilder(): React.ReactElement {
       }
 
       // Export using backend service
-      const exportResult = await Services.BeerXML.service.exportRecipe(recipe.recipe_id);
+      const exportResult = await Services.BeerXML.service.exportRecipe(
+        recipe.recipe_id
+      );
 
       // Download the file
       Services.BeerXML.service.downloadBeerXML(
@@ -224,7 +228,7 @@ function RecipeBuilder(): React.ReactElement {
   return React.createElement(
     "div",
     { id: "recipe-builder", className: "container" },
-    
+
     // Header with title, status indicators, and BeerXML actions
     React.createElement(
       "div",
@@ -235,9 +239,7 @@ function RecipeBuilder(): React.ReactElement {
         React.createElement(
           "h1",
           { className: "page-title" },
-          isEditing
-            ? `Edit Recipe: ${recipeDisplayName}`
-            : "Create New Recipe",
+          isEditing ? `Edit Recipe: ${recipeDisplayName}` : "Create New Recipe",
           hasUnsavedChanges &&
             React.createElement(
               "span",
@@ -262,13 +264,15 @@ function RecipeBuilder(): React.ReactElement {
                   showImportExport: !prev.showImportExport,
                 })),
               className: "btn btn-outline",
-              disabled: saving || beerXMLState.importing || beerXMLState.exporting,
+              disabled:
+                saving || beerXMLState.importing || beerXMLState.exporting,
             },
             "📄 BeerXML"
           ),
 
           // Quick export button for existing recipes
-          isEditing && recipe.recipe_id &&
+          isEditing &&
+            recipe.recipe_id &&
             React.createElement(
               "button",
               {
@@ -281,7 +285,9 @@ function RecipeBuilder(): React.ReactElement {
                 ? React.createElement(
                     React.Fragment,
                     null,
-                    React.createElement("span", { className: "button-spinner" }),
+                    React.createElement("span", {
+                      className: "button-spinner",
+                    }),
                     "Exporting..."
                   )
                 : "📤 Export"
@@ -414,7 +420,7 @@ function RecipeBuilder(): React.ReactElement {
       React.createElement(
         "div",
         { className: "recipe-builder-main" },
-        
+
         // Recipe Details Form - UPDATED: Pass metrics to RecipeDetails
         React.createElement(RecipeDetails, {
           recipe: recipe,
@@ -435,7 +441,11 @@ function RecipeBuilder(): React.ReactElement {
           React.createElement(
             "div",
             { className: "ingredients-header" },
-            React.createElement("h2", { className: "section-title" }, "Ingredients")
+            React.createElement(
+              "h2",
+              { className: "section-title" },
+              "Ingredients"
+            )
           ),
 
           // AI Suggestions

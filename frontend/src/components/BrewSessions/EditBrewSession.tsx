@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
-import { BrewSession, BrewSessionStatus, UpdateBrewSessionFormData } from "../../types";
+import {
+  BrewSession,
+  BrewSessionStatus,
+  UpdateBrewSessionFormData,
+} from "../../types";
 import "../../styles/BrewSessions.css";
 
 interface EditBrewSessionFormData {
@@ -57,7 +61,9 @@ const EditBrewSession: React.FC = () => {
         setLoading(true);
         setError("");
 
-        const sessionData = await Services.brewSession.fetchBrewSession(sessionId);
+        const sessionData = await Services.brewSession.fetchBrewSession(
+          sessionId
+        );
         setSession(sessionData);
 
         // Helper function to safely format date or return empty string for form display
@@ -105,7 +111,11 @@ const EditBrewSession: React.FC = () => {
     fetchSession();
   }, [sessionId, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -113,7 +123,9 @@ const EditBrewSession: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!sessionId) {

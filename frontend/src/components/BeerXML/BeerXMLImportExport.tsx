@@ -61,7 +61,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   /**
    * Handle file selection for import
    */
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -101,7 +103,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       );
 
       // Parse BeerXML using backend
-      const parsedRecipes = await Services.BeerXML.service.parseBeerXML(fileContent);
+      const parsedRecipes = await Services.BeerXML.service.parseBeerXML(
+        fileContent
+      );
       setImportState((prev) => ({
         ...prev,
         parsedRecipes,
@@ -211,7 +215,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       const result = await Services.BeerXML.service.exportRecipe(recipe.id);
 
       // Download file
-      Services.BeerXML.service.downloadBeerXML(result.xmlContent, result.filename);
+      Services.BeerXML.service.downloadBeerXML(
+        result.xmlContent,
+        result.filename
+      );
 
       if (onExport) {
         onExport({ success: true, filename: result.filename });
@@ -359,8 +366,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   >
                     {importState.parsedRecipes.map((recipe, index) => (
                       <option key={index} value={index}>
-                        {recipe?.recipe?.name || 'Unknown Recipe'} ({recipe?.ingredients?.length || 0}{" "}
-                        ingredients)
+                        {recipe?.recipe?.name || "Unknown Recipe"} (
+                        {recipe?.ingredients?.length || 0} ingredients)
                       </option>
                     ))}
                   </select>
@@ -375,23 +382,24 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     <div className="detail-row">
                       <span className="label">Name:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.name || 'N/A'}
+                        {importState.selectedRecipe?.name || "N/A"}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Style:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.style ||
-                          "Not specified"}
+                        {importState.selectedRecipe?.style || "Not specified"}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Batch Size:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.batch_size?.toFixed(
-                          0
-                        ) || 'N/A'}{" "}
-                        {importState.selectedRecipe?.batch_size_unit === "l" ? "L" : (importState.selectedRecipe?.batch_size_unit || "gal")}
+                        {importState.selectedRecipe?.batch_size?.toFixed(0) ||
+                          "N/A"}{" "}
+                        {importState.selectedRecipe?.batch_size_unit === "l"
+                          ? "L"
+                          : importState.selectedRecipe?.batch_size_unit ||
+                            "gal"}
                       </span>
                     </div>
                     <div className="detail-row">

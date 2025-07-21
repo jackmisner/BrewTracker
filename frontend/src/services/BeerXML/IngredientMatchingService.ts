@@ -187,27 +187,29 @@ class IngredientMatchingService {
       const searchResults = fuse.search(importedIngredient.name);
 
       // Enhanced matching for each result
-      const enhancedMatches: EnhancedMatch[] = searchResults.map((searchResult: any) => {
-        const match = searchResult.item;
-        const baseScore = 1 - (searchResult.score || 0); // Convert to confidence score
+      const enhancedMatches: EnhancedMatch[] = searchResults.map(
+        (searchResult: any) => {
+          const match = searchResult.item;
+          const baseScore = 1 - (searchResult.score || 0); // Convert to confidence score
 
-        // Apply ingredient-specific scoring
-        const enhancedScore = this.calculateEnhancedScore(
-          importedIngredient,
-          match,
-          baseScore
-        );
+          // Apply ingredient-specific scoring
+          const enhancedScore = this.calculateEnhancedScore(
+            importedIngredient,
+            match,
+            baseScore
+          );
 
-        return {
-          ingredient: match,
-          confidence: enhancedScore,
-          reasons: this.getMatchReasons(importedIngredient, match),
-          nameMatch: this.calculateNameSimilarity(
-            importedIngredient.name,
-            match.name
-          ),
-        };
-      });
+          return {
+            ingredient: match,
+            confidence: enhancedScore,
+            reasons: this.getMatchReasons(importedIngredient, match),
+            nameMatch: this.calculateNameSimilarity(
+              importedIngredient.name,
+              match.name
+            ),
+          };
+        }
+      );
 
       // Sort by confidence and take top matches
       enhancedMatches.sort((a, b) => b.confidence - a.confidence);
@@ -273,7 +275,9 @@ class IngredientMatchingService {
     }
 
     // Penalty for significant differences
-    if (this.hasSignificantDifferences(importedIngredient, existingIngredient)) {
+    if (
+      this.hasSignificantDifferences(importedIngredient, existingIngredient)
+    ) {
       enhancedScore *= 0.7; // 30% penalty
     }
 
@@ -377,7 +381,9 @@ class IngredientMatchingService {
 
     // Bonus for matching code
     if ((imported as any).code && existing.code) {
-      if ((imported as any).code.toLowerCase() === existing.code.toLowerCase()) {
+      if (
+        (imported as any).code.toLowerCase() === existing.code.toLowerCase()
+      ) {
         score += 0.4;
       }
     }
@@ -404,7 +410,9 @@ class IngredientMatchingService {
 
     // Bonus for similar attenuation, penalty for very different attenuation
     if (imported.attenuation && existing.attenuation) {
-      const attenuationDiff = Math.abs(imported.attenuation - existing.attenuation);
+      const attenuationDiff = Math.abs(
+        imported.attenuation - existing.attenuation
+      );
       if (attenuationDiff <= 5) {
         score += 0.1;
       } else if (attenuationDiff > 15) {
@@ -532,9 +540,12 @@ class IngredientMatchingService {
             reasons.push("Same manufacturer");
           }
         }
-        
+
         // Check BeerXML laboratory match
-        if ((imported as any).beerxml_data?.laboratory && existing.manufacturer) {
+        if (
+          (imported as any).beerxml_data?.laboratory &&
+          existing.manufacturer
+        ) {
           if (
             (imported as any).beerxml_data.laboratory.toLowerCase() ===
             existing.manufacturer.toLowerCase()
@@ -542,14 +553,16 @@ class IngredientMatchingService {
             reasons.push("Same manufacturer/lab");
           }
         }
-        
+
         // Check direct code match
         if ((imported as any).code && existing.code) {
-          if ((imported as any).code.toLowerCase() === existing.code.toLowerCase()) {
+          if (
+            (imported as any).code.toLowerCase() === existing.code.toLowerCase()
+          ) {
             reasons.push("Same product code");
           }
         }
-        
+
         // Check BeerXML product ID match
         if ((imported as any).beerxml_data?.product_id && existing.code) {
           if (
@@ -570,10 +583,10 @@ class IngredientMatchingService {
    */
   calculateNameSimilarity(name1: string, name2: string): number {
     if (!name1 || !name2) return 0;
-    
+
     const clean1 = this.cleanIngredientName(name1);
     const clean2 = this.cleanIngredientName(name2);
-    
+
     if (!clean1 || !clean2) return 0;
 
     // Exact match
@@ -598,10 +611,10 @@ class IngredientMatchingService {
       .replace(/[^a-z0-9\s]/g, "") // Remove special characters
       .replace(/\s+/g, " ") // Normalize whitespace
       .trim();
-    
+
     // Handle crystal/caramel interchangeability
     cleanedName = this.normalizeIngredientSynonyms(cleanedName);
-    
+
     return cleanedName;
   }
 
@@ -612,7 +625,7 @@ class IngredientMatchingService {
     // Handle crystal/caramel interchangeability
     // Crystal malts and caramel malts are essentially the same thing
     // Use global replacement to handle cases like "crystalcaramel" where special chars were removed
-    return name.replace(/crystal/g, 'caramel');
+    return name.replace(/crystal/g, "caramel");
   }
 
   /**
@@ -669,7 +682,7 @@ class IngredientMatchingService {
     const words1 = new Set(name1.split(" "));
     const words2 = new Set(name2.split(" "));
 
-    const intersection = new Set([...words1].filter(x => words2.has(x)));
+    const intersection = new Set([...words1].filter((x) => words2.has(x)));
     const union = new Set([...words1, ...words2]);
 
     return union.size === 0 ? 0 : intersection.size / union.size;
@@ -678,7 +691,9 @@ class IngredientMatchingService {
   /**
    * Generate suggested data for new ingredient creation
    */
-  generateNewIngredientData(importedIngredient: RecipeIngredient): Partial<Ingredient> {
+  generateNewIngredientData(
+    importedIngredient: RecipeIngredient
+  ): Partial<Ingredient> {
     const baseData: Partial<Ingredient> = {
       name: importedIngredient.name,
       type: importedIngredient.type,
@@ -689,7 +704,8 @@ class IngredientMatchingService {
     switch (importedIngredient.type) {
       case "grain":
         if (importedIngredient.color) baseData.color = importedIngredient.color;
-        if (importedIngredient.potential) baseData.potential = importedIngredient.potential;
+        if (importedIngredient.potential)
+          baseData.potential = importedIngredient.potential;
         if (importedIngredient.grain_type) {
           baseData.grain_type = importedIngredient.grain_type;
         } else {
@@ -703,14 +719,18 @@ class IngredientMatchingService {
         break;
 
       case "hop":
-        if (importedIngredient.alpha_acid) baseData.alpha_acid = importedIngredient.alpha_acid;
+        if (importedIngredient.alpha_acid)
+          baseData.alpha_acid = importedIngredient.alpha_acid;
         break;
 
       case "yeast":
-        if (importedIngredient.attenuation) baseData.attenuation = importedIngredient.attenuation;
-        if ((importedIngredient as any).manufacturer) baseData.manufacturer = (importedIngredient as any).manufacturer;
-        if ((importedIngredient as any).code) baseData.code = (importedIngredient as any).code;
-        
+        if (importedIngredient.attenuation)
+          baseData.attenuation = importedIngredient.attenuation;
+        if ((importedIngredient as any).manufacturer)
+          baseData.manufacturer = (importedIngredient as any).manufacturer;
+        if ((importedIngredient as any).code)
+          baseData.code = (importedIngredient as any).code;
+
         // Handle BeerXML yeast data structure
         if ((importedIngredient as any).beerxml_data) {
           const beerxmlData = (importedIngredient as any).beerxml_data;
@@ -722,13 +742,19 @@ class IngredientMatchingService {
           }
           // Add temperature ranges if available
           if (beerxmlData.min_temperature) {
-            baseData.min_temperature = parseInt(beerxmlData.min_temperature, 10);
+            baseData.min_temperature = parseInt(
+              beerxmlData.min_temperature,
+              10
+            );
           }
           if (beerxmlData.max_temperature) {
-            baseData.max_temperature = parseInt(beerxmlData.max_temperature, 10);
+            baseData.max_temperature = parseInt(
+              beerxmlData.max_temperature,
+              10
+            );
           }
         }
-        
+
         // Add default alcohol tolerance for tests
         if (!baseData.alcohol_tolerance) {
           baseData.alcohol_tolerance = 12;
@@ -743,7 +769,9 @@ class IngredientMatchingService {
    * Generate cache key for ingredient
    */
   generateCacheKey(ingredient: RecipeIngredient): string {
-    return `${ingredient.type}-${ingredient.name}-${ingredient.alpha_acid || ''}-${ingredient.color || ''}`;
+    return `${ingredient.type}-${ingredient.name}-${
+      ingredient.alpha_acid || ""
+    }-${ingredient.color || ""}`;
   }
 
   /**

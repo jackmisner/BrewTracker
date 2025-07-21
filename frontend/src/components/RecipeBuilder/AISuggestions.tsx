@@ -33,6 +33,14 @@ interface IngredientChange {
   // For adding new ingredients
   isNewIngredient?: boolean;
   newIngredientData?: CreateRecipeIngredientData;
+  // For consolidated changes (multiple field changes for same ingredient)
+  changes?: Array<{
+    field: string;
+    original_value: any;
+    optimized_value: any;
+    unit?: string;
+    change_reason: string;
+  }>;
 }
 
 interface OptimizationResult {
@@ -42,7 +50,6 @@ interface OptimizationResult {
   optimizedRecipe: any;
   recipeChanges: any[];
   iterationsCompleted: number;
-  remainingSuggestions: any[];
 }
 
 interface AISuggestionsProps {
@@ -89,7 +96,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   // Convert backend API suggestions to frontend format
   const convertBackendSuggestions = useCallback(
     (backendSuggestions: any[]): Suggestion[] => {
-      return backendSuggestions.map((suggestion, index) => ({
+      // Filter out optimization_summary suggestions
+      const filteredSuggestions = backendSuggestions.filter(
+        (suggestion) => suggestion.type !== "optimization_summary"
+      );
+
+      return filteredSuggestions.map((suggestion, index) => ({
         id: `backend-${index}`,
         type: suggestion.type || "general",
         title: suggestion.title || "Recipe Improvement",
@@ -157,6 +169,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 time: change.time || change.new_ingredient_data?.time,
                 use: change.use || change.new_ingredient_data?.use,
               } as CreateRecipeIngredientData & { type: string })
+            : undefined,
+        // Handle consolidated changes (multiple field changes for same ingredient)
+        changes:
+          change.changes && Array.isArray(change.changes)
+            ? change.changes
             : undefined,
       };
 
@@ -230,7 +247,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           optimizedRecipe: response.optimized_recipe,
           recipeChanges: response.recipe_changes || [],
           iterationsCompleted: response.iterations_completed || 0,
-          remainingSuggestions: response.suggestions || [],
         });
         setSuggestions([]); // Clear individual suggestions since we have complete optimization
       } else {
@@ -765,67 +781,21 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   };
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        margin: "20px 0",
-        background: "#f9f9f9",
-      }}
-    >
-      <div
-        style={{
-          padding: "15px",
-          borderBottom: "1px solid #ddd",
-          background: "#fff",
-          borderRadius: "8px 8px 0 0",
-        }}
-      >
+    <div className="ai-suggestions-container">
+      <div className="ai-suggestions-header">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
+          className="ai-suggestions-toggle"
         >
           {isExpanded ? "▼" : "▶"} AI Recipe Analysis
         </button>
 
         {isExpanded && (
-          <div
-            style={{
-              marginTop: "15px",
-              display: "flex",
-              gap: "15px",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="header-controls">
             {recipe.style && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 12px",
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: "4px",
-                  border: "1px solid #e9ecef",
-                }}
-              >
-                <span style={{ fontSize: "14px", color: "#666" }}>Style:</span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    color: "#333",
-                  }}
-                >
-                  {recipe.style}
-                </span>
+              <div className="style-display">
+                <span className="style-label">Style:</span>
+                <span className="style-value">{recipe.style}</span>
               </div>
             )}
 
@@ -834,36 +804,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               disabled={
                 analyzing || disabled || !ingredients.length || !metrics
               }
-              style={{
-                padding: "10px 20px",
-                background:
-                  analyzing || disabled || !ingredients.length || !metrics
-                    ? "#ccc"
-                    : "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor:
-                  analyzing || disabled || !ingredients.length || !metrics
-                    ? "not-allowed"
-                    : "pointer",
-              }}
+              className="btn-analyze"
             >
               {analyzing ? "Analyzing..." : "Analyze Recipe"}
             </button>
 
             {hasAnalyzed && (
-              <button
-                onClick={clearSuggestions}
-                style={{
-                  padding: "10px 20px",
-                  background: "#6c757d",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={clearSuggestions} className="btn-secondary">
                 Clear Results
               </button>
             )}
@@ -872,43 +819,21 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       </div>
 
       {isExpanded && (
-        <div style={{ padding: "15px" }}>
-          {error && (
-            <div
-              style={{
-                color: "red",
-                margin: "10px 0",
-                padding: "10px",
-                background: "#ffe6e6",
-                borderRadius: "4px",
-              }}
-            >
-              Error: {error}
-            </div>
-          )}
+        <div className="ai-suggestions-content">
+          {error && <div className="ai-suggestions-error">Error: {error}</div>}
 
           {analyzing && (
-            <div
-              style={{ textAlign: "center", padding: "20px", color: "#666" }}
-            >
+            <div className="ai-suggestions-loading">
               <p>🤖 Analyzing recipe...</p>
             </div>
           )}
 
           {hasAnalyzed && !analyzing && optimizationResult && (
-            <div
-              style={{
-                background: "white",
-                border: "2px solid #28a745",
-                borderRadius: "8px",
-                padding: "20px",
-                marginBottom: "20px",
-              }}
-            >
-              <h4 style={{ color: "#28a745", marginTop: 0 }}>
+            <div className="optimization-results">
+              <h4 className="optimization-title">
                 Recipe Optimization Complete!
               </h4>
-              <p>
+              <p className="optimization-subtitle">
                 Internal optimization completed in{" "}
                 <strong>
                   {optimizationResult.iterationsCompleted} iterations
@@ -916,49 +841,25 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               </p>
 
               {/* Metrics comparison */}
-              <div
-                style={{
-                  background: "#f8f9fa",
-                  padding: "15px",
-                  borderRadius: "6px",
-                  marginBottom: "15px",
-                }}
-              >
+              <div className="metrics-improvement">
                 <h5>Metrics Improvement</h5>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                    gap: "15px",
-                  }}
-                >
+                <div className="metrics-grid">
                   {Object.entries(optimizationResult.originalMetrics || {}).map(
                     ([metric, originalValue]) => {
                       const optimizedValue =
                         optimizationResult.optimizedMetrics?.[metric];
                       const isImproved = originalValue !== optimizedValue;
                       return (
-                        <div key={metric} style={{ textAlign: "center" }}>
+                        <div key={metric} className="metric-item">
+                          <div className="metric-label">{metric}</div>
                           <div
-                            style={{
-                              fontWeight: "bold",
-                              textTransform: "uppercase",
-                              fontSize: "12px",
-                              color: "#666",
-                            }}
-                          >
-                            {metric}
-                          </div>
-                          <div
-                            style={{ color: isImproved ? "#28a745" : "#666" }}
+                            className={`metric-value ${
+                              isImproved ? "improved" : ""
+                            }`}
                           >
                             {originalValue} → {optimizedValue}
                             {isImproved && (
-                              <span
-                                style={{ fontSize: "12px", marginLeft: "5px" }}
-                              >
-                                ✓
-                              </span>
+                              <span className="metric-checkmark">✓</span>
                             )}
                           </div>
                         </div>
@@ -970,129 +871,115 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
               {/* Recipe changes summary */}
               {optimizationResult.recipeChanges.length > 0 && (
-                <div
-                  style={{
-                    background: "#e9ecef",
-                    padding: "15px",
-                    borderRadius: "6px",
-                    marginBottom: "15px",
-                  }}
-                >
+                <div className="changes-made">
                   <h5>
-                    Changes Made ({optimizationResult.recipeChanges.length - 1})
+                    Changes Made (
+                    {
+                      optimizationResult.recipeChanges.filter(
+                        (change: any) => change.type !== "optimization_summary"
+                      ).length
+                    }
+                    )
                   </h5>
-                  <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-                    {optimizationResult.recipeChanges.map((change, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          padding: "8px",
-                          background: "white",
-                          marginBottom: "8px",
-                          borderRadius: "4px",
-                          borderLeft: "3px solid #007bff",
-                        }}
-                      >
-                        {change.type === "ingredient_modified" && (
-                          <div>
-                            <strong>{change.ingredient_name}:</strong>{" "}
-                            {change.field} changed from {change.original_value}{" "}
-                            to {change.optimized_value} {change.unit}
-                          </div>
-                        )}
-                        {change.type === "ingredient_added" && (
-                          <div>
-                            <strong>Added:</strong> {change.ingredient_name} (
-                            {change.amount} {change.unit})
-                          </div>
-                        )}
-                        {change.type === "ingredient_substituted" && (
-                          <div>
-                            <strong>Substituted:</strong>{" "}
-                            {change.original_ingredient} →{" "}
-                            {change.optimized_ingredient}
-                          </div>
-                        )}
-                        {change.type === "optimization_summary" && (
-                          <div>
-                            <strong>Summary:</strong> {change.final_compliance}{" "}
-                            ({change.iterations_completed} iterations)
-                          </div>
-                        )}
+                  <div className="changes-scroll">
+                    {optimizationResult.recipeChanges
+                      .filter(
+                        (change: any) => change.type !== "optimization_summary"
+                      )
+                      .map((change, idx) => (
                         <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#666",
-                            fontStyle: "italic",
-                            marginTop: "4px",
-                          }}
+                          key={idx}
+                          className={`change-item ${
+                            change.ingredient_type || ""
+                          }`}
                         >
-                          {change.change_reason}
+                          {change.type === "ingredient_modified" && (
+                            <div>
+                              <strong>{change.ingredient_name}:</strong>{" "}
+                              {change.changes &&
+                              Array.isArray(change.changes) ? (
+                                // Consolidated changes - multiple field changes
+                                <div className="consolidated-changes">
+                                  {change.changes.map(
+                                    (fieldChange: any, fieldIdx: number) => (
+                                      <div
+                                        key={fieldIdx}
+                                        className="consolidated-change-item"
+                                      >
+                                        <span>
+                                          • {fieldChange.field} changed from{" "}
+                                          {fieldChange.field === "amount"
+                                            ? formatIngredientAmount(
+                                                fieldChange.original_value,
+                                                fieldChange.unit || "g",
+                                                "grain",
+                                                unitSystem
+                                              )
+                                            : fieldChange.original_value}{" "}
+                                          to{" "}
+                                          {fieldChange.field === "amount"
+                                            ? formatIngredientAmount(
+                                                fieldChange.optimized_value,
+                                                fieldChange.unit || "g",
+                                                "grain",
+                                                unitSystem
+                                              )
+                                            : fieldChange.field === "time"
+                                            ? `${fieldChange.optimized_value} min`
+                                            : fieldChange.optimized_value}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                // Single change - original logic
+                                <span>
+                                  {change.field} changed from{" "}
+                                  {change.original_value} to{" "}
+                                  {change.optimized_value} {change.unit}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {change.type === "ingredient_added" && (
+                            <div>
+                              <strong>Added:</strong> {change.ingredient_name} (
+                              {change.amount} {change.unit})
+                            </div>
+                          )}
+                          {change.type === "ingredient_substituted" && (
+                            <div>
+                              <strong>Substituted:</strong>{" "}
+                              {change.original_ingredient} →{" "}
+                              {change.optimized_ingredient}
+                            </div>
+                          )}
+                          <div className="change-description">
+                            {change.change_reason}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               )}
 
               {/* Apply button */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "center",
-                }}
-              >
+              <div className="optimization-actions">
                 <button
                   onClick={() => applyOptimizedRecipe(optimizationResult)}
                   disabled={disabled}
-                  style={{
-                    background: disabled ? "#ccc" : "#28a745",
-                    color: "white",
-                    border: "none",
-                    padding: "12px 24px",
-                    borderRadius: "6px",
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                  }}
+                  className="btn-apply"
                 >
                   Apply Optimized Recipe
                 </button>
                 <button
                   onClick={() => setOptimizationResult(null)}
-                  style={{
-                    background: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    padding: "12px 24px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
+                  className="btn-secondary"
                 >
                   Keep Original Recipe
                 </button>
               </div>
-
-              {/* Remaining suggestions if any */}
-              {optimizationResult.remainingSuggestions.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "20px",
-                    paddingTop: "15px",
-                    borderTop: "1px solid #dee2e6",
-                  }}
-                >
-                  <h5>
-                    Additional Fine-tuning Available (
-                    {optimizationResult.remainingSuggestions.length})
-                  </h5>
-                  <p style={{ fontSize: "14px", color: "#666" }}>
-                    These minor adjustments can be applied after accepting the
-                    optimized recipe.
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
@@ -1101,146 +988,127 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             suggestions.length === 0 &&
             !optimizationResult &&
             !error && (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "20px",
-                  color: "#28a745",
-                }}
-              >
+              <div className="ai-suggestions-success">
                 <p>✅ Recipe analysis complete - no suggestions needed!</p>
                 <p>Your recipe looks well-balanced for the current style.</p>
               </div>
             )}
 
           {suggestions.length > 0 && (
-            <div>
+            <div className="suggestions-list">
               <h4>Suggestions ({suggestions.length})</h4>
               {suggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  style={{
-                    background: "white",
-                    border: "1px solid #ddd",
-                    borderRadius: "6px",
-                    padding: "15px",
-                    marginBottom: "15px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <h5 style={{ margin: 0 }}>{suggestion.title}</h5>
+                <div key={suggestion.id} className="individual-suggestion">
+                  <div className="individual-suggestion-header">
+                    <h5>{suggestion.title}</h5>
                     <span
-                      style={{
-                        color:
-                          suggestion.confidence === "high"
-                            ? "#28a745"
-                            : suggestion.confidence === "medium"
-                            ? "#ffc107"
-                            : "#dc3545",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                      }}
+                      className={`confidence-badge confidence-${suggestion.confidence}`}
                     >
                       {suggestion.confidence} confidence
                     </span>
                   </div>
 
-                  <p style={{ margin: "10px 0" }}>{suggestion.description}</p>
+                  <p>{suggestion.description}</p>
 
-                  <div
-                    style={{
-                      margin: "15px 0",
-                      padding: "10px",
-                      background: "#f8f9fa",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    {suggestion.changes.map((change, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          marginBottom: "8px",
-                          padding: "8px",
-                          background: "white",
-                          borderRadius: "4px",
-                          borderLeft: "3px solid #007bff",
-                        }}
-                      >
-                        <strong>{change.ingredientName}:</strong>
-                        {change.isNewIngredient ? (
-                          <span>
-                            {" "}
-                            Add{" "}
-                            {formatIngredientAmount(
-                              change.suggestedValue,
-                              change.newIngredientData?.unit || "g",
-                              "grain",
-                              unitSystem
-                            )}
-                          </span>
-                        ) : (change as any).is_yeast_strain_change &&
-                          change.field === "ingredient_id" ? (
-                          <span>
-                            {" "}
-                            Switch to {(change as any).suggested_name} (
-                            {(change as any).suggested_attenuation}%
-                            attenuation)
-                          </span>
-                        ) : (
-                          <span>
-                            {" "}
-                            Change {change.field} from {change.currentValue} to{" "}
-                            {change.suggestedValue}
-                          </span>
-                        )}
+                  <div className="individual-suggestion-changes">
+                    {suggestion.changes.map((change, idx) => {
+                      const isConsolidated =
+                        change.changes && Array.isArray(change.changes);
+
+                      // Determine ingredient type from the current ingredients list
+                      const ingredient = ingredients.find(
+                        (ing) =>
+                          ing.name === change.ingredientName ||
+                          ing.id === change.ingredientId
+                      );
+                      const ingredientType = ingredient?.type || "";
+
+                      return (
                         <div
-                          style={{
-                            fontSize: "12px",
-                            color: "#666",
-                            fontStyle: "italic",
-                            marginTop: "4px",
-                          }}
+                          key={idx}
+                          className={`suggestion-change-item ${ingredientType}`}
                         >
-                          {change.reason}
+                          <strong>{change.ingredientName}:</strong>
+                          {change.isNewIngredient ? (
+                            <span>
+                              {" "}
+                              Add{" "}
+                              {formatIngredientAmount(
+                                change.suggestedValue,
+                                change.newIngredientData?.unit || "g",
+                                "grain",
+                                unitSystem
+                              )}
+                            </span>
+                          ) : (change as any).is_yeast_strain_change &&
+                            change.field === "ingredient_id" ? (
+                            <span>
+                              {" "}
+                              Switch to {(change as any).suggested_name} (
+                              {(change as any).suggested_attenuation}%
+                              attenuation)
+                            </span>
+                          ) : isConsolidated ? (
+                            // Render consolidated changes (multiple field changes)
+                            <div className="consolidated-changes">
+                              {change.changes!.map((fieldChange, fieldIdx) => (
+                                <div
+                                  key={fieldIdx}
+                                  className="consolidated-change-item"
+                                >
+                                  <span>
+                                    • {fieldChange.field} changed from{" "}
+                                    {fieldChange.field === "amount"
+                                      ? formatIngredientAmount(
+                                          fieldChange.original_value,
+                                          fieldChange.unit || "g",
+                                          "grain",
+                                          unitSystem
+                                        )
+                                      : fieldChange.original_value}{" "}
+                                    to{" "}
+                                    {fieldChange.field === "amount"
+                                      ? formatIngredientAmount(
+                                          fieldChange.optimized_value,
+                                          fieldChange.unit || "g",
+                                          "grain",
+                                          unitSystem
+                                        )
+                                      : fieldChange.field === "time"
+                                      ? `${fieldChange.optimized_value} min`
+                                      : fieldChange.optimized_value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>
+                              {" "}
+                              Change {change.field} from {change.currentValue}{" "}
+                              to {change.suggestedValue}
+                            </span>
+                          )}
+                          <div className="change-description">
+                            {isConsolidated
+                              ? "Multiple optimizations: Recipe optimization to meet style guidelines, Hop timing optimization for better brewing practice"
+                              : change.reason}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
-                  <div
-                    style={{ display: "flex", gap: "10px", marginTop: "15px" }}
-                  >
+                  <div className="individual-suggestion-actions">
                     <button
                       onClick={() => applySuggestion(suggestion)}
                       disabled={disabled}
-                      style={{
-                        background: disabled ? "#ccc" : "#28a745",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 16px",
-                        borderRadius: "4px",
-                        cursor: disabled ? "not-allowed" : "pointer",
-                      }}
+                      className="btn-apply"
                     >
                       Apply Changes
                     </button>
                     <button
                       onClick={() => dismissSuggestion(suggestion.id)}
-                      style={{
-                        background: "#6c757d",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 16px",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
+                      className="btn-secondary"
                     >
                       Dismiss
                     </button>

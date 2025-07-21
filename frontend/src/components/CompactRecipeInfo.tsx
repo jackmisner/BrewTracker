@@ -6,13 +6,11 @@ interface CompactRecipeInfoProps {
   recipe: Recipe;
 }
 
-
 const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
-
   return (
     <div className="compact-recipe-info-panel">
       <h3 className="compact-recipe-info-title">Recipe Details</h3>
-      
+
       <div className="compact-recipe-info-grid">
         <div className="compact-recipe-info-item">
           <span className="compact-recipe-info-label">Batch Size</span>
@@ -20,7 +18,7 @@ const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
             {recipe.batch_size} {recipe.batch_size_unit}
           </span>
         </div>
-        
+
         {recipe.boil_time && (
           <div className="compact-recipe-info-item">
             <span className="compact-recipe-info-label">Boil Time</span>
@@ -29,7 +27,7 @@ const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
             </span>
           </div>
         )}
-        
+
         {recipe.efficiency && (
           <div className="compact-recipe-info-item">
             <span className="compact-recipe-info-label">Efficiency</span>
@@ -38,7 +36,7 @@ const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
             </span>
           </div>
         )}
-        
+
         {recipe.created_at && (
           <div className="compact-recipe-info-item">
             <span className="compact-recipe-info-label">Created</span>
@@ -47,13 +45,10 @@ const CompactRecipeInfo: React.FC<CompactRecipeInfoProps> = ({ recipe }) => {
             </span>
           </div>
         )}
-        
       </div>
-      
+
       {recipe.description && (
-        <div className="compact-recipe-description">
-          {recipe.description}
-        </div>
+        <div className="compact-recipe-description">{recipe.description}</div>
       )}
     </div>
   );

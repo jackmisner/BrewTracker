@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Services } from "../services";
 import {
   UnitSystem,
@@ -6,7 +12,7 @@ import {
   UnitConversion,
   RecipeIngredient,
   IngredientUnit,
-} from '../types';
+} from "../types";
 
 // Unit option interface for common units
 interface UnitOption {
@@ -36,12 +42,29 @@ interface UnitContextValue {
   getPreferredUnit: (unitType: MeasurementType) => string;
 
   // Conversions
-  convertUnit: (value: number | string, fromUnit: string, toUnit: string) => UnitConversion;
-  convertForDisplay: (value: number | string, storageUnit: string, measurementType: MeasurementType) => UnitConversion;
-  convertForStorage: (value: number | string, displayUnit: string, measurementType: MeasurementType) => UnitConversion;
+  convertUnit: (
+    value: number | string,
+    fromUnit: string,
+    toUnit: string
+  ) => UnitConversion;
+  convertForDisplay: (
+    value: number | string,
+    storageUnit: string,
+    measurementType: MeasurementType
+  ) => UnitConversion;
+  convertForStorage: (
+    value: number | string,
+    displayUnit: string,
+    measurementType: MeasurementType
+  ) => UnitConversion;
 
   // Formatting
-  formatValue: (value: number | string, unit: string, measurementType: MeasurementType, precision?: number) => string;
+  formatValue: (
+    value: number | string,
+    unit: string,
+    measurementType: MeasurementType,
+    precision?: number
+  ) => string;
 
   // Utilities
   getUnitSystemLabel: () => string;
@@ -82,7 +105,8 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
     const loadUnitPreference = async (): Promise<void> => {
       try {
         const settings = await Services.userSettings.getUserSettings();
-        const preferredUnits: UnitSystem = settings.settings?.preferred_units || "imperial";
+        const preferredUnits: UnitSystem =
+          settings.settings?.preferred_units || "imperial";
         setUnitSystem(preferredUnits);
       } catch (err) {
         console.warn("Failed to load unit preferences, using default:", err);
@@ -138,7 +162,11 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   /**
    * Convert a value from one unit to another
    */
-  const convertUnit = (value: number | string, fromUnit: string, toUnit: string): UnitConversion => {
+  const convertUnit = (
+    value: number | string,
+    fromUnit: string,
+    toUnit: string
+  ): UnitConversion => {
     const numValue = parseFloat(value.toString());
     if (isNaN(numValue)) return { value: 0, unit: toUnit };
 
@@ -201,7 +229,11 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   /**
    * Convert a value from storage unit to display unit
    */
-  const convertForDisplay = (value: number | string, storageUnit: string, measurementType: MeasurementType): UnitConversion => {
+  const convertForDisplay = (
+    value: number | string,
+    storageUnit: string,
+    measurementType: MeasurementType
+  ): UnitConversion => {
     const preferredUnit = getPreferredUnit(measurementType);
     return convertUnit(value, storageUnit, preferredUnit);
   };
@@ -209,7 +241,11 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   /**
    * Convert a value from display unit to storage unit
    */
-  const convertForStorage = (value: number | string, displayUnit: string, measurementType: MeasurementType): UnitConversion => {
+  const convertForStorage = (
+    value: number | string,
+    displayUnit: string,
+    measurementType: MeasurementType
+  ): UnitConversion => {
     // Storage units are typically:
     // - Volume: gallons (gal)
     // - Weight: pounds (lb) for fermentables, grams (g) for hops/other
@@ -240,7 +276,12 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   /**
    * Format a value with its unit for display
    */
-  const formatValue = (value: number | string, unit: string, measurementType: MeasurementType, precision: number = 2): string => {
+  const formatValue = (
+    value: number | string,
+    unit: string,
+    measurementType: MeasurementType,
+    precision: number = 2
+  ): string => {
     const numValue = parseFloat(value.toString());
     if (isNaN(numValue)) return "0 " + unit;
 
@@ -347,7 +388,8 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
     const scalingFactor = toBatchSize / fromBatchSize;
 
     return ingredients.map((ingredient) => {
-      let convertedAmount = parseFloat(ingredient.amount.toString()) * scalingFactor;
+      let convertedAmount =
+        parseFloat(ingredient.amount.toString()) * scalingFactor;
       let convertedUnit: IngredientUnit = ingredient.unit;
 
       // Convert units if needed

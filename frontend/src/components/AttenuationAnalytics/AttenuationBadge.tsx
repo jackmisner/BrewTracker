@@ -26,7 +26,10 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
       setError(null);
 
       try {
-        const data = await attenuationAnalyticsServiceInstance.getYeastAnalytics(ingredientId);
+        const data =
+          await attenuationAnalyticsServiceInstance.getYeastAnalytics(
+            ingredientId
+          );
         setAnalytics(data);
       } catch (err) {
         // Analytics not available - this is normal for many yeast ingredients
@@ -49,17 +52,24 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
     );
   }
 
-  if (!analytics || !attenuationAnalyticsServiceInstance.hasSignificantData(analytics)) {
+  if (
+    !analytics ||
+    !attenuationAnalyticsServiceInstance.hasSignificantData(analytics)
+  ) {
     return null; // Don't show anything if no meaningful data
   }
 
-  const confidence = attenuationAnalyticsServiceInstance.getConfidenceLevel(analytics.attenuation_confidence);
-  const difference = attenuationAnalyticsServiceInstance.formatAttenuationDifference(
-    analytics.theoretical_attenuation,
-    analytics.actual_attenuation_average
+  const confidence = attenuationAnalyticsServiceInstance.getConfidenceLevel(
+    analytics.attenuation_confidence
   );
+  const difference =
+    attenuationAnalyticsServiceInstance.formatAttenuationDifference(
+      analytics.theoretical_attenuation,
+      analytics.actual_attenuation_average
+    );
 
-  const bestEstimate = attenuationAnalyticsServiceInstance.getBestEstimate(analytics);
+  const bestEstimate =
+    attenuationAnalyticsServiceInstance.getBestEstimate(analytics);
 
   return (
     <div className={`attenuation-badge ${confidence.level} ${className}`}>
@@ -70,7 +80,9 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
           {bestEstimate ? formatAttenuation(bestEstimate) : "N/A"} attenuation
         </span>
         <span className={`confidence-indicator ${confidence.color}`}>
-          {attenuationAnalyticsServiceInstance.formatConfidence(analytics.attenuation_confidence)}
+          {attenuationAnalyticsServiceInstance.formatConfidence(
+            analytics.attenuation_confidence
+          )}
         </span>
       </div>
 
@@ -84,14 +96,23 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
             </span>
           </div>
 
-          {analytics.actual_attenuation_average && analytics.theoretical_attenuation && (
-            <div className="detail-row">
-              <span className="detail-label">vs. Theoretical:</span>
-              <span className={`detail-value ${difference.direction === "higher" ? "positive" : difference.direction === "lower" ? "negative" : ""}`}>
-                {difference.formatted}
-              </span>
-            </div>
-          )}
+          {analytics.actual_attenuation_average &&
+            analytics.theoretical_attenuation && (
+              <div className="detail-row">
+                <span className="detail-label">vs. Theoretical:</span>
+                <span
+                  className={`detail-value ${
+                    difference.direction === "higher"
+                      ? "positive"
+                      : difference.direction === "lower"
+                      ? "negative"
+                      : ""
+                  }`}
+                >
+                  {difference.formatted}
+                </span>
+              </div>
+            )}
 
           {analytics.std_deviation && (
             <div className="detail-row">

@@ -1,8 +1,5 @@
 import ApiService from "../api";
-import {
-  AttenuationAnalytics,
-  ID,
-} from "../../types";
+import { AttenuationAnalytics, ID } from "../../types";
 
 /**
  * Service class for managing attenuation analytics functionality
@@ -17,7 +14,9 @@ class AttenuationAnalyticsService {
    */
   async getYeastAnalytics(ingredientId: ID): Promise<AttenuationAnalytics> {
     try {
-      const response = await ApiService.attenuationAnalytics.getYeastAnalytics(ingredientId);
+      const response = await ApiService.attenuationAnalytics.getYeastAnalytics(
+        ingredientId
+      );
       return response.data;
     } catch (error) {
       console.error("Error fetching yeast analytics:", error);
@@ -28,14 +27,17 @@ class AttenuationAnalyticsService {
   /**
    * Get analytics for all yeast ingredients with actual data
    */
-  async getAllYeastAnalytics(useCache: boolean = true): Promise<AttenuationAnalytics[]> {
+  async getAllYeastAnalytics(
+    useCache: boolean = true
+  ): Promise<AttenuationAnalytics[]> {
     // Check cache first if requested
     if (useCache && this.analyticsCache && this.isCacheValid()) {
       return this.analyticsCache;
     }
 
     try {
-      const response = await ApiService.attenuationAnalytics.getAllYeastAnalytics();
+      const response =
+        await ApiService.attenuationAnalytics.getAllYeastAnalytics();
       const analytics = response.data.yeast_analytics;
 
       // Update cache
@@ -56,11 +58,14 @@ class AttenuationAnalyticsService {
    */
   async getImprovedEstimate(ingredientId: ID): Promise<number> {
     try {
-      const response = await ApiService.attenuationAnalytics.getImprovedEstimate(ingredientId);
+      const response =
+        await ApiService.attenuationAnalytics.getImprovedEstimate(ingredientId);
       return response.data.improved_estimate;
     } catch (error) {
       console.error("Error fetching improved estimate:", error);
-      throw new Error(`Failed to get improved estimate for yeast ${ingredientId}`);
+      throw new Error(
+        `Failed to get improved estimate for yeast ${ingredientId}`
+      );
     }
   }
 
@@ -135,7 +140,10 @@ class AttenuationAnalyticsService {
   /**
    * Format attenuation difference between theoretical and actual
    */
-  formatAttenuationDifference(theoretical?: number, actual?: number): {
+  formatAttenuationDifference(
+    theoretical?: number,
+    actual?: number
+  ): {
     difference: number;
     direction: "higher" | "lower" | "same";
     formatted: string;
@@ -149,7 +157,8 @@ class AttenuationAnalyticsService {
     }
 
     const difference = actual - theoretical;
-    const direction = difference > 0 ? "higher" : difference < 0 ? "lower" : "same";
+    const direction =
+      difference > 0 ? "higher" : difference < 0 ? "lower" : "same";
     const formatted = `${difference > 0 ? "+" : ""}${difference.toFixed(1)}%`;
 
     return {
@@ -162,7 +171,9 @@ class AttenuationAnalyticsService {
   /**
    * Get analytics for yeast ingredients in a recipe
    */
-  async getRecipeYeastAnalytics(yeastIngredientIds: ID[]): Promise<AttenuationAnalytics[]> {
+  async getRecipeYeastAnalytics(
+    yeastIngredientIds: ID[]
+  ): Promise<AttenuationAnalytics[]> {
     if (yeastIngredientIds.length === 0) {
       return [];
     }
@@ -176,7 +187,9 @@ class AttenuationAnalyticsService {
       );
 
       const results = await Promise.all(analyticsPromises);
-      return results.filter((analytics): analytics is AttenuationAnalytics => analytics !== null);
+      return results.filter(
+        (analytics): analytics is AttenuationAnalytics => analytics !== null
+      );
     } catch (error) {
       console.error("Error fetching recipe yeast analytics:", error);
       return [];

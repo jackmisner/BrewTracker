@@ -1,8 +1,14 @@
-import { Recipe, RecipeMetrics, RecipeFormData, Ingredient, RecipeSearchFilters } from './recipe';
-import { BeerStyleGuide, StyleAnalysis, StyleSuggestion } from './beer-styles';
-import { BrewSession, FermentationEntry } from './brew-session';
-import { User, UserSettings } from './user';
-import { ApiResponse, PaginatedResponse, ID } from './common';
+import {
+  Recipe,
+  RecipeMetrics,
+  RecipeFormData,
+  Ingredient,
+  RecipeSearchFilters,
+} from "./recipe";
+import { BeerStyleGuide, StyleAnalysis, StyleSuggestion } from "./beer-styles";
+import { BrewSession, FermentationEntry } from "./brew-session";
+import { User, UserSettings } from "./user";
+import { ApiResponse, PaginatedResponse, ID } from "./common";
 
 // Authentication API types
 export interface LoginRequest {
@@ -63,17 +69,13 @@ export interface CreateRecipeRequest extends RecipeFormData {}
 
 export interface UpdateRecipeRequest extends Partial<RecipeFormData> {}
 
-export interface CloneRecipeResponse extends ApiResponse<Recipe> {
-
-}
+export interface CloneRecipeResponse extends ApiResponse<Recipe> {}
 
 export interface ClonePublicRecipeRequest {
   originalAuthor: string;
 }
 
-export interface ClonePublicRecipeResponse extends ApiResponse<Recipe> {
-
-}
+export interface ClonePublicRecipeResponse extends ApiResponse<Recipe> {}
 
 export interface RecipeMetricsResponse extends ApiResponse<RecipeMetrics> {
   data: RecipeMetrics & {
@@ -93,10 +95,11 @@ export interface CalculateMetricsPreviewRequest {
   batch_size_unit: string;
   efficiency: number;
   boil_time: number;
-  ingredients: Recipe['ingredients'];
+  ingredients: Recipe["ingredients"];
 }
 
-export interface CalculateMetricsPreviewResponse extends ApiResponse<RecipeMetrics> {}
+export interface CalculateMetricsPreviewResponse
+  extends ApiResponse<RecipeMetrics> {}
 
 export interface RecipeVersionHistoryResponse extends ApiResponse<Recipe[]> {}
 
@@ -116,9 +119,11 @@ export interface IngredientsResponse extends ApiResponse<Ingredient[]> {}
 
 export interface IngredientResponse extends ApiResponse<Ingredient> {}
 
-export interface CreateIngredientRequest extends Omit<Ingredient, 'ingredient_id' | 'created_at' | 'updated_at'> {}
+export interface CreateIngredientRequest
+  extends Omit<Ingredient, "ingredient_id" | "created_at" | "updated_at"> {}
 
-export interface UpdateIngredientRequest extends Partial<CreateIngredientRequest> {}
+export interface UpdateIngredientRequest
+  extends Partial<CreateIngredientRequest> {}
 
 export interface IngredientRecipesResponse extends PaginatedResponse<Recipe> {}
 
@@ -127,11 +132,13 @@ export interface BeerStylesResponse extends ApiResponse<BeerStyleGuide[]> {}
 
 export interface BeerStyleResponse extends ApiResponse<BeerStyleGuide> {}
 
-export interface StyleSuggestionsResponse extends ApiResponse<StyleSuggestion[]> {}
+export interface StyleSuggestionsResponse
+  extends ApiResponse<StyleSuggestion[]> {}
 
 export interface StyleAnalysisResponse extends ApiResponse<StyleAnalysis> {}
 
-export interface BeerStyleSearchResponse extends ApiResponse<BeerStyleGuide[]> {}
+export interface BeerStyleSearchResponse
+  extends ApiResponse<BeerStyleGuide[]> {}
 
 // Brew Session API types
 export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {
@@ -150,24 +157,29 @@ export interface BrewSessionsResponse extends PaginatedResponse<BrewSession> {
 
 export interface BrewSessionResponse extends ApiResponse<BrewSession> {}
 
-export interface CreateBrewSessionRequest extends Omit<BrewSession, 'session_id' | 'created_at' | 'updated_at'> {}
+export interface CreateBrewSessionRequest
+  extends Omit<BrewSession, "session_id" | "created_at" | "updated_at"> {}
 
-export interface UpdateBrewSessionRequest extends Partial<CreateBrewSessionRequest> {}
+export interface UpdateBrewSessionRequest
+  extends Partial<CreateBrewSessionRequest> {}
 
 // Note: Backend returns fermentation data as a direct array, not wrapped in ApiResponse
 export interface FermentationDataResponse extends Array<FermentationEntry> {}
 
-export interface AddFermentationEntryRequest extends Omit<FermentationEntry, 'entry_date'> {}
+export interface AddFermentationEntryRequest
+  extends Omit<FermentationEntry, "entry_date"> {}
 
-export interface UpdateFermentationEntryRequest extends Partial<FermentationEntry> {}
+export interface UpdateFermentationEntryRequest
+  extends Partial<FermentationEntry> {}
 
-export interface FermentationStatsResponse extends ApiResponse<{
-  duration_days: number;
-  gravity_drop: number;
-  average_temperature: number;
-  current_attenuation: number;
-  projected_fg: number;
-}> {}
+export interface FermentationStatsResponse
+  extends ApiResponse<{
+    duration_days: number;
+    gravity_drop: number;
+    average_temperature: number;
+    current_attenuation: number;
+    projected_fg: number;
+  }> {}
 
 // Gravity Stabilization Analysis API types
 export interface GravityStabilizationAnalysis {
@@ -184,29 +196,32 @@ export interface GravityStabilizationAnalysis {
 }
 
 // Note: Backend returns gravity analysis as a direct object, not wrapped in ApiResponse
-export interface GravityStabilizationAnalysisResponse extends GravityStabilizationAnalysis {}
+export interface GravityStabilizationAnalysisResponse
+  extends GravityStabilizationAnalysis {}
 
 // BeerXML API types
-export interface BeerXMLExportResponse extends ApiResponse<{
-  xml_content: string;
-  filename: string;
-}> {}
+export interface BeerXMLExportResponse
+  extends ApiResponse<{
+    xml_content: string;
+    filename: string;
+  }> {}
 
 export interface BeerXMLParseRequest {
   xml_content: string;
 }
 
-export interface BeerXMLParseResponse extends ApiResponse<{
-  recipes: Recipe[];
-  ingredients: {
-    matched: Ingredient[];
-    unmatched: Array<{
-      name: string;
-      type: string;
-      suggestions: Ingredient[];
-    }>;
-  };
-}> {}
+export interface BeerXMLParseResponse
+  extends ApiResponse<{
+    recipes: Recipe[];
+    ingredients: {
+      matched: Ingredient[];
+      unmatched: Array<{
+        name: string;
+        type: string;
+        suggestions: Ingredient[];
+      }>;
+    };
+  }> {}
 
 export interface BeerXMLMatchIngredientsRequest {
   ingredients: Array<{
@@ -227,17 +242,21 @@ export interface BeerXMLMatchIngredientsRequest {
   }>;
 }
 
-export interface BeerXMLMatchIngredientsResponse extends ApiResponse<{
-  matched_ingredients: Record<string, Ingredient>;
-}> {}
+export interface BeerXMLMatchIngredientsResponse
+  extends ApiResponse<{
+    matched_ingredients: Record<string, Ingredient>;
+  }> {}
 
 export interface BeerXMLCreateIngredientsRequest {
-  ingredients: Array<Omit<Ingredient, 'ingredient_id' | 'created_at' | 'updated_at'>>;
+  ingredients: Array<
+    Omit<Ingredient, "ingredient_id" | "created_at" | "updated_at">
+  >;
 }
 
-export interface BeerXMLCreateIngredientsResponse extends ApiResponse<{
-  created_ingredients: Ingredient[];
-}> {}
+export interface BeerXMLCreateIngredientsResponse
+  extends ApiResponse<{
+    created_ingredients: Ingredient[];
+  }> {}
 
 // Dashboard API types
 export interface DashboardData {
@@ -288,7 +307,7 @@ export interface ValidationError extends ApiError {
 }
 
 // HTTP methods for API calls
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 // API endpoint configuration
 export interface ApiEndpoint {
@@ -321,22 +340,26 @@ export interface AttenuationAnalytics {
   std_deviation?: number;
 }
 
-export interface AttenuationAnalyticsResponse extends ApiResponse<AttenuationAnalytics> {}
+export interface AttenuationAnalyticsResponse
+  extends ApiResponse<AttenuationAnalytics> {}
 
-export interface AllYeastAnalyticsResponse extends ApiResponse<{
-  yeast_analytics: AttenuationAnalytics[];
-  total_count: number;
-}> {}
+export interface AllYeastAnalyticsResponse
+  extends ApiResponse<{
+    yeast_analytics: AttenuationAnalytics[];
+    total_count: number;
+  }> {}
 
-export interface ImprovedAttenuationEstimateResponse extends ApiResponse<{
-  ingredient_id: ID;
-  improved_estimate: number;
-}> {}
+export interface ImprovedAttenuationEstimateResponse
+  extends ApiResponse<{
+    ingredient_id: ID;
+    improved_estimate: number;
+  }> {}
 
-export interface AttenuationSystemStatsResponse extends ApiResponse<{
-  total_yeast_ingredients: number;
-  yeast_with_actual_data: number;
-  total_attenuation_data_points: number;
-  high_confidence_yeast: number;
-  data_coverage_percentage: number;
-}> {}
+export interface AttenuationSystemStatsResponse
+  extends ApiResponse<{
+    total_yeast_ingredients: number;
+    yeast_with_actual_data: number;
+    total_attenuation_data_points: number;
+    high_confidence_yeast: number;
+    data_coverage_percentage: number;
+  }> {}

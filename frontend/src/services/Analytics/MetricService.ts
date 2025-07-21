@@ -86,7 +86,6 @@ class MetricService {
     ingredients: RecipeIngredient[]
   ): Promise<RecipeMetrics> {
     try {
-
       const calculationData = this.prepareCalculationData(
         recipeData,
         ingredients
@@ -105,7 +104,9 @@ class MetricService {
         boil_time: calculationData.boil_time,
         ingredients: calculationData.ingredients,
       });
-      const metrics = this.processMetricsResponse(response.data.data || response.data);
+      const metrics = this.processMetricsResponse(
+        response.data.data || response.data
+      );
 
       // Cache the result
       this.calculationCache.set(cacheKey, metrics);
@@ -144,7 +145,9 @@ class MetricService {
   /**
    * Format ingredients for calculation API
    */
-  formatIngredientsForCalculation(ingredients: RecipeIngredient[]): RecipeIngredient[] {
+  formatIngredientsForCalculation(
+    ingredients: RecipeIngredient[]
+  ): RecipeIngredient[] {
     if (!ingredients || !Array.isArray(ingredients)) {
       return [];
     }
@@ -162,7 +165,8 @@ class MetricService {
       color: ing.color || undefined,
       grain_type: ing.grain_type || undefined,
       alpha_acid: ing.alpha_acid || undefined,
-      attenuation: ing.improved_attenuation_estimate || ing.attenuation || undefined,
+      attenuation:
+        ing.improved_attenuation_estimate || ing.attenuation || undefined,
     }));
   }
 
@@ -229,7 +233,10 @@ class MetricService {
   /**
    * Get comprehensive recipe analysis
    */
-  getRecipeAnalysis(metrics: RecipeMetrics, recipeData: Partial<Recipe>): RecipeAnalysis {
+  getRecipeAnalysis(
+    metrics: RecipeMetrics,
+    recipeData: Partial<Recipe>
+  ): RecipeAnalysis {
     const analysis: RecipeAnalysis = {
       metrics,
       balance: {
@@ -278,7 +285,10 @@ class MetricService {
   /**
    * Identify potential issues with the recipe
    */
-  identifyIssues(metrics: RecipeMetrics, _recipeData: Partial<Recipe>): string[] {
+  identifyIssues(
+    metrics: RecipeMetrics,
+    _recipeData: Partial<Recipe>
+  ): string[] {
     const issues: string[] = [];
 
     if (metrics.og < 1.03) {
@@ -303,7 +313,10 @@ class MetricService {
   /**
    * Generate suggestions for recipe improvement
    */
-  generateSuggestions(metrics: RecipeMetrics, recipeData: Partial<Recipe>): string[] {
+  generateSuggestions(
+    metrics: RecipeMetrics,
+    recipeData: Partial<Recipe>
+  ): string[] {
     const suggestions: string[] = [];
 
     if (

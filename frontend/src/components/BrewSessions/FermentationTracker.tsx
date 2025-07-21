@@ -11,13 +11,12 @@ import {
 } from "recharts";
 import { Services } from "../../services";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
-import { 
-  FermentationEntry, 
-  BrewSession, 
-  Recipe,
-  ID 
-} from "../../types";
-import { formatGravity, formatAttenuation, formatTemperature } from "../../utils/formatUtils";
+import { FermentationEntry, BrewSession, Recipe, ID } from "../../types";
+import {
+  formatGravity,
+  formatAttenuation,
+  formatTemperature,
+} from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 interface FermentationTrackerProps {
@@ -72,10 +71,14 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   sessionData = {},
   onUpdateSession,
 }) => {
-  const [fermentationData, setFermentationData] = useState<FermentationEntry[]>([]);
+  const [fermentationData, setFermentationData] = useState<FermentationEntry[]>(
+    []
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [stats, setStats] = useState<FermentationStatsWithDefaults | null>(null);
+  const [stats, setStats] = useState<FermentationStatsWithDefaults | null>(
+    null
+  );
   const [formData, setFormData] = useState<FormData>({
     gravity: "",
     temperature: "",
@@ -100,7 +103,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
       // Fetch fermentation statistics
       try {
-        const statsData = await Services.brewSession.getFermentationStats(sessionId);
+        const statsData = await Services.brewSession.getFermentationStats(
+          sessionId
+        );
         if (statsData) {
           setStats(statsData);
         } else {
@@ -195,7 +200,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     }
   }, [fermentationData, sessionData, initialOGSet, loading]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -203,13 +210,15 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     try {
       setSubmitting(true);
 
-      // Format data for submission  
+      // Format data for submission
       const entry = {
         gravity: formData.gravity ? parseFloat(formData.gravity) : undefined,
         temperature: formData.temperature
@@ -221,10 +230,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       };
 
       // Submit data
-      await Services.brewSession.addFermentationEntry(
-        sessionId,
-        entry
-      );
+      await Services.brewSession.addFermentationEntry(sessionId, entry);
 
       // Update the brew session if this is the first gravity reading
       if (fermentationData.length === 0 && entry.gravity) {
@@ -234,7 +240,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
             actual_og: entry.gravity,
           };
 
-          await Services.brewSession.updateBrewSession(sessionId, sessionUpdateData);
+          await Services.brewSession.updateBrewSession(
+            sessionId,
+            sessionUpdateData
+          );
 
           // Notify parent component of the update
           if (onUpdateSession) {
@@ -298,12 +307,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       const updateData: Partial<BrewSession> = {
         status: "completed",
         actual_fg: latestGravityEntry.gravity,
-        fermentation_end_date: new Date().toISOString().split('T')[0], // Today's date
+        fermentation_end_date: new Date().toISOString().split("T")[0], // Today's date
       };
 
       // Calculate ABV if we have OG
       if (sessionData.actual_og) {
-        updateData.actual_abv = (sessionData.actual_og - latestGravityEntry.gravity) * 131.25;
+        updateData.actual_abv =
+          (sessionData.actual_og - latestGravityEntry.gravity) * 131.25;
       }
 
       await Services.brewSession.updateBrewSession(sessionId, updateData);
@@ -315,7 +325,6 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
       // Refresh data to reflect changes
       fetchFermentationData();
-      
     } catch (err: any) {
       console.error("Error updating session to completed:", err);
       setError("Failed to mark session as completed");
@@ -358,7 +367,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       ((firstReading.gravity! - lastReading.gravity!) /
         (firstReading.gravity! - 1.0)) *
       100;
-    return formatAttenuation(attenuation).replace('%', ''); // Remove % since it's added separately
+    return formatAttenuation(attenuation).replace("%", ""); // Remove % since it's added separately
   };
 
   const attenuation = calculateAttenuation();
@@ -374,7 +383,6 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           {showForm ? "Cancel" : "Add Entry"}
         </button>
       </div>
-
 
       {/* Form for adding new fermentation data */}
       {showForm && (
@@ -505,30 +513,33 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
               <div className="fermentation-stat-card">
                 <h3 className="fermentation-stat-title">Temperature</h3>
-                {stats.temperature?.min !== null && stats.temperature?.min !== undefined && (
-                  <div className="fermentation-stat-row">
-                    <span className="fermentation-stat-label">Min:</span>
-                    <span className="fermentation-stat-value">
-                      {formatTemperature(stats.temperature.min, "f")}
-                    </span>
-                  </div>
-                )}
-                {stats.temperature?.max !== null && stats.temperature?.max !== undefined && (
-                  <div className="fermentation-stat-row">
-                    <span className="fermentation-stat-label">Max:</span>
-                    <span className="fermentation-stat-value">
-                      {formatTemperature(stats.temperature.max, "f")}
-                    </span>
-                  </div>
-                )}
-                {stats.temperature?.avg !== null && stats.temperature?.avg !== undefined && (
-                  <div className="fermentation-stat-row">
-                    <span className="fermentation-stat-label">Avg:</span>
-                    <span className="fermentation-stat-value">
-                      {formatTemperature(stats.temperature.avg, "f")}
-                    </span>
-                  </div>
-                )}
+                {stats.temperature?.min !== null &&
+                  stats.temperature?.min !== undefined && (
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Min:</span>
+                      <span className="fermentation-stat-value">
+                        {formatTemperature(stats.temperature.min, "f")}
+                      </span>
+                    </div>
+                  )}
+                {stats.temperature?.max !== null &&
+                  stats.temperature?.max !== undefined && (
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Max:</span>
+                      <span className="fermentation-stat-value">
+                        {formatTemperature(stats.temperature.max, "f")}
+                      </span>
+                    </div>
+                  )}
+                {stats.temperature?.avg !== null &&
+                  stats.temperature?.avg !== undefined && (
+                    <div className="fermentation-stat-row">
+                      <span className="fermentation-stat-label">Avg:</span>
+                      <span className="fermentation-stat-value">
+                        {formatTemperature(stats.temperature.avg, "f")}
+                      </span>
+                    </div>
+                  )}
               </div>
 
               {stats.ph?.data && stats.ph.data.length > 0 && (
@@ -564,16 +575,16 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           )}
 
           {/* Gravity Stabilization Analysis - only show if we have enough data and session is not completed */}
-          {fermentationData.length >= 3 && 
-           sessionData?.status !== "completed" && 
-           sessionData?.status === "fermenting" && (
-            <div className="brew-session-section">
-              <GravityStabilizationAnalysis 
-                sessionId={sessionId}
-                onSuggestCompletion={handleAcceptCompletionSuggestion}
-              />
-            </div>
-          )}
+          {fermentationData.length >= 3 &&
+            sessionData?.status !== "completed" &&
+            sessionData?.status === "fermenting" && (
+              <div className="brew-session-section">
+                <GravityStabilizationAnalysis
+                  sessionId={sessionId}
+                  onSuggestCompletion={handleAcceptCompletionSuggestion}
+                />
+              </div>
+            )}
 
           {/* Expected vs actual visualization */}
           {recipeData.estimated_og && recipeData.estimated_fg && (
@@ -633,9 +644,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       </span>
                       <div className="fermentation-comparison-value">
                         {fermentationData[fermentationData.length - 1].gravity
-                          ? formatGravity(fermentationData[
-                              fermentationData.length - 1
-                            ].gravity!)
+                          ? formatGravity(
+                              fermentationData[fermentationData.length - 1]
+                                .gravity!
+                            )
                           : "-"}
                       </div>
                     </div>

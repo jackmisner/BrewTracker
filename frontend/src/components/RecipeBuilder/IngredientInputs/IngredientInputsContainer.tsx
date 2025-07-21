@@ -3,11 +3,19 @@ import HopInput from "./HopInput";
 import YeastInput from "./YeastInput";
 import OtherInput from "./OtherInput";
 import React from "react";
-import { IngredientsByType, IngredientFormData, IngredientType, CreateRecipeIngredientData } from "../../../types";
+import {
+  IngredientsByType,
+  IngredientFormData,
+  IngredientType,
+  CreateRecipeIngredientData,
+} from "../../../types";
 
 interface IngredientInputsContainerProps {
   ingredients: IngredientsByType;
-  addIngredient: (type: IngredientType, data: CreateRecipeIngredientData) => Promise<void>;
+  addIngredient: (
+    type: IngredientType,
+    data: CreateRecipeIngredientData
+  ) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -21,46 +29,64 @@ const IngredientInputsContainer: React.FC<IngredientInputsContainerProps> = ({
       <div className="grid-col-2-3">
         <FermentableInput
           grains={ingredients.grain}
-          onAdd={(data: IngredientFormData) => addIngredient("grain", {
-            ingredient_id: data.ingredient_id,
-            amount: data.amount,
-            unit: data.unit,
-            color: data.color ? parseFloat(data.color) : undefined,
-          })}
+          onAdd={(data: IngredientFormData) =>
+            addIngredient("grain", {
+              ingredient_id: data.ingredient_id,
+              amount: data.amount,
+              unit: data.unit,
+              color: data.color ? parseFloat(data.color) : undefined,
+            })
+          }
           disabled={disabled}
         />
       </div>
 
       <HopInput
         hops={ingredients.hop}
-        onAdd={(data: IngredientFormData) => addIngredient("hop", {
-          ingredient_id: data.ingredient_id,
-          amount: data.amount,
-          unit: data.unit,
-          use: data.use,
-          time: data.time ? (typeof data.time === 'string' ? parseFloat(data.time) : data.time) : undefined,
-          alpha_acid: data.alpha_acid ? parseFloat(data.alpha_acid) : undefined,
-        })}
+        onAdd={(data: IngredientFormData) =>
+          addIngredient("hop", {
+            ingredient_id: data.ingredient_id,
+            amount: data.amount,
+            unit: data.unit,
+            use: data.use,
+            time: data.time
+              ? typeof data.time === "string"
+                ? parseFloat(data.time)
+                : data.time
+              : undefined,
+            alpha_acid: data.alpha_acid
+              ? parseFloat(data.alpha_acid)
+              : undefined,
+          })
+        }
         disabled={disabled}
       />
 
       <YeastInput
         yeasts={ingredients.yeast}
-        onAdd={(data: IngredientFormData) => addIngredient("yeast", {
-          ingredient_id: data.ingredient_id,
-          amount: data.amount,
-          unit: data.unit,
-        })}
+        onAdd={(data: IngredientFormData) =>
+          addIngredient("yeast", {
+            ingredient_id: data.ingredient_id,
+            amount: data.amount,
+            unit: data.unit,
+          })
+        }
         disabled={disabled}
       />
 
       <OtherInput
-        others={ingredients.other?.length ? ingredients.other : (ingredients as any).adjunct || []}
-        onAdd={(data: IngredientFormData) => addIngredient("other", {
-          ingredient_id: data.ingredient_id,
-          amount: data.amount,
-          unit: data.unit,
-        })}
+        others={
+          ingredients.other?.length
+            ? ingredients.other
+            : (ingredients as any).adjunct || []
+        }
+        onAdd={(data: IngredientFormData) =>
+          addIngredient("other", {
+            ingredient_id: data.ingredient_id,
+            amount: data.amount,
+            unit: data.unit,
+          })
+        }
         disabled={disabled}
       />
     </div>

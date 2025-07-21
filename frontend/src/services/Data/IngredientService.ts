@@ -135,7 +135,7 @@ class IngredientService {
 
     const newIngredient: RecipeIngredient = {
       id: this.generateIngredientId(),
-      ingredient_id: ingredientData.ingredient_id || '',
+      ingredient_id: ingredientData.ingredient_id || "",
       name: ingredientName,
       type: type,
       amount: parseFloat((ingredientData.amount || 0).toString()),
@@ -148,7 +148,9 @@ class IngredientService {
 
     // Override with custom values if provided (for newly created ingredients)
     if (type === "hop" && ingredientData.alpha_acid !== undefined) {
-      newIngredient.alpha_acid = parseFloat(ingredientData.alpha_acid.toString());
+      newIngredient.alpha_acid = parseFloat(
+        ingredientData.alpha_acid.toString()
+      );
     }
 
     if (type === "grain" && ingredientData.color !== undefined) {
@@ -164,7 +166,9 @@ class IngredientService {
     }
 
     if (type === "yeast" && ingredientData.attenuation !== undefined) {
-      newIngredient.attenuation = parseFloat(ingredientData.attenuation.toString());
+      newIngredient.attenuation = parseFloat(
+        ingredientData.attenuation.toString()
+      );
     }
 
     return newIngredient;
@@ -173,10 +177,15 @@ class IngredientService {
   /**
    * Scale ingredient amounts by a given factor
    */
-  scaleIngredients(ingredients: RecipeIngredient[], scalingFactor: number): RecipeIngredient[] {
+  scaleIngredients(
+    ingredients: RecipeIngredient[],
+    scalingFactor: number
+  ): RecipeIngredient[] {
     return ingredients.map((ingredient) => ({
       ...ingredient,
-      amount: parseFloat((parseFloat(ingredient.amount.toString()) * scalingFactor).toFixed(2)),
+      amount: parseFloat(
+        (parseFloat(ingredient.amount.toString()) * scalingFactor).toFixed(2)
+      ),
     }));
   }
 
@@ -184,7 +193,13 @@ class IngredientService {
    * Sort ingredients by type and usage
    */
   sortIngredients(ingredients: RecipeIngredient[]): RecipeIngredient[] {
-    const typeOrder: TypeOrder = { grain: 1, hop: 2, yeast: 3, adjunct: 4, other: 4 };
+    const typeOrder: TypeOrder = {
+      grain: 1,
+      hop: 2,
+      yeast: 3,
+      adjunct: 4,
+      other: 4,
+    };
     const hopUseOrder: HopUseOrder = { boil: 1, whirlpool: 2, dry_hop: 3 };
     const grainTypeOrder: GrainTypeOrder = {
       base_malt: 1,
@@ -237,21 +252,27 @@ class IngredientService {
         return a.name.localeCompare(b.name);
       }
 
-      return (a.id || '').localeCompare(b.id || '');
+      return (a.id || "").localeCompare(b.id || "");
     });
   }
 
   /**
    * Validate ingredient data before adding
    */
-  validateIngredientData(type: IngredientType, ingredientData: CreateRecipeIngredientData): ValidationResult {
+  validateIngredientData(
+    type: IngredientType,
+    ingredientData: CreateRecipeIngredientData
+  ): ValidationResult {
     const errors: string[] = [];
 
     if (!ingredientData.ingredient_id) {
       errors.push("Ingredient selection is required");
     }
 
-    if (!ingredientData.amount || parseFloat(ingredientData.amount.toString()) <= 0) {
+    if (
+      !ingredientData.amount ||
+      parseFloat(ingredientData.amount.toString()) <= 0
+    ) {
       errors.push("Amount must be greater than 0");
     }
 
@@ -266,7 +287,9 @@ class IngredientService {
       }
       if (
         ingredientData.use === "boil" &&
-        (ingredientData.time === undefined || ingredientData.time === null || parseInt(ingredientData.time.toString()) < 0)
+        (ingredientData.time === undefined ||
+          ingredientData.time === null ||
+          parseInt(ingredientData.time.toString()) < 0)
       ) {
         errors.push("Boil time is required for boil hops");
       }
@@ -309,7 +332,7 @@ class IngredientService {
     availableIngredients: IngredientsByType
   ): string {
     if (!ingredientId) return "Unknown";
-    
+
     const ingredient = availableIngredients[type]?.find(
       (i) => String(i.ingredient_id) === String(ingredientId)
     );
@@ -322,7 +345,7 @@ class IngredientService {
     availableIngredients: IngredientsByType
   ): Partial<RecipeIngredient> {
     if (!ingredientId) return {};
-    
+
     const ingredient = availableIngredients[type]?.find(
       (i) => String(i.ingredient_id) === String(ingredientId)
     );
@@ -355,16 +378,18 @@ class IngredientService {
     const randomPart1 = Math.random().toString(36).substr(2, 9);
     const randomPart2 = Math.random().toString(36).substr(2, 9);
     const randomPart3 = Math.random().toString(36).substr(2, 9);
-    
+
     // Use a global counter to ensure uniqueness across all instances
     const globalCounter = IngredientService.getNextId();
-    
-    return `new-${randomPart1}-${randomPart2}-${randomPart3}-${globalCounter.toString(36)}`;
+
+    return `new-${randomPart1}-${randomPart2}-${randomPart3}-${globalCounter.toString(
+      36
+    )}`;
   }
 
   // Static counter shared across all instances to ensure uniqueness
   private static globalIdCounter = 0;
-  
+
   private static getNextId(): number {
     return ++IngredientService.globalIdCounter;
   }

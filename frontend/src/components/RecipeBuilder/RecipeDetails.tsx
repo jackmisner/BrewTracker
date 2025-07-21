@@ -37,17 +37,17 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   hasUnsavedChanges,
   metrics,
 }) => {
-  const {
-    unitSystem,
-    getUnitSystemLabel,
-    getUnitSystemIcon,
-  } = useUnits();
+  const { unitSystem, getUnitSystemLabel, getUnitSystemIcon } = useUnits();
 
   if (!recipe) {
     return <div>Loading recipe details...</div>;
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ): void => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
@@ -149,7 +149,9 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           <BeerStyleSelector
             value={recipe.style}
             recipe={recipe}
-            onChange={(value: string) => onChange("style" as keyof Recipe, value)}
+            onChange={(value: string) =>
+              onChange("style" as keyof Recipe, value)
+            }
             placeholder="Select or search beer style..."
             showStyleInfo={true}
             disabled={saving}

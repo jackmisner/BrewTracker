@@ -1,5 +1,5 @@
-import { ID, BaseEntity } from './common';
-import { RecipeMetrics } from './recipe';
+import { ID, BaseEntity } from "./common";
+import { RecipeMetrics } from "./recipe";
 
 // Style range for min/max values with units
 export interface StyleRange {
@@ -23,13 +23,13 @@ export interface StyleRangeInput {
 // Beer style guide (BJCP or other standards)
 export interface BeerStyleGuide extends BaseEntity {
   style_guide_id: ID;
-  
+
   // Basic identification
   name: string;
   category: string;
   category_id: string;
   style_id: string;
-  
+
   // Descriptions
   category_description?: string;
   overall_impression?: string;
@@ -40,26 +40,26 @@ export interface BeerStyleGuide extends BaseEntity {
   comments?: string;
   history?: string;
   style_comparison?: string;
-  
+
   // Tags for categorization and search
   tags?: string[];
-  
+
   // Style specifications with ranges
   original_gravity?: StyleRange;
   international_bitterness_units?: StyleRange;
   final_gravity?: StyleRange;
   alcohol_by_volume?: StyleRange;
   color?: StyleRange;
-  
+
   // Additional information
   ingredients?: string;
   examples?: string; // Commercial examples
-  
+
   // Metadata
   style_guide?: string; // e.g., "BJCP2021"
   type?: string; // e.g., "beer"
   version?: number;
-  
+
   // Timestamps
   created_at?: string;
   updated_at?: string;
@@ -92,7 +92,7 @@ export interface StyleTargets {
 export interface StyleSuggestion {
   style: BeerStyleGuide;
   match_percentage: number;
-  matches: StyleMatchResult['matches'];
+  matches: StyleMatchResult["matches"];
 }
 
 // Style analysis for a specific recipe

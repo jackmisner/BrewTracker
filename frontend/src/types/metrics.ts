@@ -1,10 +1,10 @@
-import { Recipe, RecipeIngredient } from './recipe';
-import { UnitSystem } from './units';
+import { Recipe, RecipeIngredient } from "./recipe";
+import { UnitSystem } from "./units";
 
 // Core brewing metrics
 export interface BrewingMetrics {
   og: number; // Original Gravity (specific gravity)
-  fg: number; // Final Gravity (specific gravity)  
+  fg: number; // Final Gravity (specific gravity)
   abv: number; // Alcohol by Volume (percentage)
   ibu: number; // International Bitterness Units
   srm: number; // Standard Reference Method (color)
@@ -133,7 +133,7 @@ export interface ColorCalculation {
 }
 
 // IBU calculation methods
-export type IbuCalculationMethod = 'tinseth' | 'rager' | 'garetz' | 'daniels';
+export type IbuCalculationMethod = "tinseth" | "rager" | "garetz" | "daniels";
 
 // IBU calculation parameters
 export interface IbuCalculationParams {
