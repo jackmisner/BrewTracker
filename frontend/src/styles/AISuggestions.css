@@ -48,6 +48,58 @@
   background: #f9f9f9;
 }
 
+/* Header controls */
+.header-controls {
+  margin-top: 15px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.style-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.style-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.style-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Metric item styles */
+.metric-label {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.metric-value {
+  color: #666;
+}
+
+.metric-value.improved {
+  color: #28a745;
+}
+
+.metric-checkmark {
+  font-size: 12px;
+  margin-left: 5px;
+}
+
 /* Loading state */
 .ai-suggestions-loading {
   text-align: center;
@@ -163,9 +215,7 @@
   font-size: 16px;
 }
 
-.changes-scroll {
-  /* Removed max-height and overflow-y to show all changes without scrolling */
-}
+/* Changes scroll container - no scrolling to show all changes */
 
 .change-item {
   padding: 8px;
@@ -220,6 +270,128 @@
   color: #666;
   font-style: italic;
   margin-top: 4px;
+}
+
+/* Style info display */
+.style-info {
+  margin-bottom: 15px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+/* Recipe metrics container */
+.recipe-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.recipe-metric {
+  text-align: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.recipe-metric-value {
+  color: #666;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.recipe-metric-value.improved {
+  color: #28a745;
+}
+
+.metric-checkmark {
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+/* Analysis results container */
+.analysis-results {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Suggestions list */
+.suggestions-list {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.no-suggestions-message {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+/* Individual suggestion containers */
+.individual-suggestion {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.individual-suggestion:last-child {
+  margin-bottom: 0;
+}
+
+.individual-suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.individual-suggestion h5 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.individual-suggestion-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.individual-suggestion p {
+  margin: 10px 0;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.individual-suggestion-changes {
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Individual suggestion actions */
+.individual-suggestion-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 /* Action buttons */
@@ -393,9 +565,12 @@
 /* Fine-tuning section */
 .fine-tuning-section {
   margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
 }
 
-.fine-tuning-section h4 {
+.fine-tuning-section h4,
+.fine-tuning-section h5 {
   color: #2d3748;
   margin-bottom: 10px;
   font-size: 16px;
@@ -414,18 +589,18 @@
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 10px;
   }
-  
+
   .optimization-actions,
   .suggestion-actions {
     flex-direction: column;
   }
-  
+
   .suggestion-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .ai-suggestions-container {
     padding: 15px;
   }

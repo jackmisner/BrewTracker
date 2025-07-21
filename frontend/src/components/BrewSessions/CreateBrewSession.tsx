@@ -3,14 +3,25 @@ import { useNavigate, useLocation } from "react-router";
 import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import { Recipe } from "../../types";
-import { formatGravity, formatAbv, formatIbu, formatSrm } from "../../utils/formatUtils";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+} from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 interface CreateBrewSessionFormData {
   recipe_id: string | null;
   name: string;
   brew_date: string;
-  status: "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
+  status:
+    | "planned"
+    | "in-progress"
+    | "fermenting"
+    | "conditioning"
+    | "completed"
+    | "archived";
   notes: string;
 }
 
@@ -60,7 +71,11 @@ const CreateBrewSession: React.FC = () => {
     }
   }, [recipeId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ): void => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -68,7 +83,9 @@ const CreateBrewSession: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     try {
@@ -82,7 +99,9 @@ const CreateBrewSession: React.FC = () => {
       };
 
       // Create the brew session using the service
-      const newSession = await Services.brewSession.createBrewSession(sessionData);
+      const newSession = await Services.brewSession.createBrewSession(
+        sessionData
+      );
 
       // Invalidate caches to update all related components
       invalidateBrewSessionCaches.onCreated({

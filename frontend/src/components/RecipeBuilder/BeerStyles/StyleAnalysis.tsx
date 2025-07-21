@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Services } from "../../../services";
 import { Recipe, RecipeMetrics } from "../../../types";
-import { BeerStyleGuide, StyleSuggestion as BeerStyleSuggestion } from "../../../types/beer-styles";
+import {
+  BeerStyleGuide,
+  StyleSuggestion as BeerStyleSuggestion,
+} from "../../../types/beer-styles";
 import {
   formatGravity,
   formatAbv,
@@ -14,7 +17,6 @@ interface StyleMatch {
   percentage: number;
 }
 
-
 interface StyleAnalysisResult {
   found: boolean;
   style?: BeerStyleGuide;
@@ -26,14 +28,14 @@ interface StyleAnalysisProps {
   recipe?: Recipe;
   metrics?: RecipeMetrics;
   onStyleSuggestionSelect: (styleName: string) => void;
-  variant?: 'main' | 'sidebar';
+  variant?: "main" | "sidebar";
 }
 
-const StyleAnalysis: React.FC<StyleAnalysisProps> = ({ 
-  recipe, 
-  metrics, 
+const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
+  recipe,
+  metrics,
   onStyleSuggestionSelect,
-  variant = 'sidebar'
+  variant = "sidebar",
 }) => {
   const [analysis, setAnalysis] = useState<StyleAnalysisResult | null>(null);
   const [suggestions, setSuggestions] = useState<BeerStyleSuggestion[]>([]);
@@ -109,11 +111,17 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     if (metrics && recipe?.style) {
       // Real-time style analysis based on current metrics and selected style
       loadRealtimeStyleAnalysis();
-    } else if (metrics && !recipe?.style && variant === 'main') {
+    } else if (metrics && !recipe?.style && variant === "main") {
       // Only load suggestions when no style is selected and in main variant
       loadStyleSuggestionsOnly();
     }
-  }, [recipe?.style, metrics, variant, loadRealtimeStyleAnalysis, loadStyleSuggestionsOnly]);
+  }, [
+    recipe?.style,
+    metrics,
+    variant,
+    loadRealtimeStyleAnalysis,
+    loadStyleSuggestionsOnly,
+  ]);
 
   const getMatchStatusColor = (matches: Record<string, boolean>): string => {
     const matchCount = Object.values(matches).filter(Boolean).length;
@@ -125,18 +133,17 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     return "danger";
   };
 
-
   // Helper function to format values for specific spec types
   const formatValueForSpec = (spec: string, value: number): string => {
     switch (spec) {
-      case 'og':
-      case 'fg':
+      case "og":
+      case "fg":
         return formatGravity(value);
-      case 'abv':
+      case "abv":
         return formatAbv(value);
-      case 'ibu':
+      case "ibu":
         return formatIbu(value);
-      case 'srm':
+      case "srm":
         return formatSrm(value);
       default:
         return value.toFixed(1);
@@ -147,32 +154,31 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
   const formatStyleRange = (spec: string, style: BeerStyleGuide): string => {
     let range;
     switch (spec) {
-      case 'og':
+      case "og":
         range = style.original_gravity;
         break;
-      case 'fg':
+      case "fg":
         range = style.final_gravity;
         break;
-      case 'abv':
+      case "abv":
         range = style.alcohol_by_volume;
         break;
-      case 'ibu':
+      case "ibu":
         range = style.international_bitterness_units;
         break;
-      case 'srm':
+      case "srm":
         range = style.color;
         break;
       default:
-        return '';
+        return "";
     }
-    
-    if (!range?.minimum?.value || !range?.maximum?.value) return '';
-    
+
+    if (!range?.minimum?.value || !range?.maximum?.value) return "";
+
     const min = formatValueForSpec(spec, range.minimum.value);
     const max = formatValueForSpec(spec, range.maximum.value);
     return `${min} - ${max}`;
   };
-
 
   const renderStyleAnalysis = (): React.ReactElement | null => {
     if (!analysis?.found || !analysis.match_result) return null;
@@ -199,7 +205,9 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
                 >
                   <span className="spec-name">{spec.toUpperCase()}</span>
                   <span className="match-indicator">{matches ? "✓" : "✗"}</span>
-                  <span className="spec-range">{formatStyleRange(spec, analysis.style!)}</span>
+                  <span className="spec-range">
+                    {formatStyleRange(spec, analysis.style!)}
+                  </span>
                 </div>
               )
             )}
@@ -209,9 +217,8 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
     );
   };
 
-
   // Sidebar variant should not render when no style is selected
-  if (variant === 'sidebar' && !recipe?.style) {
+  if (variant === "sidebar" && !recipe?.style) {
     return null;
   }
 
@@ -276,7 +283,7 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       )}
 
       {/* Style suggestions - only show when no style is selected and in main variant */}
-      {variant === 'main' && !recipe?.style && suggestions.length > 0 && (
+      {variant === "main" && !recipe?.style && suggestions.length > 0 && (
         <div className="style-suggestions">
           <h4>Suggested Styles Based on Current Metrics</h4>
           <p className="suggestions-help">
@@ -328,17 +335,22 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       )}
 
       {/* No matches */}
-      {variant === 'main' && suggestions.length === 0 && !loading && !error && !recipe?.style && (
-        <div className="no-suggestions">
-          <p>
-            No close style matches found. Your recipe may be a unique creation!
-          </p>
-          <p className="help-text">
-            Try selecting a style manually to see how close you are to
-            established guidelines.
-          </p>
-        </div>
-      )}
+      {variant === "main" &&
+        suggestions.length === 0 &&
+        !loading &&
+        !error &&
+        !recipe?.style && (
+          <div className="no-suggestions">
+            <p>
+              No close style matches found. Your recipe may be a unique
+              creation!
+            </p>
+            <p className="help-text">
+              Try selecting a style manually to see how close you are to
+              established guidelines.
+            </p>
+          </div>
+        )}
     </div>
   );
 };

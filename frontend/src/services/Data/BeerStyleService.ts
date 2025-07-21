@@ -27,7 +27,6 @@ interface EnhancedBeerStyle extends BeerStyleGuide {
   category_name: string;
 }
 
-
 interface CategorizedStyles {
   [categoryKey: string]: {
     category?: string;
@@ -142,40 +141,40 @@ class BeerStyleService {
             allStyles.push({
               ...style,
               display_name: `${style.style_id} - ${style.name}`,
-              category_name: category.category || style.category || 'Unknown',
+              category_name: category.category || style.category || "Unknown",
             });
           });
         }
       });
 
       return allStyles.sort((a, b) => {
-        const aStyleId = a.style_id || '';
-        const bStyleId = b.style_id || '';
-        
+        const aStyleId = a.style_id || "";
+        const bStyleId = b.style_id || "";
+
         // Extract category number and subcategory letter from style_id (e.g., "1A" -> [1, "A"])
         const parseStyleId = (styleId: string) => {
           const match = styleId.match(/^(\d+)([A-Z]?)$/);
           if (match) {
             return {
               category: parseInt(match[1], 10),
-              subcategory: match[2] || ''
+              subcategory: match[2] || "",
             };
           }
           // Fallback for non-standard format
           return {
             category: 999,
-            subcategory: styleId
+            subcategory: styleId,
           };
         };
-        
+
         const aParsed = parseStyleId(aStyleId);
         const bParsed = parseStyleId(bStyleId);
-        
+
         // First sort by category number
         if (aParsed.category !== bParsed.category) {
           return aParsed.category - bParsed.category;
         }
-        
+
         // Then sort by subcategory letter alphabetically
         return aParsed.subcategory.localeCompare(bParsed.subcategory);
       });
@@ -214,8 +213,11 @@ class BeerStyleService {
   /**
    * Calculate how well recipe metrics match a style
    */
-  calculateStyleMatch(style: BeerStyleGuide, metrics: RecipeMetrics): InternalStyleMatch {
-    const matches: InternalStyleMatch['matches'] = {};
+  calculateStyleMatch(
+    style: BeerStyleGuide,
+    metrics: RecipeMetrics
+  ): InternalStyleMatch {
+    const matches: InternalStyleMatch["matches"] = {};
     let totalSpecs = 5;
     let matchingSpecs = 0;
 
@@ -250,7 +252,10 @@ class BeerStyleService {
     if (style.international_bitterness_units) {
       matches.ibu =
         metrics.ibu && metrics.ibu > 0
-          ? this.isInRange(metrics.ibu, style.international_bitterness_units as StyleRange)
+          ? this.isInRange(
+              metrics.ibu,
+              style.international_bitterness_units as StyleRange
+            )
           : false;
       if (matches.ibu) matchingSpecs++;
     }
@@ -285,7 +290,10 @@ class BeerStyleService {
   /**
    * Format style range for display
    */
-  formatStyleRange(range: StyleRange | null | undefined, precision: number = 1): string {
+  formatStyleRange(
+    range: StyleRange | null | undefined,
+    precision: number = 1
+  ): string {
     if (!range || !range.minimum || !range.maximum) return "-";
 
     const min = Number(range.minimum.value).toFixed(precision);

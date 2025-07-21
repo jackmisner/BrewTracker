@@ -1,9 +1,5 @@
 import ApiService from "../api";
-import {
-  BrewSession,
-  ID,
-  GravityStabilizationAnalysis,
-} from "../../types";
+import { BrewSession, ID, GravityStabilizationAnalysis } from "../../types";
 
 // Service-specific interfaces
 interface BrewSessionValidation {
@@ -79,7 +75,10 @@ class BrewSessionService {
   /**
    * Fetch all brew sessions for the user
    */
-  async fetchBrewSessions(page: number = 1, perPage: number = 10): Promise<BrewSessionsResponse> {
+  async fetchBrewSessions(
+    page: number = 1,
+    perPage: number = 10
+  ): Promise<BrewSessionsResponse> {
     try {
       const response = await ApiService.brewSessions.getAll(page, perPage);
 
@@ -111,7 +110,9 @@ class BrewSessionService {
   /**
    * Create a new brew session
    */
-  async createBrewSession(sessionData: Partial<BrewSession>): Promise<ProcessedBrewSession> {
+  async createBrewSession(
+    sessionData: Partial<BrewSession>
+  ): Promise<ProcessedBrewSession> {
     try {
       const validation = this.validateBrewSessionData(sessionData);
       if (!validation.isValid) {
@@ -138,7 +139,10 @@ class BrewSessionService {
   /**
    * Update an existing brew session
    */
-  async updateBrewSession(sessionId: ID, sessionData: Partial<BrewSession>): Promise<ProcessedBrewSession> {
+  async updateBrewSession(
+    sessionId: ID,
+    sessionData: Partial<BrewSession>
+  ): Promise<ProcessedBrewSession> {
     try {
       const validation = this.validateBrewSessionData(sessionData, false);
       if (!validation.isValid) {
@@ -202,7 +206,10 @@ class BrewSessionService {
   /**
    * Get brew sessions for a specific recipe with caching and force refresh option
    */
-  async getBrewSessionsForRecipe(recipeId: ID, forceRefresh: boolean = false): Promise<BrewSession[]> {
+  async getBrewSessionsForRecipe(
+    recipeId: ID,
+    forceRefresh: boolean = false
+  ): Promise<BrewSession[]> {
     const cacheKey = `recipe-${recipeId}`;
 
     // Check cache first (unless force refresh is requested)
@@ -241,7 +248,10 @@ class BrewSessionService {
   /**
    * Get brew session summary for a recipe with force refresh option
    */
-  async getBrewSessionSummary(recipeId: ID, forceRefresh: boolean = false): Promise<BrewSessionSummary> {
+  async getBrewSessionSummary(
+    recipeId: ID,
+    forceRefresh: boolean = false
+  ): Promise<BrewSessionSummary> {
     try {
       const sessions = await this.getBrewSessionsForRecipe(
         recipeId,
@@ -350,9 +360,15 @@ class BrewSessionService {
   /**
    * Delete fermentation entry
    */
-  async deleteFermentationEntry(sessionId: ID, entryIndex: number): Promise<void> {
+  async deleteFermentationEntry(
+    sessionId: ID,
+    entryIndex: number
+  ): Promise<void> {
     try {
-      await ApiService.brewSessions.deleteFermentationEntry(sessionId, entryIndex);
+      await ApiService.brewSessions.deleteFermentationEntry(
+        sessionId,
+        entryIndex
+      );
     } catch (error) {
       console.error("Error deleting fermentation entry:", error);
       throw this.createBrewSessionError(
@@ -381,9 +397,12 @@ class BrewSessionService {
   /**
    * Analyze gravity stabilization to detect fermentation completion
    */
-  async analyzeFermentationCompletion(sessionId: ID): Promise<GravityStabilizationAnalysis | null> {
+  async analyzeFermentationCompletion(
+    sessionId: ID
+  ): Promise<GravityStabilizationAnalysis | null> {
     try {
-      const response = await ApiService.brewSessions.analyzeFermentationCompletion(sessionId);
+      const response =
+        await ApiService.brewSessions.analyzeFermentationCompletion(sessionId);
       // Backend returns analysis as a direct object, not wrapped in ApiResponse
       return response.data;
     } catch (error) {
@@ -407,7 +426,9 @@ class BrewSessionService {
         if (!a.brew_date && !b.brew_date) return 0;
         if (!a.brew_date) return 1;
         if (!b.brew_date) return -1;
-        return new Date(b.brew_date).getTime() - new Date(a.brew_date).getTime();
+        return (
+          new Date(b.brew_date).getTime() - new Date(a.brew_date).getTime()
+        );
       });
   }
 
@@ -464,7 +485,10 @@ class BrewSessionService {
   /**
    * Validate brew session data
    */
-  validateBrewSessionData(sessionData: Partial<BrewSession>, isCreate: boolean = true): BrewSessionValidation {
+  validateBrewSessionData(
+    sessionData: Partial<BrewSession>,
+    isCreate: boolean = true
+  ): BrewSessionValidation {
     const errors: string[] = [];
 
     if (isCreate && !sessionData.recipe_id) {
@@ -587,7 +611,9 @@ class BrewSessionService {
     if (sessionData.actual_abv)
       formatted.actual_abv = parseFloat(sessionData.actual_abv.toString());
     if (sessionData.actual_efficiency)
-      formatted.actual_efficiency = parseFloat(sessionData.actual_efficiency.toString());
+      formatted.actual_efficiency = parseFloat(
+        sessionData.actual_efficiency.toString()
+      );
     if (sessionData.fermentation_start_date)
       formatted.fermentation_start_date = sessionData.fermentation_start_date;
     if (sessionData.fermentation_end_date)
@@ -607,7 +633,9 @@ class BrewSessionService {
    */
   getSessionDisplayName(session: Partial<BrewSession>): string {
     if (session.name) return session.name;
-    return `Session #${session.session_id?.toString().substring(0, 6) || "Unknown"}`;
+    return `Session #${
+      session.session_id?.toString().substring(0, 6) || "Unknown"
+    }`;
   }
 
   /**
@@ -647,7 +675,10 @@ class BrewSessionService {
   /**
    * Calculate average for a numeric field across sessions
    */
-  calculateAverage(sessions: BrewSession[], field: keyof BrewSession): number | null {
+  calculateAverage(
+    sessions: BrewSession[],
+    field: keyof BrewSession
+  ): number | null {
     const validValues = sessions
       .map((s) => s[field] as number)
       .filter((val) => val !== null && val !== undefined && !isNaN(val));
@@ -667,7 +698,10 @@ class BrewSessionService {
 
     if (ratings.length === 0) return null;
 
-    return ratings.reduce((sum: number, rating) => sum + (rating || 0), 0) / ratings.length;
+    return (
+      ratings.reduce((sum: number, rating) => sum + (rating || 0), 0) /
+      ratings.length
+    );
   }
 
   /**
@@ -693,12 +727,20 @@ class BrewSessionService {
   /**
    * Calculate brewing consistency
    */
-  calculateConsistency(sessions: BrewSession[]): { og: number; fg: number; abv: number; } | null {
+  calculateConsistency(
+    sessions: BrewSession[]
+  ): { og: number; fg: number; abv: number } | null {
     if (sessions.length < 2) return null;
 
-    const ogValues = sessions.map((s) => s.actual_og).filter((v): v is number => v !== undefined && v !== null);
-    const fgValues = sessions.map((s) => s.actual_fg).filter((v): v is number => v !== undefined && v !== null);
-    const abvValues = sessions.map((s) => s.actual_abv).filter((v): v is number => v !== undefined && v !== null);
+    const ogValues = sessions
+      .map((s) => s.actual_og)
+      .filter((v): v is number => v !== undefined && v !== null);
+    const fgValues = sessions
+      .map((s) => s.actual_fg)
+      .filter((v): v is number => v !== undefined && v !== null);
+    const abvValues = sessions
+      .map((s) => s.actual_abv)
+      .filter((v): v is number => v !== undefined && v !== null);
 
     return {
       og: this.calculateStandardDeviation(ogValues),
@@ -710,17 +752,19 @@ class BrewSessionService {
   /**
    * Calculate trends over time
    */
-  calculateTrends(sessions: BrewSession[]): { abv: string; rating: string; } | null {
-    const sortedSessions = [...sessions].sort(
-      (a, b) => {
-        if (!a.brew_date || !b.brew_date) return 0;
-        return new Date(a.brew_date).getTime() - new Date(b.brew_date).getTime();
-      }
-    );
+  calculateTrends(
+    sessions: BrewSession[]
+  ): { abv: string; rating: string } | null {
+    const sortedSessions = [...sessions].sort((a, b) => {
+      if (!a.brew_date || !b.brew_date) return 0;
+      return new Date(a.brew_date).getTime() - new Date(b.brew_date).getTime();
+    });
 
     if (sortedSessions.length < 2) return null;
 
-    const abvValues = sortedSessions.map((s) => s.actual_abv).filter((v): v is number => v !== undefined && v !== null);
+    const abvValues = sortedSessions
+      .map((s) => s.actual_abv)
+      .filter((v): v is number => v !== undefined && v !== null);
     const ratingValues = sortedSessions
       .map((s) => s.batch_rating)
       .filter((v): v is number => v !== undefined && v !== null);
@@ -765,10 +809,15 @@ class BrewSessionService {
   calculateSessionDuration(session: Partial<BrewSession>): number | null {
     if (!session.brew_date) return null;
 
-    const endDate = session.packaging_date || session.fermentation_end_date || new Date().toISOString();
+    const endDate =
+      session.packaging_date ||
+      session.fermentation_end_date ||
+      new Date().toISOString();
     const startDate = session.brew_date;
 
-    const diffTime = Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime());
+    const diffTime = Math.abs(
+      new Date(endDate).getTime() - new Date(startDate).getTime()
+    );
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     return diffDays;
@@ -855,7 +904,10 @@ class BrewSessionService {
   /**
    * Safely navigate to session (checks existence first)
    */
-  async safeNavigateToSession(sessionId: ID, navigate: (path: string) => void): Promise<void> {
+  async safeNavigateToSession(
+    sessionId: ID,
+    navigate: (path: string) => void
+  ): Promise<void> {
     const exists = await this.sessionExists(sessionId);
     if (exists) {
       navigate(`/brew-sessions/${sessionId}`);

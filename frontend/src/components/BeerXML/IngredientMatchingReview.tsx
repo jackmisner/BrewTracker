@@ -36,7 +36,7 @@ interface MatchingResult {
 }
 
 interface Decision {
-  imported: MatchingResult['imported'];
+  imported: MatchingResult["imported"];
   action: "use_existing" | "create_new";
   selectedMatch: any | null; // TODO: Define proper ingredient type
   newIngredientData: any | null; // TODO: Define proper ingredient data type
@@ -77,32 +77,37 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     error: null,
   });
 
-  const [matchingSummary, setMatchingSummary] = useState<MatchingSummary | null>(null);
+  const [matchingSummary, setMatchingSummary] =
+    useState<MatchingSummary | null>(null);
 
   useEffect(() => {
-    
     // Initialize decisions array and calculate summary
     const decisions: Decision[] = matchingResults.map((result) => ({
       imported: result.imported,
-      action: (result.best_match || result.bestMatch) ? "use_existing" : "create_new",
-      selectedMatch: (result.best_match || result.bestMatch)?.ingredient || null,
+      action:
+        result.best_match || result.bestMatch ? "use_existing" : "create_new",
+      selectedMatch:
+        (result.best_match || result.bestMatch)?.ingredient || null,
       newIngredientData: result.suggestedIngredientData,
       confidence: result.confidence,
     }));
 
     setReviewState((prev) => ({ ...prev, decisions }));
-    
+
     // Convert backend format to frontend format for summary calculation
-    const normalizedResults = matchingResults.map(result => ({
+    const normalizedResults = matchingResults.map((result) => ({
       ...result,
       bestMatch: result.best_match || result.bestMatch, // Normalize to frontend expected field
-      requiresNewIngredient: result.requiresNewIngredient || 
-        (result as any).requires_new || 
-        (!result.best_match && !result.bestMatch)
+      requiresNewIngredient:
+        result.requiresNewIngredient ||
+        (result as any).requires_new ||
+        (!result.best_match && !result.bestMatch),
     }));
-    
+
     setMatchingSummary(
-      Services.BeerXML.ingredientMatching.getMatchingSummary(normalizedResults as any)
+      Services.BeerXML.ingredientMatching.getMatchingSummary(
+        normalizedResults as any
+      )
     );
   }, [matchingResults]);
 
@@ -189,8 +194,10 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
           decision.newIngredientData
         ) {
           // Create deduplication key based on name and type (case-insensitive)
-          const dedupeKey = `${decision.newIngredientData.name.toLowerCase().trim()}-${decision.newIngredientData.type}`;
-          
+          const dedupeKey = `${decision.newIngredientData.name
+            .toLowerCase()
+            .trim()}-${decision.newIngredientData.type}`;
+
           let newIngredient;
           if (newIngredientCache.has(dedupeKey)) {
             // Reuse already created ingredient
@@ -444,10 +451,16 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
                           Color: {match.ingredient.color}°L
                         </span>
                       )}
-                      {(match.ingredient.improved_attenuation_estimate || match.ingredient.attenuation) && (
+                      {(match.ingredient.improved_attenuation_estimate ||
+                        match.ingredient.attenuation) && (
                         <span className="detail">
-                          Att: {match.ingredient.improved_attenuation_estimate || match.ingredient.attenuation}%
-                          {match.ingredient.improved_attenuation_estimate && <span title="Enhanced estimate">📊</span>}
+                          Att:{" "}
+                          {match.ingredient.improved_attenuation_estimate ||
+                            match.ingredient.attenuation}
+                          %
+                          {match.ingredient.improved_attenuation_estimate && (
+                            <span title="Enhanced estimate">📊</span>
+                          )}
                         </span>
                       )}
                     </div>

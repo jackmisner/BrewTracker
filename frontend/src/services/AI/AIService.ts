@@ -1,11 +1,11 @@
 /**
  * Simplified AI Service for Backend API Communication
- * 
+ *
  * Replaces complex frontend AI logic with simple backend API calls
  */
 
-import ApiService from '../api';
-import { Recipe, RecipeIngredient, RecipeMetrics } from '../../types';
+import ApiService from "../api";
+import { Recipe, RecipeIngredient, RecipeMetrics } from "../../types";
 
 export interface AIAnalysisRequest {
   recipe_data: {
@@ -15,7 +15,7 @@ export interface AIAnalysisRequest {
     efficiency: number;
   };
   style_id?: string; // Optional MongoDB ObjectId for specific style analysis
-  unit_system?: 'metric' | 'imperial';
+  unit_system?: "metric" | "imperial";
 }
 
 export interface AIAnalysisResponse {
@@ -49,7 +49,12 @@ export interface AIAnalysisResponse {
 }
 
 export interface RecipeChange {
-  type: 'ingredient_modified' | 'ingredient_added' | 'ingredient_removed' | 'ingredient_substituted' | 'optimization_summary';
+  type:
+    | "ingredient_modified"
+    | "ingredient_added"
+    | "ingredient_removed"
+    | "ingredient_substituted"
+    | "optimization_summary";
   ingredient_name?: string;
   field?: string;
   original_value?: any;
@@ -84,7 +89,7 @@ export interface AISuggestion {
   type: string;
   title: string;
   description: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   changes: AIIngredientChange[];
   priority: number;
   predicted_effects?: {
@@ -155,25 +160,23 @@ export interface AIEffectsResponse {
  * AI Service for backend communication
  */
 export class AIService {
-  
   /**
    * Analyze a recipe and get comprehensive AI suggestions
    */
   async analyzeRecipe(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
-    
     try {
       const response = await ApiService.ai.analyzeRecipe(request);
-      
-      
+
       return response.data;
     } catch (error: any) {
-      console.error('❌ AI Service - Analyze Recipe Error:', {
+      console.error("❌ AI Service - Analyze Recipe Error:", {
         error: error.response?.data || error.message,
         status: error.response?.status,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
-      const errorMessage = error.response?.data?.error || error.message || 'AI analysis failed';
+
+      const errorMessage =
+        error.response?.data?.error || error.message || "AI analysis failed";
       throw new Error(`AI analysis failed: ${errorMessage}`);
     }
   }
@@ -181,21 +184,22 @@ export class AIService {
   /**
    * Get AI suggestions for a recipe
    */
-  async getSuggestions(request: AISuggestionsRequest): Promise<AISuggestionsResponse> {
-    
+  async getSuggestions(
+    request: AISuggestionsRequest
+  ): Promise<AISuggestionsResponse> {
     try {
       const response = await ApiService.ai.getSuggestions(request);
-      
-      
+
       return response.data;
     } catch (error: any) {
-      console.error('❌ AI Service - Get Suggestions Error:', {
+      console.error("❌ AI Service - Get Suggestions Error:", {
         error: error.response?.data || error.message,
         status: error.response?.status,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
-      const errorMessage = error.response?.data?.error || error.message || 'AI suggestions failed';
+
+      const errorMessage =
+        error.response?.data?.error || error.message || "AI suggestions failed";
       throw new Error(`AI suggestions failed: ${errorMessage}`);
     }
   }
@@ -203,21 +207,24 @@ export class AIService {
   /**
    * Calculate cascading effects of recipe changes
    */
-  async calculateEffects(request: AIEffectsRequest): Promise<AIEffectsResponse> {
-    
+  async calculateEffects(
+    request: AIEffectsRequest
+  ): Promise<AIEffectsResponse> {
     try {
       const response = await ApiService.ai.calculateEffects(request);
-      
-      
+
       return response.data;
     } catch (error: any) {
-      console.error('❌ AI Service - Calculate Effects Error:', {
+      console.error("❌ AI Service - Calculate Effects Error:", {
         error: error.response?.data || error.message,
         status: error.response?.status,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
-      const errorMessage = error.response?.data?.error || error.message || 'AI effects calculation failed';
+
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "AI effects calculation failed";
       throw new Error(`AI effects calculation failed: ${errorMessage}`);
     }
   }
@@ -225,12 +232,19 @@ export class AIService {
   /**
    * Check AI service health
    */
-  async checkHealth(): Promise<{ status: string; service: string; components: Record<string, string> }> {
+  async checkHealth(): Promise<{
+    status: string;
+    service: string;
+    components: Record<string, string>;
+  }> {
     try {
       const response = await ApiService.ai.checkHealth();
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'AI health check failed';
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "AI health check failed";
       throw new Error(`AI health check failed: ${errorMessage}`);
     }
   }
@@ -240,29 +254,29 @@ export class AIService {
    * Automatically extracts beer style from recipe.style if available
    */
   async convertRecipeToAnalysisRequest(
-    recipe: Recipe, 
-    ingredients: RecipeIngredient[], 
-    unitSystem?: 'metric' | 'imperial'
+    recipe: Recipe,
+    ingredients: RecipeIngredient[],
+    unitSystem?: "metric" | "imperial"
   ): Promise<AIAnalysisRequest> {
     let styleId: string | undefined;
-    
+
     // Automatically find style ID from recipe.style if it exists
     if (recipe.style) {
       try {
         // Import Services here to avoid circular dependencies
-        const { Services } = await import('../index');
+        const { Services } = await import("../index");
         const allStyles = await Services.beerStyle.getAllStylesList();
         const matchingStyle = allStyles.find(
           (style: any) =>
             style.name.toLowerCase() === recipe.style!.toLowerCase() ||
             style.display_name.toLowerCase() === recipe.style!.toLowerCase()
         );
-        
+
         if (matchingStyle) {
           styleId = matchingStyle.style_guide_id;
         }
       } catch (error) {
-        console.warn('Failed to lookup beer style for AI analysis:', error);
+        console.warn("Failed to lookup beer style for AI analysis:", error);
         // Continue without style analysis if lookup fails
       }
     }
@@ -271,11 +285,11 @@ export class AIService {
       recipe_data: {
         ingredients: ingredients,
         batch_size: recipe.batch_size,
-        batch_size_unit: recipe.batch_size_unit || 'gal',
-        efficiency: recipe.efficiency || 75
+        batch_size_unit: recipe.batch_size_unit || "gal",
+        efficiency: recipe.efficiency || 75,
       },
       style_id: styleId,
-      unit_system: unitSystem
+      unit_system: unitSystem,
     };
   }
 }

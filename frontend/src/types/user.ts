@@ -1,5 +1,5 @@
-import { ID, BaseEntity } from './common';
-import { UnitSystem } from './units';
+import { ID, BaseEntity } from "./common";
+import { UnitSystem } from "./units";
 
 // User settings embedded document
 export interface UserSettings {
@@ -8,12 +8,12 @@ export interface UserSettings {
   share_yeast_performance: boolean;
   share_recipe_metrics: boolean;
   public_recipes_default: boolean;
-  
+
   // Application Preferences
   default_batch_size: number;
   preferred_units: UnitSystem;
   timezone: string;
-  
+
   // Notification Preferences
   email_notifications: boolean;
   brew_reminders: boolean;
@@ -103,7 +103,9 @@ export interface AuthContextActions {
   logout: () => Promise<void>;
   refreshToken: () => Promise<string>;
   updateProfile: (profileData: ProfileUpdateFormData) => Promise<User>;
-  updateSettings: (settingsData: SettingsUpdateFormData) => Promise<UserSettings>;
+  updateSettings: (
+    settingsData: SettingsUpdateFormData
+  ) => Promise<UserSettings>;
   changePassword: (passwordData: PasswordChangeFormData) => Promise<void>;
   deleteAccount: (confirmationData: AccountDeletionFormData) => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
@@ -115,23 +117,23 @@ export interface AuthContextActions {
 // User preferences (extended settings)
 export interface UserPreferences extends UserSettings {
   // UI Preferences
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
   compact_mode: boolean;
   show_tooltips: boolean;
-  
+
   // Recipe Preferences
   default_efficiency: number;
   default_boil_time: number;
   favorite_recipe_styles: string[];
   hidden_ingredients: ID[];
-  
+
   // Brew Session Preferences
   default_fermentation_temp: number;
-  temperature_unit: 'f' | 'c';
-  gravity_display_format: 'sg' | 'plato' | 'both';
-  
+  temperature_unit: "f" | "c";
+  gravity_display_format: "sg" | "plato" | "both";
+
   // Data Export Preferences
-  export_format: 'beerxml' | 'json' | 'pdf';
+  export_format: "beerxml" | "json" | "pdf";
   include_private_recipes: boolean;
   include_brew_notes: boolean;
 }
@@ -155,7 +157,7 @@ export interface UserActivity {
 
 // User subscription/tier information
 export interface UserSubscription {
-  tier: 'free' | 'premium' | 'professional';
+  tier: "free" | "premium" | "professional";
   expires_at?: string;
   features: {
     max_recipes: number;
@@ -182,7 +184,7 @@ export interface NotificationSettings {
   recipe_shares: boolean;
   system_updates: boolean;
   marketing_emails: boolean;
-  
+
   // Reminder preferences
   brew_day_reminder_days: number;
   fermentation_check_days: number[];
@@ -191,8 +193,8 @@ export interface NotificationSettings {
 
 // Privacy settings
 export interface PrivacySettings {
-  profile_visibility: 'public' | 'friends' | 'private';
-  recipe_visibility_default: 'public' | 'private';
+  profile_visibility: "public" | "friends" | "private";
+  recipe_visibility_default: "public" | "private";
   share_anonymous_data: boolean;
   allow_recipe_cloning: boolean;
   show_in_leaderboards: boolean;
@@ -223,7 +225,7 @@ export interface UserValidation {
   };
   password: {
     is_valid: boolean;
-    strength: 'weak' | 'medium' | 'strong';
+    strength: "weak" | "medium" | "strong";
     errors: string[];
   };
 }
@@ -231,7 +233,7 @@ export interface UserValidation {
 // Two-factor authentication
 export interface TwoFactorAuth {
   enabled: boolean;
-  method: 'app' | 'sms' | 'email';
+  method: "app" | "sms" | "email";
   backup_codes: string[];
   last_used?: string;
 }

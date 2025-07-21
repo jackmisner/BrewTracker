@@ -37,10 +37,10 @@ interface OtherInputProps {
   disabled?: boolean;
 }
 
-const OtherInput: React.FC<OtherInputProps> = ({ 
-  others, 
-  onAdd, 
-  disabled = false 
+const OtherInput: React.FC<OtherInputProps> = ({
+  others,
+  onAdd,
+  disabled = false,
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
@@ -102,7 +102,9 @@ const OtherInput: React.FC<OtherInputProps> = ({
     useExtendedSearch: true, // Allow flexible searches
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ): void => {
     const { name, value } = e.target;
     setOtherForm((prev) => ({
       ...prev,
@@ -188,7 +190,9 @@ const OtherInput: React.FC<OtherInputProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -252,7 +256,9 @@ const OtherInput: React.FC<OtherInputProps> = ({
     ];
   };
 
-  const getIngredientCategory = (ingredient: Ingredient | null): string | null => {
+  const getIngredientCategory = (
+    ingredient: Ingredient | null
+  ): string | null => {
     if (!ingredient) return null;
 
     const name = ingredient.name.toLowerCase();

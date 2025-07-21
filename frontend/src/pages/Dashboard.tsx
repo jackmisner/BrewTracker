@@ -41,11 +41,19 @@ const Dashboard: React.FC = () => {
 
         // Get recent items (last 5)
         const sortedRecipes = recipesResponse.data.recipes
-          .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+          .sort(
+            (a, b) =>
+              new Date(b.created_at || "").getTime() -
+              new Date(a.created_at || "").getTime()
+          )
           .slice(0, 5);
 
         const sortedSessions = sessionsResponse.data.brew_sessions
-          .sort((a, b) => new Date(b.brew_date || '').getTime() - new Date(a.brew_date || '').getTime())
+          .sort(
+            (a, b) =>
+              new Date(b.brew_date || "").getTime() -
+              new Date(a.brew_date || "").getTime()
+          )
           .slice(0, 5);
 
         // Calculate dashboard stats
@@ -246,13 +254,17 @@ const Dashboard: React.FC = () => {
                       View
                     </button>
                     <button
-                      onClick={() => handleNavigateToEditRecipe(recipe.recipe_id)}
+                      onClick={() =>
+                        handleNavigateToEditRecipe(recipe.recipe_id)
+                      }
                       className="action-button edit"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleNavigateToBrewSession(recipe.recipe_id)}
+                      onClick={() =>
+                        handleNavigateToBrewSession(recipe.recipe_id)
+                      }
                       className="action-button brew"
                     >
                       Brew
@@ -294,7 +306,9 @@ const Dashboard: React.FC = () => {
                     <div className="session-info">
                       <h3 className="session-name">
                         {session.name ||
-                          `Session #${session.session_id.toString().substring(0, 6)}`}
+                          `Session #${session.session_id
+                            .toString()
+                            .substring(0, 6)}`}
                       </h3>
                       <p className="session-date">
                         {formatDate(session.brew_date)}
@@ -303,7 +317,9 @@ const Dashboard: React.FC = () => {
                     <span
                       className="status-badge"
                       style={{
-                        backgroundColor: `${getStatusColor(session.status || "")}20`,
+                        backgroundColor: `${getStatusColor(
+                          session.status || ""
+                        )}20`,
                         color: getStatusColor(session.status || ""),
                       }}
                     >
@@ -361,13 +377,17 @@ const Dashboard: React.FC = () => {
                   {/* Actions */}
                   <div className="card-actions">
                     <button
-                      onClick={() => handleNavigateToSession(session.session_id)}
+                      onClick={() =>
+                        handleNavigateToSession(session.session_id)
+                      }
                       className="action-button view"
                     >
                       View
                     </button>
                     <button
-                      onClick={() => handleNavigateToEditSession(session.session_id)}
+                      onClick={() =>
+                        handleNavigateToEditSession(session.session_id)
+                      }
                       className="action-button edit"
                     >
                       Edit

@@ -38,17 +38,20 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
     setIsCloning(true);
     try {
       let response;
-      
+
       if (isPublicRecipe && originalAuthor) {
         // For public recipes, clone with attribution
-        response = await ApiService.recipes.clonePublic(recipe.recipe_id, originalAuthor);
+        response = await ApiService.recipes.clonePublic(
+          recipe.recipe_id,
+          originalAuthor
+        );
       } else {
         // For own recipes, use regular clone (linked)
         response = await ApiService.recipes.clone(recipe.recipe_id);
       }
 
       if (response.status === 201) {
-        const successMessage = isPublicRecipe 
+        const successMessage = isPublicRecipe
           ? `Recipe cloned successfully with attribution to ${originalAuthor}!`
           : `Recipe cloned successfully!`;
         alert(successMessage);

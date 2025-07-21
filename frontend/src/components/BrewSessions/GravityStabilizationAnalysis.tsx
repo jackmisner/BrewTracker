@@ -8,11 +8,12 @@ interface GravityStabilizationAnalysisProps {
   onSuggestCompletion?: () => void;
 }
 
-const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalysisProps> = ({
-  sessionId,
-  onSuggestCompletion,
-}) => {
-  const [analysis, setAnalysis] = useState<GravityStabilizationAnalysis | null>(null);
+const GravityStabilizationAnalysisComponent: React.FC<
+  GravityStabilizationAnalysisProps
+> = ({ sessionId, onSuggestCompletion }) => {
+  const [analysis, setAnalysis] = useState<GravityStabilizationAnalysis | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
@@ -20,8 +21,10 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
     try {
       setLoading(true);
       setError("");
-      
-      const result = await Services.brewSession.analyzeFermentationCompletion(sessionId);
+
+      const result = await Services.brewSession.analyzeFermentationCompletion(
+        sessionId
+      );
       setAnalysis(result);
     } catch (err: any) {
       console.error("Error fetching gravity stabilization analysis:", err);
@@ -85,7 +88,7 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
     <div className="gravity-stabilization-analysis">
       <div className="analysis-header">
         <h4>Gravity Stabilization Analysis</h4>
-        <button 
+        <button
           onClick={fetchAnalysis}
           className="btn btn-secondary btn-sm"
           title="Refresh analysis"
@@ -97,12 +100,16 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
       <div className="analysis-content">
         {/* Status Overview */}
         <div className="analysis-status">
-          <div className={`status-indicator ${analysis.is_stable ? 'stable' : 'unstable'}`}>
+          <div
+            className={`status-indicator ${
+              analysis.is_stable ? "stable" : "unstable"
+            }`}
+          >
             <span className="status-icon">
-              {analysis.is_stable ? '✅' : '⏳'}
+              {analysis.is_stable ? "✅" : "⏳"}
             </span>
             <span className="status-text">
-              {analysis.is_stable ? 'Gravity Stable' : 'Gravity Still Changing'}
+              {analysis.is_stable ? "Gravity Stable" : "Gravity Still Changing"}
             </span>
           </div>
         </div>
@@ -119,12 +126,16 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
           <div className="metric-row">
             <div className="metric">
               <label>Current Gravity:</label>
-              <span className="metric-value">{formatGravity(analysis.current_gravity)}</span>
+              <span className="metric-value">
+                {formatGravity(analysis.current_gravity)}
+              </span>
             </div>
             {analysis.estimated_fg && (
               <div className="metric">
                 <label>Estimated FG:</label>
-                <span className="metric-value">{formatGravity(analysis.estimated_fg)}</span>
+                <span className="metric-value">
+                  {formatGravity(analysis.estimated_fg)}
+                </span>
               </div>
             )}
           </div>
@@ -132,11 +143,14 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
           <div className="metric-row">
             <div className="metric">
               <label>Stabilization Confidence:</label>
-              <span 
+              <span
                 className="metric-value confidence"
-                style={{ color: getConfidenceColor(analysis.stabilization_confidence) }}
+                style={{
+                  color: getConfidenceColor(analysis.stabilization_confidence),
+                }}
               >
-                {getConfidenceLabel(analysis.stabilization_confidence)} ({formatPercentage(analysis.stabilization_confidence * 100, 0)})
+                {getConfidenceLabel(analysis.stabilization_confidence)} (
+                {formatPercentage(analysis.stabilization_confidence * 100, 0)})
               </span>
             </div>
             <div className="metric">
@@ -147,17 +161,18 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
             </div>
           </div>
 
-          {analysis.gravity_difference !== undefined && analysis.gravity_difference !== null && (
-            <div className="metric-row">
-              <div className="metric">
-                <label>Difference from Target:</label>
-                <span className="metric-value">
-                  {formatGravity(Math.abs(analysis.gravity_difference))} 
-                  {analysis.gravity_difference > 0 ? ' (higher)' : ' (lower)'}
-                </span>
+          {analysis.gravity_difference !== undefined &&
+            analysis.gravity_difference !== null && (
+              <div className="metric-row">
+                <div className="metric">
+                  <label>Difference from Target:</label>
+                  <span className="metric-value">
+                    {formatGravity(Math.abs(analysis.gravity_difference))}
+                    {analysis.gravity_difference > 0 ? " (higher)" : " (lower)"}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         {/* Completion Suggestion */}
@@ -167,10 +182,13 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
               <div className="suggestion-icon">🎯</div>
               <div className="suggestion-text">
                 <strong>Fermentation may be complete!</strong>
-                <p>The gravity appears to have stabilized. Consider marking this fermentation as completed.</p>
+                <p>
+                  The gravity appears to have stabilized. Consider marking this
+                  fermentation as completed.
+                </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleAcceptSuggestion}
               className="btn btn-success"
             >
@@ -186,8 +204,13 @@ const GravityStabilizationAnalysisComponent: React.FC<GravityStabilizationAnalys
             <div className="changes-list">
               {analysis.recent_changes.map((change, index) => (
                 <div key={index} className="change-item">
-                  <span className={`change-value ${Math.abs(change) <= 0.002 ? 'stable' : 'changing'}`}>
-                    {change >= 0 ? '+' : ''}{change.toFixed(4)}
+                  <span
+                    className={`change-value ${
+                      Math.abs(change) <= 0.002 ? "stable" : "changing"
+                    }`}
+                  >
+                    {change >= 0 ? "+" : ""}
+                    {change.toFixed(4)}
                   </span>
                 </div>
               ))}

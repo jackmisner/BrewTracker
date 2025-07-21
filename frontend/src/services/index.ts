@@ -62,42 +62,42 @@ export {
 export const Services = {
   // Core infrastructure
   cache: CacheManager,
-  
+
   // Data management services
   Data: {
     ingredient: ingredientServiceInstance,
     recipe: recipeServiceInstance,
     beerStyle: BeerStyleService,
   },
-  
+
   // Analytics services
   Analytics: {
     metrics: metricServiceInstance,
     attenuationAnalytics: attenuationAnalyticsServiceInstance,
   },
-  
+
   // User services
   User: {
     settings: UserSettingsService,
     recipeDefaults: RecipeDefaultsService,
   },
-  
+
   // Brewing process services
   Brewing: {
     brewSession: brewSessionServiceInstance,
   },
-  
+
   // AI services
   AI: {
     service: aiService,
   },
-  
+
   // BeerXML services
   BeerXML: {
     service: BeerXMLService,
     ingredientMatching: IngredientMatchingService,
   },
-  
+
   // Legacy flat access for backward compatibility
   ingredient: ingredientServiceInstance,
   recipe: recipeServiceInstance,
@@ -225,10 +225,10 @@ export const ServiceUtils = {
     try {
       // Pre-load ingredient data
       await ingredientServiceInstance.fetchIngredients();
-      
+
       // Pre-load user settings
       await UserSettingsService.getUserSettings();
-      
+
       console.log("Services initialized successfully");
     } catch (error) {
       console.warn("Some services failed to initialize:", error);
@@ -249,7 +249,9 @@ export const ServiceUtils = {
       brewSessionServiceInstance,
       IngredientMatchingService,
       UserSettingsService,
-    ].filter(service => service && typeof service.clearCache === "function").length;
+    ].filter(
+      (service) => service && typeof service.clearCache === "function"
+    ).length;
 
     return {
       totalServices: Object.keys(Services).length,
@@ -265,8 +267,10 @@ export const ServiceUtils = {
     if (typeof (metricServiceInstance as any).clearRecipeCache === "function") {
       (metricServiceInstance as any).clearRecipeCache(recipeId);
     }
-    
-    if (typeof (brewSessionServiceInstance as any).clearRecipeCache === "function") {
+
+    if (
+      typeof (brewSessionServiceInstance as any).clearRecipeCache === "function"
+    ) {
       (brewSessionServiceInstance as any).clearRecipeCache(recipeId);
     }
 

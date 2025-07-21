@@ -58,7 +58,8 @@ class BeerXMLService {
     try {
       const response = await ApiService.beerxml.export(recipeId);
       return {
-        xmlContent: (response.data as any).xml_content || (response.data as any).xml,
+        xmlContent:
+          (response.data as any).xml_content || (response.data as any).xml,
         filename: (response.data as any).filename,
       };
     } catch (error) {
@@ -94,10 +95,12 @@ class BeerXMLService {
   /**
    * Match ingredients using backend service
    */
-  async matchIngredients(ingredients: RecipeIngredient[]): Promise<IngredientMatchingResult[]> {
+  async matchIngredients(
+    ingredients: RecipeIngredient[]
+  ): Promise<IngredientMatchingResult[]> {
     try {
       const response = await ApiService.beerxml.matchIngredients({
-        ingredients: ingredients.map(ing => ({
+        ingredients: ingredients.map((ing) => ({
           name: ing.name,
           type: ing.type,
           amount: ing.amount,
@@ -105,15 +108,15 @@ class BeerXMLService {
           use: ing.use,
           time: ing.time,
           // Include type-specific fields
-          ...(ing.type === 'grain' && {
+          ...(ing.type === "grain" && {
             potential: ing.potential,
             color: ing.color,
             grain_type: ing.grain_type,
           }),
-          ...(ing.type === 'hop' && {
+          ...(ing.type === "hop" && {
             alpha_acid: ing.alpha_acid,
           }),
-          ...(ing.type === 'yeast' && {
+          ...(ing.type === "yeast" && {
             attenuation: ing.attenuation,
           }),
           // Include any additional BeerXML data if available
@@ -123,10 +126,15 @@ class BeerXMLService {
         })),
       });
 
-      return (response.data as any).matching_results || (response.data as any).matched_ingredients;
+      return (
+        (response.data as any).matching_results ||
+        (response.data as any).matched_ingredients
+      );
     } catch (error) {
       console.error("Error matching ingredients:", error);
-      throw new Error(`Failed to match ingredients: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to match ingredients: ${(error as Error).message}`
+      );
     }
   }
 
@@ -142,7 +150,9 @@ class BeerXMLService {
       return (response.data as any).created_ingredients;
     } catch (error) {
       console.error("Error creating ingredients:", error);
-      throw new Error(`Failed to create ingredients: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to create ingredients: ${(error as Error).message}`
+      );
     }
   }
 
@@ -244,7 +254,10 @@ class BeerXMLService {
   /**
    * Download BeerXML file
    */
-  downloadBeerXML(xmlContent: string, filename: string = "recipe.xml"): boolean {
+  downloadBeerXML(
+    xmlContent: string,
+    filename: string = "recipe.xml"
+  ): boolean {
     try {
       const blob = new Blob([xmlContent], {
         type: "application/xml;charset=utf-8",
@@ -291,7 +304,10 @@ class BeerXMLService {
   /**
    * Process uploaded file through complete import workflow
    */
-  async processImportFile(file: File, _availableIngredients?: any): Promise<BeerXMLRecipe[]> {
+  async processImportFile(
+    file: File,
+    _availableIngredients?: any
+  ): Promise<BeerXMLRecipe[]> {
     try {
       // Step 1: Validate file
       const fileValidation = this.validateFile(file);
@@ -361,8 +377,14 @@ class BeerXMLService {
         recipe.ingredients.forEach((ingredient) => {
           const type =
             (ingredient.type as any) === "adjunct" ? "other" : ingredient.type;
-          if (summary.ingredientsByType[type as keyof typeof summary.ingredientsByType] !== undefined) {
-            summary.ingredientsByType[type as keyof typeof summary.ingredientsByType]++;
+          if (
+            summary.ingredientsByType[
+              type as keyof typeof summary.ingredientsByType
+            ] !== undefined
+          ) {
+            summary.ingredientsByType[
+              type as keyof typeof summary.ingredientsByType
+            ]++;
           }
         });
       }

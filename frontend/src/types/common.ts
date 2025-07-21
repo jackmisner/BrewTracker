@@ -22,7 +22,7 @@ export interface PaginatedResponse<T> {
   has_prev: boolean;
 }
 
-export type LoadingState = 'idle' | 'loading' | 'succeeded' | 'failed';
+export type LoadingState = "idle" | "loading" | "succeeded" | "failed";
 
 export interface AsyncState<T> {
   data: T | null;

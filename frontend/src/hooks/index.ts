@@ -144,7 +144,9 @@ export const HookTestUtils = {
   /**
    * Mock hook return values for testing
    */
-  createMockHookReturn: (overrides: Partial<MockHookReturn> = {}): MockHookReturn => ({
+  createMockHookReturn: (
+    overrides: Partial<MockHookReturn> = {}
+  ): MockHookReturn => ({
     loading: false,
     error: null,
     data: null,
@@ -154,7 +156,10 @@ export const HookTestUtils = {
   /**
    * Create test props for hooks that need them
    */
-  createTestProps: (hookName: string, customProps: Record<string, any> = {}) => {
+  createTestProps: (
+    hookName: string,
+    customProps: Record<string, any> = {}
+  ) => {
     const baseProps: Record<string, any> = {
       useRecipeBuilder: { recipeId: "test-recipe-id" },
       useRecipeState: { recipeId: "test-recipe-id" },

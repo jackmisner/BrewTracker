@@ -36,7 +36,7 @@ const AllRecipes: React.FC = () => {
   // Create Fuse instance for fuzzy search
   const fuse = useMemo(() => {
     if (!recipes || recipes.length === 0) return null;
-    
+
     return new Fuse(recipes, {
       keys: [
         { name: "name", weight: 1.0 },
@@ -58,51 +58,87 @@ const AllRecipes: React.FC = () => {
   // Sort recipes based on selected criteria
   const sortRecipes = (recipesToSort: Recipe[]): Recipe[] => {
     const sorted = [...recipesToSort];
-    
+
     switch (sortBy) {
       case "name_asc":
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_desc":
         return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "created_at_asc":
-        return sorted.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(a.created_at || "").getTime() -
+            new Date(b.created_at || "").getTime()
+        );
       case "created_at_desc":
-        return sorted.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.created_at || "").getTime() -
+            new Date(a.created_at || "").getTime()
+        );
       case "updated_at_asc":
-        return sorted.sort((a, b) => new Date(a.updated_at || '').getTime() - new Date(b.updated_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(a.updated_at || "").getTime() -
+            new Date(b.updated_at || "").getTime()
+        );
       case "updated_at_desc":
-        return sorted.sort((a, b) => new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.updated_at || "").getTime() -
+            new Date(a.updated_at || "").getTime()
+        );
       case "abv_asc":
-        return sorted.sort((a, b) => (a.estimated_abv || 0) - (b.estimated_abv || 0));
+        return sorted.sort(
+          (a, b) => (a.estimated_abv || 0) - (b.estimated_abv || 0)
+        );
       case "abv_desc":
-        return sorted.sort((a, b) => (b.estimated_abv || 0) - (a.estimated_abv || 0));
+        return sorted.sort(
+          (a, b) => (b.estimated_abv || 0) - (a.estimated_abv || 0)
+        );
       case "ibu_asc":
-        return sorted.sort((a, b) => (a.estimated_ibu || 0) - (b.estimated_ibu || 0));
+        return sorted.sort(
+          (a, b) => (a.estimated_ibu || 0) - (b.estimated_ibu || 0)
+        );
       case "ibu_desc":
-        return sorted.sort((a, b) => (b.estimated_ibu || 0) - (a.estimated_ibu || 0));
+        return sorted.sort(
+          (a, b) => (b.estimated_ibu || 0) - (a.estimated_ibu || 0)
+        );
       case "srm_asc":
-        return sorted.sort((a, b) => (a.estimated_srm || 0) - (b.estimated_srm || 0));
+        return sorted.sort(
+          (a, b) => (a.estimated_srm || 0) - (b.estimated_srm || 0)
+        );
       case "srm_desc":
-        return sorted.sort((a, b) => (b.estimated_srm || 0) - (a.estimated_srm || 0));
+        return sorted.sort(
+          (a, b) => (b.estimated_srm || 0) - (a.estimated_srm || 0)
+        );
       case "og_asc":
-        return sorted.sort((a, b) => (a.estimated_og || 0) - (b.estimated_og || 0));
+        return sorted.sort(
+          (a, b) => (a.estimated_og || 0) - (b.estimated_og || 0)
+        );
       case "og_desc":
-        return sorted.sort((a, b) => (b.estimated_og || 0) - (a.estimated_og || 0));
+        return sorted.sort(
+          (a, b) => (b.estimated_og || 0) - (a.estimated_og || 0)
+        );
       default:
-        return sorted.sort((a, b) => new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.updated_at || "").getTime() -
+            new Date(a.updated_at || "").getTime()
+        );
     }
   };
 
   // Filter and sort recipes
   const filteredAndSortedRecipes = useMemo(() => {
     let recipesToProcess = recipes || [];
-    
+
     // Apply search filter if there's a search term
     if (searchTerm && searchTerm.length >= 2 && fuse) {
       const results = fuse.search(searchTerm);
-      recipesToProcess = results.map(result => result.item);
+      recipesToProcess = results.map((result) => result.item);
     }
-    
+
     // Apply sorting
     return sortRecipes(recipesToProcess);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,7 +214,9 @@ const AllRecipes: React.FC = () => {
           </div>
 
           <div className="sort-container">
-            <label htmlFor="sort-select" className="sort-label">Sort by:</label>
+            <label htmlFor="sort-select" className="sort-label">
+              Sort by:
+            </label>
             <select
               id="sort-select"
               value={sortBy}
@@ -204,43 +242,42 @@ const AllRecipes: React.FC = () => {
 
           {searchTerm && searchTerm.length >= 2 && (
             <p className="search-results-count">
-              Showing {filteredAndSortedRecipes.length} of {recipes?.length || 0} recipes
+              Showing {filteredAndSortedRecipes.length} of{" "}
+              {recipes?.length || 0} recipes
             </p>
           )}
         </div>
       )}
 
       {loading && <div className="loading-state">Loading...</div>}
-      
-      {error && (
-        <div className="error-state">
-          {error}
-        </div>
-      )}
+
+      {error && <div className="error-state">{error}</div>}
 
       {!loading && !error && (!recipes || recipes.length === 0) && (
         <div className="empty-state">No recipes found.</div>
       )}
 
-      {!loading && !error && recipes && recipes.length > 0 && filteredAndSortedRecipes.length === 0 && searchTerm && (
-        <div className="no-search-results">
-          <p>No recipes found matching "{searchTerm}"</p>
-          <button
-            onClick={() => setSearchTerm("")}
-            className="clear-search-link"
-          >
-            Clear search
-          </button>
-        </div>
-      )}
+      {!loading &&
+        !error &&
+        recipes &&
+        recipes.length > 0 &&
+        filteredAndSortedRecipes.length === 0 &&
+        searchTerm && (
+          <div className="no-search-results">
+            <p>No recipes found matching "{searchTerm}"</p>
+            <button
+              onClick={() => setSearchTerm("")}
+              className="clear-search-link"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
 
       {!loading && !error && filteredAndSortedRecipes.length > 0 && (
         <div className="recipes-grid">
           {filteredAndSortedRecipes.map((recipe) => (
-            <CompactRecipeCard
-              key={recipe.recipe_id}
-              recipe={recipe}
-            />
+            <CompactRecipeCard key={recipe.recipe_id} recipe={recipe} />
           ))}
         </div>
       )}

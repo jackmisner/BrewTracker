@@ -1,15 +1,15 @@
-import { ID, BaseEntity } from './common';
-import { Recipe } from './recipe';
-import { TemperatureUnit } from './units';
+import { ID, BaseEntity } from "./common";
+import { Recipe } from "./recipe";
+import { TemperatureUnit } from "./units";
 
 // Brew session status options
-export type BrewSessionStatus = 
-  | 'planned'
-  | 'in-progress' 
-  | 'fermenting'
-  | 'conditioning'
-  | 'completed'
-  | 'archived';
+export type BrewSessionStatus =
+  | "planned"
+  | "in-progress"
+  | "fermenting"
+  | "conditioning"
+  | "completed"
+  | "archived";
 
 // Fermentation entry for tracking data points
 export interface FermentationEntry {
@@ -28,34 +28,34 @@ export interface BrewSession extends BaseEntity {
   brew_date: string; // ISO date string (date only)
   name?: string;
   status: BrewSessionStatus;
-  
+
   // Brew day measurements
   mash_temp?: number;
   actual_og?: number;
   actual_fg?: number;
   actual_abv?: number;
   actual_efficiency?: number;
-  
+
   // Important dates
   fermentation_start_date?: string; // ISO date string
-  fermentation_end_date?: string; // ISO date string  
+  fermentation_end_date?: string; // ISO date string
   packaging_date?: string; // ISO date string
-  
+
   // Fermentation tracking data
   fermentation_data: FermentationEntry[];
-  
+
   // Notes and ratings
   notes?: string;
   tasting_notes?: string;
   batch_rating?: number; // 1-5 scale
   photos_url?: string;
-  
+
   // Store recipe snapshot as JSON string to preserve history
   recipe_snapshot?: string;
-  
+
   // Temperature unit preference
   temperature_unit: TemperatureUnit;
-  
+
   // Timestamps
   created_at?: string;
   updated_at?: string;
@@ -73,7 +73,8 @@ export interface CreateBrewSessionFormData {
 }
 
 // Brew session update form data
-export interface UpdateBrewSessionFormData extends Partial<CreateBrewSessionFormData> {
+export interface UpdateBrewSessionFormData
+  extends Partial<CreateBrewSessionFormData> {
   actual_og?: number;
   actual_fg?: number;
   actual_abv?: number;
@@ -111,13 +112,19 @@ export interface FermentationStats {
     max: number;
     unit: TemperatureUnit;
   };
-  gravity_trend: 'falling' | 'stable' | 'rising' | 'unknown';
+  gravity_trend: "falling" | "stable" | "rising" | "unknown";
 }
 
 // Brew session timeline event
 export interface BrewSessionTimelineEvent {
   date: string;
-  event_type: 'brew_day' | 'fermentation_start' | 'fermentation_entry' | 'fermentation_end' | 'packaging' | 'tasting';
+  event_type:
+    | "brew_day"
+    | "fermentation_start"
+    | "fermentation_entry"
+    | "fermentation_end"
+    | "packaging"
+    | "tasting";
   title: string;
   description?: string;
   data?: FermentationEntry | Partial<BrewSession>;
@@ -130,7 +137,7 @@ export interface BrewSessionAnalysis {
     target_efficiency: number;
     actual_efficiency: number;
     variance: number;
-    performance: 'excellent' | 'good' | 'average' | 'below_average' | 'poor';
+    performance: "excellent" | "good" | "average" | "below_average" | "poor";
   };
   fermentation_analysis: {
     duration: number;
@@ -159,9 +166,9 @@ export interface BrewingCalendarEvent {
   session_id: ID;
   session_name: string;
   recipe_name: string;
-  event_type: BrewSessionTimelineEvent['event_type'];
+  event_type: BrewSessionTimelineEvent["event_type"];
   status: BrewSessionStatus;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
 }
 
 // Brew session comparison
@@ -191,7 +198,7 @@ export interface BrewSessionComparison {
     };
   };
   trends: {
-    efficiency_trend: 'improving' | 'declining' | 'stable';
+    efficiency_trend: "improving" | "declining" | "stable";
     consistency_score: number;
   };
 }
@@ -255,13 +262,13 @@ export interface BrewSessionStatistics {
   };
   efficiency_trend: {
     last_5_sessions: number[];
-    trend: 'improving' | 'declining' | 'stable';
+    trend: "improving" | "declining" | "stable";
   };
 }
 
 // Brew session export options
 export interface BrewSessionExportOptions {
-  format: 'json' | 'csv' | 'pdf';
+  format: "json" | "csv" | "pdf";
   include_recipe: boolean;
   include_fermentation_data: boolean;
   include_photos: boolean;
@@ -274,7 +281,7 @@ export interface BrewSessionExportOptions {
 // Brew session notification/reminder
 export interface BrewSessionReminder {
   session_id: ID;
-  reminder_type: 'brew_day' | 'fermentation_check' | 'packaging' | 'tasting';
+  reminder_type: "brew_day" | "fermentation_check" | "packaging" | "tasting";
   scheduled_date: string;
   message: string;
   sent: boolean;

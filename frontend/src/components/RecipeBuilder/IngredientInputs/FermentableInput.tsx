@@ -31,10 +31,10 @@ interface FermentableInputProps {
   disabled?: boolean;
 }
 
-const FermentableInput: React.FC<FermentableInputProps> = ({ 
-  grains, 
-  onAdd, 
-  disabled = false 
+const FermentableInput: React.FC<FermentableInputProps> = ({
+  grains,
+  onAdd,
+  disabled = false,
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
@@ -77,7 +77,9 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     ignoreLocation: true,
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ): void => {
     const { name, value } = e.target;
     setFermentableForm((prev) => ({
       ...prev,
@@ -93,7 +95,9 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     }
   };
 
-  const handleFermentableSelect = (selectedFermentable: Ingredient | null): void => {
+  const handleFermentableSelect = (
+    selectedFermentable: Ingredient | null
+  ): void => {
     if (selectedFermentable) {
       setFermentableForm((prev) => ({
         ...prev,
@@ -161,7 +165,9 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -173,7 +179,9 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
         ingredient_id: fermentableForm.ingredient_id,
         amount: fermentableForm.amount,
         unit: fermentableForm.unit,
-        color: fermentableForm.color ? parseFloat(fermentableForm.color) : undefined,
+        color: fermentableForm.color
+          ? parseFloat(fermentableForm.color)
+          : undefined,
       };
 
       await onAdd(formData);

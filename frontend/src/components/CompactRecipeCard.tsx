@@ -1,16 +1,22 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { Recipe } from "../types";
-import { formatGravity, formatAbv, formatIbu, formatSrm, getSrmColour } from "../utils/formatUtils";
+import {
+  formatGravity,
+  formatAbv,
+  formatIbu,
+  formatSrm,
+  getSrmColour,
+} from "../utils/formatUtils";
 
 interface CompactRecipeCardProps {
   recipe: Recipe;
   showActionsInCard?: boolean;
 }
 
-const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({ 
-  recipe, 
-  showActionsInCard = true 
+const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
+  recipe,
+  showActionsInCard = true,
 }) => {
   const navigate = useNavigate();
 
@@ -31,7 +37,9 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
       <div className="compact-recipe-header">
         <div className="compact-recipe-info">
           <h3 className="compact-recipe-name">{recipe.name}</h3>
-          <p className="compact-recipe-style">{recipe.style || "No style specified"}</p>
+          <p className="compact-recipe-style">
+            {recipe.style || "No style specified"}
+          </p>
         </div>
         <div
           className="compact-color-swatch"
@@ -73,22 +81,13 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
       {/* Actions */}
       {showActionsInCard && (
         <div className="compact-card-actions">
-          <button
-            onClick={handleView}
-            className="compact-action-button view"
-          >
+          <button onClick={handleView} className="compact-action-button view">
             View
           </button>
-          <button
-            onClick={handleEdit}
-            className="compact-action-button edit"
-          >
+          <button onClick={handleEdit} className="compact-action-button edit">
             Edit
           </button>
-          <button
-            onClick={handleBrew}
-            className="compact-action-button brew"
-          >
+          <button onClick={handleBrew} className="compact-action-button brew">
             Brew
           </button>
         </div>

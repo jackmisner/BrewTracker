@@ -61,13 +61,16 @@ const IngredientManager: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
-  const [existingIngredients, setExistingIngredients] = useState<Ingredient[]>([]);
-  const [groupedIngredients, setGroupedIngredients] = useState<GroupedIngredients>({
-    grain: [],
-    hop: [],
-    yeast: [],
-    other: [],
-  });
+  const [existingIngredients, setExistingIngredients] = useState<Ingredient[]>(
+    []
+  );
+  const [groupedIngredients, setGroupedIngredients] =
+    useState<GroupedIngredients>({
+      grain: [],
+      hop: [],
+      yeast: [],
+      other: [],
+    });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredResults, setFilteredResults] = useState<GroupedIngredients>({
     grain: [],
@@ -112,7 +115,9 @@ const IngredientManager: React.FC = () => {
         setExistingIngredients(ingredients);
 
         // Use the IngredientService to group ingredients by type
-        const grouped = ingredientServiceInstance.groupIngredientsByType(ingredients) as GroupedIngredients;
+        const grouped = ingredientServiceInstance.groupIngredientsByType(
+          ingredients
+        ) as GroupedIngredients;
         setGroupedIngredients(grouped);
 
         // Initialize filtered results with all grouped ingredients
@@ -172,7 +177,11 @@ const IngredientManager: React.FC = () => {
   }, [searchQuery, fuse, groupedIngredients]);
 
   // Handle form field changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -285,30 +294,29 @@ const IngredientManager: React.FC = () => {
 
     try {
       // Prepare data for submission (remove empty fields)
-      const submissionData: Partial<Ingredient> = Object.entries(formData).reduce(
-        (acc: any, [key, value]) => {
-          if (value !== "" && value !== null && value !== undefined) {
-            // Convert numeric fields
-            if (
-              [
-                "potential",
-                "color",
-                "alpha_acid",
-                "attenuation",
-                "alcohol_tolerance",
-                "min_temperature",
-                "max_temperature",
-              ].includes(key)
-            ) {
-              acc[key] = parseFloat(value as string);
-            } else {
-              acc[key] = value;
-            }
+      const submissionData: Partial<Ingredient> = Object.entries(
+        formData
+      ).reduce((acc: any, [key, value]) => {
+        if (value !== "" && value !== null && value !== undefined) {
+          // Convert numeric fields
+          if (
+            [
+              "potential",
+              "color",
+              "alpha_acid",
+              "attenuation",
+              "alcohol_tolerance",
+              "min_temperature",
+              "max_temperature",
+            ].includes(key)
+          ) {
+            acc[key] = parseFloat(value as string);
+          } else {
+            acc[key] = value;
           }
-          return acc;
-        },
-        {}
-      );
+        }
+        return acc;
+      }, {});
 
       await ApiService.ingredients.create(submissionData as any);
 
@@ -323,7 +331,9 @@ const IngredientManager: React.FC = () => {
       setExistingIngredients(ingredients);
 
       // Re-group ingredients using the service
-      const grouped = ingredientServiceInstance.groupIngredientsByType(ingredients) as GroupedIngredients;
+      const grouped = ingredientServiceInstance.groupIngredientsByType(
+        ingredients
+      ) as GroupedIngredients;
       setGroupedIngredients(grouped);
       setFilteredResults(grouped);
 
@@ -382,7 +392,11 @@ const IngredientManager: React.FC = () => {
   };
 
   // Highlight search matches in text
-  const highlightMatches = (text: string, matches: any[] = [], searchTerm: string = ""): string => {
+  const highlightMatches = (
+    text: string,
+    matches: any[] = [],
+    searchTerm: string = ""
+  ): string => {
     if (!matches.length || !searchTerm) return text;
 
     // Simple approach: highlight the search query if it appears
@@ -860,10 +874,19 @@ const IngredientManager: React.FC = () => {
                                     (points per pound per gallon)
                                   </span>
                                 )}
-                                {(ingredient.improved_attenuation_estimate || ingredient.attenuation) && (
+                                {(ingredient.improved_attenuation_estimate ||
+                                  ingredient.attenuation) && (
                                   <span>
-                                    Attenuation: {ingredient.improved_attenuation_estimate || ingredient.attenuation}%
-                                    {ingredient.improved_attenuation_estimate && <span title="Enhanced estimate based on real fermentation data"> 📊</span>}
+                                    Attenuation:{" "}
+                                    {ingredient.improved_attenuation_estimate ||
+                                      ingredient.attenuation}
+                                    %
+                                    {ingredient.improved_attenuation_estimate && (
+                                      <span title="Enhanced estimate based on real fermentation data">
+                                        {" "}
+                                        📊
+                                      </span>
+                                    )}
                                   </span>
                                 )}
                                 {ingredient.manufacturer && (

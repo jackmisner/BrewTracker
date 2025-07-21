@@ -6,8 +6,14 @@ import { BrewSession } from "../../types";
 import { formatGravity, formatAbv } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
-
-type BrewSessionStatus = "all" | "planned" | "in-progress" | "fermenting" | "conditioning" | "completed" | "archived";
+type BrewSessionStatus =
+  | "all"
+  | "planned"
+  | "in-progress"
+  | "fermenting"
+  | "conditioning"
+  | "completed"
+  | "archived";
 
 const BrewSessionList: React.FC = () => {
   const [sessions, setSessions] = useState<BrewSession[]>([]);
@@ -35,7 +41,7 @@ const BrewSessionList: React.FC = () => {
   // Create Fuse instance for fuzzy search
   const fuse = useMemo(() => {
     if (!sessions || sessions.length === 0) return null;
-    
+
     return new Fuse(sessions, {
       keys: [
         { name: "name", weight: 1.0 },
@@ -56,20 +62,36 @@ const BrewSessionList: React.FC = () => {
   // Sort sessions based on selected criteria
   const sortSessions = (sessionsToSort: BrewSession[]): BrewSession[] => {
     const sorted = [...sessionsToSort];
-    
+
     switch (sortBy) {
       case "name_asc":
-        return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        return sorted.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "")
+        );
       case "name_desc":
-        return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+        return sorted.sort((a, b) =>
+          (b.name || "").localeCompare(a.name || "")
+        );
       case "brew_date_asc":
-        return sorted.sort((a, b) => new Date(a.brew_date || '').getTime() - new Date(b.brew_date || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(a.brew_date || "").getTime() -
+            new Date(b.brew_date || "").getTime()
+        );
       case "brew_date_desc":
-        return sorted.sort((a, b) => new Date(b.brew_date || '').getTime() - new Date(a.brew_date || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.brew_date || "").getTime() -
+            new Date(a.brew_date || "").getTime()
+        );
       case "status_asc":
-        return sorted.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+        return sorted.sort((a, b) =>
+          (a.status || "").localeCompare(b.status || "")
+        );
       case "status_desc":
-        return sorted.sort((a, b) => (b.status || '').localeCompare(a.status || ''));
+        return sorted.sort((a, b) =>
+          (b.status || "").localeCompare(a.status || "")
+        );
       case "abv_asc":
         return sorted.sort((a, b) => (a.actual_abv || 0) - (b.actual_abv || 0));
       case "abv_desc":
@@ -83,40 +105,64 @@ const BrewSessionList: React.FC = () => {
       case "fg_desc":
         return sorted.sort((a, b) => (b.actual_fg || 0) - (a.actual_fg || 0));
       case "efficiency_asc":
-        return sorted.sort((a, b) => (a.actual_efficiency || 0) - (b.actual_efficiency || 0));
+        return sorted.sort(
+          (a, b) => (a.actual_efficiency || 0) - (b.actual_efficiency || 0)
+        );
       case "efficiency_desc":
-        return sorted.sort((a, b) => (b.actual_efficiency || 0) - (a.actual_efficiency || 0));
+        return sorted.sort(
+          (a, b) => (b.actual_efficiency || 0) - (a.actual_efficiency || 0)
+        );
       case "rating_asc":
-        return sorted.sort((a, b) => (a.batch_rating || 0) - (b.batch_rating || 0));
+        return sorted.sort(
+          (a, b) => (a.batch_rating || 0) - (b.batch_rating || 0)
+        );
       case "rating_desc":
-        return sorted.sort((a, b) => (b.batch_rating || 0) - (a.batch_rating || 0));
+        return sorted.sort(
+          (a, b) => (b.batch_rating || 0) - (a.batch_rating || 0)
+        );
       case "created_at_asc":
-        return sorted.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(a.created_at || "").getTime() -
+            new Date(b.created_at || "").getTime()
+        );
       case "created_at_desc":
-        return sorted.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.created_at || "").getTime() -
+            new Date(a.created_at || "").getTime()
+        );
       default:
-        return sorted.sort((a, b) => new Date(b.brew_date || '').getTime() - new Date(a.brew_date || '').getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.brew_date || "").getTime() -
+            new Date(a.brew_date || "").getTime()
+        );
     }
   };
 
   // Filter, search, and sort sessions
   const filteredAndSortedSessions = useMemo(() => {
     let sessionsToProcess = sessions || [];
-    
+
     // Apply status filter first
     if (filterStatus !== "all") {
-      sessionsToProcess = sessionsToProcess.filter((session) => session.status === filterStatus);
+      sessionsToProcess = sessionsToProcess.filter(
+        (session) => session.status === filterStatus
+      );
     }
-    
+
     // Apply search filter if there's a search term
     if (searchTerm && searchTerm.length >= 2 && fuse) {
       const searchResults = fuse.search(searchTerm);
-      const searchSessionIds = searchResults.map(result => result.item.session_id);
-      sessionsToProcess = sessionsToProcess.filter(session => 
+      const searchSessionIds = searchResults.map(
+        (result) => result.item.session_id
+      );
+      sessionsToProcess = sessionsToProcess.filter((session) =>
         searchSessionIds.includes(session.session_id)
       );
     }
-    
+
     // Apply sorting
     return sortSessions(sessionsToProcess);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,7 +172,9 @@ const BrewSessionList: React.FC = () => {
     fetchSessions();
   }, []);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
     setFilterStatus(e.target.value as BrewSessionStatus);
   };
 
@@ -193,7 +241,9 @@ const BrewSessionList: React.FC = () => {
           </div>
 
           <div className="sort-container">
-            <label htmlFor="sort-select" className="sort-label">Sort by:</label>
+            <label htmlFor="sort-select" className="sort-label">
+              Sort by:
+            </label>
             <select
               id="sort-select"
               value={sortBy}
@@ -243,7 +293,8 @@ const BrewSessionList: React.FC = () => {
 
           {searchTerm && searchTerm.length >= 2 && (
             <p className="search-results-count">
-              Showing {filteredAndSortedSessions.length} of {sessions?.length || 0} sessions
+              Showing {filteredAndSortedSessions.length} of{" "}
+              {sessions?.length || 0} sessions
             </p>
           )}
         </div>
@@ -262,17 +313,22 @@ const BrewSessionList: React.FC = () => {
         </div>
       )}
 
-      {!loading && !error && sessions && sessions.length > 0 && filteredAndSortedSessions.length === 0 && searchTerm && (
-        <div className="no-search-results">
-          <p>No sessions found matching "{searchTerm}"</p>
-          <button
-            onClick={() => setSearchTerm("")}
-            className="clear-search-link"
-          >
-            Clear search
-          </button>
-        </div>
-      )}
+      {!loading &&
+        !error &&
+        sessions &&
+        sessions.length > 0 &&
+        filteredAndSortedSessions.length === 0 &&
+        searchTerm && (
+          <div className="no-search-results">
+            <p>No sessions found matching "{searchTerm}"</p>
+            <button
+              onClick={() => setSearchTerm("")}
+              className="clear-search-link"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
 
       {!loading && !error && filteredAndSortedSessions.length > 0 && (
         <div className="table-container">
@@ -301,19 +357,19 @@ const BrewSessionList: React.FC = () => {
                   </td>
                   <td>
                     <span className={getStatusBadgeClass(session.status || "")}>
-                      {session.status 
-                        ? session.status.charAt(0).toUpperCase() + session.status.slice(1)
+                      {session.status
+                        ? session.status.charAt(0).toUpperCase() +
+                          session.status.slice(1)
                         : "Unknown"}
                     </span>
                   </td>
                   <td className="session-metrics-cell">
-                    {session.actual_og ? formatGravity(session.actual_og) : "-"} /
+                    {session.actual_og ? formatGravity(session.actual_og) : "-"}{" "}
+                    /
                     {session.actual_fg ? formatGravity(session.actual_fg) : "-"}
                   </td>
                   <td className="session-metrics-cell">
-                    {session.actual_abv
-                      ? formatAbv(session.actual_abv)
-                      : "-"}
+                    {session.actual_abv ? formatAbv(session.actual_abv) : "-"}
                   </td>
                   <td className="session-actions-cell">
                     <Link
