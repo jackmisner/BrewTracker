@@ -1,0 +1,432 @@
+/* ==========================================================================
+   AISuggestions.css - AI Recipe Suggestions Component Styles
+   ========================================================================== */
+
+/* Main container */
+.ai-suggestions-container {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 20px 0;
+  background: #f9f9f9;
+}
+
+/* Header section */
+.ai-suggestions-header {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px 8px 0 0;
+}
+
+.ai-suggestions-title {
+  margin: 0;
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ai-suggestions-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  color: #2d3748;
+  padding: 0 0 0 12px;
+  margin-left: 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-suggestions-toggle:hover {
+  background-color: #f7fafc;
+}
+
+/* Content wrapper */
+.ai-suggestions-content {
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+/* Loading state */
+.ai-suggestions-loading {
+  text-align: center;
+  padding: 20px;
+  color: #4a5568;
+}
+
+/* Error state */
+.ai-suggestions-error {
+  text-align: center;
+  padding: 20px;
+  color: #e53e3e;
+  background: #fed7d7;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+/* Success state */
+.ai-suggestions-success {
+  text-align: center;
+  padding: 20px;
+  color: #28a745;
+}
+
+.ai-suggestions-success p {
+  margin: 5px 0;
+}
+
+/* Optimization results */
+.optimization-results {
+  background: white;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.optimization-title {
+  color: #2f855a;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.optimization-subtitle {
+  font-size: 14px;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+.optimization-subtitle strong {
+  color: #28a745;
+}
+
+/* Metrics improvement section */
+.metrics-improvement {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.metrics-improvement h4 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.metric-item {
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 5px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.metric-improvement {
+  color: #38a169;
+}
+
+.metric-no-change {
+  color: #718096;
+}
+
+/* Changes made section */
+.changes-made {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.changes-made h5 {
+  color: #2d3748;
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+.changes-scroll {
+  /* Removed max-height and overflow-y to show all changes without scrolling */
+}
+
+.change-item {
+  padding: 8px;
+  background: white;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.change-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Ingredient-type-specific border colors */
+.change-item.grain {
+  border-left-color: #d97706; /* amber-600 - matches grain colors */
+}
+
+.change-item.hop {
+  border-left-color: #10b981; /* emerald-500 - matches hop colors */
+}
+
+.change-item.yeast {
+  border-left-color: #eab308; /* yellow-500 - matches yeast colors */
+}
+
+.change-item.other {
+  border-left-color: #6b7280; /* gray-500 - matches other/adjunct colors */
+}
+
+.change-item.adjunct {
+  border-left-color: #6b7280; /* gray-500 - legacy adjunct support */
+}
+
+/* Consolidated changes */
+.consolidated-changes {
+  margin-top: 8px;
+}
+
+.consolidated-change-item {
+  margin-left: 16px;
+  margin-bottom: 4px;
+}
+
+.consolidated-change-item span {
+  font-size: 14px;
+}
+
+/* Change description */
+.change-description {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Action buttons */
+.optimization-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+.btn-apply {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-apply:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-apply:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-analyze {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-analyze:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-analyze:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Suggestions section */
+.suggestions-section h4 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.suggestion-item {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.suggestion-title {
+  margin: 0;
+  color: #2d3748;
+  font-size: 16px;
+}
+
+.confidence-badge {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.confidence-high {
+  color: #28a745;
+  background: #d4edda;
+}
+
+.confidence-medium {
+  color: #856404;
+  background: #fff3cd;
+}
+
+.confidence-low {
+  color: #721c24;
+  background: #f8d7da;
+}
+
+.suggestion-description {
+  margin: 10px 0;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.suggestion-changes {
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.suggestion-change-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.suggestion-change-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Ingredient-type-specific border colors for suggestion items */
+.suggestion-change-item.grain {
+  border-left-color: #d97706; /* amber-600 - matches grain colors */
+}
+
+.suggestion-change-item.hop {
+  border-left-color: #10b981; /* emerald-500 - matches hop colors */
+}
+
+.suggestion-change-item.yeast {
+  border-left-color: #eab308; /* yellow-500 - matches yeast colors */
+}
+
+.suggestion-change-item.other {
+  border-left-color: #6b7280; /* gray-500 - matches other/adjunct colors */
+}
+
+.suggestion-change-item.adjunct {
+  border-left-color: #6b7280; /* gray-500 - legacy adjunct support */
+}
+
+.suggestion-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* Fine-tuning section */
+.fine-tuning-section {
+  margin-top: 20px;
+}
+
+.fine-tuning-section h4 {
+  color: #2d3748;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.fine-tuning-description {
+  color: #718096;
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  
+  .optimization-actions,
+  .suggestion-actions {
+    flex-direction: column;
+  }
+  
+  .suggestion-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ai-suggestions-container {
+    padding: 15px;
+  }
+}

@@ -780,31 +780,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   };
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        margin: "20px 0",
-        background: "#f9f9f9",
-      }}
-    >
-      <div
-        style={{
-          padding: "15px",
-          borderBottom: "1px solid #ddd",
-          background: "#fff",
-          borderRadius: "8px 8px 0 0",
-        }}
+    <div className="ai-suggestions-container">
+      <div className="ai-suggestions-header"
       >
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
+          className="ai-suggestions-toggle"
         >
           {isExpanded ? "▼" : "▶"} AI Recipe Analysis
         </button>
@@ -887,43 +868,26 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       </div>
 
       {isExpanded && (
-        <div style={{ padding: "15px" }}>
+        <div className="ai-suggestions-content">
           {error && (
-            <div
-              style={{
-                color: "red",
-                margin: "10px 0",
-                padding: "10px",
-                background: "#ffe6e6",
-                borderRadius: "4px",
-              }}
-            >
+            <div className="ai-suggestions-error">
               Error: {error}
             </div>
           )}
 
           {analyzing && (
-            <div
-              style={{ textAlign: "center", padding: "20px", color: "#666" }}
-            >
+            <div className="ai-suggestions-loading">
               <p>🤖 Analyzing recipe...</p>
             </div>
           )}
 
           {hasAnalyzed && !analyzing && optimizationResult && (
-            <div
-              style={{
-                background: "white",
-                border: "2px solid #28a745",
-                borderRadius: "8px",
-                padding: "20px",
-                marginBottom: "20px",
-              }}
+            <div className="optimization-results"
             >
-              <h4 style={{ color: "#28a745", marginTop: 0 }}>
+              <h4 className="optimization-title">
                 Recipe Optimization Complete!
               </h4>
-              <p>
+              <p className="optimization-subtitle">
                 Internal optimization completed in{" "}
                 <strong>
                   {optimizationResult.iterationsCompleted} iterations
@@ -931,29 +895,16 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               </p>
 
               {/* Metrics comparison */}
-              <div
-                style={{
-                  background: "#f8f9fa",
-                  padding: "15px",
-                  borderRadius: "6px",
-                  marginBottom: "15px",
-                }}
-              >
+              <div className="metrics-improvement">
                 <h5>Metrics Improvement</h5>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                    gap: "15px",
-                  }}
-                >
+                <div className="metrics-grid">
                   {Object.entries(optimizationResult.originalMetrics || {}).map(
                     ([metric, originalValue]) => {
                       const optimizedValue =
                         optimizationResult.optimizedMetrics?.[metric];
                       const isImproved = originalValue !== optimizedValue;
                       return (
-                        <div key={metric} style={{ textAlign: "center" }}>
+                        <div key={metric} className="metric-item">
                           <div
                             style={{
                               fontWeight: "bold",
@@ -996,19 +947,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   <h5>
                     Changes Made ({optimizationResult.recipeChanges.filter((change: any) => change.type !== "optimization_summary").length})
                   </h5>
-                  <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                  <div className="changes-scroll">
                     {optimizationResult.recipeChanges
                       .filter((change: any) => change.type !== "optimization_summary")
                       .map((change, idx) => (
                       <div
                         key={idx}
-                        style={{
-                          padding: "8px",
-                          background: "white",
-                          marginBottom: "8px",
-                          borderRadius: "4px",
-                          borderLeft: "3px solid #007bff",
-                        }}
+                        className={`change-item ${change.ingredient_type || ''}`}
                       >
                         {change.type === "ingredient_modified" && (
                           <div>
@@ -1090,39 +1035,17 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               )}
 
               {/* Apply button */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "center",
-                }}
-              >
+              <div className="optimization-actions">
                 <button
                   onClick={() => applyOptimizedRecipe(optimizationResult)}
                   disabled={disabled}
-                  style={{
-                    background: disabled ? "#ccc" : "#28a745",
-                    color: "white",
-                    border: "none",
-                    padding: "12px 24px",
-                    borderRadius: "6px",
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                  }}
+                  className="btn-apply"
                 >
                   Apply Optimized Recipe
                 </button>
                 <button
                   onClick={() => setOptimizationResult(null)}
-                  style={{
-                    background: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    padding: "12px 24px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
+                  className="btn-secondary"
                 >
                   Keep Original Recipe
                 </button>
@@ -1219,16 +1142,16 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                     {suggestion.changes.map((change, idx) => {
                       const isConsolidated = change.changes && Array.isArray(change.changes);
                       
+                      // Determine ingredient type from the current ingredients list
+                      const ingredient = ingredients.find(ing => 
+                        ing.name === change.ingredientName || ing.id === change.ingredientId
+                      );
+                      const ingredientType = ingredient?.type || '';
+                      
                       return (
                         <div
                           key={idx}
-                          style={{
-                            marginBottom: "8px",
-                            padding: "8px",
-                            background: "white",
-                            borderRadius: "4px",
-                            borderLeft: "3px solid #007bff",
-                          }}
+                          className={`suggestion-change-item ${ingredientType}`}
                         >
                           <strong>{change.ingredientName}:</strong>
                           {change.isNewIngredient ? (
