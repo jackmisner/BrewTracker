@@ -233,6 +233,32 @@ class RecipeAnalysisEngine:
 
         return grain_colors, batch_size_gal
 
+    def _apply_final_brewing_increments_rounding(self, recipe_data: Dict, unit_system: str) -> Dict:
+        """Apply final rounding to brewing increments for all ingredients in optimized recipe"""
+        rounded_recipe = recipe_data.copy()
+        rounded_ingredients = []
+        
+        for ingredient in recipe_data.get("ingredients", []):
+            rounded_ingredient = ingredient.copy()
+            
+            # Round amount to brewing increments using standard UnitConverter logic
+            current_amount = ingredient.get("amount", 0)
+            ingredient_type = ingredient.get("type", "grain")
+            
+            # Apply standard brewing precision rounding for final result
+            rounded_amount = UnitConverter.round_to_brewing_precision(
+                current_amount, ingredient_type, unit_system
+            )
+            
+            # Update the ingredient with rounded amount
+            rounded_ingredient["amount"] = rounded_amount
+            rounded_ingredients.append(rounded_ingredient)
+            
+            logger.info(f"🔄 Final rounding: {ingredient.get('name')} {current_amount:.1f} → {rounded_amount}")
+        
+        rounded_recipe["ingredients"] = rounded_ingredients
+        return rounded_recipe
+
     def _calculate_accurate_srm_impact(
         self, recipe_data: Dict, old_grain: Dict, new_grain: Dict
     ) -> float:
@@ -367,11 +393,12 @@ class RecipeAnalysisEngine:
         recipe_data: Dict,
         style_id: Optional[str] = None,
         unit_system: str = "imperial",
-        max_iterations: int = 50,
+        max_iterations: int = 200,  # Increased from 50 to 200 for aggressive optimization
     ) -> Dict:
         """
         Internal iterative optimization system that automatically applies suggestions
-        until the recipe reaches equilibrium or maximum iterations.
+        until the recipe is FULLY COMPLIANT with ALL style metrics.
+        Will continue iterating until complete compliance is achieved.
         """
 
         current_recipe = recipe_data.copy()
@@ -380,6 +407,9 @@ class RecipeAnalysisEngine:
             set()
         )  # Track applied suggestions to prevent loops
         previous_metrics = None  # Track metric improvements
+        stagnation_counter = 0  # Track iterations without progress to prevent infinite loops
+
+        logger.info(f"🚀 Starting aggressive optimization - will iterate until ALL metrics are in spec (max {max_iterations} iterations)")
 
         for iteration in range(max_iterations):
 
@@ -400,40 +430,56 @@ class RecipeAnalysisEngine:
             enriched_recipe_data["current_metrics"] = current_metrics
             enriched_recipe_data["style_analysis"] = style_analysis
 
+            # Use more aggressive optimization stages
+            if iteration >= max_iterations - 10:
+                optimization_stage = "final"
+            elif iteration >= max_iterations - 50:
+                optimization_stage = "aggressive" 
+            else:
+                optimization_stage = "initial"
+            
             # Generate suggestions
             suggestions = self.suggestion_generator.generate_suggestions(
-                enriched_recipe_data, current_metrics, style_analysis, unit_system
+                enriched_recipe_data, current_metrics, style_analysis, unit_system, optimization_stage
             )
 
-            # Check for convergence - no more suggestions means we've reached equilibrium
-            if not suggestions:
-                logger.info(
-                    f"✅ Optimization converged after {iteration + 1} iterations - no more suggestions"
-                )
-                break
-
-            # Check if recipe is fully compliant
+            # ONLY STOP if recipe is FULLY COMPLIANT - no other early exits
             if self._is_recipe_fully_compliant(style_analysis, current_recipe):
                 logger.info(
-                    f"✅ Optimization converged after {iteration + 1} iterations - recipe is fully compliant"
+                    f"🎯 SUCCESS! Recipe is FULLY COMPLIANT after {iteration + 1} iterations"
                 )
                 break
 
-            # Check for minimal metric improvements (stop if changes become negligible)
-            # Only stop for minimal improvements if recipe is already reasonably compliant
-            if previous_metrics and self._is_recipe_reasonably_compliant(
-                style_analysis
-            ):
-                metric_improvement = self._calculate_metric_improvement(
-                    previous_metrics, current_metrics
-                )
-                if (
-                    metric_improvement < 0.05
-                ):  # Less than 0.05% improvement and reasonably compliant
-                    logger.info(
-                        f"✅ Optimization converged after {iteration + 1} iterations - minimal improvements ({metric_improvement:.2f}%) on compliant recipe"
+            # Check for no suggestions available
+            if not suggestions:
+                # Reset fingerprints and try again with different stage to break deadlocks
+                if stagnation_counter < 3:
+                    stagnation_counter += 1
+                    applied_suggestion_fingerprints.clear()  # Reset to allow re-trying suggestions
+                    logger.info(f"🔄 No suggestions found, clearing suggestion history (attempt {stagnation_counter}/3)")
+                    
+                    # Try with final optimization stage if not already
+                    if optimization_stage != "final":
+                        final_suggestions = self.suggestion_generator.generate_suggestions(
+                            enriched_recipe_data, current_metrics, style_analysis, unit_system, "final"
+                        )
+                        if final_suggestions:
+                            suggestions = final_suggestions
+                            logger.info(f"🎯 Final stage found {len(suggestions)} additional optimizations")
+                    
+                    if not suggestions:
+                        continue  # Try next iteration with reset fingerprints
+                else:
+                    # We've tried multiple times - recipe may be at optimization limit
+                    compliance_info = self._get_compliance_status(style_analysis)
+                    logger.warning(
+                        f"⚠️ Optimization stopped after {iteration + 1} iterations - no more suggestions available"
                     )
+                    logger.warning(f"⚠️ Current compliance status: {compliance_info}")
                     break
+
+            # Reset stagnation counter when we have suggestions
+            stagnation_counter = 0
 
             # Apply the most important suggestion internally
             best_suggestion = self._select_best_suggestion_for_internal_optimization(
@@ -459,16 +505,18 @@ class RecipeAnalysisEngine:
                     # Validate that the recipe was actually modified
                     if updated_recipe == current_recipe:
                         logger.warning(
-                            f"🔄 Iteration {iteration + 1} - Recipe unchanged after applying suggestion, stopping optimization"
+                            f"🔄 Iteration {iteration + 1} - Recipe unchanged after applying suggestion"
                         )
-                        break
+                        # Don't break - try other suggestions or continue with reset fingerprints
+                        continue
 
                 except Exception as e:
                     logger.error(
                         f"🔄 Iteration {iteration + 1} - Error applying suggestion: {str(e)}"
                     )
                     logger.error(f"🔄 Suggestion details: {best_suggestion}")
-                    break
+                    # Don't break - try other suggestions
+                    continue
 
                 # Store the optimization step
                 metrics_after = self._calculate_recipe_metrics(updated_recipe)
@@ -536,10 +584,13 @@ class RecipeAnalysisEngine:
                     )
                 )
 
+            # Apply final rounding to brewing increments for optimized recipe
+            final_rounded_recipe = self._apply_final_brewing_increments_rounding(current_recipe, unit_system)
+
             return {
                 "original_metrics": original_metrics,
                 "optimized_metrics": final_metrics,
-                "optimized_recipe": current_recipe,  # Complete optimized recipe
+                "optimized_recipe": final_rounded_recipe,  # Complete optimized recipe with final rounding
                 "recipe_changes": recipe_changes,  # Summary of all changes
                 "style_analysis": final_style_analysis,
                 "suggestions": remaining_suggestions,  # Should be minimal
@@ -910,3 +961,33 @@ class RecipeAnalysisEngine:
             "ibu": calculate_ibu_preview(recipe_data),
             "srm": calculate_srm_preview(recipe_data),
         }
+
+    def _get_compliance_status(self, style_analysis: Optional[Dict]) -> str:
+        """Get a readable compliance status summary for logging"""
+        if not style_analysis:
+            return "No style analysis available"
+        
+        compliance = style_analysis.get("compliance", {})
+        if not compliance:
+            return "No compliance data"
+        
+        total_metrics = len(compliance)
+        compliant_metrics = sum(1 for data in compliance.values() if data.get("in_range", False))
+        
+        status_parts = [f"{compliant_metrics}/{total_metrics} metrics in range"]
+        
+        # Detail non-compliant metrics
+        non_compliant = []
+        for metric, data in compliance.items():
+            if not data.get("in_range", False):
+                current = data.get("current_value", 0)
+                style_range = data.get("style_range", {})
+                min_val = style_range.get("min", 0)
+                max_val = style_range.get("max", 0)
+                deviation = data.get("deviation", 0)
+                non_compliant.append(f"{metric.upper()}={current:.3f} (need {min_val:.3f}-{max_val:.3f}, off by {deviation:.3f})")
+        
+        if non_compliant:
+            status_parts.append(f"Non-compliant: {', '.join(non_compliant)}")
+        
+        return "; ".join(status_parts)

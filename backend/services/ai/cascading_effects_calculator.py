@@ -76,13 +76,8 @@ class CascadingEffectsCalculator:
         modified_recipe = copy.deepcopy(recipe)
         modified_ingredients = modified_recipe.get("ingredients", [])
 
-        logger.info(
-            f"🔍 Applying {len(changes)} changes to recipe with {len(modified_ingredients)} ingredients"
-        )
+        # Apply changes to ingredients
         for change in changes:
-            logger.info(
-                f"🔍 Processing change: {change.get('ingredient_name')} ({change.get('ingredient_type')}) use='{change.get('ingredient_use')}' time={change.get('ingredient_time')} - {change.get('field')} = {change.get('suggested_value')}"
-            )
             if change.get("is_new_ingredient"):
                 # Add new ingredient with proper database ingredient_id
                 new_ingredient_data = change.get("new_ingredient_data", {})
@@ -100,16 +95,9 @@ class CascadingEffectsCalculator:
                         ).first()
                         if db_ingredient:
                             ingredient_id = str(db_ingredient.id)
-                            logger.info(
-                                f"🔍 Found database ingredient_id {ingredient_id} for {ingredient_name}"
-                            )
-                        else:
-                            logger.warning(
-                                f"🔍 No database ingredient found for {ingredient_name}"
-                            )
                     except Exception as e:
                         logger.error(
-                            f"🔍 Error looking up ingredient {ingredient_name}: {str(e)}"
+                            f"Error looking up ingredient {ingredient_name}: {str(e)}"
                         )
 
                 new_ingredient = new_ingredient_data.copy()
@@ -120,7 +108,7 @@ class CascadingEffectsCalculator:
                         "unit": change.get("unit", "g"),  # Default to grams for metric
                     }
                 )
-                logger.info(f"🔍 Adding new ingredient: {new_ingredient}")
+                # Add new ingredient to recipe
                 modified_ingredients.append(new_ingredient)
             else:
                 # Modify existing ingredient
@@ -155,6 +143,7 @@ class CascadingEffectsCalculator:
                         else:
                             # Regular field change
                             ing[field] = new_value
+                            logger.info(f"✅ Successfully updated {ing.get('name')}: {field} = {old_value} -> {new_value}")
 
                         found = True
                         break
@@ -250,6 +239,7 @@ class CascadingEffectsCalculator:
                                     else:
                                         # Regular field change
                                         ing[field] = new_value
+                                        logger.info(f"✅ Successfully updated (by name) {ing.get('name')}: {field} = {old_value} -> {new_value}")
 
                                     found = True
                                     break
@@ -258,6 +248,9 @@ class CascadingEffectsCalculator:
                     logger.warning(
                         f"⚠️ Could not find ingredient with id {ingredient_id} or name {change.get('ingredient_name')} to modify"
                     )
+                    logger.warning(f"⚠️ Change details: {change}")
+                    logger.warning(f"⚠️ Available ingredient names: {[ing.get('name') for ing in modified_ingredients]}")
+                    logger.warning(f"⚠️ Available ingredient IDs: {[ing.get('ingredient_id') for ing in modified_ingredients]}")
 
         modified_recipe["ingredients"] = modified_ingredients
         return modified_recipe
