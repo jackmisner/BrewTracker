@@ -5,9 +5,9 @@ This module provides the RecipeContext class that maintains recipe state
 throughout workflow execution and handles condition evaluation and strategy execution.
 """
 
-from typing import Any, Dict, List, Optional, Union
 import logging
 from copy import deepcopy
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class RecipeContext:
     """
     Context object that maintains recipe state throughout workflow execution.
-    
+
     This class serves as the central hub for:
     - Recipe data and current metrics
     - Style guideline information
@@ -23,11 +23,15 @@ class RecipeContext:
     - Strategy execution
     - Change tracking
     """
-    
-    def __init__(self, recipe_data: Dict[str, Any], style_guidelines: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        recipe_data: Dict[str, Any],
+        style_guidelines: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initialize recipe context.
-        
+
         Args:
             recipe_data: Recipe data including ingredients, batch size, efficiency, etc.
             style_guidelines: Optional style guidelines for compliance checking
@@ -35,116 +39,121 @@ class RecipeContext:
         self.original_recipe = deepcopy(recipe_data)
         self.recipe = recipe_data
         self.style_guidelines = style_guidelines or {}
-        
+
         # Current calculated metrics
         self.metrics = self._calculate_metrics()
-        
+
         # Track all changes made during workflow execution
         self.changes_made: List[Dict[str, Any]] = []
-        
+
         # Execution trail for debugging
         self.execution_trail: List[Dict[str, Any]] = []
-        
+
         # Registries for conditions and strategies
         self.condition_evaluators = {}
         self.strategy_handlers = {}
-        
+
         # Strategy loader reference (set in _register_builtin_strategies)
         self._get_strategy = None
-        
+
         # Initialize built-in condition evaluators
         self._register_builtin_conditions()
-        
+
         # Initialize built-in strategy handlers
         self._register_builtin_strategies()
-    
+
     def _calculate_metrics(self) -> Dict[str, Any]:
         """Calculate current recipe metrics using the full brewing calculation system."""
         try:
             # Use the brewing calculations wrapper that handles full complexity
             from .brewing_calculations import get_brewing_calculations
-            
+
             brewing_calc = get_brewing_calculations()
             return brewing_calc.calculate_metrics(self.recipe)
-            
+
         except Exception as e:
             logger.error(f"Error calculating metrics: {e}")
             # Return default metrics if calculation fails
             return {
-                'OG': 1.050,
-                'FG': 1.012,
-                'ABV': 5.0,
-                'IBU': 20.0,
-                'SRM': 8.0,
-                'attenuation': 75.0
+                "OG": 1.050,
+                "FG": 1.012,
+                "ABV": 5.0,
+                "IBU": 20.0,
+                "SRM": 8.0,
+                "attenuation": 75.0,
             }
-    
-    
+
     def _register_builtin_conditions(self):
         """Register built-in condition evaluators."""
-        self.condition_evaluators.update({
-            'all_metrics_in_style': self._evaluate_all_metrics_in_style,
-            'og_in_range': self._evaluate_metric_in_range('OG'),
-            'fg_in_range': self._evaluate_metric_in_range('FG'),
-            'abv_in_range': self._evaluate_metric_in_range('ABV'),
-            'ibu_in_range': self._evaluate_metric_in_range('IBU'),
-            'srm_in_range': self._evaluate_metric_in_range('SRM'),
-            'og_too_low': self._evaluate_metric_too_low('OG'),
-            'og_too_high': self._evaluate_metric_too_high('OG'),
-            'fg_too_low': self._evaluate_metric_too_low('FG'),
-            'fg_too_high': self._evaluate_metric_too_high('FG'),
-            'abv_too_low': self._evaluate_metric_too_low('ABV'),
-            'abv_too_high': self._evaluate_metric_too_high('ABV'),
-            'ibu_too_low': self._evaluate_metric_too_low('IBU'),
-            'ibu_too_high': self._evaluate_metric_too_high('IBU'),
-            'srm_too_low': self._evaluate_metric_too_low('SRM'),
-            'srm_too_high': self._evaluate_metric_too_high('SRM'),
-            'srm_also_too_low': self._evaluate_metric_too_low('SRM'),
-            'srm_still_too_low': self._evaluate_metric_too_low('SRM'),
-            'amounts_normalized': self._evaluate_amounts_normalized,
-            'caramel_malts_in_recipe': self._evaluate_caramel_malts_in_recipe,
-            'roasted_grains_in_recipe': self._evaluate_roasted_grains_in_recipe,
-        })
-    
+        self.condition_evaluators.update(
+            {
+                "all_metrics_in_style": self._evaluate_all_metrics_in_style,
+                "og_in_range": self._evaluate_metric_in_range("OG"),
+                "fg_in_range": self._evaluate_metric_in_range("FG"),
+                "abv_in_range": self._evaluate_metric_in_range("ABV"),
+                "ibu_in_range": self._evaluate_metric_in_range("IBU"),
+                "srm_in_range": self._evaluate_metric_in_range("SRM"),
+                "og_too_low": self._evaluate_metric_too_low("OG"),
+                "og_too_high": self._evaluate_metric_too_high("OG"),
+                "fg_too_low": self._evaluate_metric_too_low("FG"),
+                "fg_too_high": self._evaluate_metric_too_high("FG"),
+                "abv_too_low": self._evaluate_metric_too_low("ABV"),
+                "abv_too_high": self._evaluate_metric_too_high("ABV"),
+                "ibu_too_low": self._evaluate_metric_too_low("IBU"),
+                "ibu_too_high": self._evaluate_metric_too_high("IBU"),
+                "srm_too_low": self._evaluate_metric_too_low("SRM"),
+                "srm_too_high": self._evaluate_metric_too_high("SRM"),
+                "srm_also_too_low": self._evaluate_metric_too_low("SRM"),
+                "srm_still_too_low": self._evaluate_metric_too_low("SRM"),
+                "amounts_normalized": self._evaluate_amounts_normalized,
+                "caramel_malts_in_recipe": self._evaluate_caramel_malts_in_recipe,
+                "roasted_grains_in_recipe": self._evaluate_roasted_grains_in_recipe,
+            }
+        )
+
     def _register_builtin_strategies(self):
         """Register built-in strategy handlers."""
         # Import here to avoid circular imports
         from .optimization_strategies import get_strategy
-        
+
         # Dynamic strategy loading
         self._get_strategy = get_strategy
-        
+
         # Legacy handlers for backward compatibility
-        self.strategy_handlers.update({
-            'base_malt_increase': self._execute_strategy_dynamic,
-            'base_malt_reduction': self._execute_strategy_dynamic,
-            'adjust_dark_malt_quantity': self._execute_strategy_dynamic,
-            'caramel_malt_swap': self._execute_strategy_dynamic,
-            'add_roasted_grains': self._execute_strategy_dynamic,
-            'normalize_amounts': self._execute_strategy_dynamic,
-            'yeast_substitution': self._execute_strategy_dynamic,
-            'hop_timing_optimization': self._execute_strategy_dynamic,
-            'hop_ibu_adjustment': self._execute_strategy_dynamic,
-            'increase_roasted_grains': self._execute_strategy_dynamic,
-            'reduce_roasted_grains': self._execute_strategy_dynamic,
-            'reduce_darkest_base_malt': self._execute_strategy_dynamic,
-        })
-    
-    def evaluate_condition(self, condition_name: str, config: Dict[str, Any] = None) -> bool:
+        self.strategy_handlers.update(
+            {
+                "base_malt_increase": self._execute_strategy_dynamic,
+                "base_malt_reduction": self._execute_strategy_dynamic,
+                "adjust_dark_malt_quantity": self._execute_strategy_dynamic,
+                "caramel_malt_swap": self._execute_strategy_dynamic,
+                "add_roasted_grains": self._execute_strategy_dynamic,
+                "normalize_amounts": self._execute_strategy_dynamic,
+                "yeast_substitution": self._execute_strategy_dynamic,
+                "hop_timing_optimization": self._execute_strategy_dynamic,
+                "hop_ibu_adjustment": self._execute_strategy_dynamic,
+                "increase_roasted_grains": self._execute_strategy_dynamic,
+                "reduce_roasted_grains": self._execute_strategy_dynamic,
+                "reduce_darkest_base_malt": self._execute_strategy_dynamic,
+            }
+        )
+
+    def evaluate_condition(
+        self, condition_name: str, config: Dict[str, Any] = None
+    ) -> bool:
         """
         Evaluate a named condition against current recipe state.
-        
+
         Args:
             condition_name: Name of the condition to evaluate
             config: Optional configuration parameters for the condition
-            
+
         Returns:
             Boolean result of the condition evaluation
         """
         if condition_name not in self.condition_evaluators:
             logger.warning(f"Unknown condition: {condition_name}")
             return False
-        
+
         try:
             evaluator = self.condition_evaluators[condition_name]
             if config:
@@ -154,15 +163,17 @@ class RecipeContext:
         except Exception as e:
             logger.error(f"Error evaluating condition {condition_name}: {e}")
             return False
-    
-    def execute_strategy(self, strategy_name: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+
+    def execute_strategy(
+        self, strategy_name: str, parameters: Dict[str, Any] = None
+    ) -> List[Dict[str, Any]]:
         """
         Execute a named strategy to modify the recipe.
-        
+
         Args:
             strategy_name: Name of the strategy to execute
             parameters: Optional parameters for the strategy
-            
+
         Returns:
             List of changes made to the recipe
         """
@@ -172,7 +183,7 @@ class RecipeContext:
                 strategy = self._get_strategy(strategy_name, self)
                 if strategy:
                     return strategy.execute(parameters or {})
-            
+
             # Fall back to legacy handlers
             if strategy_name in self.strategy_handlers:
                 handler = self.strategy_handlers[strategy_name]
@@ -180,122 +191,127 @@ class RecipeContext:
                     return handler(parameters)
                 else:
                     return handler()
-            
+
             logger.warning(f"Unknown strategy: {strategy_name}")
             return []
-            
+
         except Exception as e:
             logger.error(f"Error executing strategy {strategy_name}: {e}")
             return []
-    
+
     def apply_changes(self, changes: List[Dict[str, Any]]):
         """
         Apply a list of changes to the recipe and recalculate metrics.
-        
+
         Args:
             changes: List of change dictionaries to apply
         """
         for change in changes:
             self._apply_single_change(change)
             self.changes_made.append(change)
-        
+
         # Recalculate metrics after changes
         self.metrics = self._calculate_metrics()
-        
+
         logger.info(f"Applied {len(changes)} changes. New metrics: {self.metrics}")
-    
+
     def _apply_single_change(self, change: Dict[str, Any]):
         """Apply a single change to the recipe data."""
-        change_type = change.get('type')
-        
-        if change_type == 'ingredient_modified':
+        change_type = change.get("type")
+
+        if change_type == "ingredient_modified":
             self._modify_ingredient(change)
-        elif change_type == 'ingredient_added':
+        elif change_type == "ingredient_added":
             self._add_ingredient(change)
-        elif change_type == 'ingredient_removed':
+        elif change_type == "ingredient_removed":
             self._remove_ingredient(change)
         else:
             logger.warning(f"Unknown change type: {change_type}")
-    
+
     def _modify_ingredient(self, change: Dict[str, Any]):
         """Modify an existing ingredient."""
-        ingredient_name = change.get('ingredient_name')
-        field = change.get('field', 'amount')
-        new_value = change.get('new_value')
-        
-        ingredients = self.recipe.get('ingredients', [])
+        ingredient_name = change.get("ingredient_name")
+        field = change.get("field", "amount")
+        new_value = change.get("new_value")
+
+        ingredients = self.recipe.get("ingredients", [])
         for ingredient in ingredients:
-            if ingredient.get('name') == ingredient_name:
+            if ingredient.get("name") == ingredient_name:
                 ingredient[field] = new_value
                 break
-    
+
     def _add_ingredient(self, change: Dict[str, Any]):
         """Add a new ingredient to the recipe."""
-        new_ingredient = change.get('ingredient_data', {})
+        new_ingredient = change.get("ingredient_data", {})
         if new_ingredient:
-            self.recipe.setdefault('ingredients', []).append(new_ingredient)
-    
+            self.recipe.setdefault("ingredients", []).append(new_ingredient)
+
     def _remove_ingredient(self, change: Dict[str, Any]):
         """Remove an ingredient from the recipe."""
-        ingredient_name = change.get('ingredient_name')
-        ingredients = self.recipe.get('ingredients', [])
-        self.recipe['ingredients'] = [
-            ing for ing in ingredients 
-            if ing.get('name') != ingredient_name
+        ingredient_name = change.get("ingredient_name")
+        ingredients = self.recipe.get("ingredients", [])
+        self.recipe["ingredients"] = [
+            ing for ing in ingredients if ing.get("name") != ingredient_name
         ]
-    
+
     # Condition evaluators
     def _evaluate_all_metrics_in_style(self, config: Dict[str, Any] = None) -> bool:
         """Check if all metrics are within style guidelines."""
         if not self.style_guidelines:
             return True
-        
-        style_ranges = self.style_guidelines.get('ranges', {})
-        for metric_name in ['OG', 'FG', 'ABV', 'IBU', 'SRM']:
+
+        style_ranges = self.style_guidelines.get("ranges", {})
+        for metric_name in ["OG", "FG", "ABV", "IBU", "SRM"]:
             if not self._metric_in_range(metric_name, style_ranges):
                 return False
         return True
-    
+
     def _evaluate_metric_in_range(self, metric_name: str):
         """Create a metric range evaluator for a specific metric."""
+
         def evaluator(config: Dict[str, Any] = None):
             if not self.style_guidelines:
                 return True
-            style_ranges = self.style_guidelines.get('ranges', {})
+            style_ranges = self.style_guidelines.get("ranges", {})
             return self._metric_in_range(metric_name, style_ranges)
+
         return evaluator
-    
+
     def _evaluate_metric_too_low(self, metric_name: str):
         """Create a metric too low evaluator for a specific metric."""
+
         def evaluator(config: Dict[str, Any] = None):
             if not self.style_guidelines:
                 return False
-            style_ranges = self.style_guidelines.get('ranges', {})
+            style_ranges = self.style_guidelines.get("ranges", {})
             metric_range = style_ranges.get(metric_name)
             if not metric_range:
                 return False
             current_value = self.metrics.get(metric_name, 0)
-            return current_value < metric_range.get('min', 0)
+            return current_value < metric_range.get("min", 0)
+
         return evaluator
-    
+
     def _evaluate_metric_too_high(self, metric_name: str):
         """Create a metric too high evaluator for a specific metric."""
+
         def evaluator(config: Dict[str, Any] = None):
             if not self.style_guidelines:
                 return False
-            style_ranges = self.style_guidelines.get('ranges', {})
+            style_ranges = self.style_guidelines.get("ranges", {})
             metric_range = style_ranges.get(metric_name)
             if not metric_range:
                 return False
             current_value = self.metrics.get(metric_name, 0)
-            return current_value > metric_range.get('max', 999)
+            return current_value > metric_range.get("max", 999)
+
         return evaluator
-    
+
     def _evaluate_amounts_normalized(self, config: Dict[str, Any] = None) -> bool:
         """Check if ingredient amounts are normalized to brewing-friendly values."""
-        ingredients = self.recipe.get('ingredients', [])
+        ingredients = self.recipe.get("ingredients", [])
         for ingredient in ingredients:
-            amount = ingredient.get('amount', 0)
+            amount = ingredient.get("amount", 0)
             # Check if amounts are reasonable brewing increments (multiples of 0.25 for small amounts)
             if amount > 0 and amount < 1:
                 if (amount * 4) % 1 != 0:  # Not a quarter increment
@@ -304,51 +320,54 @@ class RecipeContext:
                 if amount % 0.5 != 0:  # Not a half increment for larger amounts
                     return False
         return True
-    
+
     def _evaluate_caramel_malts_in_recipe(self, config: Dict[str, Any] = None) -> bool:
         """Check if recipe contains caramel/crystal malts."""
-        ingredients = self.recipe.get('ingredients', [])
-        caramel_names = ['caramel', 'crystal', 'cara']
+        ingredients = self.recipe.get("ingredients", [])
+        caramel_names = ["caramel", "crystal", "cara"]
         return any(
-            any(name in ingredient.get('name', '').lower() for name in caramel_names)
+            any(name in ingredient.get("name", "").lower() for name in caramel_names)
             for ingredient in ingredients
-            if ingredient.get('type') == 'grain'
+            if ingredient.get("type") == "grain"
         )
-    
+
     def _evaluate_roasted_grains_in_recipe(self, config: Dict[str, Any] = None) -> bool:
         """Check if recipe contains roasted grains."""
-        ingredients = self.recipe.get('ingredients', [])
-        roasted_names = ['roasted', 'black', 'chocolate', 'patent', 'blackprinz']
+        ingredients = self.recipe.get("ingredients", [])
+        roasted_names = ["roasted", "black", "chocolate", "patent", "blackprinz"]
         return any(
-            any(name in ingredient.get('name', '').lower() for name in roasted_names)
+            any(name in ingredient.get("name", "").lower() for name in roasted_names)
             for ingredient in ingredients
-            if ingredient.get('type') == 'grain'
+            if ingredient.get("type") == "grain"
         )
-    
+
     def _metric_in_range(self, metric_name: str, style_ranges: Dict[str, Any]) -> bool:
         """Check if a specific metric is within style range."""
         metric_range = style_ranges.get(metric_name)
         if not metric_range:
             return True
-        
+
         current_value = self.metrics.get(metric_name, 0)
-        min_val = metric_range.get('min', 0)
-        max_val = metric_range.get('max', 999)
-        
+        min_val = metric_range.get("min", 0)
+        max_val = metric_range.get("max", 999)
+
         return min_val <= current_value <= max_val
-    
+
     # Dynamic strategy execution
-    def _execute_strategy_dynamic(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    def _execute_strategy_dynamic(
+        self, parameters: Dict[str, Any] = None
+    ) -> List[Dict[str, Any]]:
         """Execute strategy using dynamic loading from optimization_strategies module."""
         # Get the strategy name from the call stack
         import inspect
+
         frame = inspect.currentframe()
         try:
             # Look for the strategy name in the execution context
             # This is a bit hacky but works for our use case
             caller_locals = frame.f_back.f_locals
-            strategy_name = caller_locals.get('strategy_name', 'unknown')
-            
+            strategy_name = caller_locals.get("strategy_name", "unknown")
+
             if self._get_strategy:
                 strategy = self._get_strategy(strategy_name, self)
                 if strategy:

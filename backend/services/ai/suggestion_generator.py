@@ -308,7 +308,7 @@ class SuggestionGenerator:
         try:
             # Set optimization stage for use by sub-methods
             self.current_optimization_stage = optimization_stage
-            
+
             # Check if recipe is already compliant
             if self._is_recipe_compliant(style_analysis):
                 return [
@@ -541,7 +541,9 @@ class SuggestionGenerator:
         suggestions.extend(general_suggestions)
 
         # Filter out suggestions with minimal impact
-        meaningful_suggestions = self._filter_meaningful_suggestions(suggestions, optimization_stage)
+        meaningful_suggestions = self._filter_meaningful_suggestions(
+            suggestions, optimization_stage
+        )
 
         return meaningful_suggestions[:3]  # Limit to top 3 suggestions
 
@@ -706,7 +708,9 @@ class SuggestionGenerator:
             new_amount_base = self._round_to_brewing_increments(
                 new_amount_base, unit_system
             )
-            min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+            min_change = self._get_minimum_change_for_system(
+                unit_system, getattr(self, "current_optimization_stage", "initial")
+            )
 
             # Check if change is above minimum threshold
             change_amount = abs(new_amount_base - current_amount_base)
@@ -716,7 +720,8 @@ class SuggestionGenerator:
                         "ingredient_id": malt.get("ingredient_id"),
                         "ingredient_name": malt.get("name"),
                         "ingredient_type": malt.get("type", "grain"),
-                        "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                        "ingredient_use": malt.get("use")
+                        or "mash",  # Ensure we get "mash" not empty string
                         "field": "amount",
                         "current_value": current_amount_base,  # In base unit (g or oz)
                         "suggested_value": new_amount_base,  # In base unit (g or oz)
@@ -788,7 +793,10 @@ class SuggestionGenerator:
                         new_amount_base, unit_system
                     )
 
-                    min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+                    min_change = self._get_minimum_change_for_system(
+                        unit_system,
+                        getattr(self, "current_optimization_stage", "initial"),
+                    )
 
                     if abs(new_amount_base - current_amount_base) >= min_change:
                         changes.append(
@@ -845,7 +853,9 @@ class SuggestionGenerator:
                     new_amount_base, unit_system
                 )
 
-                min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+                min_change = self._get_minimum_change_for_system(
+                    unit_system, getattr(self, "current_optimization_stage", "initial")
+                )
 
                 if abs(new_amount_base - current_amount_base) >= min_change:
                     # Check if dramatic SRM reduction is needed and this is a small amount grain
@@ -1089,7 +1099,10 @@ class SuggestionGenerator:
                         )
 
                         # Ensure minimum change threshold
-                        min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+                        min_change = self._get_minimum_change_for_system(
+                            unit_system,
+                            getattr(self, "current_optimization_stage", "initial"),
+                        )
                         if abs(new_amount_base - current_amount_base) >= min_change:
                             changes.append(
                                 {
@@ -1120,7 +1133,10 @@ class SuggestionGenerator:
                             new_amount_base, unit_system, "hop"
                         )
 
-                        min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+                        min_change = self._get_minimum_change_for_system(
+                            unit_system,
+                            getattr(self, "current_optimization_stage", "initial"),
+                        )
                         if abs(new_amount_base - current_amount_base) >= min_change:
                             changes.append(
                                 {
@@ -1150,7 +1166,10 @@ class SuggestionGenerator:
                         new_amount_base, unit_system, "hop"
                     )
 
-                    min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+                    min_change = self._get_minimum_change_for_system(
+                        unit_system,
+                        getattr(self, "current_optimization_stage", "initial"),
+                    )
                     if abs(new_amount_base - current_amount_base) >= min_change:
                         changes.append(
                             {
@@ -1514,7 +1533,8 @@ class SuggestionGenerator:
                             "ingredient_id": malt.get("ingredient_id"),
                             "ingredient_name": malt.get("name"),
                             "ingredient_type": malt.get("type", "grain"),
-                            "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                            "ingredient_use": malt.get("use")
+                            or "mash",  # Ensure we get "mash" not empty string
                             "field": "amount",
                             "current_value": current_amount_base,
                             "suggested_value": new_amount,
@@ -1556,8 +1576,8 @@ class SuggestionGenerator:
         from utils.unit_conversions import UnitConverter
 
         # Use smaller increments for aggressive and final precision optimization
-        optimization_stage = getattr(self, 'current_optimization_stage', 'initial')
-        
+        optimization_stage = getattr(self, "current_optimization_stage", "initial")
+
         if optimization_stage in ["aggressive", "final"] and ingredient_type == "grain":
             # Use 1g/0.01oz increments for precision adjustments
             if unit_system == "metric":
@@ -1570,9 +1590,11 @@ class SuggestionGenerator:
                 amount, ingredient_type, unit_system
             )
 
-    def _get_minimum_change_for_system(self, unit_system: str, optimization_stage: str = "initial") -> float:
+    def _get_minimum_change_for_system(
+        self, unit_system: str, optimization_stage: str = "initial"
+    ) -> float:
         """Get minimum meaningful change for the unit system
-        
+
         Args:
             unit_system: 'metric' or 'imperial'
             optimization_stage: 'initial' for first passes, 'aggressive' for mid-stage, 'final' for precision adjustments
@@ -2204,7 +2226,8 @@ class SuggestionGenerator:
                         "ingredient_id": malt.get("ingredient_id"),
                         "ingredient_name": malt.get("name"),
                         "ingredient_type": malt.get("type", "grain"),
-                        "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                        "ingredient_use": malt.get("use")
+                        or "mash",  # Ensure we get "mash" not empty string
                         "field": "name",
                         "current_value": malt.get("name"),
                         "suggested_value": replacement["name"],
@@ -2264,7 +2287,8 @@ class SuggestionGenerator:
                             "ingredient_id": malt.get("ingredient_id"),
                             "ingredient_name": malt.get("name"),
                             "ingredient_type": malt.get("type", "grain"),
-                            "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                            "ingredient_use": malt.get("use")
+                            or "mash",  # Ensure we get "mash" not empty string
                             "field": "name",
                             "current_value": malt.get("name"),
                             "suggested_value": replacement["name"],
@@ -2338,16 +2362,20 @@ class SuggestionGenerator:
         # Approximate brewing rule: 0.001 OG ≈ 2-3% base malt change
         # For safety, use more conservative 2.5x multiplier with minimum thresholds
         if og_reduction_needed <= 0.002:
-            reduction_factor = min(0.15, og_reduction_needed * 15)  # Conservative for small changes
+            reduction_factor = min(
+                0.15, og_reduction_needed * 15
+            )  # Conservative for small changes
         elif og_reduction_needed <= 0.005:
             reduction_factor = min(0.25, og_reduction_needed * 12)  # Moderate reduction
         else:
             reduction_factor = min(0.30, og_reduction_needed * 10)  # Larger reductions
-        
+
         # Ensure minimum meaningful reduction for small OG differences
         reduction_factor = max(0.02, reduction_factor)  # At least 2% reduction
-        
-        logger.info(f"🔧 OG REDUCTION: Need {og_reduction_needed:.3f} OG reduction, using {reduction_factor:.1%} base malt reduction")
+
+        logger.info(
+            f"🔧 OG REDUCTION: Need {og_reduction_needed:.3f} OG reduction, using {reduction_factor:.1%} base malt reduction"
+        )
 
         for malt in base_malts:
             current_amount = malt.get("amount", 0)
@@ -2365,14 +2393,17 @@ class SuggestionGenerator:
             )
 
             # Ensure minimum change threshold
-            min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+            min_change = self._get_minimum_change_for_system(
+                unit_system, getattr(self, "current_optimization_stage", "initial")
+            )
             if abs(new_amount_base - current_amount_base) >= min_change:
                 changes.append(
                     {
                         "ingredient_id": malt.get("ingredient_id"),
                         "ingredient_name": malt.get("name"),
                         "ingredient_type": malt.get("type", "grain"),
-                        "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                        "ingredient_use": malt.get("use")
+                        or "mash",  # Ensure we get "mash" not empty string
                         "field": "amount",
                         "current_value": current_amount_base,
                         "suggested_value": new_amount_base,
@@ -2540,7 +2571,9 @@ class SuggestionGenerator:
         )
 
         # Ensure minimum change threshold
-        min_change = self._get_minimum_change_for_system(unit_system, getattr(self, 'current_optimization_stage', 'initial'))
+        min_change = self._get_minimum_change_for_system(
+            unit_system, getattr(self, "current_optimization_stage", "initial")
+        )
         if abs(new_amount_base - current_amount_base) >= min_change:
             changes.append(
                 {
@@ -2586,7 +2619,8 @@ class SuggestionGenerator:
                             "ingredient_id": malt.get("ingredient_id"),
                             "ingredient_name": malt.get("name"),
                             "ingredient_type": malt.get("type", "grain"),
-                            "ingredient_use": malt.get("use") or "mash",  # Ensure we get "mash" not empty string
+                            "ingredient_use": malt.get("use")
+                            or "mash",  # Ensure we get "mash" not empty string
                             "field": "amount",
                             "current_value": current_amount_base,
                             "suggested_value": new_amount_base,
@@ -2721,7 +2755,9 @@ class SuggestionGenerator:
             else 0
         )
 
-    def _filter_meaningful_suggestions(self, suggestions: List[Dict], optimization_stage: str = "initial") -> List[Dict]:
+    def _filter_meaningful_suggestions(
+        self, suggestions: List[Dict], optimization_stage: str = "initial"
+    ) -> List[Dict]:
         """Filter out suggestions with minimal brewing impact and apply conservative limits"""
         meaningful = []
 
@@ -2734,7 +2770,9 @@ class SuggestionGenerator:
 
             for change in changes:
                 # Apply conservative change limits
-                limited_change = self._apply_conservative_limits(change, optimization_stage)
+                limited_change = self._apply_conservative_limits(
+                    change, optimization_stage
+                )
                 if not limited_change:
                     continue
 
@@ -2763,7 +2801,9 @@ class SuggestionGenerator:
 
         return meaningful
 
-    def _apply_conservative_limits(self, change: Dict, optimization_stage: str = "initial") -> Optional[Dict]:
+    def _apply_conservative_limits(
+        self, change: Dict, optimization_stage: str = "initial"
+    ) -> Optional[Dict]:
         """Apply conservative brewing limits to ingredient changes"""
         field = change.get("field", "")
         current_value = change.get("current_value", 0)
@@ -2808,7 +2848,9 @@ class SuggestionGenerator:
         if isinstance(suggested_value, (int, float)) and isinstance(
             current_value, (int, float)
         ):
-            if abs(suggested_value - current_value) < self._get_minimum_change(unit, optimization_stage):
+            if abs(suggested_value - current_value) < self._get_minimum_change(
+                unit, optimization_stage
+            ):
                 return None
 
         # Update the change with limited values
@@ -2823,9 +2865,11 @@ class SuggestionGenerator:
 
         return limited_change
 
-    def _get_minimum_change(self, unit: str, optimization_stage: str = "initial") -> float:
+    def _get_minimum_change(
+        self, unit: str, optimization_stage: str = "initial"
+    ) -> float:
         """Get minimum meaningful change for different units (assuming grams internally)
-        
+
         Args:
             unit: Unit of measurement
             optimization_stage: 'initial' for first passes, 'final' for precision adjustments
@@ -2835,7 +2879,7 @@ class SuggestionGenerator:
             # Extremely small thresholds for final precision optimization
             unit_minimums = {
                 "g": 1,  # 1g minimum for final grain changes
-                "kg": 1,  # Still 1g minimum (stored as grams internally)  
+                "kg": 1,  # Still 1g minimum (stored as grams internally)
                 "oz": 1,  # Still 1g minimum (stored as grams internally)
                 "lb": 1,  # Still 1g minimum (stored as grams internally)
                 "pkg": 1,  # 1 package minimum (for yeast) - unchanged
@@ -2853,7 +2897,9 @@ class SuggestionGenerator:
                 "tsp": 0.5,  # 0.5 tsp minimum (for other ingredients)
                 "tbsp": 0.25,  # 0.25 tbsp minimum (for other ingredients)
             }
-        return unit_minimums.get(unit.lower(), 25 if optimization_stage == "initial" else 1)
+        return unit_minimums.get(
+            unit.lower(), 25 if optimization_stage == "initial" else 1
+        )
 
     def _convert_from_pounds(self, weight_lb: float, unit_system: str) -> float:
         """Convert weight from pounds to user's preferred unit system"""
@@ -2901,90 +2947,134 @@ class SuggestionGenerator:
     ) -> List[Dict]:
         """
         Apply base malt compensation when specialty grains are added to maintain OG/ABV within style limits.
-        
-        This prevents recipes from going over style guidelines when Munich Dark, Blackprinz, 
+
+        This prevents recipes from going over style guidelines when Munich Dark, Blackprinz,
         or other specialty grains are added by reducing base malt quantities proportionally.
         """
         # Check if specialty grains are being added
         specialty_grain_additions = []
         base_malt_increases = []
-        
+
         for change in changes:
             # Check for specialty grain additions (multiple possible action types)
-            if (change.get("action") in ["add_new_ingredient", "new_ingredient"] or 
-                change.get("type") == "new_ingredient" or
-                change.get("is_new_ingredient") == True):
+            if (
+                change.get("action") in ["add_new_ingredient", "new_ingredient"]
+                or change.get("type") == "new_ingredient"
+                or change.get("is_new_ingredient") == True
+            ):
                 ingredient_name = change.get("ingredient_name", "").lower()
                 # Identify specialty grains that contribute to gravity
-                if any(grain in ingredient_name for grain in ["munich", "vienna", "maris otter", "blackprinz", "chocolate", "roasted"]):
+                if any(
+                    grain in ingredient_name
+                    for grain in [
+                        "munich",
+                        "vienna",
+                        "maris otter",
+                        "blackprinz",
+                        "chocolate",
+                        "roasted",
+                    ]
+                ):
                     specialty_grain_additions.append(change)
-            elif change.get("field") == "amount" and change.get("ingredient_type") == "grain":
+            elif (
+                change.get("field") == "amount"
+                and change.get("ingredient_type") == "grain"
+            ):
                 # Check if this is a base malt increase
                 ingredient_name = change.get("ingredient_name", "").lower()
-                if any(base in ingredient_name for base in ["pilsner", "pale", "2-row", "6-row", "maris otter"]):
+                if any(
+                    base in ingredient_name
+                    for base in ["pilsner", "pale", "2-row", "6-row", "maris otter"]
+                ):
                     # Only count as increase if suggested_value > current_value
                     current = change.get("current_value", 0)
                     suggested = change.get("suggested_value", 0)
                     if suggested > current:
                         base_malt_increases.append(change)
-        
+
         # Enhanced compensation logic: Apply compensation if:
         # 1. We have both specialty grains AND base malt increases, OR
         # 2. We have significant specialty grain additions that will likely cause overshooting
         should_compensate = False
-        
+
         if specialty_grain_additions and base_malt_increases:
             should_compensate = True
-            logger.info(f"🔧 COMPENSATION: Type 1 - Found {len(specialty_grain_additions)} specialty grain additions and {len(base_malt_increases)} base malt increases")
+            logger.info(
+                f"🔧 COMPENSATION: Type 1 - Found {len(specialty_grain_additions)} specialty grain additions and {len(base_malt_increases)} base malt increases"
+            )
         elif specialty_grain_additions and not base_malt_increases:
             # Check if current OG is already close to upper limit
             current_og = metrics.get("og", 1.050)
             if style_analysis and style_analysis.get("compliance", {}).get("og"):
-                og_max = style_analysis["compliance"]["og"].get("style_range", {}).get("max", 1.070)
+                og_max = (
+                    style_analysis["compliance"]["og"]
+                    .get("style_range", {})
+                    .get("max", 1.070)
+                )
                 if current_og > (og_max - 0.005):  # Within 0.005 of upper limit
                     should_compensate = True
-                    logger.info(f"🔧 COMPENSATION: Type 2 - Predictive compensation (OG {current_og:.3f} near max {og_max:.3f}) with {len(specialty_grain_additions)} specialty additions")
-        
+                    logger.info(
+                        f"🔧 COMPENSATION: Type 2 - Predictive compensation (OG {current_og:.3f} near max {og_max:.3f}) with {len(specialty_grain_additions)} specialty additions"
+                    )
+
         if should_compensate:
-            logger.info(f"🔧 COMPENSATION: Found {len(specialty_grain_additions)} specialty grain additions and {len(base_malt_increases)} base malt increases")
-            
+            logger.info(
+                f"🔧 COMPENSATION: Found {len(specialty_grain_additions)} specialty grain additions and {len(base_malt_increases)} base malt increases"
+            )
+
             # Calculate total gravity contribution from specialty grains
             total_specialty_gravity_impact = 0
             for addition in specialty_grain_additions:
                 amount = addition.get("amount", 0)
                 # Estimate gravity impact (rough approximation: 25g = ~0.001 OG points for 20L batch)
                 batch_size = recipe_data.get("batch_size", 20)  # Default 20L
-                gravity_impact = (amount * 0.001) / (batch_size / 20)  # Scale by batch size
+                gravity_impact = (amount * 0.001) / (
+                    batch_size / 20
+                )  # Scale by batch size
                 total_specialty_gravity_impact += gravity_impact
-                logger.info(f"🔧 COMPENSATION: {addition.get('ingredient_name')} ({amount}g) contributes ~{gravity_impact:.3f} OG points")
-            
+                logger.info(
+                    f"🔧 COMPENSATION: {addition.get('ingredient_name')} ({amount}g) contributes ~{gravity_impact:.3f} OG points"
+                )
+
             # Calculate proportional reduction needed for base malts
-            total_base_malt_current = sum(change.get("current_value", 0) for change in base_malt_increases)
+            total_base_malt_current = sum(
+                change.get("current_value", 0) for change in base_malt_increases
+            )
             if total_base_malt_current > 0:
                 # Reduce each base malt proportionally to compensate for specialty grain gravity
-                reduction_factor = min(0.15, total_specialty_gravity_impact / 0.010)  # Max 15% reduction, scale with gravity impact
-                
-                logger.info(f"🔧 COMPENSATION: Total specialty gravity impact: {total_specialty_gravity_impact:.3f}, applying {reduction_factor:.1%} base malt reduction")
-                
+                reduction_factor = min(
+                    0.15, total_specialty_gravity_impact / 0.010
+                )  # Max 15% reduction, scale with gravity impact
+
+                logger.info(
+                    f"🔧 COMPENSATION: Total specialty gravity impact: {total_specialty_gravity_impact:.3f}, applying {reduction_factor:.1%} base malt reduction"
+                )
+
                 for change in base_malt_increases:
                     original_suggested = change.get("suggested_value", 0)
                     current_value = change.get("current_value", 0)
-                    
+
                     # Reduce the increase, not the base amount
                     increase_amount = original_suggested - current_value
                     compensated_increase = increase_amount * (1 - reduction_factor)
                     new_suggested = current_value + compensated_increase
-                    
+
                     # Ensure we don't go below current amount
                     new_suggested = max(new_suggested, current_value)
-                    
+
                     # Apply brewing increment rounding
-                    new_suggested = self._round_to_brewing_increments(new_suggested, unit_system, "grain")
-                    
+                    new_suggested = self._round_to_brewing_increments(
+                        new_suggested, unit_system, "grain"
+                    )
+
                     # Update the change
                     change["suggested_value"] = new_suggested
-                    change["reason"] = f"{change.get('reason', '')} (compensated for specialty grain additions)"
-                    
-                    logger.info(f"🔧 COMPENSATION: {change.get('ingredient_name')} reduced from {original_suggested}g to {new_suggested}g")
-        
+                    change["reason"] = (
+                        f"{change.get('reason', '')} (compensated for specialty grain additions)"
+                    )
+
+                    logger.info(
+                        f"🔧 COMPENSATION: {change.get('ingredient_name')} reduced from {original_suggested}g to {new_suggested}g"
+                    )
+
         return changes

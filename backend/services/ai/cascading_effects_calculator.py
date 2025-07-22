@@ -143,7 +143,9 @@ class CascadingEffectsCalculator:
                         else:
                             # Regular field change
                             ing[field] = new_value
-                            logger.info(f"✅ Successfully updated {ing.get('name')}: {field} = {old_value} -> {new_value}")
+                            logger.info(
+                                f"✅ Successfully updated {ing.get('name')}: {field} = {old_value} -> {new_value}"
+                            )
 
                         found = True
                         break
@@ -239,7 +241,9 @@ class CascadingEffectsCalculator:
                                     else:
                                         # Regular field change
                                         ing[field] = new_value
-                                        logger.info(f"✅ Successfully updated (by name) {ing.get('name')}: {field} = {old_value} -> {new_value}")
+                                        logger.info(
+                                            f"✅ Successfully updated (by name) {ing.get('name')}: {field} = {old_value} -> {new_value}"
+                                        )
 
                                     found = True
                                     break
@@ -249,8 +253,12 @@ class CascadingEffectsCalculator:
                         f"⚠️ Could not find ingredient with id {ingredient_id} or name {change.get('ingredient_name')} to modify"
                     )
                     logger.warning(f"⚠️ Change details: {change}")
-                    logger.warning(f"⚠️ Available ingredient names: {[ing.get('name') for ing in modified_ingredients]}")
-                    logger.warning(f"⚠️ Available ingredient IDs: {[ing.get('ingredient_id') for ing in modified_ingredients]}")
+                    logger.warning(
+                        f"⚠️ Available ingredient names: {[ing.get('name') for ing in modified_ingredients]}"
+                    )
+                    logger.warning(
+                        f"⚠️ Available ingredient IDs: {[ing.get('ingredient_id') for ing in modified_ingredients]}"
+                    )
 
         modified_recipe["ingredients"] = modified_ingredients
         return modified_recipe

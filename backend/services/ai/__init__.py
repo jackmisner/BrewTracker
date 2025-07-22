@@ -14,19 +14,19 @@ Main Components:
 """
 
 from .cascading_effects_calculator import CascadingEffectsCalculator
-from .recipe_analysis_engine import RecipeAnalysisEngine
-from .style_compliance_analyzer import StyleComplianceAnalyzer
-from .suggestion_generator import SuggestionGenerator
+from .flowchart_ai_service import FlowchartAIService, get_flowchart_ai_service
 
 # New flowchart-based system
 from .flowchart_engine import FlowchartEngine
-from .flowchart_ai_service import FlowchartAIService, get_flowchart_ai_service
-from .workflow_config_loader import WorkflowConfigLoader, load_workflow, list_workflows
+from .recipe_analysis_engine import RecipeAnalysisEngine
+from .style_compliance_analyzer import StyleComplianceAnalyzer
+from .suggestion_generator import SuggestionGenerator
+from .workflow_config_loader import WorkflowConfigLoader, list_workflows, load_workflow
 
 # Maintain backward compatibility
 __all__ = [
     "RecipeAnalysisEngine",
-    "StyleComplianceAnalyzer", 
+    "StyleComplianceAnalyzer",
     "SuggestionGenerator",
     "CascadingEffectsCalculator",
     # New flowchart system

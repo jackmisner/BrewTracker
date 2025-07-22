@@ -87,12 +87,14 @@ def analyze_recipe():
 
         if use_flowchart:
             # Use flowchart-based analysis
-            logger.info(f"🔬 Using flowchart-based analysis with workflow: {workflow_name or 'default'}")
+            logger.info(
+                f"🔬 Using flowchart-based analysis with workflow: {workflow_name or 'default'}"
+            )
             analysis_result = flowchart_ai_service.analyze_recipe(
                 recipe_data,
                 style_id=style_id,
                 unit_system=unit_system,
-                workflow_name=workflow_name
+                workflow_name=workflow_name,
             )
         else:
             # Use traditional analysis engine
@@ -175,14 +177,16 @@ def optimize_recipe():
             unit_system = "imperial"  # Default fallback
 
         logger.info(f"🔬 Optimizing recipe using flowchart workflow: {workflow_name}")
-        logger.info(f"🔍 Recipe has {len(recipe_data.get('ingredients', []))} ingredients")
+        logger.info(
+            f"🔍 Recipe has {len(recipe_data.get('ingredients', []))} ingredients"
+        )
 
         # Perform flowchart-based optimization
         optimization_result = flowchart_ai_service.analyze_recipe(
             recipe_data,
             style_id=style_id,
             unit_system=unit_system,
-            workflow_name=workflow_name
+            workflow_name=workflow_name,
         )
 
         # Add metadata specific to optimization endpoint
@@ -193,7 +197,9 @@ def optimize_recipe():
             "default_batch_size": user.get_default_batch_size(),
         }
 
-        logger.info(f"✅ Optimization completed. Changes made: {len(optimization_result.get('recipe_changes', []))}")
+        logger.info(
+            f"✅ Optimization completed. Changes made: {len(optimization_result.get('recipe_changes', []))}"
+        )
 
         return jsonify(optimization_result), 200
 
@@ -351,7 +357,7 @@ def ai_health():
 def list_workflows():
     """
     List available optimization workflows
-    
+
     Returns:
     {
         "workflows": [
@@ -366,31 +372,40 @@ def list_workflows():
     """
     try:
         workflows = flowchart_ai_service.get_available_workflows()
-        
+
         # Get workflow details for each
         workflow_details = []
         for workflow_name in workflows:
             try:
                 from .workflow_config_loader import load_workflow
+
                 config = load_workflow(workflow_name)
-                
-                workflow_details.append({
-                    "name": workflow_name,
-                    "display_name": config.get("workflow_name", workflow_name),
-                    "description": config.get("description", "No description available"),
-                    "version": config.get("version", "1.0")
-                })
+
+                workflow_details.append(
+                    {
+                        "name": workflow_name,
+                        "display_name": config.get("workflow_name", workflow_name),
+                        "description": config.get(
+                            "description", "No description available"
+                        ),
+                        "version": config.get("version", "1.0"),
+                    }
+                )
             except Exception as e:
-                logger.warning(f"Could not load details for workflow {workflow_name}: {e}")
-                workflow_details.append({
-                    "name": workflow_name,
-                    "display_name": workflow_name.title().replace('_', ' '),
-                    "description": "Workflow available but details could not be loaded",
-                    "version": "Unknown"
-                })
-        
+                logger.warning(
+                    f"Could not load details for workflow {workflow_name}: {e}"
+                )
+                workflow_details.append(
+                    {
+                        "name": workflow_name,
+                        "display_name": workflow_name.title().replace("_", " "),
+                        "description": "Workflow available but details could not be loaded",
+                        "version": "Unknown",
+                    }
+                )
+
         return jsonify({"workflows": workflow_details}), 200
-        
+
     except Exception as e:
         logger.error(f"Failed to list workflows: {str(e)}")
         return jsonify({"error": "Failed to list workflows", "details": str(e)}), 500
