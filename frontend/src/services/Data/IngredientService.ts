@@ -140,7 +140,7 @@ class IngredientService {
       type: type,
       amount: parseFloat((ingredientData.amount || 0).toString()),
       unit: ingredientData.unit as any, // Type assertion for unit compatibility
-      use: ingredientData.use || "",
+      use: ingredientData.use || this.getDefaultUse(type),
       time: parseInt((ingredientData.time || 0).toString()),
       // Include calculation-specific fields
       ...baseData,
@@ -399,6 +399,24 @@ class IngredientService {
       this.cacheTimestamp !== null &&
       Date.now() - this.cacheTimestamp < this.CACHE_DURATION
     );
+  }
+
+  /**
+   * Get default use value for ingredient type
+   */
+  private getDefaultUse(type: IngredientType): string {
+    switch (type) {
+      case "grain":
+        return "mash";
+      case "hop":
+        return "boil";
+      case "yeast":
+        return "fermentation";
+      case "other":
+        return "boil";
+      default:
+        return "";
+    }
   }
 
   /**

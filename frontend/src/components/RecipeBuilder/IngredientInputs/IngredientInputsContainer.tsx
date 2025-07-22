@@ -34,6 +34,7 @@ const IngredientInputsContainer: React.FC<IngredientInputsContainerProps> = ({
               ingredient_id: data.ingredient_id,
               amount: data.amount,
               unit: data.unit,
+              use: data.use || "mash",
               color: data.color ? parseFloat(data.color) : undefined,
             })
           }
@@ -69,6 +70,7 @@ const IngredientInputsContainer: React.FC<IngredientInputsContainerProps> = ({
             ingredient_id: data.ingredient_id,
             amount: data.amount,
             unit: data.unit,
+            use: data.use || "fermentation",
           })
         }
         disabled={disabled}
@@ -85,6 +87,7 @@ const IngredientInputsContainer: React.FC<IngredientInputsContainerProps> = ({
             ingredient_id: data.ingredient_id,
             amount: data.amount,
             unit: data.unit,
+            use: data.use || "boil",
           })
         }
         disabled={disabled}
