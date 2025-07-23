@@ -7,7 +7,7 @@ current frontend expectations.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict, List, Optional
 
 from models.mongo_models import BeerStyleGuide
@@ -270,7 +270,7 @@ class FlowchartAIService:
                 ),
                 "style_analysis": style_analysis,
                 "suggestions": [],  # Empty for optimization mode
-                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "analysis_timestamp": datetime.now(UTC),
                 "unit_system": unit_system,
                 "user_preferences": {
                     "preferred_units": unit_system,
@@ -303,7 +303,7 @@ class FlowchartAIService:
                 "current_metrics": workflow_result.final_metrics,
                 "style_analysis": style_analysis,
                 "suggestions": [],  # Could generate suggestions here if needed
-                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "analysis_timestamp": datetime.now(UTC),
                 "unit_system": unit_system,
                 "user_preferences": {
                     "preferred_units": unit_system,
