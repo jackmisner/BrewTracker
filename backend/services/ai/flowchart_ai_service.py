@@ -7,7 +7,7 @@ current frontend expectations.
 """
 
 import logging
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from models.mongo_models import BeerStyleGuide
@@ -146,30 +146,6 @@ class FlowchartAIService:
         except Exception as e:
             logger.error(
                 f"FlowchartAIService get_suggestions failed: {e}", exc_info=True
-            )
-            raise
-
-    def calculate_effects(
-        self, original_recipe: Dict[str, Any], changes: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """
-        Calculate cascading effects of proposed changes.
-
-        This uses the existing effects calculation logic but could be
-        enhanced with flowchart-based prediction in the future.
-        """
-        try:
-            # Import here to avoid circular imports
-            from .cascading_effects_calculator import CascadingEffectsCalculator
-
-            effects_calculator = CascadingEffectsCalculator()
-            effects = effects_calculator.calculate_effects(original_recipe, changes)
-
-            return {"effects": effects}
-
-        except Exception as e:
-            logger.error(
-                f"FlowchartAIService calculate_effects failed: {e}", exc_info=True
             )
             raise
 
