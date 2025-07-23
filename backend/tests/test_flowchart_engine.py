@@ -474,8 +474,8 @@ class TestOptimizationStrategies:
                 {
                     "name": "Pale 2-Row",
                     "type": "grain",
-                    "grain_type": "base",
-                    "amount": 6.0,
+                    "grain_type": "base_malt",
+                    "amount": 2.0,  # Low amount to ensure OG is below target
                     "unit": "lb",
                     "potential": 1.037,
                     "color": 2.0,
