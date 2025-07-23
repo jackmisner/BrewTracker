@@ -182,33 +182,59 @@ class FlowchartAIService:
                 return None
 
             # Convert style guide to dictionary format expected by RecipeContext
+            # Use proper StyleRange objects from the BeerStyleGuide model
+            ranges = {}
+
+            # Original Gravity (OG)
+            if (
+                hasattr(style_guide, "original_gravity")
+                and style_guide.original_gravity
+            ):
+                ranges["OG"] = {
+                    "min": style_guide.original_gravity.minimum,
+                    "max": style_guide.original_gravity.maximum,
+                }
+
+            # Final Gravity (FG)
+            if hasattr(style_guide, "final_gravity") and style_guide.final_gravity:
+                ranges["FG"] = {
+                    "min": style_guide.final_gravity.minimum,
+                    "max": style_guide.final_gravity.maximum,
+                }
+
+            # Alcohol By Volume (ABV)
+            if (
+                hasattr(style_guide, "alcohol_by_volume")
+                and style_guide.alcohol_by_volume
+            ):
+                ranges["ABV"] = {
+                    "min": style_guide.alcohol_by_volume.minimum,
+                    "max": style_guide.alcohol_by_volume.maximum,
+                }
+
+            # International Bitterness Units (IBU)
+            if (
+                hasattr(style_guide, "international_bitterness_units")
+                and style_guide.international_bitterness_units
+            ):
+                ranges["IBU"] = {
+                    "min": style_guide.international_bitterness_units.minimum,
+                    "max": style_guide.international_bitterness_units.maximum,
+                }
+
+            # Color (SRM)
+            if hasattr(style_guide, "color") and style_guide.color:
+                ranges["SRM"] = {
+                    "min": style_guide.color.minimum,
+                    "max": style_guide.color.maximum,
+                }
+
             return {
                 "id": str(style_guide.id),
                 "name": style_guide.name,
                 "display_name": getattr(style_guide, "display_name", style_guide.name),
                 "category": getattr(style_guide, "category", ""),
-                "ranges": {
-                    "OG": {
-                        "min": getattr(style_guide, "og_min", 1.040),
-                        "max": getattr(style_guide, "og_max", 1.080),
-                    },
-                    "FG": {
-                        "min": getattr(style_guide, "fg_min", 1.008),
-                        "max": getattr(style_guide, "fg_max", 1.020),
-                    },
-                    "ABV": {
-                        "min": getattr(style_guide, "abv_min", 3.0),
-                        "max": getattr(style_guide, "abv_max", 12.0),
-                    },
-                    "IBU": {
-                        "min": getattr(style_guide, "ibu_min", 10),
-                        "max": getattr(style_guide, "ibu_max", 100),
-                    },
-                    "SRM": {
-                        "min": getattr(style_guide, "srm_min", 2),
-                        "max": getattr(style_guide, "srm_max", 40),
-                    },
-                },
+                "ranges": ranges,
             }
 
         except Exception as e:
@@ -314,7 +340,29 @@ class FlowchartAIService:
             elif change_type == "ingredient_added":
                 new_ingredient = change.get("ingredient_data", {})
                 if new_ingredient:
-                    ingredients.append(new_ingredient)
+                    # Check for duplicates before adding
+                    ingredient_name = new_ingredient.get("name")
+                    ingredient_type = new_ingredient.get("type")
+                    use = new_ingredient.get("use", "")
+                    time = new_ingredient.get("time", 0)
+
+                    # Check if this ingredient already exists with same name, type, use, and time
+                    duplicate_found = False
+                    for existing in ingredients:
+                        if (
+                            existing.get("name") == ingredient_name
+                            and existing.get("type") == ingredient_type
+                            and existing.get("use") == use
+                            and existing.get("time") == time
+                        ):
+                            logger.warning(
+                                f"Skipping duplicate ingredient addition: {ingredient_name}"
+                            )
+                            duplicate_found = True
+                            break
+
+                    if not duplicate_found:
+                        ingredients.append(new_ingredient)
 
             elif change_type == "ingredient_removed":
                 ingredient_name = change.get("ingredient_name")

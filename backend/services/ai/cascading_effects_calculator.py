@@ -78,7 +78,36 @@ class CascadingEffectsCalculator:
 
         # Apply changes to ingredients
         for change in changes:
-            if change.get("is_new_ingredient"):
+            if change.get("type") == "ingredient_substituted":
+                # Handle ingredient substitution (remove old, add new)
+                old_ingredient_id = change.get("old_ingredient_id")
+                new_ingredient_data = change.get("new_ingredient_data", {})
+
+                # Remove old ingredient first
+                modified_ingredients = [
+                    ing
+                    for ing in modified_ingredients
+                    if ing.get("ingredient_id") != old_ingredient_id
+                ]
+
+                # Add new ingredient with preserved recipe context
+                new_ingredient = new_ingredient_data.copy()
+                new_ingredient.update(
+                    {
+                        "ingredient_id": new_ingredient_data.get("ingredient_id"),
+                        "amount": change.get("amount"),
+                        "unit": change.get("unit"),
+                        "use": change.get("use"),
+                        "time": change.get("time"),
+                    }
+                )
+
+                modified_ingredients.append(new_ingredient)
+                logger.info(
+                    f"🔄 Substituted ingredient: {change.get('old_ingredient_data', {}).get('name')} → {new_ingredient_data.get('name')}"
+                )
+
+            elif change.get("is_new_ingredient"):
                 # Add new ingredient with proper database ingredient_id
                 new_ingredient_data = change.get("new_ingredient_data", {})
                 ingredient_name = new_ingredient_data.get("name")

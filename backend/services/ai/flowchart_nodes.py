@@ -137,6 +137,9 @@ class MultiDecisionNode(FlowchartNode):
         # No conditions matched - use default path if available
         default_path = self.config.get("default_path")
         if default_path:
+            logger.warning(
+                f"MultiDecisionNode {self.node_id}: No conditions matched, using default path"
+            )
             result = NodeResult(
                 next_node_id=default_path,
                 data={"matched_condition": None, "used_default_path": True},

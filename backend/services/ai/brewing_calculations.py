@@ -113,7 +113,7 @@ class BrewingCalculations:
         boil_time = recipe_data.get("boil_time", 60)
 
         # Convert batch size to gallons
-        if batch_size_unit == "L":
+        if batch_size_unit.lower() == "l":
             batch_size_gal = batch_size * 0.264172
         else:
             batch_size_gal = batch_size
@@ -125,13 +125,13 @@ class BrewingCalculations:
         for grain in grains:
             amount = grain.get("amount", 0)
             unit = grain.get("unit", "lb")
-            potential = grain.get("potential", 1.037)
+            potential = grain.get("potential", 37.0)  # Default potential in PPG
 
             # Convert to pounds
             amount_lb = self.convert_to_pounds(amount, unit)
 
             # Calculate points
-            ppg = (potential - 1.0) * 1000
+            ppg = potential
             grain_points += ppg * amount_lb
 
         # Calculate OG

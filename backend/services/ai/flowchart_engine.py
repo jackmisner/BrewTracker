@@ -55,8 +55,8 @@ class FlowchartEngine:
         self._build_nodes()
 
         # Execution limits for safety
-        self.max_iterations = 100
-        self.max_node_executions = 1000
+        self.max_iterations = 50  # Reduced from 100
+        self.max_node_executions = 200  # Reduced from 1000
 
     def _get_default_workflow(self) -> Dict[str, Any]:
         """Get the default workflow configuration."""

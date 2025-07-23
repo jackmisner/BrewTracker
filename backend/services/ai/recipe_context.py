@@ -39,6 +39,9 @@ class RecipeContext:
         self.original_recipe = deepcopy(recipe_data)
         self.recipe = recipe_data
         self.style_guidelines = style_guidelines or {}
+        logger.info(
+            f"Initialized RecipeContext with Style Guidelines: {self.style_guidelines}"
+        )
 
         # Current calculated metrics
         self.metrics = self._calculate_metrics()
@@ -69,18 +72,20 @@ class RecipeContext:
             from .brewing_calculations import get_brewing_calculations
 
             brewing_calc = get_brewing_calculations()
-            return brewing_calc.calculate_metrics(self.recipe)
+            metrics = brewing_calc.calculate_metrics(self.recipe)
+            logger.info(metrics)
+            return metrics
 
         except Exception as e:
             logger.error(f"Error calculating metrics: {e}")
-            # Return default metrics if calculation fails
+            # Return default empty metrics if calculation fails
             return {
-                "OG": 1.050,
-                "FG": 1.012,
-                "ABV": 5.0,
-                "IBU": 20.0,
-                "SRM": 8.0,
-                "attenuation": 75.0,
+                "OG": 1.000,
+                "FG": 1.000,
+                "ABV": 0.0,
+                "IBU": 0.0,
+                "SRM": 0.0,
+                "attenuation": 0.0,
             }
 
     def _register_builtin_conditions(self):
@@ -225,6 +230,8 @@ class RecipeContext:
             self._add_ingredient(change)
         elif change_type == "ingredient_removed":
             self._remove_ingredient(change)
+        elif change_type == "ingredient_substituted":
+            self._substitute_ingredient(change)
         else:
             logger.warning(f"Unknown change type: {change_type}")
 
@@ -253,6 +260,20 @@ class RecipeContext:
         self.recipe["ingredients"] = [
             ing for ing in ingredients if ing.get("name") != ingredient_name
         ]
+
+    def _substitute_ingredient(self, change: Dict[str, Any]):
+        """Substitute one ingredient for another in the recipe."""
+        old_ingredient_name = change.get("old_ingredient_name")
+        new_ingredient = change.get("new_ingredient", {})
+
+        ingredients = self.recipe.get("ingredients", [])
+        for i, ingredient in enumerate(ingredients):
+            if ingredient.get("name") == old_ingredient_name:
+                self._remove_ingredient({"ingredient_name": old_ingredient_name})
+                # Add the new ingredient
+                if new_ingredient:
+                    self._add_ingredient({"ingredient_data": new_ingredient})
+                break
 
     # Condition evaluators
     def _evaluate_all_metrics_in_style(self, config: Dict[str, Any] = None) -> bool:
@@ -350,6 +371,18 @@ class RecipeContext:
         current_value = self.metrics.get(metric_name, 0)
         min_val = metric_range.get("min", 0)
         max_val = metric_range.get("max", 999)
+
+        # Add small tolerance for certain metrics to prevent infinite loops
+        # FG changes from yeast substitution are often very small (0.001-0.003)
+        if metric_name == "FG":
+            tolerance = 0.002  # 2 gravity points tolerance
+            return (min_val - tolerance) <= current_value <= (max_val + tolerance)
+
+        # Add small tolerance for SRM to prevent normalization loops
+        # Normalization can cause small SRM fluctuations due to rounding
+        if metric_name == "SRM":
+            tolerance = 0.3  # 0.3 SRM tolerance
+            return (min_val - tolerance) <= current_value <= (max_val + tolerance)
 
         return min_val <= current_value <= max_val
 

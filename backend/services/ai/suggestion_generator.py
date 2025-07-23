@@ -1968,6 +1968,7 @@ class SuggestionGenerator:
                     "munich" in ingredient["name"].lower()
                     and ingredient["type"] == "grain"
                     and ingredient["grain_type"] == "base_malt"
+                    and ingredient["color"] >= 10
                 ):
                     munich_malt = ingredient
                     break
