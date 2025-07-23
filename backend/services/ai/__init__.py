@@ -18,7 +18,7 @@ from .workflow_config_loader import WorkflowConfigLoader, list_workflows, load_w
 
 __all__ = [
     # Flowchart system
-    "FlowchartEngine", 
+    "FlowchartEngine",
     "FlowchartAIService",
     "get_flowchart_ai_service",
     "WorkflowConfigLoader",

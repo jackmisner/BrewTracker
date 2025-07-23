@@ -195,27 +195,27 @@ def optimize_recipe():
         return jsonify({"error": "Recipe optimization failed", "details": str(e)}), 500
 
 
-
-
-
 @ai_bp.route("/health", methods=["GET"])
 def ai_health():
     """Health check for AI service"""
     try:
         # Test that the flowchart AI service is available
         service_status = flowchart_ai_service.get_available_workflows()
-        return jsonify(
-            {
-                "status": "healthy",
-                "service": "Flowchart-based AI Recipe Analysis",
-                "components": {
-                    "flowchart_engine": "available",
-                    "workflow_loader": "available",
-                    "optimization_strategies": "available",
-                },
-                "available_workflows": service_status,
-            }
-        ), 200
+        return (
+            jsonify(
+                {
+                    "status": "healthy",
+                    "service": "Flowchart-based AI Recipe Analysis",
+                    "components": {
+                        "flowchart_engine": "available",
+                        "workflow_loader": "available",
+                        "optimization_strategies": "available",
+                    },
+                    "available_workflows": service_status,
+                }
+            ),
+            200,
+        )
     except Exception as e:
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
