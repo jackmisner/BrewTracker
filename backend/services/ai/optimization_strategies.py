@@ -8,7 +8,13 @@ that can be executed by the FlowchartEngine workflow nodes.
 import logging
 import math
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+if TYPE_CHECKING:
+
+    class RecipeContext:
+        pass
+
 
 logger = logging.getLogger(__name__)
 
