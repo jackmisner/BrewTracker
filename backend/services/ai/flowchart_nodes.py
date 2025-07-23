@@ -8,7 +8,13 @@ Each node represents a different type of decision or action in the optimization 
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+
+if TYPE_CHECKING:
+
+    class RecipeContext:
+        pass
+
 
 logger = logging.getLogger(__name__)
 
