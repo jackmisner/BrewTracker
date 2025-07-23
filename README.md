@@ -49,11 +49,18 @@ homebrew-tracker/
 │   │   ├── __init__.py
 │   │   ├── ai/                                           # AI recipe analysis and optimization services
 │   │   │   ├── __init__.py                               # Package initialization with clean imports for all AI components
-│   │   │   ├── recipe_analysis_engine.py                 # Main orchestrator for comprehensive recipe analysis and optimization
-│   │   │   ├── style_compliance_analyzer.py              # BJCP style guidelines analysis and compliance checking
-│   │   │   ├── suggestion_generator.py                   # Recipe improvement suggestions and ingredient optimization algorithms
-│   │   │   └── cascading_effects_calculator.py           # Recipe change impact prediction and metric calculations
+│   │   │   ├── brewing_calculations.py                   # Provides a wrapper for existing brewing calculation system to avoid circular dependencies
+│   │   │   ├── flowchart_ai_service.py                   # Service wrapper for flowchart-based analysis to ensure compatibility with the current frontend expectations
+│   │   │   ├── flowchart_engine.py                       # Flowchart-based optimization system
+│   │   │   ├── flowchart_nodes.py                        # Provides the core node types for executing flowchart-based recipe optimization workflows
+│   │   │   ├── optimization_strategies.py                # Provides concrete implementations of optimization strategies that can be executed by the FlowchartEngine workflow nodes
+│   │   │   ├── recipe_context.py                         # Maintains recipe state throughout workflow execution and handles condition evaluation and strategy execution
+│   │   │   ├── workflow_configuration_loader.py          # Provides utilities for loading and managing workflow configurations from YAML and JSON files
+│   │   │   └── workflows/
+│   │   │       ├── AI_flowchart.png                      # Graphical representation of the AI recipe Analysis/suggestion generator flowchart
+│   │   │       └── recipe_optimization.yaml              # Configuration file for recipe analysis flowchart. Defines all nodes and paths
 │   │   ├── attenuation_service.py                        # Service for collecting and analyzing real-world yeast attenuation data
+│   │   ├── ingredient_lookup_service.py                  # Provides centralized ingredient search, matching, and substitution logic for the AI optimization system.
 │   │   └── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
 │   ├── tests/                                            # pytest test suite for backend functionality
 │   ├── utils/                                            # Utility functions
@@ -384,83 +391,6 @@ pytest -v
 - **Black + isort**: Python code formatting and import organization
 - **CI/CD**: Automated testing on push and pull requests
 - **Coverage Reports**: Integrated with Codecov for tracking
-
-## 🧬 Yeast Attenuation Analytics
-
-### Feature Status: Implemented (Pending Real-World Data)
-
-The yeast attenuation analytics feature is **fully implemented** and ready for production use. This advanced feature tracks real-world yeast performance to provide more accurate fermentation predictions.
-
-#### What's Implemented:
-
-- ✅ **Database Schema**: Extended ingredient model with attenuation tracking fields
-- ✅ **API Endpoints**: Complete backend support for attenuation data management
-- ✅ **Frontend Dashboard**: AttenuationAnalytics page for visualizing yeast performance
-- ✅ **Service Layer**: TypeScript services for attenuation data processing
-- ✅ **Test Coverage**: Comprehensive testing for all attenuation functionality
-
-#### What's Needed:
-
-- 🔄 **Real Brewing Data**: Feature requires actual brew session data to populate analytics
-- 🔄 **User Adoption**: Community engagement needed to build meaningful datasets
-- 🔄 **Data Collection**: Integration with brew session completion workflows
-
-#### Future Enhancements:
-
-- 🚀 **Predictive Modeling**: Machine learning for attenuation prediction
-- 🚀 **Environmental Factors**: Temperature and pH impact analysis
-- 🚀 **Batch Comparisons**: Performance analysis across different batch sizes
-
-The infrastructure is complete and waiting for real-world brewing data to deliver valuable insights to the homebrewing community.
-
-## 🤖 AI Recipe Suggestions
-
-### Feature Status: Production Ready ✅
-
-The AI recipe suggestions system is **fully implemented** and actively helping brewers create better, more balanced recipes that meet BJCP style guidelines.
-
-#### What's Implemented:
-
-- ✅ **Style Compliance Analysis**: Full BJCP integration with multi-metric optimization (OG, FG, ABV, IBU, SRM)
-- ✅ **Smart Base Malt Selection**: Intelligent malt recommendations based on beer style characteristics
-- ✅ **Ingredient Addition System**: Smart malt addition for colour adjustments (Munich Dark when SRM is low AND OG/FG is low, Midnight Wheat if SRM is low but OG/FG in range)
-- ✅ **Hop Timing Optimization**: IBU-focused hop timing suggestions with conservative brewing approach
-- ✅ **Cascading Effects Prediction**: Accurate impact analysis for ingredient changes
-- ✅ **Unified Suggestion System**: Single comprehensive suggestion combining all optimizations
-- ✅ **Quality Control**: Stringent compliance checking with detailed user feedback
-
-#### Key Features:
-
-- 🎯 **Style-Aware Recommendations**: Automatically detects beer style characteristics (hop-forward, malt-forward, colour requirements)
-- 🧮 **Real-Time Calculations**: Instant metric predictions for suggested ingredient changes
-- 🔍 **Intelligent Conflict Resolution**: Priority-based merging of multiple optimization suggestions
-- 📊 **Multi-Metric Optimization**: Simultaneous optimization across all brewing metrics
-- ✅ **Comprehensive Validation**: Only shows "recipe looks good" when ALL style ranges are met
-
-#### Technical Architecture:
-
-**Backend AI Services (Refactored Package Structure):**
-
-- **RecipeAnalysisEngine**: Main orchestrator for comprehensive analysis and optimization workflows
-- **StyleComplianceAnalyzer**: BJCP style analysis and compliance checking with optimization targets
-- **SuggestionGenerator**: Recipe improvement algorithms and ingredient optimization strategies
-- **CascadingEffectsCalculator**: Recipe change impact prediction and metric calculations
-
-**Frontend AI Services:**
-
-- **EnhancedStyleComplianceService**: BJCP style analysis and optimization logic
-- **SmartBaseMaltService**: Intelligent grain bill recommendations
-- **CascadingEffectsService**: Recipe change prediction and impact analysis
-- **AISuggestions Component**: Main UI with comprehensive optimization display
-
-**Architecture Benefits:**
-
-- 🏗️ **Modular Design**: Each AI component is separated into focused, maintainable modules
-- 🧪 **Better Testability**: Individual components can be tested and validated independently
-- 🔧 **Enhanced Maintainability**: Clear separation of concerns makes debugging and feature development easier
-- 👥 **Team Collaboration**: Multiple developers can work on different AI aspects simultaneously
-
-The AI suggestions system is actively improving recipe quality and helping brewers understand the relationships between ingredients and brewing metrics.
 
 ## 🤝 Contributing
 
