@@ -1,25 +1,27 @@
 """
 AI Recipe Analysis Package
 
-This package provides intelligent recipe analysis, optimization suggestions, and brewing guidance
-based on brewing science and BJCP style guidelines.
+This package provides intelligent recipe analysis and optimization using a flowchart-based
+system based on brewing science and BJCP style guidelines.
 
 Main Components:
-- RecipeAnalysisEngine: Main orchestrator for recipe analysis
-- StyleComplianceAnalyzer: BJCP style compliance analysis
-- SuggestionGenerator: Recipe improvement suggestions
-- CascadingEffectsCalculator: Predicts effects of recipe changes
+- FlowchartEngine: Flowchart-based optimization system
+- FlowchartAIService: Service wrapper for flowchart-based analysis
+- OptimizationStrategies: Individual optimization strategies
+- WorkflowConfigLoader: YAML workflow configuration loader
 """
 
-from .cascading_effects_calculator import CascadingEffectsCalculator
-from .recipe_analysis_engine import RecipeAnalysisEngine
-from .style_compliance_analyzer import StyleComplianceAnalyzer
-from .suggestion_generator import SuggestionGenerator
+# Flowchart-based system (primary)
+from .flowchart_ai_service import FlowchartAIService, get_flowchart_ai_service
+from .flowchart_engine import FlowchartEngine
+from .workflow_config_loader import WorkflowConfigLoader, list_workflows, load_workflow
 
-# Maintain backward compatibility
 __all__ = [
-    "RecipeAnalysisEngine",
-    "StyleComplianceAnalyzer",
-    "SuggestionGenerator",
-    "CascadingEffectsCalculator",
+    # Flowchart system
+    "FlowchartEngine",
+    "FlowchartAIService",
+    "get_flowchart_ai_service",
+    "WorkflowConfigLoader",
+    "load_workflow",
+    "list_workflows",
 ]

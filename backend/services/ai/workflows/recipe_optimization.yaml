@@ -1,0 +1,284 @@
+# Recipe Optimization Workflow - Sequential Gating System
+# Implements 9-step sequential gating based on corrected flowchart logic
+
+workflow_name: "Recipe Style Optimization"
+version: "2.0"
+description: "Sequential gating optimization following BJCP style guidelines"
+start_node: "start"
+
+nodes:
+  # START - Entry point
+  start:
+    type: "start"
+    description: "Begin recipe analysis and optimization"
+    next_node: "step1_all_metrics_check"
+
+  # STEP 1: All metrics in range? (Initial check)
+  step1_all_metrics_check:
+    type: "decision"
+    condition: "all_metrics_in_style"
+    description: "Step 1: Are all metrics within style guidelines?"
+    yes_path: "step8_normalization_check"
+    no_path: "step2_og_check"
+
+  # STEP 2: OG in range?
+  step2_og_check:
+    type: "decision"
+    condition: "og_in_range"
+    description: "Step 2: Is OG within range?"
+    yes_path: "step3_srm_check"
+    no_path: "og_correction_flow"
+
+  # OG CORRECTION SUB-FLOW
+  og_correction_flow:
+    type: "multi_decision"
+    description: "OG Correction: Determine adjustment type"
+    conditions:
+      - condition: "og_too_high"
+        path: "og_reduce_base_malts"
+      - condition: "og_too_low"
+        path: "og_low_srm_check"
+    default_path: "step2_og_check"
+
+  # OG too high: Reduce base malts
+  og_reduce_base_malts:
+    type: "action"
+    strategy: "base_malt_reduction"
+    description: "Reduce base malts (target 25% below style max)"
+    parameters:
+      reduction_target: "25_percent_below_style_max"
+      maintain_malt_ratios: true
+    next_node: "step2_og_check"
+
+  # OG too low: Check SRM for appropriate correction
+  og_low_srm_check:
+    type: "decision"
+    condition: "srm_also_too_low"
+    description: "OG low: Is SRM also too low?"
+    yes_path: "og_increase_dark_malts"
+    no_path: "og_increase_light_malts"
+
+  # OG low + SRM low: Add/increase dark malts
+  og_increase_dark_malts:
+    type: "action"
+    strategy: "base_malt_og_and_srm"
+    description: "Increase Munich Dark or add if missing (target 25% above style min)"
+    parameters:
+      target_position: "25_percent_above_style_min"
+    next_node: "step2_og_check"
+
+  # OG low + SRM OK: Increase only light base malts
+  og_increase_light_malts:
+    type: "action"
+    strategy: "base_malt_og_only"
+    description: "Increase all base malts proportionally (preserve SRM ratios)"
+    parameters:
+      target_position: "25_percent_above_style_min"
+    next_node: "step2_og_check"
+
+  # STEP 3: SRM in range?
+  step3_srm_check:
+    type: "decision"
+    condition: "srm_in_range"
+    description: "Step 3: Is SRM within range?"
+    yes_path: "step4_fg_check"
+    no_path: "srm_correction_flow"
+
+  # SRM CORRECTION SUB-FLOW
+  srm_correction_flow:
+    type: "multi_decision"
+    description: "SRM Correction: Determine adjustment type"
+    conditions:
+      - condition: "srm_too_low"
+        path: "srm_check_caramel_for_darker"
+      - condition: "srm_too_high"
+        path: "srm_check_caramel_for_lighter"
+    default_path: "step3_srm_check"
+
+  # SRM too low: Check for caramel malts to swap darker
+  srm_check_caramel_for_darker:
+    type: "decision"
+    condition: "caramel_malts_in_recipe"
+    description: "SRM low: Caramel malts available for darker swaps?"
+    yes_path: "srm_swap_lighter_to_darker"
+    no_path: "srm_increase_roasted"
+
+  srm_swap_lighter_to_darker:
+    type: "action"
+    strategy: "caramel_malt_swap"
+    description: "Swap lighter caramel for darker"
+    parameters:
+      direction: "lighter_to_darker"
+    next_node: "step3_srm_check"
+
+  srm_increase_roasted:
+    type: "action"
+    strategy: "roasted_malt_increase"
+    description: "Increase roasted grain amounts or add darkest roasted grain"
+    parameters:
+      target_position: "25_percent_above_style_min"
+    next_node: "step3_srm_check"
+
+  # SRM too high: Check for caramel malts to swap lighter
+  srm_check_caramel_for_lighter:
+    type: "decision"
+    condition: "caramel_malts_in_recipe"
+    description: "SRM high: Caramel malts available for lighter swaps?"
+    yes_path: "srm_swap_darker_to_lighter"
+    no_path: "srm_reduce_roasted"
+
+  srm_swap_darker_to_lighter:
+    type: "action"
+    strategy: "caramel_malt_swap"
+    description: "Swap darker caramel for lighter"
+    parameters:
+      direction: "darker_to_lighter"
+    next_node: "step3_srm_check"
+
+  srm_reduce_roasted:
+    type: "action"
+    strategy: "roasted_malt_decrease"
+    description: "Reduce roasted grain amounts or remove if necessary"
+    parameters:
+      target_position: "25_percent_below_style_max"
+    next_node: "step3_srm_check"
+
+  # STEP 4: FG in range?
+  step4_fg_check:
+    type: "decision"
+    condition: "fg_in_range"
+    description: "Step 4: Is FG within range?"
+    yes_path: "step5_abv_check"
+    no_path: "fg_correction_flow"
+
+  # FG CORRECTION SUB-FLOW
+  fg_correction_flow:
+    type: "multi_decision"
+    description: "FG Correction: Yeast substitution"
+    conditions:
+      - condition: "fg_too_high"
+        path: "fg_higher_attenuation_yeast"
+      - condition: "fg_too_low"
+        path: "fg_lower_attenuation_yeast"
+    default_path: "step4_fg_check"
+
+  fg_higher_attenuation_yeast:
+    type: "action"
+    strategy: "yeast_substitution"
+    description: "Substitute for higher attenuation yeast"
+    parameters:
+      target_attenuation: "higher"
+      maintain_style_compliance: true
+    next_node: "step4_fg_check"
+
+  fg_lower_attenuation_yeast:
+    type: "action"
+    strategy: "yeast_substitution"
+    description: "Substitute for lower attenuation yeast"
+    parameters:
+      target_attenuation: "lower"
+      maintain_style_compliance: true
+    next_node: "step4_fg_check"
+
+  # STEP 5: ABV in range?
+  step5_abv_check:
+    type: "decision"
+    condition: "abv_in_range"
+    description: "Step 5: Is ABV within range?"
+    yes_path: "step6_ibu_check"
+    no_path: "abv_correction_flow"
+
+  # ABV CORRECTION SUB-FLOW
+  abv_correction_flow:
+    type: "multi_decision"
+    description: "ABV Correction: Adjust OG/FG balance"
+    conditions:
+      - condition: "abv_too_high"
+        path: "abv_reduce_og"
+      - condition: "abv_too_low"
+        path: "abv_increase_og"
+    default_path: "step5_abv_check"
+
+  abv_reduce_og:
+    type: "action"
+    strategy: "abv_targeted"
+    description: "Adjust base malts to target ABV midpoint"
+    parameters:
+      direction: "decrease"
+      target_metric: "ABV"
+    next_node: "step5_abv_check" # Re-check ABV directly instead of starting over
+
+  abv_increase_og:
+    type: "action"
+    strategy: "abv_targeted"
+    description: "Adjust base malts to target ABV midpoint"
+    parameters:
+      direction: "increase"
+      target_metric: "ABV"
+    next_node: "step5_abv_check" # Re-check ABV directly instead of starting over
+
+  # STEP 6: IBU in range?
+  step6_ibu_check:
+    type: "decision"
+    condition: "ibu_in_range"
+    description: "Step 6: Is IBU within range?"
+    yes_path: "step7_all_metrics_recheck"
+    no_path: "ibu_correction_flow"
+
+  # IBU CORRECTION SUB-FLOW
+  ibu_correction_flow:
+    type: "multi_decision"
+    description: "IBU Correction: Hop adjustments"
+    conditions:
+      - condition: "ibu_too_low"
+        path: "ibu_increase_hops"
+      - condition: "ibu_too_high"
+        path: "ibu_reduce_hops"
+    default_path: "step6_ibu_check"
+
+  ibu_increase_hops:
+    type: "action"
+    strategy: "hop_ibu_adjustment"
+    description: "Increase hop amounts/times for higher IBU"
+    parameters:
+      strategy: "increase_time_then_amount"
+      max_time: 60
+      amount_increment: 0.25
+    next_node: "step6_ibu_check"
+
+  ibu_reduce_hops:
+    type: "action"
+    strategy: "hop_ibu_adjustment"
+    description: "Reduce hop amounts/times for lower IBU"
+    parameters:
+      strategy: "reduce_amount_then_time"
+      min_amount: 0.25
+      time_decrement: 10
+    next_node: "step6_ibu_check"
+
+  # STEP 7: All metrics in range? (Final validation before normalization)
+  step7_all_metrics_recheck:
+    type: "decision"
+    condition: "all_metrics_in_style"
+    description: "Step 7: All metrics still within style guidelines?"
+    yes_path: "step8_normalization_check"
+    no_path: "step2_og_check" # Return to step 2 to restart sequential checks
+
+  # STEP 8: Ingredients normalized?
+  step8_normalization_check:
+    type: "decision"
+    condition: "amounts_normalized"
+    description: "Step 8: Are amounts/times normalized to brewing increments?"
+    yes_path: "step9_finish"
+    no_path: "normalize_amounts"
+
+  normalize_amounts:
+    type: "action"
+    strategy: "normalize_amounts"
+    description: "Normalize amounts/times to brewing-friendly increments"
+    next_node: "step7_all_metrics_recheck" # Return to step 7 for re-validation
+
+  # STEP 9: Finished
+  step9_finish:
+    type: "end"
+    description: "Recipe optimization completed successfully"

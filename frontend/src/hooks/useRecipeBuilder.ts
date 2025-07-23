@@ -616,10 +616,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               throw new Error(`Ingredient with ID ${ingredientId} not found`);
             }
 
+            console.log(`🔍 BULK UPDATE: Processing existing ingredient ${existingIngredient.name}`);
+            console.log(`🔍 BULK UPDATE: Existing ingredient use: "${existingIngredient.use}"`);
+            console.log(`🔍 BULK UPDATE: Update data:`, updatedData);
+
             // Validate the updated ingredient data
-            const validation = Services.ingredient.validateIngredientData(
-              existingIngredient.type,
-              {
+            const validationData = {
                 ingredient_id:
                   updatedData.ingredient_id || existingIngredient.ingredient_id,
                 amount: updatedData.amount || existingIngredient.amount,
@@ -629,15 +631,24 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
                 alpha_acid:
                   updatedData.alpha_acid || existingIngredient.alpha_acid,
                 color: updatedData.color || existingIngredient.color,
-              } as CreateRecipeIngredientData
+              } as CreateRecipeIngredientData;
+            
+            console.log(`🔍 BULK UPDATE: Validation data for ${existingIngredient.name}:`, validationData);
+            
+            const validation = Services.ingredient.validateIngredientData(
+              existingIngredient.type,
+              validationData
             );
 
             if (!validation.isValid) {
+              console.log(`🔍 BULK UPDATE: Validation FAILED for ${existingIngredient.name}:`, validation.errors);
               throw new Error(
                 `Validation failed for ${
                   existingIngredient.name
                 }: ${validation.errors.join(", ")}`
               );
+            } else {
+              console.log(`🔍 BULK UPDATE: Validation PASSED for ${existingIngredient.name}`);
             }
 
             // Update the ingredient in the array
@@ -649,6 +660,10 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
         const sortedIngredients =
           Services.ingredient.sortIngredients(updatedIngredients);
+        
+        console.log(`🔍 BULK UPDATE: About to update state with ${sortedIngredients.length} ingredients`);
+        console.log(`🔍 BULK UPDATE: Sorted ingredients:`, sortedIngredients.map(ing => `${ing.name} (${ing.amount}${ing.unit})`));
+        
         // Update state immediately for better UX
         setState((prev) => ({
           ...prev,
@@ -658,18 +673,47 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           calculatingMetrics: true,
         }));
 
-        // Recalculate metrics
+        console.log(`🔍 BULK UPDATE: State updated, now recalculating metrics...`);
+        
+        // Create updated recipe object with new ingredients for consistent metrics calculation
+        const updatedRecipe = {
+          ...currentRecipe,
+          // Ensure recipe has the updated ingredients for metrics calculation
+        };
+        
+        // Recalculate metrics with consistent recipe and ingredients
         const metrics = await Services.metrics.calculateMetricsDebounced(
           "recipe-builder",
-          currentRecipe,
+          updatedRecipe,
           sortedIngredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        console.log(`🔍 BULK UPDATE: Metrics calculated, updating final state...`);
+        console.log(`🔍 BULK UPDATE: New metrics:`, metrics);
+
+        setState((prev) => {
+          console.log(`🔍 BULK UPDATE: Final state update - prev ingredients:`, prev.ingredients.map(ing => `${ing.name} (${ing.amount}${ing.unit})`));
+          console.log(`🔍 BULK UPDATE: Final state update - new metrics:`, metrics);
+          console.log(`🔍 BULK UPDATE: Final state update - updating calculatingMetrics from ${prev.calculatingMetrics} to false`);
+          
+          // Ensure we're only updating metrics if ingredients haven't changed
+          const currentIngredientIds = prev.ingredients.map(ing => `${ing.id}-${ing.amount}`).sort().join(',');
+          const expectedIngredientIds = sortedIngredients.map(ing => `${ing.id}-${ing.amount}`).sort().join(',');
+          
+          if (currentIngredientIds !== expectedIngredientIds) {
+            console.log(`🔍 BULK UPDATE: Ingredients mismatch detected! Current: ${currentIngredientIds.substring(0, 100)}...`);
+            console.log(`🔍 BULK UPDATE: Expected: ${expectedIngredientIds.substring(0, 100)}...`);
+          }
+          
+          return {
+            ...prev,
+            metrics,
+            calculatingMetrics: false,
+          };
+        });
+        
+        // Bulk update completed successfully
+        
       } catch (error) {
         console.error("Error bulk updating ingredients:", error);
         setState((prev) => ({

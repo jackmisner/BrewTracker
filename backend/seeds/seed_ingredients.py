@@ -56,6 +56,11 @@ def seed_ingredients(mongo_uri, json_file_path):
                             date_field["$date"].replace("Z", "+00:00")
                         )
 
+                # Ensure yeast_type field is properly handled for yeast ingredients
+                if clean_data.get("type") == "yeast" and "yeast_type" not in clean_data:
+                    # Set yeast_type to None if not provided, will be populated by migration
+                    clean_data["yeast_type"] = None
+
                 # Create ingredient object with cleaned data
                 ingredient = Ingredient(**clean_data)
                 ingredient.save()

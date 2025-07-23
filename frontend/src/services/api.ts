@@ -418,11 +418,6 @@ const ApiService = {
     analyzeRecipe: (requestData: any): Promise<AxiosResponse<any>> =>
       api.post("/ai/analyze-recipe", requestData),
 
-    getSuggestions: (requestData: any): Promise<AxiosResponse<any>> =>
-      api.post("/ai/suggestions", requestData),
-
-    calculateEffects: (requestData: any): Promise<AxiosResponse<any>> =>
-      api.post("/ai/effects", requestData),
 
     checkHealth: (): Promise<AxiosResponse<any>> => api.get("/ai/health"),
   },

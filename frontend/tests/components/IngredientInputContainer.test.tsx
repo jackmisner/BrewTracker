@@ -234,6 +234,7 @@ describe("IngredientInputsContainer", () => {
       amount: undefined,
       unit: undefined,
       color: undefined,
+      use: "mash"
     });
   });
 
@@ -263,6 +264,7 @@ describe("IngredientInputsContainer", () => {
       ingredient_id: undefined,
       amount: undefined,
       unit: undefined,
+      use: "fermentation",
     });
   });
 
@@ -276,6 +278,7 @@ describe("IngredientInputsContainer", () => {
       ingredient_id: undefined,
       amount: undefined,
       unit: undefined,
+      use: "boil",
     });
   });
 
