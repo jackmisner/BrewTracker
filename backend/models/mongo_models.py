@@ -194,7 +194,9 @@ class Ingredient(Document):
     alcohol_tolerance = FloatField()  # Alcohol tolerance as percentage
     min_temperature = FloatField()  # Minimum fermentation temperature
     max_temperature = FloatField()  # Maximum fermentation temperature
-    yeast_type = StringField(max_length=50)  # Yeast type: lager, belgian_ale, english_ale, american_ale, wheat, wild
+    yeast_type = StringField(
+        max_length=50
+    )  # Yeast type: lager, belgian_ale, english_ale, american_ale, wheat, wild
 
     # Real-world attenuation tracking
     actual_attenuation_data = ListField(
@@ -207,7 +209,10 @@ class Ingredient(Document):
     )  # Confidence score (0-1) based on data volume
     last_attenuation_update = DateTimeField()  # When attenuation data was last updated
 
-    meta = {"collection": "ingredients", "indexes": ["name", "type", "grain_type", "yeast_type"]}
+    meta = {
+        "collection": "ingredients",
+        "indexes": ["name", "type", "grain_type", "yeast_type"],
+    }
 
     def to_dict(self):
         return {
