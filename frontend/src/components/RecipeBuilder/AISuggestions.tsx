@@ -160,9 +160,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [optimizationResult, setOptimizationResult] =
     useState<OptimizationResult | null>(null);
-  const [flowchartResult, setFlowchartResult] =
-    useState<OptimizationResult | null>(null);
-  const [analyzingFlowchart, setAnalyzingFlowchart] = useState<boolean>(false);
 
   // Unit context for user preferences
   const { unitSystem, loading: unitsLoading } = useUnits();
@@ -255,7 +252,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     });
   };
 
-  // Generate suggestions using backend API
+  // Generate suggestions using flowchart-based backend API
   const generateSuggestions = useCallback(async (): Promise<void> => {
     if (!ingredients.length || !metrics || unitsLoading || disabled) return;
 
@@ -277,7 +274,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           alpha_acid: ing.alpha_acid,
           time: ing.time,
           use: ing.use,
-          attenuation: ing.attenuation, // Include yeast attenuation for proper FG/ABV calculations
+          attenuation: ing.attenuation,
         })),
         batch_size: recipe.batch_size,
         batch_size_unit: recipe.batch_size_unit,
@@ -304,11 +301,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      // Call backend AI API using Services
+      // Call backend AI API using Services (flowchart-based analysis only)
       const response = await Services.AI.service.analyzeRecipe({
         recipe_data: recipeData,
-        style_id: styleId, // Pass the looked-up style ID for proper style compliance analysis
+        style_id: styleId,
         unit_system: unitSystem,
+        workflow_name: "recipe_optimization"
       });
 
       // Check if internal optimization was performed
@@ -322,7 +320,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           recipeChanges: response.recipe_changes || [],
           iterationsCompleted: response.iterations_completed || 0,
         });
-        setSuggestions([]); // Clear individual suggestions since we have complete optimization
+        setSuggestions([]);
       } else {
         // Fallback to traditional suggestions format
         const convertedSuggestions = convertBackendSuggestions(
@@ -330,7 +328,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         );
 
         setSuggestions(convertedSuggestions);
-        setOptimizationResult(null); // Clear any previous optimization results
+        setOptimizationResult(null);
       }
 
       setHasAnalyzed(true);
@@ -576,109 +574,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     generateSuggestions();
   };
 
-  // Generate flowchart-based analysis for testing
-  const generateFlowchartAnalysis = useCallback(async (): Promise<void> => {
-    if (!ingredients.length || !metrics || unitsLoading || disabled) return;
 
-    setAnalyzingFlowchart(true);
-    setError(null);
-
-    try {
-      // Prepare recipe data for backend API
-      const recipeData = {
-        ingredients: ingredients.map((ing) => ({
-          ingredient_id: ing.ingredient_id,
-          name: ing.name,
-          type: ing.type,
-          grain_type: ing.grain_type,
-          amount: ing.amount,
-          unit: ing.unit,
-          potential: ing.potential,
-          color: ing.color,
-          alpha_acid: ing.alpha_acid,
-          time: ing.time,
-          use: ing.use,
-          attenuation: ing.attenuation,
-        })),
-        batch_size: recipe.batch_size,
-        batch_size_unit: recipe.batch_size_unit,
-        efficiency: recipe.efficiency || 75,
-        boil_time: recipe.boil_time || 60,
-      };
-
-      // Look up style ID from recipe style name
-      let styleId: string | undefined;
-      if (recipe.style) {
-        try {
-          const allStyles = await Services.Data.beerStyle.getAllStylesList();
-          const matchingStyle = allStyles.find(
-            (style: any) =>
-              style.name.toLowerCase() === recipe.style!.toLowerCase() ||
-              style.display_name?.toLowerCase() === recipe.style!.toLowerCase()
-          );
-
-          if (matchingStyle) {
-            styleId = matchingStyle.style_guide_id || matchingStyle.id;
-          }
-        } catch (error) {
-          console.warn("🔍 AISuggestions - Failed to lookup style:", error);
-        }
-      }
-
-      // Call backend AI API with flowchart enabled
-      const response = await Services.AI.service.analyzeRecipe({
-        recipe_data: recipeData,
-        style_id: styleId,
-        unit_system: unitSystem,
-        use_flowchart: true, // Enable flowchart analysis
-        workflow_name: "recipe_optimization"
-      });
-
-      // Process flowchart results
-      if (response.optimization_performed && response.optimized_recipe) {
-        setFlowchartResult({
-          performed: true,
-          originalMetrics: response.original_metrics,
-          optimizedMetrics: response.optimized_metrics,
-          optimizedRecipe: response.optimized_recipe,
-          recipeChanges: response.recipe_changes || [],
-          iterationsCompleted: response.iterations_completed || 0,
-        });
-      } else {
-        // No optimization performed
-        setFlowchartResult({
-          performed: false,
-          originalMetrics: response.current_metrics,
-          optimizedMetrics: response.current_metrics,
-          optimizedRecipe: null,
-          recipeChanges: [],
-          iterationsCompleted: 0,
-        });
-      }
-
-    } catch (error) {
-      console.error("❌ AISuggestions - Error in flowchart analysis:", error);
-      setError(
-        error instanceof Error
-          ? `Flowchart analysis failed: ${error.message}`
-          : "Flowchart analysis failed"
-      );
-    } finally {
-      setAnalyzingFlowchart(false);
-    }
-  }, [
-    recipe,
-    ingredients,
-    metrics,
-    unitSystem,
-    unitsLoading,
-    disabled,
-  ]);
-
-  // Handle flowchart analyze button click
-  const handleFlowchartAnalyze = (): void => {
-    generateFlowchartAnalysis();
-  };
 
   // Apply optimized recipe
   const applyOptimizedRecipe = async (
@@ -775,7 +671,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           
           try {
             // Get cached ingredient data
-            const availableIngredients = await Services.ingredient.fetchIngredients();
+            const availableIngredients = await Services.Data.ingredient.fetchIngredients();
             const ingredientType = optimizedIng.type as keyof typeof availableIngredients;
             const completeIngredientData = availableIngredients[ingredientType]?.find(
               (ing: any) => String(ing.ingredient_id) === String(optimizedIng.ingredient_id)
@@ -876,7 +772,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     setSuggestions([]);
     setAppliedSuggestions(new Set());
     setOptimizationResult(null);
-    setFlowchartResult(null);
     setHasAnalyzed(false);
     setError(null);
   };
@@ -910,18 +805,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               {analyzing ? "Analyzing..." : "Analyze Recipe"}
             </button>
 
-            <button
-              onClick={handleFlowchartAnalyze}
-              disabled={
-                analyzingFlowchart || disabled || !ingredients.length || !metrics
-              }
-              className="btn-analyze flowchart-btn"
-              style={{ backgroundColor: '#4CAF50', marginLeft: '8px' }}
-            >
-              {analyzingFlowchart ? "Flowchart..." : "🔄 Flowchart Analysis"}
-            </button>
-
-            {(hasAnalyzed || flowchartResult) && (
+            {hasAnalyzed && (
               <button onClick={clearSuggestions} className="btn-secondary">
                 Clear Results
               </button>
@@ -940,11 +824,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             </div>
           )}
 
-          {analyzingFlowchart && (
-            <div className="ai-suggestions-loading">
-              <p>🔄 Running flowchart analysis...</p>
-            </div>
-          )}
 
           {hasAnalyzed && !analyzing && optimizationResult && (
             <div className="optimization-results">
@@ -1108,174 +987,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             </div>
           )}
 
-          {flowchartResult && !analyzingFlowchart && (
-            <div className="optimization-results flowchart-results">
-              <h4 className="optimization-title" style={{ color: '#4CAF50' }}>
-                🔄 Flowchart Analysis Results
-              </h4>
-              {flowchartResult.performed ? (
-                <>
-                  <p className="optimization-subtitle">
-                    Flowchart optimization completed in{" "}
-                    <strong>
-                      {flowchartResult.iterationsCompleted} iterations
-                    </strong>
-                  </p>
-
-                  {/* Metrics comparison */}
-                  <div className="metrics-improvement">
-                    <h5>Metrics Improvement</h5>
-                    <div className="metrics-grid">
-                      {Object.entries(flowchartResult.originalMetrics || {}).map(
-                        ([metric, originalValue]) => {
-                          const optimizedValue =
-                            flowchartResult.optimizedMetrics?.[metric];
-                          const isImproved = originalValue !== optimizedValue;
-                          return (
-                            <div key={metric} className="metric-item">
-                              <div className="metric-label">{metric}</div>
-                              <div
-                                className={`metric-value ${
-                                  isImproved ? "improved" : ""
-                                }`}
-                              >
-                                {originalValue} → {optimizedValue}
-                                {isImproved && (
-                                  <span className="metric-checkmark">✓</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Recipe changes summary */}
-                  {flowchartResult.optimizedRecipe?.ingredients && (
-                    <div className="changes-made">
-                      <h5>
-                        Changes Made ({getOptimizedChangesSummary(ingredients, flowchartResult.optimizedRecipe.ingredients).length})
-                      </h5>
-                      <div className="changes-scroll">
-                        {getOptimizedChangesSummary(ingredients, flowchartResult.optimizedRecipe.ingredients)
-                          .map((change, idx) => (
-                            <div
-                              key={idx}
-                              className={`change-item ${
-                                change.ingredient_type || ""
-                              }`}
-                            >
-                              {change.type === "ingredient_modified" && (
-                                <div>
-                                  <strong>{change.ingredient_name}:</strong>{" "}
-                                  {change.changes &&
-                                  Array.isArray(change.changes) ? (
-                                    <div className="consolidated-changes">
-                                      {change.changes.map(
-                                        (fieldChange: any, fieldIdx: number) => (
-                                          <div
-                                            key={fieldIdx}
-                                            className="consolidated-change-item"
-                                          >
-                                            <span>
-                                              • {fieldChange.field} changed from{" "}
-                                              {fieldChange.field === "amount"
-                                                ? formatIngredientAmount(
-                                                    fieldChange.original_value,
-                                                    fieldChange.unit || "g",
-                                                    "grain",
-                                                    unitSystem
-                                                  )
-                                                : fieldChange.original_value}{" "}
-                                              to{" "}
-                                              {fieldChange.field === "amount"
-                                                ? formatIngredientAmount(
-                                                    fieldChange.optimized_value,
-                                                    fieldChange.unit || "g",
-                                                    "grain",
-                                                    unitSystem
-                                                  )
-                                                : fieldChange.field === "time"
-                                                ? `${fieldChange.optimized_value} min`
-                                                : fieldChange.optimized_value}
-                                            </span>
-                                          </div>
-                                        )
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span>
-                                      {change.field} changed from{" "}
-                                      {change.original_value} to{" "}
-                                      {change.optimized_value} {change.unit}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {change.type === "ingredient_added" && (
-                                <div>
-                                  <strong>Added:</strong> {change.ingredient_name} (
-                                  {formatIngredientAmount(
-                                    change.amount,
-                                    change.unit || "g",
-                                    change.ingredient_type || "grain",
-                                    unitSystem
-                                  )})
-                                </div>
-                              )}
-                              {change.type === "ingredient_removed" && (
-                                <div>
-                                  <strong>Removed:</strong> {change.ingredient_name} (
-                                  {formatIngredientAmount(
-                                    change.amount,
-                                    change.unit || "g",
-                                    change.ingredient_type || "grain",
-                                    unitSystem
-                                  )})
-                                </div>
-                              )}
-                              {change.type === "ingredient_substituted" && (
-                                <div>
-                                  <strong>Substituted:</strong>{" "}
-                                  {change.original_ingredient} →{" "}
-                                  {change.optimized_ingredient}
-                                </div>
-                              )}
-                              <div className="change-description">
-                                {change.change_reason}
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Apply button */}
-                  <div className="optimization-actions">
-                    <button
-                      onClick={() => applyOptimizedRecipe(flowchartResult)}
-                      disabled={disabled}
-                      className="btn-apply"
-                    >
-                      Apply Flowchart Recipe
-                    </button>
-                    <button
-                      onClick={() => setFlowchartResult(null)}
-                      className="btn-secondary"
-                    >
-                      Keep Original Recipe
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="ai-suggestions-success">
-                  <p>✅ Flowchart analysis complete - no optimization needed!</p>
-                  <p>Your recipe is already well-balanced for the flowchart system.</p>
-                </div>
-              )}
-            </div>
-          )}
 
           {hasAnalyzed &&
             !analyzing &&

@@ -16,7 +16,6 @@ export interface AIAnalysisRequest {
   };
   style_id?: string; // Optional MongoDB ObjectId for specific style analysis
   unit_system?: "metric" | "imperial";
-  use_flowchart?: boolean; // Enable flowchart-based analysis
   workflow_name?: string; // Optional workflow name for flowchart analysis
 }
 
@@ -121,42 +120,6 @@ export interface AIIngredientChange {
   };
 }
 
-export interface AISuggestionsRequest {
-  recipe_data: {
-    ingredients: RecipeIngredient[];
-    batch_size: number;
-    batch_size_unit: string;
-    efficiency: number;
-  };
-  style_id?: string;
-  suggestion_types?: string[];
-}
-
-export interface AISuggestionsResponse {
-  suggestions: AISuggestion[];
-  current_metrics: RecipeMetrics;
-  style_analysis?: any;
-  unit_system: string;
-}
-
-export interface AIEffectsRequest {
-  original_recipe: {
-    ingredients: RecipeIngredient[];
-    batch_size: number;
-    batch_size_unit: string;
-    efficiency: number;
-  };
-  changes: AIIngredientChange[];
-}
-
-export interface AIEffectsResponse {
-  effects: {
-    original_metrics: RecipeMetrics;
-    predicted_metrics: RecipeMetrics;
-    metric_changes: Record<string, any>;
-  };
-  unit_system: string;
-}
 
 /**
  * AI Service for backend communication
@@ -183,53 +146,6 @@ export class AIService {
     }
   }
 
-  /**
-   * Get AI suggestions for a recipe
-   */
-  async getSuggestions(
-    request: AISuggestionsRequest
-  ): Promise<AISuggestionsResponse> {
-    try {
-      const response = await ApiService.ai.getSuggestions(request);
-
-      return response.data;
-    } catch (error: any) {
-      console.error("❌ AI Service - Get Suggestions Error:", {
-        error: error.response?.data || error.message,
-        status: error.response?.status,
-        timestamp: new Date().toISOString(),
-      });
-
-      const errorMessage =
-        error.response?.data?.error || error.message || "AI suggestions failed";
-      throw new Error(`AI suggestions failed: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Calculate cascading effects of recipe changes
-   */
-  async calculateEffects(
-    request: AIEffectsRequest
-  ): Promise<AIEffectsResponse> {
-    try {
-      const response = await ApiService.ai.calculateEffects(request);
-
-      return response.data;
-    } catch (error: any) {
-      console.error("❌ AI Service - Calculate Effects Error:", {
-        error: error.response?.data || error.message,
-        status: error.response?.status,
-        timestamp: new Date().toISOString(),
-      });
-
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "AI effects calculation failed";
-      throw new Error(`AI effects calculation failed: ${errorMessage}`);
-    }
-  }
 
   /**
    * Check AI service health
