@@ -40,8 +40,12 @@ def create_app(config_class=None):
 
     # Configure logging for development debugging
     if env == "development":
-        logging.basicConfig(level=logging.INFO)
-        app.logger.setLevel(logging.INFO)
+        logging.basicConfig(
+            filename="brewtracker.log", encoding="utf-8", level=logging.INFO
+        )
+        # Set werkzeug logger to WARNING to suppress its INFO logs in brewtracker.log
+        logging.getLogger("werkzeug").setLevel(logging.WARNING)
+        app.logger.setLevel(logging.ERROR)
         # Enable AI service logging
         ai_logger = logging.getLogger("services.ai_service")
         ai_logger.setLevel(logging.INFO)
