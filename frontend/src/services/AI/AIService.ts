@@ -16,6 +16,8 @@ export interface AIAnalysisRequest {
   };
   style_id?: string; // Optional MongoDB ObjectId for specific style analysis
   unit_system?: "metric" | "imperial";
+  use_flowchart?: boolean; // Enable flowchart-based analysis
+  workflow_name?: string; // Optional workflow name for flowchart analysis
 }
 
 export interface AIAnalysisResponse {
