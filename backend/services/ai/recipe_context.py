@@ -66,15 +66,37 @@ class RecipeContext:
         self._register_builtin_strategies()
 
     def _calculate_metrics(self) -> Dict[str, Any]:
-        """Calculate current recipe metrics using the full brewing calculation system."""
+        """Calculate current recipe metrics using the established brewing calculation system."""
         try:
-            # Use the brewing calculations wrapper that handles full complexity
-            from .brewing_calculations import get_brewing_calculations
+            # Use the existing recipe API calculator (no wrapper needed)
+            from utils.recipe_api_calculator import calculate_all_metrics_preview
 
-            brewing_calc = get_brewing_calculations()
-            metrics = brewing_calc.calculate_metrics(self.recipe)
-            logger.info(metrics)
-            return metrics
+            metrics = calculate_all_metrics_preview(self.recipe)
+            
+            # Calculate attenuation from yeast ingredients
+            attenuation = 75.0  # Default attenuation
+            yeast_ingredients = [
+                ing for ing in self.recipe.get("ingredients", []) 
+                if ing.get("type") == "yeast"
+            ]
+            if yeast_ingredients:
+                attenuations = [
+                    float(ing.get("attenuation", 75.0)) for ing in yeast_ingredients
+                ]
+                attenuation = sum(attenuations) / len(attenuations)
+
+            # Convert to expected format (uppercase keys)
+            formatted_metrics = {
+                "OG": round(metrics.get("og", 1.000), 3),
+                "FG": round(metrics.get("fg", 1.000), 3), 
+                "ABV": round(metrics.get("abv", 0.0), 1),
+                "IBU": round(metrics.get("ibu", 0.0), 1),
+                "SRM": round(metrics.get("srm", 0.0), 1),
+                "attenuation": round(attenuation, 1),
+            }
+            
+            logger.info(formatted_metrics)
+            return formatted_metrics
 
         except Exception as e:
             logger.error(f"Error calculating metrics: {e}")
@@ -85,7 +107,7 @@ class RecipeContext:
                 "ABV": 0.0,
                 "IBU": 0.0,
                 "SRM": 0.0,
-                "attenuation": 0.0,
+                "attenuation": 75.0,
             }
 
     def _register_builtin_conditions(self):
