@@ -147,14 +147,24 @@ describe("OtherInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<OtherInput {...defaultProps as any} />);
 
-    // Select an ingredient but don't enter amount
+    // Select an ingredient (this will pre-fill the amount)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "irish moss");
 
+    // Wait for pre-filling to complete
+    await waitFor(() => {
+      const amountInput = screen.getByTestId("other-amount-input");
+      expect((amountInput as HTMLInputElement).value).toBe("0.5");
+    });
+
+    // Clear the pre-filled amount to test validation
+    const amountInput = screen.getByTestId("other-amount-input");
+    await user.clear(amountInput);
+
     // Try to submit
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-other-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {

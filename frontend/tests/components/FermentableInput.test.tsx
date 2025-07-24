@@ -142,11 +142,21 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
-    // Select an ingredient but don't enter amount
+    // Select an ingredient (this will pre-fill the amount)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "pale malt");
+
+    // Wait for pre-filling to complete
+    await waitFor(() => {
+      const amountInput = screen.getByPlaceholderText("Amount");
+      expect((amountInput as HTMLInputElement).value).toBe("1");
+    });
+
+    // Clear the pre-filled amount to test validation
+    const amountInput = screen.getByPlaceholderText("Amount");
+    await user.clear(amountInput);
 
     // Try to submit
     const addButton = screen.getByText("Add");
@@ -209,7 +219,13 @@ describe("FermentableInput", () => {
       .querySelector("input");
     await user.type(searchableSelect!, "pale malt");
 
-    const amountInput = screen.getByPlaceholderText("1");
+    // Wait for ingredient selection and use testid to get the input
+    await waitFor(() => {
+      expect(screen.getByTestId("fermentable-amount-input")).toBeInTheDocument();
+    });
+
+    const amountInput = screen.getByTestId("fermentable-amount-input");
+    await user.clear(amountInput);
     await user.type(amountInput, "8");
 
     const colorInput = screen.getByPlaceholderText("Color");
