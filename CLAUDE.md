@@ -69,7 +69,7 @@ BrewTracker is a homebrewing management application with a React frontend and Fl
 - **Data/**: IngredientService, BeerStyleService, RecipeService  
 - **User/**: UserSettingsService, RecipeDefaultsService
 - **Brewing/**: BrewSessionService
-- **AI/**: CascadingEffectsService, EnhancedStyleComplianceService, SmartBaseMaltService
+- **AI/**: AIService (frontend interface to backend flowchart system)
 - **BeerXML/**: BeerXMLService, IngredientMatchingService
 
 ##### Mandatory Service Import Pattern
@@ -289,146 +289,118 @@ The system is designed to collect attenuation data from:
 - **Environmental factors**: Track temperature, pH, and other variables affecting attenuation
 - **Predictive modeling**: Machine learning models for attenuation prediction based on recipe composition
 
-## AI Recipe Suggestions System
+## AI Recipe Analysis System - Flowchart Architecture ✅
 
-### Implementation Status: Production Ready ✅
+### Implementation Status: Production Ready
 
-BrewTracker now includes a comprehensive AI suggestions system that analyzes recipes and provides actionable recommendations for improvement. This system helps brewers create better, more balanced recipes that meet style guidelines using advanced brewing science and BJCP style analysis.
+BrewTracker now uses a **flowchart-based AI system** that replaced the previous monolithic approach. This system provides sequential, deterministic recipe optimization following brewing science principles and BJCP style guidelines.
 
-### Current Implementation
+### Architecture Overview
 
-#### Core Features (✅ COMPLETED)
-- **Enhanced Base Malt Intelligence**: Proportional increase across all base malts with intelligent style-aware selection
-- **Smart Base Malt Selection**: BeerStyleGuide integration with intelligent malt recommendations based on style characteristics
-- **Comprehensive Style Compliance**: Full BJCP integration with multi-metric optimization and priority-based suggestions
-- **Blackprinz Malt Addition**: Automatic addition of color-adjusting grains when SRM is too low and no roasted grains exist
-- **Hop Timing Optimization**: IBU-focused hop timing suggestions with conservative approach
-- **Unified Suggestion System**: Single comprehensive suggestion combining all optimizations with intelligent conflict resolution
-- **Stringent Quality Control**: Only shows "recipe looks good" when ALL style ranges are in spec AND base malt ≥55%
+#### Core Components
 
-#### Technical Architecture
+- **FlowchartAIService**: `backend/services/ai/flowchart_ai_service.py` - Main AI service orchestrator
+- **FlowchartEngine**: `backend/services/ai/flowchart_engine.py` - Workflow execution engine
+- **FlowchartNodes**: `backend/services/ai/flowchart_nodes.py` - Node type implementations
+- **OptimizationStrategies**: `backend/services/ai/optimization_strategies.py` - Recipe modification strategies
+- **RecipeContext**: `backend/services/ai/recipe_context.py` - Recipe data management and calculations
+- **WorkflowConfigLoader**: `backend/services/ai/workflow_config_loader.py` - YAML workflow loading
 
-##### Services
-- **EnhancedStyleComplianceService**: `frontend/src/services/EnhancedStyleComplianceService.ts`
-  - Full BJCP style analysis with characteristic detection
-  - Multi-metric optimization logic (OG, FG, ABV, IBU, SRM)
-  - Style-aware prioritization and target optimization
-  - Generates optimization targets with impact types (critical, important, nice-to-have)
+#### Workflow Definition
 
-- **SmartBaseMaltService**: `frontend/src/services/SmartBaseMaltService.ts`
-  - Intelligent base malt analysis and selection
-  - Style-aware grain bill recommendations
-  - Fermentability scoring and color contribution analysis
+- **Configuration**: `backend/services/ai/workflows/recipe_optimization.yaml` - Complete 9-step sequential optimization process
+- **Visual Reference**: `backend/services/ai/workflows/AI_flowchart.png` - Flowchart diagram
 
-- **CascadingEffectsService**: `frontend/src/services/CascadingEffectsService.ts`
-  - Predicts metric changes from ingredient adjustments
-  - Handles both existing ingredient modifications and new ingredient additions
-  - Accurate SRM, OG, FG, ABV, IBU calculations
+### Key Features
 
-##### Components
-- **AISuggestions**: `frontend/src/components/RecipeBuilder/AISuggestions.tsx`
-  - Main suggestion UI with comprehensive optimization display
-  - Unified suggestion system with detailed breakdown
-  - Support for new ingredient additions (Blackprinz Malt)
-  - Stringent "no suggestions" criteria with proper user feedback
+#### Sequential Gating System
 
-##### Key Features
+The system follows a 9-step sequential process:
 
-###### Style Characteristic Detection
-- **Hop-forward identification**: IBU thresholds and description analysis
-- **Malt-forward detection**: Flavor profile extraction from style text
-- **Color requirements**: Dark/light style analysis from SRM ranges
-- **Complexity assessment**: Simple/moderate/complex brewing requirements
+1. **Initial Metrics Check**: Verify if all metrics are already in range
+2. **OG Correction**: Original Gravity adjustments via base malt modifications
+3. **SRM Correction**: Color adjustments via specialty grain swaps and additions
+4. **FG Correction**: Final Gravity adjustments via yeast substitution
+5. **ABV Correction**: Alcohol content fine-tuning via targeted OG adjustments
+6. **IBU Correction**: Bitterness adjustments via hop timing and amount changes
+7. **Final Validation**: Ensure all metrics remain in range after corrections
+8. **Normalization**: Round amounts to brewing-friendly increments
+9. **Completion**: Recipe optimization finished
 
-###### Intelligent Malt Recommendations
-- **American IPA**: 2-Row for clean hop character
-- **American Stout**: Maris Otter for complementary biscuit notes
-- **German Lager**: Pilsner malt for authentic crisp profile
-- **Porter**: Munich malt for rich, malty character
+#### Intelligence Features
 
-###### New Ingredient Addition System
-- **Blackprinz Malt Addition**: Automatically suggests adding 450L color malt when:
-  - SRM is below style minimum
-  - No existing roasted grains are available to modify
-  - Calculates appropriate amounts (25g/0.5oz increments)
-  - Provides accurate SRM increase predictions
+- **Style-Aware Corrections**: Different strategies based on BJCP style characteristics
+- **Brewing-Realistic Changes**: All adjustments use standard brewing increments (25g/0.5oz)
+- **Cascade Prevention**: Sequential gating prevents metric interactions from causing loops
+- **Conservative Targeting**: Aims for 25% within style ranges to avoid edge cases
 
-###### Comprehensive Quality Control
-- **Stringent Compliance Checking**: `checkRecipeFullyCompliant()` function validates:
-  - Base malt percentage ≥55%
-  - ALL style metrics within BJCP ranges
-  - Ingredient amounts properly normalized
-- **Smart User Feedback**: 
-  - ✅ "Recipe Analysis Complete" only when truly compliant
-  - 🔍 "Analysis Complete - Manual Review Needed" when improvements needed but can't be auto-generated
+#### Advanced Strategies
 
-#### Current Suggestion Types
-1. **Smart Base Malt Selection** - Style-aware base malt recommendations with intelligent prioritization
-2. **Comprehensive Style Compliance** - BJCP-based multi-metric optimization
-3. **Blackprinz Malt Addition** - Automatic color adjustment via ingredient addition
-4. **Hop Timing Optimization** - IBU-focused timing adjustments (conservative approach)
-5. **Normalize Amounts** - Round ingredients to brewing-friendly increments
-6. **Yeast Selection** - Attenuation improvements from real-world data
+- **Base Malt Management**: Proportional increases/decreases maintaining existing ratios
+- **Specialty Grain Swaps**: Caramel malt substitutions for SRM adjustments
+- **Yeast Intelligence**: Attenuation-based strain recommendations from comprehensive database
+- **Hop Optimization**: Time-before-amount strategy for IBU adjustments
 
-#### Technical Implementation Details
+### Technical Implementation
 
-##### Data Flow
-1. **Style Analysis**: Load and analyze full BeerStyleGuide objects
-2. **Recipe Analysis**: Analyze current recipe metrics and ingredient composition
-3. **Issue Identification**: Detect areas for improvement based on brewing science and style guidelines
-4. **Solution Generation**: Create actionable ingredient changes with predicted effects
-5. **Unified Suggestion**: Combine all optimizations with intelligent conflict resolution
-6. **Impact Calculation**: Predict metric changes using CascadingEffectsService
-7. **Quality Control**: Apply stringent compliance checking before showing positive feedback
+#### Data Flow
 
-##### Key Algorithms
-- **Conflict Resolution**: Priority-based merging of ingredient changes
-- **SRM Calculation**: Accurate color prediction for Blackprinz additions
-- **Style Compliance**: Multi-metric optimization with weighted priorities
-- **Intelligent Merging**: Combines up to 6 different optimization types into single suggestion
+1. **Frontend Request**: Recipe data sent to `ai_routes.py`
+2. **Service Initialization**: FlowchartAIService loads workflow configuration
+3. **Context Creation**: RecipeContext wraps recipe data with calculation methods
+4. **Engine Execution**: FlowchartEngine executes workflow nodes sequentially
+5. **Strategy Application**: OptimizationStrategies modify recipe based on node results
+6. **Response**: Optimized recipe returned with change summary
 
-##### Error Handling & Validation
-- **Ingredient Validation**: Prevents invalid amounts (Infinity, negative, zero)
-- **Type Safety**: Comprehensive TypeScript interfaces for all suggestion types
-- **Graceful Fallbacks**: Handles missing style data and edge cases
-- **User Feedback**: Clear error messages and guidance for manual improvements
+#### Node Types
+
+- **Start/End Nodes**: Workflow entry and exit points
+- **Decision Nodes**: Metric evaluation and path routing
+- **Multi-Decision Nodes**: Complex branching based on multiple conditions
+- **Action Nodes**: Recipe modification operations
+
+#### Strategy Categories
+
+- **base_malt_reduction**: Reduce base malts for high OG
+- **base_malt_og_and_srm**: Increase dark base malts for low OG+SRM
+- **base_malt_og_only**: Increase light base malts for low OG only
+- **caramel_malt_swap**: Swap caramel malts for SRM adjustment
+- **roasted_malt_increase/decrease**: Modify roasted grains for SRM
+- **yeast_substitution**: Change yeast strains for FG adjustment
+- **abv_targeted**: Precise ABV targeting via OG modification
+- **hop_ibu_adjustment**: Hop timing and amount optimization
+- **normalize_amounts**: Round to brewing-friendly increments
 
 ### Integration Points
+
 - **Recipe Builder**: Seamlessly integrated into recipe building workflow
 - **BeerStyleGuide System**: Deep integration with BJCP style data
 - **Style Analysis**: Works with existing style compliance system
 - **Metrics Calculation**: Leverages existing brewing calculation engine
-- **Ingredient Management**: Supports both modifications and new ingredient additions
 - **Unit System**: Respects user metric/imperial preferences
 
-### Testing & Quality Assurance
-- **Comprehensive Test Coverage**: All services have extensive test suites
-- **TypeScript Compilation**: Strict type checking for all components
-- **Error Handling**: Validated edge cases and graceful degradation
-- **User Experience**: Tested with real brewing scenarios
-
 ### Performance Characteristics
-- **Fast Analysis**: Typically completes in <1 second
-- **Accurate Predictions**: Cascading effects calculations validated against brewing science
-- **Scalable Architecture**: Modular design supports future enhancements
-- **Memory Efficient**: Debounced calculations prevent excessive API calls
 
-### Future Roadmap
+- **Deterministic**: Same input always produces same output
+- **Fast Execution**: Typically completes in <1 second
+- **Memory Efficient**: Stateless execution with minimal memory footprint
+- **Scalable**: Modular design supports easy workflow modifications
 
-#### Phase 4: Advanced Color Management (🔄 PLANNED)
-- **Grain Interaction Modeling**: Complex color contribution calculations
-- **Smart Specialty Grain Swaps**: Maintain flavor while adjusting color
-- **Maillard Reaction Factors**: Account for brewing process effects on color
+### Testing Coverage
 
-#### Phase 5: Enhanced Hop System (🔄 PLANNED)
-- **IBU Targeting**: Precise hop adjustments to hit style IBU ranges
-- **Utilization Optimization**: Factor in OG effects on hop utilization
-- **Flavor Balance**: Consider bitterness-to-sweetness ratios
+- **FlowchartEngine Tests**: `backend/tests/test_flowchart_engine.py` - Core engine functionality
+- **Strategy Tests**: Individual optimization strategy validation
+- **Integration Tests**: End-to-end workflow execution
+- **Edge Case Handling**: Malformed recipes and extreme values
 
-#### Phase 6: Advanced Features (🔄 PLANNED)
-- **Fermentation Temperature Optimization**: Yeast strain-specific recommendations
-- **Water Chemistry Integration**: pH and mineral content suggestions
-- **Seasonal Ingredient Availability**: Suggest alternatives based on availability
+### Legacy System Migration
+
+The old monolithic `ai_service.py` system has been completely replaced with this flowchart-based architecture. Key improvements include:
+
+- **Deterministic Behavior**: Eliminates previous issues with iterative loops and string substitution errors
+- **Modular Design**: Each strategy is isolated and testable
+- **Clear Logic Flow**: YAML configuration makes optimization logic transparent
+- **Better Maintainability**: New optimization strategies can be added without touching core engine code
 
 ## Recent UI/UX Improvements
 
@@ -438,7 +410,7 @@ BrewTracker now includes a comprehensive AI suggestions system that analyzes rec
 - **Location**: `frontend/src/components/CompactRecipeCard.tsx`
 - **Features**: 
   - SRM color swatches with accurate beer color representation
-  - Compact metrics grid (OG, ABV, IBU, SRM)
+  - Enhanced metrics grid (OG, FG, ABV, IBU, SRM) with improved display order
   - Consistent action buttons (View, Edit, Brew)
   - Responsive design with mobile optimization
   - Comprehensive test coverage (26 test cases)
@@ -466,6 +438,13 @@ BrewTracker now includes a comprehensive AI suggestions system that analyzes rec
   - `tests/components/RecipeCard.test.tsx`
 - **Updated all imports and references**: Codebase now uses consistent component architecture
 - **Maintained test coverage**: All 1,671 tests passing after cleanup
+
+### Metrics Display Improvements
+
+- **Fixed Order Display**: All recipe metrics now display in consistent order (OG, FG, ABV, IBU, SRM)
+- **Enhanced FG Display**: Final Gravity now included in compact card metrics alongside SRM color swatch
+- **Color Integration**: SRM values positioned next to visual color swatches for better user experience
+- **Improved Consistency**: Unified metrics display across all recipe viewing contexts
 
 ## CI/CD and Quality Assurance
 
@@ -528,6 +507,16 @@ BrewTracker now includes a comprehensive AI suggestions system that analyzes rec
 4. **Types**: Define proper TypeScript interfaces before implementation
 5. **Documentation**: Update CLAUDE.md for significant architectural changes
 
+### Service Integration with Flowchart AI System
+
+When working with the AI system:
+
+1. **Use FlowchartAIService**: All AI requests should go through the main service
+2. **Understand Workflow**: Review `recipe_optimization.yaml` for optimization logic
+3. **Strategy Extension**: Add new strategies to `OptimizationStrategies` class
+4. **Node Types**: Understand decision/action/multi-decision node types
+5. **Testing**: Add workflow tests for new optimization paths
+
 # Important Instruction Reminders
 
 ## Core Principles
@@ -561,3 +550,15 @@ When tests are failing, systematically analyze each failure and apply this decis
 - Apply similar patterns across related components for uniformity
 - Maintain backward compatibility when possible
 - Document significant behavior changes in commit messages
+
+### AI System Development Notes
+
+- **Workflow Modifications**: Changes to optimization logic should be made in YAML configuration
+- **Strategy Implementation**: New optimization strategies go in `OptimizationStrategies` class
+- **Engine Extensions**: Core engine modifications require careful testing of all workflow paths
+- **Context Management**: Recipe data transformations should be handled in `RecipeContext`
+- **Testing Requirements**: All AI system changes require comprehensive test coverage
+
+### Legacy System Notes
+
+The old monolithic `ai_service.py` system has been completely replaced with the flowchart-based architecture. Any references to the old system in documentation or comments should be updated to reflect the new architecture.

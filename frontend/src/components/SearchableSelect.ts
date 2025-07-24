@@ -126,13 +126,11 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       setHighlightedIndex(0);
     } else if (query.length === 0) {
       // Show ALL options when no query, preserving original sorting from service
-      const allResults: ProcessedSearchResult<T>[] = options.map(
-        (item) => ({
-          item,
-          score: 0,
-          matches: [],
-        })
-      );
+      const allResults: ProcessedSearchResult<T>[] = options.map((item) => ({
+        item,
+        score: 0,
+        matches: [],
+      }));
       setSearchResults(allResults);
       setHighlightedIndex(-1);
     } else {
@@ -294,7 +292,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   // Format temperature range based on unit system
   const formatTemperatureRange = (min?: number, max?: number): string => {
     if (!min || !max) return "";
-    
+
     if (unitSystem === "metric") {
       const minC = convertTemperature(min);
       const maxC = convertTemperature(max);
@@ -308,9 +306,9 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   const formatGrainType = (grainType?: string): string => {
     if (!grainType) return "";
     return grainType
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // Get best attenuation value (prefer real-world data with high confidence)
@@ -323,7 +321,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     if (confidence >= 0.7 && actualAttenuation) {
       return actualAttenuation;
     }
-    
+
     // Fallback to manufacturer attenuation
     return manufacturerAttenuation || null;
   };
@@ -331,68 +329,71 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   // Render yeast-specific metadata
   const renderYeastMetadata = (option: any): string => {
     const parts: string[] = [];
-    
+
     // Add attenuation with label
     const attenuation = getBestAttenuation(option);
     if (attenuation) {
       parts.push(`${Math.round(attenuation)}% attenuation`);
     }
-    
+
     // Add temperature range
-    const tempRange = formatTemperatureRange(option.min_temperature, option.max_temperature);
+    const tempRange = formatTemperatureRange(
+      option.min_temperature,
+      option.max_temperature
+    );
     if (tempRange) {
       parts.push(tempRange);
     }
-    
+
     // Add manufacturer
     if (option.manufacturer) {
       parts.push(option.manufacturer);
     }
-    
-    return parts.join(' • ');
+
+    return parts.join(" • ");
   };
 
   // Render hop-specific metadata
   const renderHopMetadata = (option: any): string => {
     const parts: string[] = [];
-    
+
     // Add alpha acid percentage
     if (option.alpha_acid) {
       parts.push(`${option.alpha_acid}% AA`);
     }
-    
-    return parts.join(' • ');
+
+    return parts.join(" • ");
   };
 
   // Render grain-specific metadata
   const renderGrainMetadata = (option: any): string => {
     const parts: string[] = [];
-    
+
     // Add grain type
     const grainType = formatGrainType(option.grain_type);
     if (grainType) {
       parts.push(grainType);
     }
-    
+
     // Add color value
     if (option.color) {
       parts.push(`${option.color}°L`);
     }
-    
-    return parts.join(' • ');
+
+    return parts.join(" • ");
   };
 
   // Get metadata string based on ingredient type
   const getIngredientMetadata = (option: any): string => {
     if (!ingredientType) return "";
-    
+
     switch (ingredientType.toLowerCase()) {
-      case 'yeast':
+      case "yeast":
         return renderYeastMetadata(option);
-      case 'hop':
+      case "hop":
         return renderHopMetadata(option);
-      case 'grain':
-      case 'fermentable':
+      case "grain":
+      case "fermentable":
         return renderGrainMetadata(option);
       default:
         return "";
@@ -500,7 +501,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
               ),
 
             // Only show manufacturer separately if not yeast (yeast includes it in metadata)
-            (option as any).manufacturer && ingredientType?.toLowerCase() !== 'yeast' &&
+            (option as any).manufacturer &&
+              ingredientType?.toLowerCase() !== "yeast" &&
               React.createElement(
                 "div",
                 { className: "option-manufacturer" },
