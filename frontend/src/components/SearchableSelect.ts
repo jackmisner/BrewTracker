@@ -102,14 +102,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     return new Fuse(options, defaultFuseOptions);
   }, [options, searchKey, fuseOptions]);
 
-  // Sort options alphabetically for when no query is present
-  const sortedOptions = useMemo(() => {
-    return [...options].sort((a, b) => {
-      const nameA = ((a[displayKey as keyof T] as string) || "").toLowerCase();
-      const nameB = ((b[displayKey as keyof T] as string) || "").toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
-  }, [options, displayKey]);
+  // Use options as provided (already sorted by service) for when no query is present
 
   // Search with Fuse.js
   useEffect(() => {
@@ -128,8 +121,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       setSearchResults(processedResults);
       setHighlightedIndex(0);
     } else if (query.length === 0) {
-      // Show ALL options when no query, sorted alphabetically
-      const allResults: ProcessedSearchResult<T>[] = sortedOptions.map(
+      // Show ALL options when no query, preserving original sorting from service
+      const allResults: ProcessedSearchResult<T>[] = options.map(
         (item) => ({
           item,
           score: 0,
@@ -142,7 +135,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       setSearchResults([]);
       setHighlightedIndex(-1);
     }
-  }, [query, fuse, maxResults, minQueryLength, sortedOptions]);
+  }, [query, fuse, maxResults, minQueryLength, options]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {

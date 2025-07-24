@@ -16,7 +16,7 @@ export type HopUse =
   | "whirlpool"
   | "dry_hop"
   | "hop_back";
-export type YeastType = "ale" | "lager" | "wild" | "bacteria";
+export type YeastType = "lager" | "belgian_ale" | "english_ale" | "american_ale" | "wheat" | "wild";
 export type IngredientUnit =
   | "oz"
   | "lb"
@@ -79,6 +79,7 @@ export interface Ingredient extends BaseEntity {
   alpha_acid?: number; // Alpha acid percentage
 
   // Yeast-specific properties
+  yeast_type?: YeastType;
   attenuation?: number; // Attenuation percentage (theoretical/manufacturer spec)
   manufacturer?: string;
   code?: string;
@@ -101,6 +102,7 @@ export interface RecipeIngredient {
   name: string;
   type: IngredientType;
   grain_type?: GrainType;
+  yeast_type?: YeastType;
   amount: number;
   unit: IngredientUnit;
   use?: string;

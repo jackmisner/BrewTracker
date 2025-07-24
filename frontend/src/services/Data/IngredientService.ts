@@ -64,6 +64,67 @@ class IngredientService {
   }
 
   /**
+   * Custom sorting function for ingredients with special handling for caramel malts and candi syrups
+   */
+  private sortIngredientsCustom(ingredients: Ingredient[]): Ingredient[] {
+    return ingredients.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+
+      // Check for caramel malts (e.g., "caramel 60", "caramel/crystal 40L", "caramel malt - 120L")
+      const caramelRegex = /(?:caramel|crystal)[\s\/\-]*(?:malt[\s\-]*)?(\d+)l?/i;
+      const aCaramelMatch = aName.match(caramelRegex);
+      const bCaramelMatch = bName.match(caramelRegex);
+
+      if (aCaramelMatch && bCaramelMatch) {
+        // Both are caramel malts - sort by number
+        const aNum = parseInt(aCaramelMatch[1]);
+        const bNum = parseInt(bCaramelMatch[1]);
+        return aNum - bNum;
+      } else if (aCaramelMatch && !bCaramelMatch) {
+        // Only a is caramel - check if b starts with caramel/crystal
+        if (bName.startsWith('caramel') || bName.startsWith('crystal')) {
+          return -1; // a (with number) comes before b (without number)
+        }
+        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      } else if (!aCaramelMatch && bCaramelMatch) {
+        // Only b is caramel - check if a starts with caramel/crystal
+        if (aName.startsWith('caramel') || aName.startsWith('crystal')) {
+          return 1; // b (with number) comes before a (without number)
+        }
+        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      }
+
+      // Check for candi syrups (e.g., "D-45", "D-180")
+      const candiRegex = /d-(\d+)/i;
+      const aCandiMatch = aName.match(candiRegex);
+      const bCandiMatch = bName.match(candiRegex);
+
+      if (aCandiMatch && bCandiMatch) {
+        // Both are candi syrups - sort by number
+        const aNum = parseInt(aCandiMatch[1]);
+        const bNum = parseInt(bCandiMatch[1]);
+        return aNum - bNum;
+      } else if (aCandiMatch && !bCandiMatch) {
+        // Only a is candi syrup - check if b starts with 'candi' or 'd-'
+        if (bName.includes('candi') || bName.startsWith('d-')) {
+          return -1; // a (with number) comes before b (without number)
+        }
+        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      } else if (!aCandiMatch && bCandiMatch) {
+        // Only b is candi syrup - check if a starts with 'candi' or 'd-'
+        if (aName.includes('candi') || aName.startsWith('d-')) {
+          return 1; // b (with number) comes before a (without number)
+        }
+        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      }
+
+      // Default alphabetical sorting
+      return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  /**
    * Group ingredients by type
    */
   groupIngredientsByType(ingredients: Ingredient[]): IngredientsByType {
@@ -87,6 +148,11 @@ class IngredientService {
         );
         grouped.other.push(ingredient);
       }
+    });
+
+    // Sort each type with custom sorting logic
+    Object.keys(grouped).forEach((type) => {
+      grouped[type as keyof IngredientsByType] = this.sortIngredientsCustom(grouped[type as keyof IngredientsByType]);
     });
 
     return grouped;
