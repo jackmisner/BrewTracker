@@ -120,11 +120,29 @@ const OtherInput: React.FC<OtherInputProps> = ({
     }
   };
 
+  // Get default amount based on unit
+  const getDefaultAmount = (): string => {
+    const unit = otherForm.unit;
+    switch (unit) {
+      case "g":
+        return "5";
+      case "kg":
+        return "0.5";
+      case "oz":
+        return "0.5";
+      case "lb":
+        return "1";
+      default:
+        return "5";
+    }
+  };
+
   const handleOtherSelect = (selectedOther: Ingredient | null): void => {
     if (selectedOther) {
       setOtherForm((prev) => ({
         ...prev,
         ingredient_id: selectedOther.ingredient_id,
+        amount: prev.amount || getDefaultAmount(), // Set default amount if empty
         selectedIngredient: selectedOther,
       }));
 
@@ -140,6 +158,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
       setOtherForm((prev) => ({
         ...prev,
         ingredient_id: "",
+        amount: "", // Clear amount when no ingredient selected
         selectedIngredient: null,
       }));
     }
@@ -364,12 +383,15 @@ const OtherInput: React.FC<OtherInputProps> = ({
               name="amount"
               value={otherForm.amount}
               onChange={handleChange}
-              placeholder={getAmountPlaceholder()}
+              placeholder={
+                otherForm.selectedIngredient ? "Amount" : getAmountPlaceholder()
+              }
               className="amount-input"
               step="0.1"
               min="0"
               disabled={disabled}
               required
+              data-testid="other-amount-input"
             />
             <select
               name="unit"
@@ -377,6 +399,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               onChange={handleChange}
               className="unit-select"
               disabled={disabled}
+              data-testid="other-unit-select"
             >
               {getAvailableUnits().map((unit) => (
                 <option
@@ -404,6 +427,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               maxResults={15}
               minQueryLength={1}
               resetTrigger={resetTrigger}
+              data-testid="other-searchable-select"
             />
           </div>
 
@@ -443,6 +467,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
             type="submit"
             className="ingredient-add-button"
             disabled={disabled}
+            data-testid="add-other-button"
           >
             {disabled ? "Adding..." : "Add"}
           </button>

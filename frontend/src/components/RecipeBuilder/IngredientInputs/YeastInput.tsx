@@ -99,11 +99,24 @@ const YeastInput: React.FC<YeastInputProps> = ({
     }
   };
 
+  // Get default amount based on unit
+  const getDefaultAmount = (): string => {
+    switch (yeastForm.unit) {
+      case "pkg":
+        return "1";
+      case "g":
+        return "11";
+      default:
+        return "1";
+    }
+  };
+
   const handleYeastSelect = (selectedYeast: Ingredient | null): void => {
     if (selectedYeast) {
       setYeastForm((prev) => ({
         ...prev,
         ingredient_id: selectedYeast.ingredient_id,
+        amount: prev.amount || getDefaultAmount(), // Set default amount if empty
         selectedIngredient: selectedYeast,
       }));
 
@@ -119,6 +132,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
       setYeastForm((prev) => ({
         ...prev,
         ingredient_id: "",
+        amount: "", // Clear amount when no ingredient selected
         selectedIngredient: null,
       }));
     }
@@ -280,12 +294,15 @@ const YeastInput: React.FC<YeastInputProps> = ({
               value={yeastForm.amount}
               onChange={handleChange}
               className={`amount-input ${errors.amount ? "error" : ""}`}
-              placeholder={getAmountPlaceholder()}
+              placeholder={
+                yeastForm.selectedIngredient ? "Amount" : getAmountPlaceholder()
+              }
               step="0.5"
               min="0.5"
               max="20"
               disabled={disabled}
               required
+              data-testid="yeast-amount-input"
             />
             <select
               name="unit"
@@ -293,6 +310,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
               onChange={handleChange}
               className="unit-select"
               disabled={disabled}
+              data-testid="yeast-unit-select"
             >
               {getAvailableUnits().map((unit) => (
                 <option
@@ -320,6 +338,9 @@ const YeastInput: React.FC<YeastInputProps> = ({
               maxResults={12}
               minQueryLength={2}
               resetTrigger={resetTrigger}
+              ingredientType="yeast"
+              unitSystem={unitSystem}
+              data-testid="yeast-searchable-select"
             />
           </div>
 
@@ -328,6 +349,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
             type="submit"
             className="ingredient-add-button"
             disabled={disabled}
+            data-testid="add-yeast-button"
           >
             {disabled ? "Adding..." : "Add"}
           </button>
