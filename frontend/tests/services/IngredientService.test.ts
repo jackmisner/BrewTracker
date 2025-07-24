@@ -42,8 +42,8 @@ describe("IngredientService", () => {
         hop: [{ ingredient_id: 2, name: "Cascade", type: "hop" }],
         yeast: [{ ingredient_id: 3, name: "US-05", type: "yeast" }],
         other: [
-          { ingredient_id: 4, name: "Irish Moss", type: "adjunct" },
           { ingredient_id: 5, name: "Honey", type: "other" },
+          { ingredient_id: 4, name: "Irish Moss", type: "adjunct" },
         ],
       });
     });
