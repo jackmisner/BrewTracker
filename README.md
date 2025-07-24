@@ -56,7 +56,7 @@ homebrew-tracker/
 │   │   │   ├── recipe_context.py                         # Maintains recipe state throughout workflow execution, handles condition evaluation and strategy execution
 │   │   │   ├── workflow_config_loader.py                 # Provides utilities for loading and managing workflow configurations from YAML and JSON files
 │   │   │   └── workflows/
-│   │   │       ├── AI_flowchart.png                      # Graphical representation of the AI recipe Analysis/suggestion generator flowchart
+│   │   │       ├── AI_flowchart.png                      # Graphical representation of the AI recipe analysis flowchart (showcased in README)
 │   │   │       └── recipe_optimization.yaml              # Configuration file for recipe analysis flowchart. Defines all nodes and paths
 │   │   ├── attenuation_service.py                        # Service for collecting and analyzing real-world yeast attenuation data
 │   │   ├── ingredient_lookup_service.py                  # Provides centralized ingredient search, matching, and substitution logic for the AI optimization system.
@@ -319,6 +319,52 @@ Visit `http://localhost:3000` to access the application.
   - Responsive design optimized for desktop and mobile
   - Real-time recipe calculations and validation
   - Comprehensive search with Fuse.js fuzzy matching
+
+## 🤖 AI Recipe Analysis Engine
+
+BrewTracker features a sophisticated AI-powered recipe analysis engine that provides intelligent brewing suggestions and optimization recommendations. The engine uses a flowchart-based approach to systematically analyze recipes and provide actionable improvements.
+
+### Flowchart-Based Analysis System
+
+![AI Recipe Analysis Flowchart](AI_flowchart.png)
+
+_The comprehensive AI recipe analysis flowchart showing decision trees for IBU optimization, ABV/FG adjustments, SRM color balancing, OG targeting, and ingredient normalization._
+
+The AI engine follows a structured workflow that:
+
+1. **Analyzes Recipe Composition**: Evaluates ingredient ratios, base malt percentages, and overall recipe structure
+2. **Checks Style Compliance**: Compares recipes against BJCP style guidelines for accuracy and authenticity
+3. **Identifies Optimization Opportunities**: Detects areas for improvement in grain bills, hop schedules, and yeast selection
+4. **Generates Intelligent Suggestions**: Provides specific, actionable recommendations with predicted impacts
+5. **Validates Improvements**: Ensures suggestions maintain recipe integrity and brewing feasibility
+
+### Key AI Features
+
+- **Smart Base Malt Selection**: Style-aware malt recommendations (e.g., Pilsner for German lagers, 2-Row for American IPAs)
+- **Comprehensive Style Compliance**: Multi-metric optimization targeting OG, FG, ABV, IBU, and SRM ranges
+- **Automatic Color Adjustment**: Intelligent addition of color malts like Blackprinz when SRM is below style minimum
+- **Hop Timing Optimization**: IBU-focused timing adjustments with conservative brewing practices
+- **Ingredient Normalization**: Rounds ingredients to brewing-friendly increments (25g/0.5oz steps)
+- **Cascading Effects Prediction**: Accurately predicts how changes affect all recipe metrics
+
+### Technical Implementation
+
+The AI system is built using:
+
+- **Flowchart Engine**: Configurable YAML-based workflow execution (`backend/services/ai/flowchart_engine.py`)
+- **Optimization Strategies**: Modular brewing science algorithms (`backend/services/ai/optimization_strategies.py`)
+- **Recipe Context Management**: Stateful recipe analysis with condition evaluation (`backend/services/ai/recipe_context.py`)
+- **BJCP Integration**: Complete beer style guide integration for accurate style matching
+- **Real-time Calculations**: Instant metric updates using brewing calculation engine
+
+### Quality Control
+
+The system includes stringent quality checks:
+
+- ✅ **Full Compliance Validation**: Only shows "Recipe Analysis Complete" when ALL style metrics are within BJCP ranges
+- 🔍 **Manual Review Indicators**: Alerts when improvements are needed but can't be auto-generated
+- ⚖️ **Base Malt Requirements**: Ensures base malts constitute ≥55% of grain bill
+- 🎯 **Conservative Adjustments**: Prefers safe, proven brewing techniques over aggressive changes
 
 ## 💻 Tech Stack
 
