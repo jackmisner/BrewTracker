@@ -1458,4 +1458,33 @@ class MongoDBService:
                 )
                 # Keep original values if conversion fails
 
+        # Handle time unit conversion for hops and other ingredients with time
+        if "time" in normalized_data and normalized_data.get("time"):
+            time_value = normalized_data["time"]
+            time_unit = normalized_data.get("time_unit", "minutes")
+
+            # Convert time to minutes for consistent storage
+            try:
+                normalized_time = UnitConverter.convert_time_to_minutes(
+                    time_value, time_unit
+                )
+                normalized_data["time"] = normalized_time
+
+                # Remove time_unit from stored data since we always store in minutes
+                if "time_unit" in normalized_data:
+                    del normalized_data["time_unit"]
+
+                # Log the conversion for debugging
+                if time_unit.lower() != "minutes":
+                    print(
+                        f"Normalized time for {normalized_data.get('name', 'Unknown')}: "
+                        f"{time_value} {time_unit} -> {normalized_time} minutes"
+                    )
+
+            except Exception as e:
+                print(
+                    f"Warning: Could not normalize time for ingredient {normalized_data.get('name', 'Unknown')}: {e}"
+                )
+                # Keep original time value if conversion fails
+
         return normalized_data

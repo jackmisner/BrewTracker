@@ -465,3 +465,80 @@ class UnitConverter:
             return None  # Yeast often uses 'pkg' which we don't convert
 
         return base_units["weight"]  # Default to weight
+
+    @classmethod
+    def convert_time_to_minutes(cls, time_value, time_unit):
+        """
+        Convert time value to minutes for consistent storage
+
+        Args:
+            time_value: The time amount (int or float)
+            time_unit: The time unit ('minutes', 'days', 'hours')
+
+        Returns:
+            Time in minutes as integer
+        """
+        if not time_value or not time_unit:
+            return 0
+
+        time_value = float(time_value)
+        time_unit_lower = str(time_unit).lower()
+
+        if time_unit_lower in ["minute", "minutes", "min"]:
+            return int(time_value)
+        elif time_unit_lower in ["day", "days", "d"]:
+            return int(time_value * 1440)  # 1 day = 1440 minutes
+        elif time_unit_lower in ["hour", "hours", "hr", "h"]:
+            return int(time_value * 60)  # 1 hour = 60 minutes
+        else:
+            # Default to minutes if unknown unit
+            return int(time_value)
+
+    @classmethod
+    def convert_minutes_to_time_unit(cls, minutes, target_unit):
+        """
+        Convert minutes back to target time unit for display/editing
+
+        Args:
+            minutes: Time in minutes (int)
+            target_unit: Target unit ('minutes', 'days', 'hours')
+
+        Returns:
+            Time in target unit as float
+        """
+        if not minutes:
+            return 0.0
+
+        minutes = int(minutes)
+        target_unit_lower = str(target_unit).lower()
+
+        if target_unit_lower in ["minute", "minutes", "min"]:
+            return float(minutes)
+        elif target_unit_lower in ["day", "days", "d"]:
+            return round(minutes / 1440.0, 1)  # Convert to days with 1 decimal
+        elif target_unit_lower in ["hour", "hours", "hr", "h"]:
+            return round(minutes / 60.0, 1)  # Convert to hours with 1 decimal
+        else:
+            # Default to minutes if unknown unit
+            return float(minutes)
+
+    @classmethod
+    def get_time_unit_for_hop_use(cls, hop_use):
+        """
+        Get the appropriate time unit for a hop usage type
+
+        Args:
+            hop_use: The hop usage ('boil', 'whirlpool', 'dry-hop', etc.)
+
+        Returns:
+            Appropriate time unit string ('minutes' or 'days')
+        """
+        if not hop_use:
+            return "minutes"
+
+        hop_use_lower = str(hop_use).lower()
+
+        if hop_use_lower == "dry-hop":
+            return "days"
+        else:
+            return "minutes"
