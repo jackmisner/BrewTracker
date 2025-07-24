@@ -859,7 +859,7 @@ describe("IngredientManager", () => {
       await user.type(searchInput, "test");
 
       expect(
-        screen.getByText("Fuzzy search enabled - try partial matches or typos")
+        screen.getByText("Fuzzy search enabled - all sections expanded to show results")
       ).toBeInTheDocument();
     });
 
@@ -953,33 +953,68 @@ describe("IngredientManager", () => {
     });
 
     it("displays ingredient details correctly", async () => {
+      const user = userEvent.setup();
       render(<IngredientManager />);
 
+      // Wait for ingredients to load
       await waitFor(() => {
-        expect(screen.getByText("Pale Malt")).toBeInTheDocument();
-        expect(screen.getByText("Cascade")).toBeInTheDocument();
-        expect(screen.getByText("Wyeast 1056")).toBeInTheDocument();
+        expect(screen.getByText("Grains & Fermentables")).toBeInTheDocument();
       });
+
+      // Expand grain section to see "Pale Malt"
+      const grainHeader = screen.getByText("Grains & Fermentables").closest(".ingredient-type-header");
+      await user.click(grainHeader);
+
+      // Expand hop section to see "Cascade"
+      const hopHeader = screen.getByText("Hops").closest(".ingredient-type-header");
+      await user.click(hopHeader);
+
+      // Expand yeast section to see "Wyeast 1056"
+      const yeastHeaders = screen.getAllByText("Yeast");
+      const yeastHeader = yeastHeaders.find(el => el.closest(".ingredient-type-header"))?.closest(".ingredient-type-header");
+      await user.click(yeastHeader);
+
+      // Now check for ingredient names
+      expect(screen.getByText("Pale Malt")).toBeInTheDocument();
+      expect(screen.getByText("Cascade")).toBeInTheDocument();
+      expect(screen.getByText("Wyeast 1056")).toBeInTheDocument();
     });
 
     it("shows ingredient properties based on type", async () => {
+      const user = userEvent.setup();
       render(<IngredientManager />);
 
+      // Wait for ingredients to load
       await waitFor(() => {
-        // Grain properties
-        expect(screen.getByText("Color: 2.5°L")).toBeInTheDocument();
-        expect(
-          screen.getByText("Potential: 37 ppg (points per pound per gallon)")
-        ).toBeInTheDocument();
-
-        // Hop properties
-        expect(screen.getByText("AA: 5.5%")).toBeInTheDocument();
-
-        // Yeast properties
-        expect(screen.getByText("Attenuation: 81%")).toBeInTheDocument();
-        expect(screen.getByText("Mfg: Wyeast")).toBeInTheDocument();
-        expect(screen.getByText("Code: 1056")).toBeInTheDocument();
+        expect(screen.getByText("Grains & Fermentables")).toBeInTheDocument();
       });
+
+      // Expand grain section to see grain properties
+      const grainHeader = screen.getByText("Grains & Fermentables").closest(".ingredient-type-header");
+      await user.click(grainHeader);
+
+      // Check grain properties
+      expect(screen.getByText("Color: 2.5°L")).toBeInTheDocument();
+      expect(
+        screen.getByText("Potential: 37 ppg (points per pound per gallon)")
+      ).toBeInTheDocument();
+
+      // Expand hop section to see hop properties
+      const hopHeader = screen.getByText("Hops").closest(".ingredient-type-header");
+      await user.click(hopHeader);
+
+      // Check hop properties
+      expect(screen.getByText("AA: 5.5%")).toBeInTheDocument();
+
+      // Expand yeast section to see yeast properties
+      const yeastHeaders = screen.getAllByText("Yeast");
+      const yeastHeader = yeastHeaders.find(el => el.closest(".ingredient-type-header"))?.closest(".ingredient-type-header");
+      await user.click(yeastHeader);
+
+      // Check yeast properties
+      expect(screen.getByText("Attenuation: 81%")).toBeInTheDocument();
+      expect(screen.getByText("Mfg: Wyeast")).toBeInTheDocument();
+      expect(screen.getByText("Code: 1056")).toBeInTheDocument();
     });
 
     it("applies correct type colors", async () => {
