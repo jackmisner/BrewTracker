@@ -24,7 +24,6 @@ This repository contains two applications:
 
 ```
 homebrew-tracker/
-├── AI_flowchart.png                                     # AI recipe analysis flowchart diagram (see AI Engine section below)
 ├── backend/
 │   ├── app.py                                            # Flask application factory with auto-seeding, CORS, and blueprint registration
 │   ├── config.py                                         # Environment-specific configuration classes (development, testing, production)
@@ -329,7 +328,7 @@ BrewTracker features a sophisticated AI-powered recipe analysis engine that prov
 
 ![AI Recipe Analysis Flowchart](AI_flowchart.png)
 
-*The comprehensive AI recipe analysis flowchart showing decision trees for IBU optimization, ABV/FG adjustments, SRM color balancing, OG targeting, and ingredient normalization.*
+_The comprehensive AI recipe analysis flowchart showing decision trees for IBU optimization, ABV/FG adjustments, SRM color balancing, OG targeting, and ingredient normalization._
 
 The AI engine follows a structured workflow that:
 
@@ -351,6 +350,7 @@ The AI engine follows a structured workflow that:
 ### Technical Implementation
 
 The AI system is built using:
+
 - **Flowchart Engine**: Configurable YAML-based workflow execution (`backend/services/ai/flowchart_engine.py`)
 - **Optimization Strategies**: Modular brewing science algorithms (`backend/services/ai/optimization_strategies.py`)
 - **Recipe Context Management**: Stateful recipe analysis with condition evaluation (`backend/services/ai/recipe_context.py`)
@@ -360,6 +360,7 @@ The AI system is built using:
 ### Quality Control
 
 The system includes stringent quality checks:
+
 - ✅ **Full Compliance Validation**: Only shows "Recipe Analysis Complete" when ALL style metrics are within BJCP ranges
 - 🔍 **Manual Review Indicators**: Alerts when improvements are needed but can't be auto-generated
 - ⚖️ **Base Malt Requirements**: Ensures base malts constitute ≥55% of grain bill
