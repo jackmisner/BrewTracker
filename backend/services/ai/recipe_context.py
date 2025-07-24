@@ -72,11 +72,12 @@ class RecipeContext:
             from utils.recipe_api_calculator import calculate_all_metrics_preview
 
             metrics = calculate_all_metrics_preview(self.recipe)
-            
+
             # Calculate attenuation from yeast ingredients
             attenuation = 75.0  # Default attenuation
             yeast_ingredients = [
-                ing for ing in self.recipe.get("ingredients", []) 
+                ing
+                for ing in self.recipe.get("ingredients", [])
                 if ing.get("type") == "yeast"
             ]
             if yeast_ingredients:
@@ -88,13 +89,13 @@ class RecipeContext:
             # Convert to expected format (uppercase keys)
             formatted_metrics = {
                 "OG": round(metrics.get("og", 1.000), 3),
-                "FG": round(metrics.get("fg", 1.000), 3), 
+                "FG": round(metrics.get("fg", 1.000), 3),
                 "ABV": round(metrics.get("abv", 0.0), 1),
                 "IBU": round(metrics.get("ibu", 0.0), 1),
                 "SRM": round(metrics.get("srm", 0.0), 1),
                 "attenuation": round(attenuation, 1),
             }
-            
+
             logger.info(formatted_metrics)
             return formatted_metrics
 
