@@ -38,6 +38,16 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
+  // Get default amount based on unit system
+  const getDefaultAmount = (): string => {
+    const preferredUnit = getPreferredUnit("weight");
+    if (unitSystem === "metric") {
+      return preferredUnit === "kg" ? "1" : "1000";
+    } else {
+      return preferredUnit === "lb" ? "1" : "16";
+    }
+  };
+
   const [fermentableForm, setFermentableForm] = useState<FermentableFormData>({
     ingredient_id: "",
     color: "",
@@ -103,6 +113,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
         ...prev,
         ingredient_id: selectedFermentable.ingredient_id,
         color: selectedFermentable.color?.toString() || "",
+        amount: prev.amount || getDefaultAmount(), // Set default amount if empty
         selectedIngredient: selectedFermentable,
       }));
 
@@ -119,6 +130,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
         ...prev,
         ingredient_id: "",
         color: "",
+        amount: "", // Clear amount when no ingredient selected
         selectedIngredient: null,
       }));
     }
@@ -259,10 +271,15 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               step="0.1"
               min="0"
               max={unitSystem === "metric" ? "50000" : "1600"}
-              placeholder={getAmountPlaceholder()}
+              placeholder={
+                fermentableForm.selectedIngredient
+                  ? "Amount"
+                  : getAmountPlaceholder()
+              }
               className={`amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
+              data-testid="fermentable-amount-input"
             />
             <select
               id="fermentable-unit"
@@ -271,6 +288,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               onChange={handleChange}
               className="unit-select"
               disabled={disabled}
+              data-testid="fermentable-unit-select"
             >
               {getAvailableUnits().map((unit) => (
                 <option
@@ -298,6 +316,9 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               maxResults={100}
               minQueryLength={1}
               resetTrigger={resetTrigger}
+              ingredientType="fermentable"
+              unitSystem={unitSystem}
+              data-testid="fermentable-searchable-select"
             />
           </div>
 
@@ -309,12 +330,13 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               name="color"
               value={fermentableForm.color}
               onChange={handleChange}
-              step="0.5"
+              step="0.1"
               min="0"
               max="600"
               placeholder="Color"
               className={`color-input ${errors.color ? "error" : ""}`}
               disabled={disabled}
+              data-testid="fermentable-color-input"
             />
             <span className="color-unit">°L</span>
             {fermentableForm.color && getColorPreview()}
@@ -326,6 +348,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
             type="submit"
             className="ingredient-add-button"
             disabled={disabled}
+            data-testid="add-fermentable-button"
           >
             {disabled ? "Adding..." : "Add"}
           </button>

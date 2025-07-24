@@ -105,8 +105,20 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
       return; // Don't start editing if field isn't editable for this ingredient type
     }
 
+    let editValue = currentValue?.toString() || "";
+    
+    // Special handling for time field on dry-hop ingredients
+    if (field === "time" && ingredient.use === "dry-hop" && currentValue) {
+      // Convert stored minutes back to days for dry-hop editing
+      const minutes = parseInt(currentValue.toString());
+      if (!isNaN(minutes) && minutes >= 1440) { // If >= 1 day in minutes
+        const days = Math.round(minutes / 1440 * 10) / 10; // Round to 1 decimal
+        editValue = days.toString();
+      }
+    }
+
     setEditingCell({ ingredientId, field });
-    setEditValue(currentValue?.toString() || "");
+    setEditValue(editValue);
     setValidationError("");
   };
 
@@ -211,21 +223,38 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
         if (!trimmedValue) {
           return { isValid: true, value: 0 };
         }
-        const time = parseInt(trimmedValue);
+        const time = parseFloat(trimmedValue);
         if (isNaN(time) || time < 0) {
           return { isValid: false, error: "Time must be 0 or greater" };
         }
-        if (
-          time > 120 &&
-          ingredient.type === "hop" &&
-          ingredient.use === "boil"
-        ) {
-          return {
-            isValid: false,
-            error: "Boil time over 120 minutes is unusual",
-          };
+        
+        // Handle dry-hop validation and conversion
+        if (ingredient.use === "dry-hop") {
+          // Validate as days
+          if (time > 21) {
+            return {
+              isValid: false,
+              error: "Dry hop time over 21 days is unusual",
+            };
+          }
+          // Convert days to minutes for storage
+          const timeInMinutes = Math.round(time * 1440);
+          return { isValid: true, value: timeInMinutes };
+        } else {
+          // Handle as minutes for other hop uses
+          const timeInMinutes = Math.round(time);
+          if (
+            timeInMinutes > 120 &&
+            ingredient.type === "hop" &&
+            ingredient.use === "boil"
+          ) {
+            return {
+              isValid: false,
+              error: "Boil time over 120 minutes is unusual",
+            };
+          }
+          return { isValid: true, value: timeInMinutes };
         }
-        return { isValid: true, value: time };
 
       case "alpha_acid":
         if (!trimmedValue) {
@@ -368,8 +397,24 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     const inputType = ["amount", "time", "alpha_acid", "color"].includes(field)
       ? "number"
       : "text";
-    const step =
-      field === "amount" ? "0.1" : field === "alpha_acid" ? "0.1" : "1";
+    
+    // Determine step and placeholder based on field and ingredient type
+    let step = "1";
+    let placeholder = "";
+    
+    if (field === "amount") {
+      step = "0.1";
+    } else if (field === "alpha_acid") {
+      step = "0.1";
+    } else if (field === "time") {
+      if (ingredient.use === "dry-hop") {
+        step = "1";
+        placeholder = "days";
+      } else {
+        step = "1";
+        placeholder = "minutes";
+      }
+    }
 
     return (
       <div className="edit-cell-container">
@@ -382,9 +427,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           onKeyDown={handleKeyPress}
           step={step}
           min="0"
+          placeholder={placeholder}
           className="edit-cell-input"
+          title={field === "time" && ingredient.use === "dry-hop" ? "Enter time in days" : undefined}
         />
         {validationError && <div className="edit-error">{validationError}</div>}
+
       </div>
     );
   };
@@ -835,6 +883,8 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
             💡 <strong>Editable fields:</strong> Grains (amount, color) • Hops
             (amount, use, time, alpha acid) • Yeast (amount) • Other (amount,
             use, time)
+            <br />
+            <strong>Time units:</strong> Dry-hops in days, others in minutes
             <br />
             Press Enter to save, Escape to cancel.
           </small>

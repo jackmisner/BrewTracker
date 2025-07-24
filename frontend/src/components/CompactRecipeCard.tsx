@@ -41,6 +41,12 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
             {recipe.style || "No style specified"}
           </p>
         </div>
+          <div className="compact-metric-SRM">
+            <div className="compact-metric-value">
+              {formatSrm(recipe.estimated_srm)}
+            </div>
+            <div className="compact-metric-label">SRM</div>
+          </div>
         <div
           className="compact-color-swatch"
           style={{
@@ -60,6 +66,12 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
         </div>
         <div className="compact-metric">
           <div className="compact-metric-value">
+            {formatGravity(recipe.estimated_fg)}
+          </div>
+          <div className="compact-metric-label">FG</div>
+        </div>
+        <div className="compact-metric">
+          <div className="compact-metric-value">
             {formatAbv(recipe.estimated_abv)}
           </div>
           <div className="compact-metric-label">ABV</div>
@@ -69,12 +81,6 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
             {formatIbu(recipe.estimated_ibu)}
           </div>
           <div className="compact-metric-label">IBU</div>
-        </div>
-        <div className="compact-metric">
-          <div className="compact-metric-value">
-            {formatSrm(recipe.estimated_srm)}
-          </div>
-          <div className="compact-metric-label">SRM</div>
         </div>
       </div>
 

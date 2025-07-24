@@ -122,7 +122,7 @@ describe("CompactRecipeCard", () => {
     it("handles missing metric values gracefully", () => {
       renderWithRouter(<CompactRecipeCard recipe={mockRecipeMinimal} />);
       
-      expect(screen.getByText("1.000")).toBeInTheDocument(); // OG default
+      expect(screen.getAllByText("1.000")).toHaveLength(2); // OG and FG default to 1.000
       expect(screen.getByText("0.0%")).toBeInTheDocument(); // ABV default
       expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
       expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0
@@ -196,10 +196,10 @@ describe("CompactRecipeCard", () => {
       expect(metrics).toHaveLength(4);
       
       const metricValues = container.querySelectorAll(".compact-metric-value");
-      expect(metricValues).toHaveLength(4);
+      expect(metricValues).toHaveLength(5);
       
       const metricLabels = container.querySelectorAll(".compact-metric-label");
-      expect(metricLabels).toHaveLength(4);
+      expect(metricLabels).toHaveLength(5);
     });
 
     it("applies correct CSS classes to action buttons", () => {
@@ -268,7 +268,7 @@ describe("CompactRecipeCard", () => {
       
       renderWithRouter(<CompactRecipeCard recipe={zeroRecipe} />);
       
-      expect(screen.getByText("1.000")).toBeInTheDocument(); // OG formatted as 1.000
+      expect(screen.getAllByText("1.000")).toHaveLength(2); // OG and FG default to 1.000
       expect(screen.getByText("0.0%")).toBeInTheDocument(); // ABV
       expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
       expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0
@@ -288,7 +288,7 @@ describe("CompactRecipeCard", () => {
       renderWithRouter(<CompactRecipeCard recipe={undefinedRecipe} />);
       
       expect(screen.getByText("No style specified")).toBeInTheDocument();
-      expect(screen.getByText("1.000")).toBeInTheDocument();
+      expect(screen.getAllByText("1.000")).toHaveLength(2); // OG and FG default to 1.000
       expect(screen.getByText("0.0%")).toBeInTheDocument();
       expect(screen.getByText("0")).toBeInTheDocument(); // IBU shows 0
       expect(screen.getByText("0.0")).toBeInTheDocument(); // SRM shows 0.0

@@ -100,13 +100,13 @@ const HopInput: React.FC<HopInputProps> = ({
     if (name === "use") {
       if (value === "dry-hop") {
         updatedForm.time_unit = "days";
-        updatedForm.time = updatedForm.time || "3"; // Default to 3 days
+        updatedForm.time = getDefaultTimeForUse(value); // Always set to 3 days
       } else if (value === "boil") {
         updatedForm.time_unit = "minutes";
-        if (updatedForm.time === "3") updatedForm.time = ""; // Clear days default
+        updatedForm.time = getDefaultTimeForUse(value); // Always set to 60 minutes
       } else if (value === "whirlpool") {
         updatedForm.time_unit = "minutes";
-        updatedForm.time = updatedForm.time || "15"; // Default to 15 minutes
+        updatedForm.time = getDefaultTimeForUse(value); // Always set to 15 minutes
       }
     }
 
@@ -121,12 +121,46 @@ const HopInput: React.FC<HopInputProps> = ({
     }
   };
 
+  // Get default values based on unit system and hop use
+  const getDefaultAmount = (): string => {
+    return hopForm.unit === "oz" ? "1.0" : "30";
+  };
+
+  const getDefaultTime = (): string => {
+    switch (hopForm.use) {
+      case "boil":
+        return "60";
+      case "whirlpool":
+        return "15";
+      case "dry-hop":
+        return "3";
+      default:
+        return "0";
+    }
+  };
+
+  // Helper function to get default time for a specific use
+  const getDefaultTimeForUse = (use: string): string => {
+    switch (use) {
+      case "boil":
+        return "60";
+      case "whirlpool":
+        return "15";
+      case "dry-hop":
+        return "3";
+      default:
+        return "0";
+    }
+  };
+
   const handleHopSelect = (selectedHop: Ingredient | null): void => {
     if (selectedHop) {
       setHopForm((prev) => ({
         ...prev,
         ingredient_id: selectedHop.ingredient_id,
         alpha_acid: selectedHop.alpha_acid?.toString() || "",
+        amount: prev.amount || getDefaultAmount(), // Set default amount if empty
+        time: prev.time || getDefaultTime(), // Set default time if empty
         selectedIngredient: selectedHop,
       }));
 
@@ -143,6 +177,8 @@ const HopInput: React.FC<HopInputProps> = ({
         ...prev,
         ingredient_id: "",
         alpha_acid: "",
+        amount: "", // Clear amount when no ingredient selected
+        time: "", // Clear time when no ingredient selected
         selectedIngredient: null,
       }));
     }
@@ -258,11 +294,11 @@ const HopInput: React.FC<HopInputProps> = ({
   const getTimePlaceholder = (): string => {
     switch (hopForm.use) {
       case "boil":
-        return "60";
+        return "60 min";
       case "whirlpool":
-        return "15";
+        return "15 min";
       case "dry-hop":
-        return "3";
+        return "3 days";
       default:
         return "0";
     }
@@ -283,12 +319,12 @@ const HopInput: React.FC<HopInputProps> = ({
   };
 
   const getAmountPlaceholder = (): string => {
-    return hopForm.unit === "oz" ? "1.0" : "28";
+    return hopForm.unit === "oz" ? "1.0" : "30";
   };
 
   const getAmountGuidance = (): string => {
     if (unitSystem === "metric") {
-      return "Bittering hops: 14-56g, Aroma hops: 14-28g per 19L batch";
+      return "Bittering hops: 15-60g, Aroma hops: 15-30g per 19L batch";
     } else {
       return "Bittering hops: 0.5-2.0 oz, Aroma hops: 0.5-1.0 oz per 5 gal batch";
     }
@@ -311,10 +347,13 @@ const HopInput: React.FC<HopInputProps> = ({
               step="0.1"
               min="0"
               max={hopForm.unit === "oz" ? "10" : "300"}
-              placeholder={getAmountPlaceholder()}
+              placeholder={
+                hopForm.selectedIngredient ? "Amount" : getAmountPlaceholder()
+              }
               className={`amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
+              data-testid="hop-amount-input"
             />
             <select
               id="hop-unit"
@@ -323,6 +362,7 @@ const HopInput: React.FC<HopInputProps> = ({
               onChange={handleChange}
               className="unit-select"
               disabled={disabled}
+              data-testid="hop-unit-select"
             >
               {getAvailableUnits().map((unit) => (
                 <option
@@ -350,6 +390,9 @@ const HopInput: React.FC<HopInputProps> = ({
               maxResults={15}
               minQueryLength={1}
               resetTrigger={resetTrigger}
+              ingredientType="hop"
+              unitSystem={unitSystem}
+              data-testid="hop-searchable-select"
             />
           </div>
 
@@ -368,6 +411,7 @@ const HopInput: React.FC<HopInputProps> = ({
               className={`alpha-input ${errors.alpha_acid ? "error" : ""}`}
               disabled={disabled}
               required
+              data-testid="hop-alpha-acid-input"
             />
             <span className="alpha-unit">%AA</span>
           </div>
@@ -382,9 +426,12 @@ const HopInput: React.FC<HopInputProps> = ({
               onChange={handleChange}
               step="1"
               min="0"
-              placeholder={getTimePlaceholder()}
+              placeholder={
+                hopForm.selectedIngredient ? "Time" : getTimePlaceholder()
+              }
               className={`time-input ${errors.time ? "error" : ""}`}
               disabled={disabled}
+              data-testid="hop-time-input"
             />
             <select
               id="hop-time-unit"
@@ -393,6 +440,7 @@ const HopInput: React.FC<HopInputProps> = ({
               onChange={handleChange}
               className="time-unit-select"
               disabled={disabled}
+              data-testid="hop-time-unit-select"
             >
               <option value="minutes">min</option>
               <option value="days">days</option>
@@ -404,6 +452,7 @@ const HopInput: React.FC<HopInputProps> = ({
               onChange={handleChange}
               className="use-select"
               disabled={disabled}
+              data-testid="hop-use-select"
             >
               <option value="boil">Boil</option>
               <option value="whirlpool">Whirlpool</option>
@@ -417,6 +466,7 @@ const HopInput: React.FC<HopInputProps> = ({
             type="submit"
             className="ingredient-add-button"
             disabled={disabled}
+            data-testid="add-hop-button"
           >
             {disabled ? "Adding..." : "Add"}
           </button>

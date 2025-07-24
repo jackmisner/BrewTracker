@@ -124,25 +124,35 @@ describe("HopInput", () => {
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
     expect(screen.getByText("Hops")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("1.0")).toBeInTheDocument(); // Updated placeholder for imperial
+    expect(screen.getByTestId("hop-amount-input")).toBeInTheDocument(); // Updated placeholder for imperial
     expect(screen.getByDisplayValue("oz")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Alpha")).toBeInTheDocument();
+    expect(screen.getByTestId("hop-alpha-acid-input")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Boil")).toBeInTheDocument();
-    expect(screen.getByText("Add")).toBeInTheDocument();
+    expect(screen.getByTestId("add-hop-button")).toBeInTheDocument();
   });
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    // Select an ingredient but don't enter amount
+    // Select an ingredient (this will pre-fill amount and time)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
+    // Wait for pre-filling to complete
+    await waitFor(() => {
+      const amountInput = screen.getByTestId("hop-amount-input");
+      expect((amountInput as HTMLInputElement).value).toBe("1.0");
+    });
+
+    // Clear the pre-filled amount to test validation
+    const amountInput = screen.getByTestId("hop-amount-input");
+    await user.clear(amountInput);
+
     // Try to submit
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -157,11 +167,11 @@ describe("HopInput", () => {
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
     // Enter amount but don't select ingredient
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "1");
 
     // Try to submit
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -175,7 +185,7 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -184,10 +194,10 @@ describe("HopInput", () => {
     await user.type(searchableSelect!, "cascade");
 
     // Clear alpha acid that was auto-filled
-    const alphaInput = screen.getByPlaceholderText("Alpha");
+    const alphaInput = screen.getByTestId("hop-alpha-acid-input");
     await user.clear(alphaInput);
 
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -201,7 +211,7 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "15");
 
     const searchableSelect = screen
@@ -209,7 +219,7 @@ describe("HopInput", () => {
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -223,7 +233,7 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "1");
 
     // Change to grams
@@ -253,7 +263,7 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "1");
 
     const searchableSelect = screen
@@ -261,11 +271,11 @@ describe("HopInput", () => {
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const alphaInput = screen.getByPlaceholderText("Alpha");
+    const alphaInput = screen.getByTestId("hop-alpha-acid-input");
     await user.clear(alphaInput);
     await user.type(alphaInput, "30");
 
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -279,17 +289,22 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    // Boil is default use, but don't enter time
+    // Wait for ingredient selection and pre-filling
+    await waitFor(() => {
+      const timeInput = screen.getByTestId("hop-time-input");
+      expect((timeInput as HTMLInputElement).value).toBe("60");
+    });
 
-    const addButton = screen.getByText("Add");
+    // Clear the pre-filled time to test validation
+    const timeInput = screen.getByTestId("hop-time-input");
+    await user.clear(timeInput);
+
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -305,26 +320,30 @@ describe("HopInput", () => {
 
     renderWithUnitProvider(<HopInput {...defaultProps as any} onAdd={mockOnAdd} />);
 
-    // Fill out form
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
+    // Select ingredient first (this will pre-fill amount, alpha, and time)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const timeInput = screen.getByPlaceholderText("60");
-    await user.type(timeInput, "60");
+    // Wait for pre-filling to complete
+    await waitFor(() => {
+      const amountInput = screen.getByTestId("hop-amount-input");
+      const alphaInput = screen.getByTestId("hop-alpha-acid-input");
+      const timeInput = screen.getByTestId("hop-time-input");
+      expect((amountInput as HTMLInputElement).value).toBe("1.0");
+      expect((alphaInput as HTMLInputElement).value).toBe("5.5");
+      expect((timeInput as HTMLInputElement).value).toBe("60");
+    });
 
-    // Submit
-    const addButton = screen.getByText("Add");
+    // Submit (values are already pre-filled correctly)
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalledWith({
         ingredient_id: "hop-1",
-        amount: "1",
+        amount: "1.0",
         unit: "oz",
         alpha_acid: "5.5",
         use: "boil",
@@ -344,7 +363,7 @@ describe("HopInput", () => {
     await user.type(searchableSelect!, "centennial");
 
     await waitFor(() => {
-      const alphaInput = screen.getByPlaceholderText("Alpha");
+      const alphaInput = screen.getByTestId("hop-alpha-acid-input");
       expect((alphaInput as HTMLInputElement).value).toBe("10");
     });
   });
@@ -362,7 +381,7 @@ describe("HopInput", () => {
       expect(timeUnitSelect).toBeInTheDocument();
     });
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("15")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("15 min")).toBeInTheDocument();
     });
   });
 
@@ -417,7 +436,7 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const unitSelect = screen.getByDisplayValue("oz");
+    const unitSelect = screen.getByTestId("hop-unit-select");
     await user.selectOptions(unitSelect, "g");
 
     expect(screen.getByDisplayValue("g")).toBeInTheDocument();
@@ -429,20 +448,20 @@ describe("HopInput", () => {
 
     renderWithUnitProvider(<HopInput {...defaultProps as any} onAdd={mockOnAdd} />);
 
-    // Fill out form
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
+    // Select ingredient first (this will pre-fill values)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const timeInput = screen.getByPlaceholderText("60");
-    await user.type(timeInput, "60");
+    // Wait for pre-filling
+    await waitFor(() => {
+      const amountInput = screen.getByTestId("hop-amount-input");
+      expect((amountInput as HTMLInputElement).value).toBe("1.0");
+    });
 
     // Submit
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -451,11 +470,12 @@ describe("HopInput", () => {
 
     // Wait for form state to reset after successful submission
     await waitFor(() => {
+      const amountInput = screen.getByTestId("hop-amount-input");
       expect((amountInput as HTMLInputElement).value).toBe("");
     });
 
     await waitFor(() => {
-      expect((screen.getByPlaceholderText("Alpha") as HTMLInputElement).value).toBe("");
+      expect((screen.getByTestId("hop-alpha-acid-input") as HTMLInputElement).value).toBe("");
     });
   });
 
@@ -464,7 +484,7 @@ describe("HopInput", () => {
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
     // Trigger validation error
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -474,7 +494,7 @@ describe("HopInput", () => {
     });
 
     // Start typing in amount field
-    const amountInput = screen.getByPlaceholderText("1.0");
+    const amountInput = screen.getByTestId("hop-amount-input");
     await user.type(amountInput, "1");
 
     await waitFor(() => {
@@ -489,21 +509,21 @@ describe("HopInput", () => {
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
     renderWithUnitProvider(<HopInput {...defaultProps as any} onAdd={mockOnAdd} />);
-
-    // Fill out form
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
+    
+    // Select ingredient first (this will pre-fill all values correctly)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const timeInput = screen.getByPlaceholderText("60");
-    await user.type(timeInput, "60");
+    // Wait for pre-filling to complete
+    await waitFor(() => {
+      const amountInput = screen.getByTestId("hop-amount-input");
+      expect((amountInput as HTMLInputElement).value).toBe("1.0");
+    });
 
-    // Submit
-    const addButton = screen.getByText("Add");
+    // Submit (with valid data but mock will reject)
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -522,9 +542,9 @@ describe("HopInput", () => {
   test("disables form when disabled prop is true", () => {
     renderWithUnitProvider(<HopInput {...defaultProps as any} disabled={true} />);
 
-    expect(screen.getByPlaceholderText("1.0")).toBeDisabled();
+    expect(screen.getByTestId("hop-amount-input")).toBeDisabled();
     expect(screen.getByDisplayValue("oz")).toBeDisabled();
-    expect(screen.getByPlaceholderText("Alpha")).toBeDisabled();
+    expect(screen.getByTestId("hop-alpha-acid-input")).toBeDisabled();
     expect(screen.getByText("Adding...")).toBeDisabled();
   });
 
@@ -540,10 +560,6 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    // Fill required fields
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
@@ -553,17 +569,17 @@ describe("HopInput", () => {
     const useSelect = screen.getByDisplayValue("Boil");
     await user.selectOptions(useSelect, "dry-hop");
 
-    // Wait for the state change to complete (placeholder should change to "3")
+    // Wait for the state change to complete (placeholder should change to "3 days")
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("3")).toBeInTheDocument();
+      expect(screen.getByTestId("hop-time-input")).toBeInTheDocument();
     });
 
     // Clear the auto-filled time value to simulate missing time
-    const timeInput = screen.getByPlaceholderText("3");
+    const timeInput = screen.getByTestId("hop-time-input");
     await user.clear(timeInput);
 
     // Submit with cleared time
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     await user.click(addButton);
 
     // Wait for error message to appear
@@ -579,18 +595,15 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "cascade");
 
-    const timeInput = screen.getByPlaceholderText("60");
+    const timeInput = screen.getByTestId("hop-time-input");
     await user.type(timeInput, "150");
 
-    const addButton = screen.getByText("Add");
+    const addButton = screen.getByTestId("add-hop-button");
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -604,9 +617,6 @@ describe("HopInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
-    const amountInput = screen.getByPlaceholderText("1.0");
-    await user.type(amountInput, "1");
-
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
@@ -616,7 +626,7 @@ describe("HopInput", () => {
     const useSelect = screen.getByDisplayValue("Boil");
     await user.selectOptions(useSelect, "dry-hop");
 
-    const timeInput = screen.getByPlaceholderText("3");
+    const timeInput = screen.getByTestId("hop-time-input");
     await user.type(timeInput, "30");
 
     const addButton = screen.getByText("Add");
@@ -634,7 +644,7 @@ describe("HopInput", () => {
     renderWithUnitProvider(<HopInput {...defaultProps as any} />);
 
     // Default should be oz placeholder
-    expect(screen.getByPlaceholderText("1.0")).toBeInTheDocument();
+    expect(screen.getByTestId("hop-amount-input")).toBeInTheDocument();
 
     // Change to g
     const unitSelect = screen.getByDisplayValue("oz");
@@ -642,7 +652,7 @@ describe("HopInput", () => {
 
     // Should update to g placeholder
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("28")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("30")).toBeInTheDocument();
     });
   });
 });

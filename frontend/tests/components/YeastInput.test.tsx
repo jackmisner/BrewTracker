@@ -159,11 +159,19 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
 
-    // Select an ingredient but don't enter amount
-    const searchableSelect = screen
-      .getByTestId("searchable-select")
-      .querySelector("input");
-    await user.type(searchableSelect!, "us-05");
+    // First select an ingredient to enable the amount field pre-filling
+    const yeastInput = screen.getByTestId("searchable-select").querySelector("input");
+    await user.type(yeastInput!, "us-05");
+    
+    // Wait for ingredient selection to complete and pre-fill amount
+    await waitFor(() => {
+      const amountInput = screen.getByPlaceholderText("Amount");
+      expect((amountInput as HTMLInputElement).value).toBe("1");
+    });
+    
+    // Clear the pre-filled amount to test validation
+    const amountInput = screen.getByPlaceholderText("Amount");
+    await user.clear(amountInput);
 
     // Try to submit
     const addButton = screen.getByText("Add");
