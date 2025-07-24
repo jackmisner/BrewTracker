@@ -25,6 +25,8 @@ interface SearchableSelectProps<T = Ingredient> {
   minQueryLength?: number;
   resetTrigger?: any;
   fuseOptions?: any; // Use any instead of Fuse.IFuseOptions to avoid namespace issues
+  ingredientType?: string; // Type of ingredient for metadata display
+  unitSystem?: string; // Unit system for temperature conversion
 }
 
 const SearchableSelect = <T extends Record<string, any> = Ingredient>({
@@ -41,6 +43,8 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
   minQueryLength = 1,
   resetTrigger = null,
   fuseOptions = {},
+  ingredientType = "",
+  unitSystem = "imperial",
 }: SearchableSelectProps<T>): React.ReactElement => {
   const [query, setQuery] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -282,6 +286,119 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     return highlightedText;
   };
 
+  // Helper function to convert temperature from Fahrenheit to Celsius
+  const convertTemperature = (fahrenheit: number): number => {
+    return Math.round(((fahrenheit - 32) * 5) / 9);
+  };
+
+  // Format temperature range based on unit system
+  const formatTemperatureRange = (min?: number, max?: number): string => {
+    if (!min || !max) return "";
+    
+    if (unitSystem === "metric") {
+      const minC = convertTemperature(min);
+      const maxC = convertTemperature(max);
+      return `${minC}-${maxC}°C`;
+    } else {
+      return `${Math.round(min)}-${Math.round(max)}°F`;
+    }
+  };
+
+  // Format grain type for display
+  const formatGrainType = (grainType?: string): string => {
+    if (!grainType) return "";
+    return grainType
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Get best attenuation value (prefer real-world data with high confidence)
+  const getBestAttenuation = (option: any): number | null => {
+    const confidence = option.attenuation_confidence || 0;
+    const actualAttenuation = option.actual_attenuation_average;
+    const manufacturerAttenuation = option.attenuation;
+
+    // Use actual attenuation if confidence is high enough (>= 0.7)
+    if (confidence >= 0.7 && actualAttenuation) {
+      return actualAttenuation;
+    }
+    
+    // Fallback to manufacturer attenuation
+    return manufacturerAttenuation || null;
+  };
+
+  // Render yeast-specific metadata
+  const renderYeastMetadata = (option: any): string => {
+    const parts: string[] = [];
+    
+    // Add attenuation with label
+    const attenuation = getBestAttenuation(option);
+    if (attenuation) {
+      parts.push(`${Math.round(attenuation)}% attenuation`);
+    }
+    
+    // Add temperature range
+    const tempRange = formatTemperatureRange(option.min_temperature, option.max_temperature);
+    if (tempRange) {
+      parts.push(tempRange);
+    }
+    
+    // Add manufacturer
+    if (option.manufacturer) {
+      parts.push(option.manufacturer);
+    }
+    
+    return parts.join(' • ');
+  };
+
+  // Render hop-specific metadata
+  const renderHopMetadata = (option: any): string => {
+    const parts: string[] = [];
+    
+    // Add alpha acid percentage
+    if (option.alpha_acid) {
+      parts.push(`${option.alpha_acid}% AA`);
+    }
+    
+    return parts.join(' • ');
+  };
+
+  // Render grain-specific metadata
+  const renderGrainMetadata = (option: any): string => {
+    const parts: string[] = [];
+    
+    // Add grain type
+    const grainType = formatGrainType(option.grain_type);
+    if (grainType) {
+      parts.push(grainType);
+    }
+    
+    // Add color value
+    if (option.color) {
+      parts.push(`${option.color}°L`);
+    }
+    
+    return parts.join(' • ');
+  };
+
+  // Get metadata string based on ingredient type
+  const getIngredientMetadata = (option: any): string => {
+    if (!ingredientType) return "";
+    
+    switch (ingredientType.toLowerCase()) {
+      case 'yeast':
+        return renderYeastMetadata(option);
+      case 'hop':
+        return renderHopMetadata(option);
+      case 'grain':
+      case 'fermentable':
+        return renderGrainMetadata(option);
+      default:
+        return "";
+    }
+  };
+
   return React.createElement(
     "div",
     { className: `searchable-select ${className}` },
@@ -374,7 +491,16 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
                 },
               }),
 
-            (option as any).manufacturer &&
+            // Render ingredient-specific metadata
+            getIngredientMetadata(option) &&
+              React.createElement(
+                "div",
+                { className: "option-metadata" },
+                getIngredientMetadata(option)
+              ),
+
+            // Only show manufacturer separately if not yeast (yeast includes it in metadata)
+            (option as any).manufacturer && ingredientType?.toLowerCase() !== 'yeast' &&
               React.createElement(
                 "div",
                 { className: "option-manufacturer" },
