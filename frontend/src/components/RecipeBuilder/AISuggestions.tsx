@@ -72,73 +72,83 @@ interface AISuggestionsProps {
 }
 
 // Helper function to generate changes summary using optimized recipe values (rounded)
-const getOptimizedChangesSummary = (currentIngredients: RecipeIngredient[], optimizedIngredients: any[]): any[] => {
+const getOptimizedChangesSummary = (
+  currentIngredients: RecipeIngredient[],
+  optimizedIngredients: any[]
+): any[] => {
   const changes: any[] = [];
-  
+
   // Track ingredient modifications and additions
   for (const optimizedIng of optimizedIngredients) {
     const currentIng = currentIngredients.find(
-      (ing) => ing.ingredient_id === optimizedIng.ingredient_id || ing.name === optimizedIng.name
+      (ing) =>
+        ing.ingredient_id === optimizedIng.ingredient_id ||
+        ing.name === optimizedIng.name
     );
-    
+
     if (currentIng) {
       // Check for modifications
       const modifications: any[] = [];
-      
+
       if (currentIng.amount !== optimizedIng.amount) {
         modifications.push({
-          field: 'amount',
+          field: "amount",
           original_value: currentIng.amount,
           optimized_value: optimizedIng.amount,
-          unit: optimizedIng.unit || currentIng.unit
+          unit: optimizedIng.unit || currentIng.unit,
         });
       }
-      
-      if (currentIng.time !== optimizedIng.time && optimizedIng.time !== undefined) {
+
+      if (
+        currentIng.time !== optimizedIng.time &&
+        optimizedIng.time !== undefined
+      ) {
         modifications.push({
-          field: 'time',
+          field: "time",
           original_value: currentIng.time,
           optimized_value: optimizedIng.time,
-          unit: 'min'
+          unit: "min",
         });
       }
-      
+
       if (modifications.length > 0) {
         changes.push({
-          type: 'ingredient_modified',
+          type: "ingredient_modified",
           ingredient_name: optimizedIng.name,
           ingredient_type: optimizedIng.type,
-          changes: modifications
+          changes: modifications,
         });
       }
     } else {
       // New ingredient added
       changes.push({
-        type: 'ingredient_added',
+        type: "ingredient_added",
         ingredient_name: optimizedIng.name,
         ingredient_type: optimizedIng.type,
         amount: optimizedIng.amount,
-        unit: optimizedIng.unit
+        unit: optimizedIng.unit,
       });
     }
   }
-  
+
   // Track ingredient removals
   for (const currentIng of currentIngredients) {
     const stillExists = optimizedIngredients.find(
-      (optIng) => optIng.ingredient_id === currentIng.ingredient_id || optIng.name === currentIng.name
+      (optIng) =>
+        optIng.ingredient_id === currentIng.ingredient_id ||
+        optIng.name === currentIng.name
     );
     if (!stillExists) {
       changes.push({
-        type: 'ingredient_removed',
+        type: "ingredient_removed",
         ingredient_name: currentIng.name,
         ingredient_type: currentIng.type,
         amount: currentIng.amount,
-        unit: currentIng.unit
+        unit: currentIng.unit,
       });
     }
   }
-  
+
   return changes;
 };
 
@@ -306,7 +316,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         recipe_data: recipeData,
         style_id: styleId,
         unit_system: unitSystem,
-        workflow_name: "recipe_optimization"
+        workflow_name: "recipe_optimization",
       });
 
       // Check if internal optimization was performed
@@ -409,8 +419,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             potential: foundIngredient.potential || 1.035,
             use:
               change.newIngredientData.use ||
-              (foundIngredient.type === "hop" ? "boil" : 
-               foundIngredient.type === "yeast" ? "fermentation" : "mash"),
+              (foundIngredient.type === "hop"
+                ? "boil"
+                : foundIngredient.type === "yeast"
+                ? "fermentation"
+                : "mash"),
             time:
               change.newIngredientData.time ||
               (foundIngredient.type === "hop" ? 60 : undefined),
@@ -574,8 +587,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     generateSuggestions();
   };
 
-
-
   // Apply optimized recipe
   const applyOptimizedRecipe = async (
     optimization: OptimizationResult
@@ -587,9 +598,14 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       // The optimized recipe contains the final rounded values we want to apply
       const optimizedRecipe = optimization.optimizedRecipe;
       const optimizedIngredients = optimizedRecipe?.ingredients || [];
-      
+
       console.log("🔍 FRONTEND: Using optimized recipe with rounded values");
-      console.log("🔍 FRONTEND: Optimized ingredients:", optimizedIngredients.map((ing: any) => `${ing.name} (${ing.amount}${ing.unit})`));
+      console.log(
+        "🔍 FRONTEND: Optimized ingredients:",
+        optimizedIngredients.map(
+          (ing: any) => `${ing.name} (${ing.amount}${ing.unit})`
+        )
+      );
 
       // Convert optimized ingredients to bulk update format
       const allBulkUpdates: Array<{
@@ -600,40 +616,52 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       // Step 1: Remove ingredients that should be removed
       // Special handling for yeast - if optimization includes a new yeast, remove all existing yeast
-      const hasNewYeast = optimizedIngredients.some((ing: any) => ing.type === 'yeast' && 
-        !ingredients.some(existing => existing.ingredient_id === ing.ingredient_id)
+      const hasNewYeast = optimizedIngredients.some(
+        (ing: any) =>
+          ing.type === "yeast" &&
+          !ingredients.some(
+            (existing) => existing.ingredient_id === ing.ingredient_id
+          )
       );
-      
-      const ingredientsToRemove = ingredients.filter(currentIng => {
+
+      const ingredientsToRemove = ingredients.filter((currentIng) => {
         // If we're adding a new yeast, remove all existing yeast ingredients
-        if (hasNewYeast && currentIng.type === 'yeast') {
-          console.log(`🔍 FRONTEND: Removing existing yeast for replacement: ${currentIng.name}`);
+        if (hasNewYeast && currentIng.type === "yeast") {
+          console.log(
+            `🔍 FRONTEND: Removing existing yeast for replacement: ${currentIng.name}`
+          );
           return true;
         }
-        
+
         // For non-yeast ingredients, check if they still exist in optimized recipe
         const stillExists = optimizedIngredients.find(
-          (optIng: any) => optIng.ingredient_id === currentIng.ingredient_id || 
-          (optIng.name === currentIng.name && optIng.type === currentIng.type)
+          (optIng: any) =>
+            optIng.ingredient_id === currentIng.ingredient_id ||
+            (optIng.name === currentIng.name && optIng.type === currentIng.type)
         );
         return !stillExists;
       });
 
-      console.log(`🔍 FRONTEND: Removing ${ingredientsToRemove.length} ingredients:`, ingredientsToRemove.map(ing => ing.name));
-      
+      console.log(
+        `🔍 FRONTEND: Removing ${ingredientsToRemove.length} ingredients:`,
+        ingredientsToRemove.map((ing) => ing.name)
+      );
+
       // Remove ingredients that should be removed
       if (onRemoveIngredient) {
         for (const ingToRemove of ingredientsToRemove) {
           if (ingToRemove.id) {
-            console.log(`🔍 FRONTEND: Removing ingredient: ${ingToRemove.name}`);
+            console.log(
+              `🔍 FRONTEND: Removing ingredient: ${ingToRemove.name}`
+            );
             await onRemoveIngredient(ingToRemove.id);
           }
         }
-        
+
         // Add a small delay to ensure removal state updates have propagated
         if (ingredientsToRemove.length > 0) {
           console.log(`🔍 FRONTEND: Waiting for removal state to update...`);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
@@ -641,17 +669,21 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       for (const optimizedIng of optimizedIngredients) {
         // Check if this is an existing ingredient (that wasn't removed)
         // After removal, we need to check against remaining ingredients only
-        const remainingIngredients = ingredients.filter(ing => 
-          !ingredientsToRemove.some(removed => removed.id === ing.id)
+        const remainingIngredients = ingredients.filter(
+          (ing) => !ingredientsToRemove.some((removed) => removed.id === ing.id)
         );
-        
+
         const existingIngredient = remainingIngredients.find(
-          (ing) => ing.ingredient_id === optimizedIng.ingredient_id || ing.name === optimizedIng.name
+          (ing) =>
+            ing.ingredient_id === optimizedIng.ingredient_id ||
+            ing.name === optimizedIng.name
         );
 
         if (existingIngredient) {
           // Update existing ingredient with optimized values
-          console.log(`🔍 FRONTEND: Updating existing ingredient: ${existingIngredient.name}`);
+          console.log(
+            `🔍 FRONTEND: Updating existing ingredient: ${existingIngredient.name}`
+          );
           allBulkUpdates.push({
             ingredientId: existingIngredient.id!,
             updatedData: {
@@ -659,26 +691,41 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               amount: optimizedIng.amount,
               unit: optimizedIng.unit,
               use: optimizedIng.use || existingIngredient.use,
-              time: optimizedIng.time !== undefined ? optimizedIng.time : existingIngredient.time,
-              alpha_acid: optimizedIng.alpha_acid || existingIngredient.alpha_acid,
+              time:
+                optimizedIng.time !== undefined
+                  ? optimizedIng.time
+                  : existingIngredient.time,
+              alpha_acid:
+                optimizedIng.alpha_acid || existingIngredient.alpha_acid,
               color: optimizedIng.color || existingIngredient.color,
-              attenuation: optimizedIng.attenuation || existingIngredient.attenuation,
+              attenuation:
+                optimizedIng.attenuation || existingIngredient.attenuation,
             },
           });
         } else {
           // Add new ingredient - get complete data from cached ingredients
-          console.log(`🔍 FRONTEND: Adding new ingredient: ${optimizedIng.name} (not found in remaining ingredients)`);
-          
+          console.log(
+            `🔍 FRONTEND: Adding new ingredient: ${optimizedIng.name} (not found in remaining ingredients)`
+          );
+
           try {
             // Get cached ingredient data
-            const availableIngredients = await Services.Data.ingredient.fetchIngredients();
-            const ingredientType = optimizedIng.type as keyof typeof availableIngredients;
-            const completeIngredientData = availableIngredients[ingredientType]?.find(
-              (ing: any) => String(ing.ingredient_id) === String(optimizedIng.ingredient_id)
+            const availableIngredients =
+              await Services.Data.ingredient.fetchIngredients();
+            const ingredientType =
+              optimizedIng.type as keyof typeof availableIngredients;
+            const completeIngredientData = availableIngredients[
+              ingredientType
+            ]?.find(
+              (ing: any) =>
+                String(ing.ingredient_id) === String(optimizedIng.ingredient_id)
             );
-            
-            console.log(`🔍 FRONTEND: Complete ingredient data for ${optimizedIng.name}:`, completeIngredientData);
-            
+
+            console.log(
+              `🔍 FRONTEND: Complete ingredient data for ${optimizedIng.name}:`,
+              completeIngredientData
+            );
+
             allBulkUpdates.push({
               ingredientId: optimizedIng.ingredient_id,
               updatedData: {
@@ -687,18 +734,28 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 type: optimizedIng.type,
                 amount: optimizedIng.amount,
                 unit: optimizedIng.unit,
-                use: optimizedIng.use || (optimizedIng.type === 'yeast' ? 'fermentation' : 'mash'),
+                use:
+                  optimizedIng.use ||
+                  (optimizedIng.type === "yeast" ? "fermentation" : "mash"),
                 time: optimizedIng.time || 0,
-                alpha_acid: completeIngredientData?.alpha_acid || optimizedIng.alpha_acid,
+                alpha_acid:
+                  completeIngredientData?.alpha_acid || optimizedIng.alpha_acid,
                 color: completeIngredientData?.color || optimizedIng.color,
-                attenuation: completeIngredientData?.attenuation || optimizedIng.attenuation,
-                grain_type: completeIngredientData?.grain_type || optimizedIng.grain_type,
-                potential: completeIngredientData?.potential || optimizedIng.potential,
+                attenuation:
+                  completeIngredientData?.attenuation ||
+                  optimizedIng.attenuation,
+                grain_type:
+                  completeIngredientData?.grain_type || optimizedIng.grain_type,
+                potential:
+                  completeIngredientData?.potential || optimizedIng.potential,
               },
               isNewIngredient: true,
             });
           } catch (error) {
-            console.error(`❌ FRONTEND: Failed to get cached ingredient data for ${optimizedIng.name}:`, error);
+            console.error(
+              `❌ FRONTEND: Failed to get cached ingredient data for ${optimizedIng.name}:`,
+              error
+            );
             // Fallback to optimized ingredient data
             allBulkUpdates.push({
               ingredientId: optimizedIng.ingredient_id,
@@ -708,7 +765,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                 type: optimizedIng.type,
                 amount: optimizedIng.amount,
                 unit: optimizedIng.unit,
-                use: optimizedIng.use || (optimizedIng.type === 'yeast' ? 'fermentation' : 'mash'),
+                use:
+                  optimizedIng.use ||
+                  (optimizedIng.type === "yeast" ? "fermentation" : "mash"),
                 time: optimizedIng.time || 0,
                 alpha_acid: optimizedIng.alpha_acid,
                 color: optimizedIng.color,
@@ -723,22 +782,39 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       // Apply all changes as a single bulk update
-      console.log("🔍 FRONTEND: Applying optimized recipe with", allBulkUpdates.length, "updates");
-      
+      console.log(
+        "🔍 FRONTEND: Applying optimized recipe with",
+        allBulkUpdates.length,
+        "updates"
+      );
+
       // Filter out any updates that try to update removed ingredients
-      const filteredBulkUpdates = allBulkUpdates.filter(update => {
-        const isRemoved = ingredientsToRemove.some(removed => removed.id === update.ingredientId);
+      const filteredBulkUpdates = allBulkUpdates.filter((update) => {
+        const isRemoved = ingredientsToRemove.some(
+          (removed) => removed.id === update.ingredientId
+        );
         if (isRemoved) {
-          console.log(`🔍 FRONTEND: Skipping update for removed ingredient: ${update.ingredientId}`);
+          console.log(
+            `🔍 FRONTEND: Skipping update for removed ingredient: ${update.ingredientId}`
+          );
         }
         return !isRemoved;
       });
-      
-      console.log("🔍 FRONTEND: Filtered bulk updates:", filteredBulkUpdates.length, "updates after removing", allBulkUpdates.length - filteredBulkUpdates.length, "updates for removed ingredients");
+
+      console.log(
+        "🔍 FRONTEND: Filtered bulk updates:",
+        filteredBulkUpdates.length,
+        "updates after removing",
+        allBulkUpdates.length - filteredBulkUpdates.length,
+        "updates for removed ingredients"
+      );
 
       // Apply optimized recipe directly using bulk update
       if (filteredBulkUpdates.length > 0) {
-        console.log("🔍 FRONTEND: Total bulk updates to apply:", filteredBulkUpdates.length);
+        console.log(
+          "🔍 FRONTEND: Total bulk updates to apply:",
+          filteredBulkUpdates.length
+        );
         console.log("🔍 FRONTEND: Bulk updates details:", filteredBulkUpdates);
 
         await onBulkIngredientUpdate(filteredBulkUpdates);
@@ -747,7 +823,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       // Clear the optimization result and show success message
-      console.log("🔍 FRONTEND: Successfully applied all changes, clearing optimization result");
+      console.log(
+        "🔍 FRONTEND: Successfully applied all changes, clearing optimization result"
+      );
       setOptimizationResult(null);
       setHasAnalyzed(false);
     } catch (error) {
@@ -824,45 +902,44 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             </div>
           )}
 
-
           {hasAnalyzed && !analyzing && optimizationResult && (
             <div className="optimization-results">
               <h4 className="optimization-title">
                 Recipe Optimization Complete!
               </h4>
-              <p className="optimization-subtitle">
-                Internal optimization completed in{" "}
-                <strong>
-                  {optimizationResult.iterationsCompleted} iterations
-                </strong>
-              </p>
 
               {/* Metrics comparison */}
               <div className="metrics-improvement">
                 <h5>Metrics Improvement</h5>
                 <div className="metrics-grid">
-                  {Object.entries(optimizationResult.originalMetrics || {}).map(
-                    ([metric, originalValue]) => {
-                      const optimizedValue =
-                        optimizationResult.optimizedMetrics?.[metric];
-                      const isImproved = originalValue !== optimizedValue;
-                      return (
-                        <div key={metric} className="metric-item">
-                          <div className="metric-label">{metric}</div>
-                          <div
-                            className={`metric-value ${
-                              isImproved ? "improved" : ""
-                            }`}
-                          >
-                            {originalValue} → {optimizedValue}
-                            {isImproved && (
-                              <span className="metric-checkmark">✓</span>
-                            )}
-                          </div>
+                  {["OG", "FG", "ABV", "IBU", "SRM"].map((metric) => {
+                    const originalValue =
+                      optimizationResult.originalMetrics?.[metric];
+                    const optimizedValue =
+                      optimizationResult.optimizedMetrics?.[metric];
+                    // Only render if the metric exists
+                    if (
+                      originalValue === undefined &&
+                      optimizedValue === undefined
+                    )
+                      return null;
+                    const isImproved = originalValue !== optimizedValue;
+                    return (
+                      <div key={metric} className="metric-item">
+                        <div className="metric-label">{metric}</div>
+                        <div
+                          className={`metric-value ${
+                            isImproved ? "improved" : ""
+                          }`}
+                        >
+                          {originalValue} → {optimizedValue}
+                          {isImproved && (
+                            <span className="metric-checkmark">✓</span>
+                          )}
                         </div>
-                      );
-                    }
-                  )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -870,100 +947,110 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               {optimizationResult.optimizedRecipe?.ingredients && (
                 <div className="changes-made">
                   <h5>
-                    Changes Made ({getOptimizedChangesSummary(ingredients, optimizationResult.optimizedRecipe.ingredients).length})
+                    Changes Made (
+                    {
+                      getOptimizedChangesSummary(
+                        ingredients,
+                        optimizationResult.optimizedRecipe.ingredients
+                      ).length
+                    }
+                    )
                   </h5>
                   <div className="changes-scroll">
-                    {getOptimizedChangesSummary(ingredients, optimizationResult.optimizedRecipe.ingredients)
-                      .map((change, idx) => (
-                        <div
-                          key={idx}
-                          className={`change-item ${
-                            change.ingredient_type || ""
-                          }`}
-                        >
-                          {change.type === "ingredient_modified" && (
-                            <div>
-                              <strong>{change.ingredient_name}:</strong>{" "}
-                              {change.changes &&
-                              Array.isArray(change.changes) ? (
-                                // Consolidated changes - multiple field changes
-                                <div className="consolidated-changes">
-                                  {change.changes.map(
-                                    (fieldChange: any, fieldIdx: number) => (
-                                      <div
-                                        key={fieldIdx}
-                                        className="consolidated-change-item"
-                                      >
-                                        <span>
-                                          • {fieldChange.field} changed from{" "}
-                                          {fieldChange.field === "amount"
-                                            ? formatIngredientAmount(
-                                                fieldChange.original_value,
-                                                fieldChange.unit || "g",
-                                                "grain",
-                                                unitSystem
-                                              )
-                                            : fieldChange.original_value}{" "}
-                                          to{" "}
-                                          {fieldChange.field === "amount"
-                                            ? formatIngredientAmount(
-                                                fieldChange.optimized_value,
-                                                fieldChange.unit || "g",
-                                                "grain",
-                                                unitSystem
-                                              )
-                                            : fieldChange.field === "time"
-                                            ? `${fieldChange.optimized_value} min`
-                                            : fieldChange.optimized_value}
-                                        </span>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              ) : (
-                                // Single change - original logic
-                                <span>
-                                  {change.field} changed from{" "}
-                                  {change.original_value} to{" "}
-                                  {change.optimized_value} {change.unit}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                          {change.type === "ingredient_added" && (
-                            <div>
-                              <strong>Added:</strong> {change.ingredient_name} (
-                              {formatIngredientAmount(
-                                change.amount,
-                                change.unit || "g",
-                                change.ingredient_type || "grain",
-                                unitSystem
-                              )})
-                            </div>
-                          )}
-                          {change.type === "ingredient_removed" && (
-                            <div>
-                              <strong>Removed:</strong> {change.ingredient_name} (
-                              {formatIngredientAmount(
-                                change.amount,
-                                change.unit || "g",
-                                change.ingredient_type || "grain",
-                                unitSystem
-                              )})
-                            </div>
-                          )}
-                          {change.type === "ingredient_substituted" && (
-                            <div>
-                              <strong>Substituted:</strong>{" "}
-                              {change.original_ingredient} →{" "}
-                              {change.optimized_ingredient}
-                            </div>
-                          )}
-                          <div className="change-description">
-                            {change.change_reason}
+                    {getOptimizedChangesSummary(
+                      ingredients,
+                      optimizationResult.optimizedRecipe.ingredients
+                    ).map((change, idx) => (
+                      <div
+                        key={idx}
+                        className={`change-item ${
+                          change.ingredient_type || ""
+                        }`}
+                      >
+                        {change.type === "ingredient_modified" && (
+                          <div>
+                            <strong>{change.ingredient_name}:</strong>{" "}
+                            {change.changes && Array.isArray(change.changes) ? (
+                              // Consolidated changes - multiple field changes
+                              <div className="consolidated-changes">
+                                {change.changes.map(
+                                  (fieldChange: any, fieldIdx: number) => (
+                                    <div
+                                      key={fieldIdx}
+                                      className="consolidated-change-item"
+                                    >
+                                      <span>
+                                        • {fieldChange.field} changed from{" "}
+                                        {fieldChange.field === "amount"
+                                          ? formatIngredientAmount(
+                                              fieldChange.original_value,
+                                              fieldChange.unit || "g",
+                                              "grain",
+                                              unitSystem
+                                            )
+                                          : fieldChange.original_value}{" "}
+                                        to{" "}
+                                        {fieldChange.field === "amount"
+                                          ? formatIngredientAmount(
+                                              fieldChange.optimized_value,
+                                              fieldChange.unit || "g",
+                                              "grain",
+                                              unitSystem
+                                            )
+                                          : fieldChange.field === "time"
+                                          ? `${fieldChange.optimized_value} min`
+                                          : fieldChange.optimized_value}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              // Single change - original logic
+                              <span>
+                                {change.field} changed from{" "}
+                                {change.original_value} to{" "}
+                                {change.optimized_value} {change.unit}
+                              </span>
+                            )}
                           </div>
+                        )}
+                        {change.type === "ingredient_added" && (
+                          <div>
+                            <strong>Added:</strong> {change.ingredient_name} (
+                            {formatIngredientAmount(
+                              change.amount,
+                              change.unit || "g",
+                              change.ingredient_type || "grain",
+                              unitSystem
+                            )}
+                            )
+                          </div>
+                        )}
+                        {change.type === "ingredient_removed" && (
+                          <div>
+                            <strong>Removed:</strong> {change.ingredient_name} (
+                            {formatIngredientAmount(
+                              change.amount,
+                              change.unit || "g",
+                              change.ingredient_type || "grain",
+                              unitSystem
+                            )}
+                            )
+                          </div>
+                        )}
+                        {change.type === "ingredient_substituted" && (
+                          <div>
+                            <strong>Substituted:</strong>{" "}
+                            {change.original_ingredient} →{" "}
+                            {change.optimized_ingredient}
+                          </div>
+                        )}
+                        <div className="change-description">
+                          {change.change_reason}
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -986,7 +1073,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               </div>
             </div>
           )}
-
 
           {hasAnalyzed &&
             !analyzing &&
