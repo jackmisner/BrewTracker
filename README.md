@@ -49,13 +49,12 @@ homebrew-tracker/
 │   │   ├── __init__.py
 │   │   ├── ai/                                           # AI recipe analysis and optimization services
 │   │   │   ├── __init__.py                               # Package initialization with clean imports for all AI components
-│   │   │   ├── brewing_calculations.py                   # Provides a wrapper for existing brewing calculation system to avoid circular dependencies
 │   │   │   ├── flowchart_ai_service.py                   # Service wrapper for flowchart-based analysis to ensure compatibility with the current frontend expectations
-│   │   │   ├── flowchart_engine.py                       # Flowchart-based optimization system
+│   │   │   ├── flowchart_engine.py                       # Provides the core engine that performs recipe analysis and optimization using a flowchart-based approach
 │   │   │   ├── flowchart_nodes.py                        # Provides the core node types for executing flowchart-based recipe optimization workflows
 │   │   │   ├── optimization_strategies.py                # Provides concrete implementations of optimization strategies that can be executed by the FlowchartEngine workflow nodes
-│   │   │   ├── recipe_context.py                         # Maintains recipe state throughout workflow execution and handles condition evaluation and strategy execution
-│   │   │   ├── workflow_configuration_loader.py          # Provides utilities for loading and managing workflow configurations from YAML and JSON files
+│   │   │   ├── recipe_context.py                         # Maintains recipe state throughout workflow execution, handles condition evaluation and strategy execution
+│   │   │   ├── workflow_config_loader.py                 # Provides utilities for loading and managing workflow configurations from YAML and JSON files
 │   │   │   └── workflows/
 │   │   │       ├── AI_flowchart.png                      # Graphical representation of the AI recipe Analysis/suggestion generator flowchart
 │   │   │       └── recipe_optimization.yaml              # Configuration file for recipe analysis flowchart. Defines all nodes and paths
@@ -65,9 +64,9 @@ homebrew-tracker/
 │   ├── tests/                                            # pytest test suite for backend functionality
 │   ├── utils/                                            # Utility functions
 │   │   ├── __init__.py
-│   │   ├── brewing_calculation_core.py                   # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations)
+│   │   ├── brewing_calculation_core.py                   # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations) - centralized calculation logic used by all services
 │   │   ├── recipe_orm_calculator.py                      # Recipe calculations integrated with MongoDB models and validation
-│   │   ├── recipe_api_calculator.py                      # Real-time recipe calculations for API endpoints without database persistence
+│   │   ├── recipe_api_calculator.py                      # Real-time recipe calculations for API endpoints without database persistence - also used by AI services
 │   │   └── unit_conversions.py                           # Metric/imperial conversion utilities for weight, volume, and temperature
 │   ├── requirements.txt                                  # Python package dependencies for backend
 │   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
@@ -343,7 +342,7 @@ Visit `http://localhost:3000` to access the application.
 ### Test Coverage Overview
 
 - **Frontend**: 1,671 tests with Jest and React Testing Library
-- **Backend**: 271 tests with pytest and mongomock
+- **Backend**: 441 tests with pytest and mongomock
 - **Coverage Target**: 70% minimum for both frontend and backend
 - **Total Test Suite**: Comprehensive end-to-end testing including component, service, and integration tests
 
@@ -371,7 +370,7 @@ npm test -- --testPathPattern=CompactRecipeCard
 cd backend
 source venv/bin/activate
 
-# Run all tests (271 tests)
+# Run all tests (441 tests)
 pytest
 
 # Run tests with coverage reporting
