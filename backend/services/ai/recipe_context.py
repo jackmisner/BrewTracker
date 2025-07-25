@@ -260,6 +260,8 @@ class RecipeContext:
             self._remove_ingredient(change)
         elif change_type == "ingredient_substituted":
             self._substitute_ingredient(change)
+        elif change_type == "modify_recipe_parameter":
+            self._modify_recipe_parameter(change)
         else:
             logger.warning(f"Unknown change type: {change_type}")
 
@@ -302,6 +304,19 @@ class RecipeContext:
                 if new_ingredient:
                     self._add_ingredient({"ingredient_data": new_ingredient})
                 break
+
+    def _modify_recipe_parameter(self, change: Dict[str, Any]):
+        """Modify a recipe-level parameter (e.g., mash_temperature, mash_temp_unit)."""
+        parameter = change.get("parameter")
+        new_value = change.get("new_value")
+
+        if parameter and new_value is not None:
+            self.recipe[parameter] = new_value
+            logger.info(f"Applied recipe parameter change: {parameter} = {new_value}")
+        else:
+            logger.warning(
+                f"Invalid recipe parameter change: parameter={parameter}, new_value={new_value}"
+            )
 
     # Condition evaluators
     def _evaluate_all_metrics_in_style(self, config: Dict[str, Any] = None) -> bool:
@@ -395,8 +410,11 @@ class RecipeContext:
     ) -> bool:
         """Check if mash temperature is available and can be lowered (currently high)."""
         mash_temp = self.recipe.get("mash_temperature")
+
+        # If no mash temperature is set, assume baseline temperature (152°F/67°C)
+        # This allows mash temperature optimization even for recipes without explicit mash temp
         if not mash_temp:
-            return False
+            return True  # Baseline can be lowered for higher fermentability
 
         # Convert to Fahrenheit for consistent evaluation
         mash_temp_f = float(mash_temp)
@@ -404,16 +422,32 @@ class RecipeContext:
         if mash_temp_unit == "C":
             mash_temp_f = (mash_temp_f * 9 / 5) + 32
 
-        # Consider "high" if above 152°F (can be lowered for higher fermentability)
-        return mash_temp_f > 152.0
+        # Mash temperature is available for lowering if it's above 146°F
+        # This allows optimization even from the baseline 152°F temperature
+        # Research shows practical range: 145-168°F, with 152°F as balanced baseline
+        return mash_temp_f > 146.0
 
     def _evaluate_mash_temp_available_and_low(
         self, config: Dict[str, Any] = None
     ) -> bool:
         """Check if mash temperature is available and can be raised (currently low)."""
         mash_temp = self.recipe.get("mash_temperature")
+        recipe_info = self.recipe
+        logger.info(
+            f"🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️ Evaluating recipe {recipe_info} mash_temp_available_and_low: {mash_temp}"
+        )
+        # Debug logging to understand why mash temp path isn't taken
+        logger.info(
+            f"🌡️ mash_temp_available_and_low check: mash_temp={mash_temp}, mash_temp_unit={self.recipe.get('mash_temp_unit')}"
+        )
+
+        # If no mash temperature is set, assume baseline temperature (152°F/67°C)
+        # This allows mash temperature optimization even for recipes without explicit mash temp
         if not mash_temp:
-            return False
+            logger.info(
+                f"🌡️ mash_temp_available_and_low: No mash temperature found, assuming baseline 152°F - can be raised"
+            )
+            return True  # Baseline can be raised for lower fermentability
 
         # Convert to Fahrenheit for consistent evaluation
         mash_temp_f = float(mash_temp)
@@ -421,8 +455,14 @@ class RecipeContext:
         if mash_temp_unit == "C":
             mash_temp_f = (mash_temp_f * 9 / 5) + 32
 
-        # Consider "low" if below 152°F (can be raised for lower fermentability)
-        return mash_temp_f < 152.0
+        # Mash temperature is available for raising if it's below 158°F
+        # This allows optimization even from the baseline 152°F temperature
+        # Research shows practical range: 145-168°F, with 152°F as balanced baseline
+        result = mash_temp_f < 158.0
+        logger.info(
+            f"🌡️ mash_temp_available_and_low: {mash_temp}°{mash_temp_unit} = {mash_temp_f}°F < 158°F = {result}"
+        )
+        return result
 
     def _evaluate_yeast_substitution_available(
         self, config: Dict[str, Any] = None
@@ -441,10 +481,10 @@ class RecipeContext:
         min_val = metric_range.get("min", 0)
         max_val = metric_range.get("max", 999)
 
-        # Add small tolerance for certain metrics to prevent infinite loops
-        # FG changes from yeast substitution are often very small (0.001-0.003)
+        # Add small tolerance for FG to prevent infinite loops
+        # FG changes from optimization strategies can be very small (0.001-0.003)
         if metric_name == "FG":
-            tolerance = 0.002  # 2 gravity points tolerance
+            tolerance = 0.001  # 1 gravity point tolerance - balance between sensitivity and stability
             return (min_val - tolerance) <= current_value <= (max_val + tolerance)
 
         # Add small tolerance for SRM to prevent normalization loops

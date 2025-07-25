@@ -1038,9 +1038,9 @@ class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
 
         # Convert back to original unit if needed
         if temp_unit == "C":
-            new_temp = (new_temp_f - 32) * 5 / 9
+            new_temp = round((new_temp_f - 32) * 5 / 9)
         else:
-            new_temp = new_temp_f
+            new_temp = round(new_temp_f)
 
         # Only suggest change if temperature is different
         if abs(new_temp - current_temp) >= 1:
@@ -1058,6 +1058,21 @@ class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
                     "category": "process_adjustment",
                 }
             )
+
+            # Also ensure mash_temp_unit is set if not already present
+            if not self.recipe.get("mash_temp_unit"):
+                changes.append(
+                    {
+                        "type": "modify_recipe_parameter",
+                        "parameter": "mash_temp_unit",
+                        "old_value": None,
+                        "new_value": temp_unit,
+                        "reason": "Set mash temperature unit",
+                        "impact_type": "minor",
+                        "confidence": "high",
+                        "category": "process_adjustment",
+                    }
+                )
 
         return changes
 

@@ -346,6 +346,16 @@ class FlowchartAIService:
                     ing for ing in ingredients if ing.get("name") != ingredient_name
                 ]
 
+            elif change_type == "modify_recipe_parameter":
+                # Handle recipe-level parameter changes (like mash temperature)
+                parameter = change.get("parameter")
+                new_value = change.get("new_value")
+                if parameter and new_value is not None:
+                    modified_recipe[parameter] = new_value
+                    logger.info(
+                        f"Applied recipe parameter change: {parameter} = {new_value}"
+                    )
+
         modified_recipe["ingredients"] = ingredients
         return modified_recipe
 
@@ -375,6 +385,16 @@ class FlowchartAIService:
                         ),
                         "amount": change.get("ingredient_data", {}).get("amount", 0),
                         "unit": change.get("ingredient_data", {}).get("unit", ""),
+                    }
+                )
+            elif change.get("type") == "modify_recipe_parameter":
+                # Handle recipe parameter changes for frontend
+                api_change.update(
+                    {
+                        "parameter": change.get("parameter"),
+                        "field": change.get("parameter"),  # Use parameter name as field
+                        "ingredient_name": "",  # No ingredient for recipe parameters
+                        "change_reason": f"Adjusted {change.get('parameter')} for optimization",
                     }
                 )
 
