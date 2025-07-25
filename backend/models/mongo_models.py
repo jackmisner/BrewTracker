@@ -321,6 +321,12 @@ class Recipe(Document):
     efficiency = FloatField()  # percentage
     notes = StringField()
 
+    # Mash temperature fields - affects wort fermentability and FG calculations
+    # Note: Defaults are set dynamically in MongoDBService based on user preference
+    mash_temperature = FloatField()  # Single infusion temperature (152°F/67°C baseline)
+    mash_temp_unit = StringField(choices=["F", "C"])  # Temperature unit
+    mash_time = IntField(default=60)  # Mash duration in minutes (for future use)
+
     # Embedded ingredients list - replaces the join table
     ingredients = ListField(EmbeddedDocumentField(RecipeIngredient))
 
@@ -435,6 +441,9 @@ class Recipe(Document):
             "boil_time": self.boil_time,
             "efficiency": self.efficiency,
             "notes": self.notes,
+            "mash_temperature": self.mash_temperature,
+            "mash_temp_unit": self.mash_temp_unit,
+            "mash_time": self.mash_time,
             "ingredients": [ingredient.to_dict() for ingredient in self.ingredients],
         }
 
