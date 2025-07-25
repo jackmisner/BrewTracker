@@ -752,6 +752,36 @@
 }
 
 /* ==========================================================================
+   Grain Total Display
+   ========================================================================== */
+.grain-total-section {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-amber-50);
+  border: 1px solid var(--color-amber-200);
+  border-radius: var(--border-radius-sm);
+}
+
+.grain-total-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.grain-total-label {
+  font-weight: 600;
+  color: var(--color-amber-800);
+}
+
+.grain-total-value {
+  font-weight: 700;
+  color: var(--color-amber-900);
+  font-size: 1.1rem;
+  font-family: monospace;
+}
+
+/* ==========================================================================
    Responsive Adjustments - Unified
    ========================================================================== */
 @media (max-width: 1400px) {

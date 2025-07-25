@@ -472,7 +472,60 @@ function RecipeBuilder(): React.ReactElement {
             ingredients: availableIngredients,
             addIngredient: addIngredient,
             disabled: addingIngredient || updatingIngredient || saving,
-          })
+          }),
+
+          // Bottom Save Button
+          React.createElement(
+            "div",
+            { className: "bottom-save-section" },
+            React.createElement(
+              "div",
+              { className: "bottom-save-actions" },
+              React.createElement(
+                "button",
+                {
+                  type: "button",
+                  className: "btn btn-secondary",
+                  onClick: handleCancel,
+                  disabled: saving,
+                },
+                "Cancel"
+              ),
+              React.createElement(
+                "button",
+                {
+                  type: "button",
+                  className: `btn btn-primary ${!canSave ? "btn-disabled" : ""}`,
+                  disabled: !canSave || saving,
+                  onClick: (e) => {
+                    e.preventDefault();
+                    saveRecipe();
+                  },
+                  title: !canSave ? "Add at least one ingredient to save" : "",
+                },
+                saving
+                  ? React.createElement(
+                      React.Fragment,
+                      null,
+                      React.createElement("span", {
+                        className: "button-spinner",
+                      }),
+                      "Saving..."
+                    )
+                  : `${isEditing ? "Update" : "Save"} Recipe`
+              )
+            ),
+            !canSave &&
+              React.createElement(
+                "div",
+                { className: "validation-info" },
+                React.createElement(
+                  "small",
+                  { className: "validation-message" },
+                  "💡 Add at least one grain and yeast to save your recipe"
+                )
+              )
+          )
         )
       ),
 
