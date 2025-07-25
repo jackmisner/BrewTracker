@@ -212,6 +212,9 @@ class TestRecipeCalculations:
         self.mock_recipe.batch_size_unit = "gal"
         self.mock_recipe.efficiency = 75
         self.mock_recipe.ingredients = [self.mock_grain, self.mock_hop, self.mock_yeast]
+        # Add mash temperature attributes to prevent Mock object arithmetic errors
+        self.mock_recipe.mash_temperature = None
+        self.mock_recipe.mash_temp_unit = None
 
     @patch("utils.recipe_orm_calculator.UnitConverter")
     @patch("utils.recipe_orm_calculator.convert_to_pounds")
@@ -447,3 +450,45 @@ class TestRecipeCalculations:
 
                 # Should use 0% attenuation when no yeast
                 mock_calc_fg.assert_called_once_with(1.050, 0)
+
+    @patch("utils.recipe_orm_calculator.calculate_og")
+    @patch("utils.recipe_orm_calculator.calc_fg_with_mash_temp")
+    @patch("services.attenuation_service.AttenuationService")
+    def test_calculate_fg_with_mash_temperature(
+        self, mock_attenuation_service, mock_calc_fg_with_temp, mock_calculate_og
+    ):
+        """Test FG calculation with mash temperature adjustment"""
+        mock_calculate_og.return_value = 1.050
+        mock_calc_fg_with_temp.return_value = 1.008
+        mock_attenuation_service.get_improved_attenuation_estimate.return_value = 80
+
+        # Set up recipe with mash temperature
+        self.mock_recipe.mash_temperature = 148.0  # Low temperature
+        self.mock_recipe.mash_temp_unit = "F"
+
+        result = calculate_fg(self.mock_recipe)
+
+        assert result == 1.008
+        mock_calculate_og.assert_called_once_with(self.mock_recipe)
+        mock_calc_fg_with_temp.assert_called_once_with(1.050, 80, 148.0)
+
+    @patch("utils.recipe_orm_calculator.calculate_og")
+    @patch("utils.recipe_orm_calculator.calc_fg_core")
+    @patch("services.attenuation_service.AttenuationService")
+    def test_calculate_fg_baseline_temperature(
+        self, mock_attenuation_service, mock_calc_fg, mock_calculate_og
+    ):
+        """Test FG calculation at baseline temperature (152F) uses standard calculation"""
+        mock_calculate_og.return_value = 1.050
+        mock_calc_fg.return_value = 1.012
+        mock_attenuation_service.get_improved_attenuation_estimate.return_value = 75
+
+        # Set up recipe with baseline mash temperature
+        self.mock_recipe.mash_temperature = 152.0  # Baseline temperature
+        self.mock_recipe.mash_temp_unit = "F"
+
+        result = calculate_fg(self.mock_recipe)
+
+        assert result == 1.012
+        mock_calculate_og.assert_called_once_with(self.mock_recipe)
+        mock_calc_fg.assert_called_once_with(1.050, 75)  # Uses standard calculation
