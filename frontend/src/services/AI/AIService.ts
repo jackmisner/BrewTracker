@@ -13,6 +13,10 @@ export interface AIAnalysisRequest {
     batch_size: number;
     batch_size_unit: string;
     efficiency: number;
+    // Optional: Additional recipe metadata can be added here
+    mash_temperature?: number; // Optional mash temperature for analysis
+    mash_temp_unit?: string; // Optional unit for mash temperature (e.g., "F" or "C")
+    
   };
   style_id?: string; // Optional MongoDB ObjectId for specific style analysis
   unit_system?: "metric" | "imperial";
