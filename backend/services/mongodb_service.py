@@ -367,6 +367,33 @@ class MongoDBService:
                 else:
                     recipe_data["batch_size_unit"] = "gal"
 
+            # Set default mash temperature if not provided (research-backed baseline)
+            # 152°F/67°C provides balanced enzyme activity for optimal fermentability
+            if (
+                "mash_temperature" not in recipe_data
+                or recipe_data["mash_temperature"] is None
+            ):
+                if user and user.get_preferred_units() == "metric":
+                    recipe_data["mash_temperature"] = (
+                        67.0  # Celsius - balanced enzyme activity
+                    )
+                    recipe_data["mash_temp_unit"] = "C"
+                else:
+                    recipe_data["mash_temperature"] = (
+                        152.0  # Fahrenheit - balanced enzyme activity
+                    )
+                    recipe_data["mash_temp_unit"] = "F"
+
+            # Ensure mash_temp_unit is set if temperature is provided
+            if (
+                "mash_temp_unit" not in recipe_data
+                and "mash_temperature" in recipe_data
+            ):
+                if user and user.get_preferred_units() == "metric":
+                    recipe_data["mash_temp_unit"] = "C"
+                else:
+                    recipe_data["mash_temp_unit"] = "F"
+
             # Create recipe object
             recipe = Recipe(**recipe_data)
 
@@ -421,6 +448,26 @@ class MongoDBService:
             # We don't want to change the unit system after creation
             if "unit_system" in recipe_data:
                 recipe_data.pop("unit_system")
+
+            # Handle mash temperature unit preference for updates
+            # Get user for unit system preferences
+            user = User.objects(id=recipe.user_id).first()
+
+            # If mash temperature is being updated, ensure unit matches user preference
+            if (
+                "mash_temperature" in recipe_data
+                and recipe_data["mash_temperature"] is not None
+            ):
+                user_preferred_units = (
+                    user.get_preferred_units() if user else "imperial"
+                )
+
+                # Set the unit based on user preference if not explicitly provided
+                if "mash_temp_unit" not in recipe_data:
+                    if user_preferred_units == "metric":
+                        recipe_data["mash_temp_unit"] = "C"
+                    else:
+                        recipe_data["mash_temp_unit"] = "F"
 
             # Update recipe fields
             for key, value in recipe_data.items():

@@ -96,6 +96,8 @@ export interface CalculateMetricsPreviewRequest {
   efficiency: number;
   boil_time: number;
   ingredients: Recipe["ingredients"];
+  mash_temperature?: number; // Mash temperature for FG calculations
+  mash_temp_unit?: "F" | "C"; // Temperature unit
 }
 
 export interface CalculateMetricsPreviewResponse

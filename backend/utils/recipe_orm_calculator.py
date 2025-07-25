@@ -1,9 +1,11 @@
 from utils.brewing_calculation_core import (
     calc_abv_core,
     calc_fg_core,
+    calc_fg_with_mash_temp,
     calc_ibu_core,
     calc_og_core,
     calc_srm_core,
+    calc_temperature_adjusted_attenuation,
     convert_to_ounces,
     convert_to_pounds,
 )
@@ -129,7 +131,7 @@ def calculate_og(recipe):
 
 
 def calculate_fg(recipe):
-    """Calculate final gravity using improved yeast attenuation estimates"""
+    """Calculate final gravity using improved yeast attenuation estimates and mash temperature effects"""
     if not recipe or not hasattr(recipe, "ingredients"):
         return 1.000
 
@@ -153,7 +155,31 @@ def calculate_fg(recipe):
                 max_attenuation = max(max_attenuation, attenuation)
 
     og = calculate_og(recipe)
-    return calc_fg_core(og, max_attenuation)
+
+    # Check if recipe has mash temperature data for enhanced FG calculation
+    if (
+        hasattr(recipe, "mash_temperature")
+        and recipe.mash_temperature
+        and max_attenuation > 0
+    ):
+        # Convert mash temperature to Fahrenheit if needed
+        mash_temp_f = recipe.mash_temperature
+        if hasattr(recipe, "mash_temp_unit") and recipe.mash_temp_unit == "C":
+            mash_temp_f = (recipe.mash_temperature * 9 / 5) + 32
+
+        # Only apply temperature adjustment if different from baseline (152°F/67°C)
+        baseline_temp_f = 152.0
+        temp_tolerance = 0.5  # Allow small tolerance for floating point comparisons
+
+        if abs(mash_temp_f - baseline_temp_f) > temp_tolerance:
+            # Use temperature-adjusted FG calculation
+            return calc_fg_with_mash_temp(og, max_attenuation, mash_temp_f)
+        else:
+            # At baseline temperature - use standard calculation
+            return calc_fg_core(og, max_attenuation)
+    else:
+        # Fall back to standard FG calculation (no mash temperature data)
+        return calc_fg_core(og, max_attenuation)
 
 
 def calculate_abv(recipe):

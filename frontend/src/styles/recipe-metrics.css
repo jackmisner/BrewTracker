@@ -495,3 +495,62 @@
     border-radius: var(--border-radius-sm);
   }
 }
+
+/* ==========================================================================
+   Mash Temperature Adjustment Indicators
+   ========================================================================== */
+.temperature-adjustment-indicator {
+  margin-left: var(--spacing-xs);
+  font-size: 0.875rem;
+  cursor: help;
+  display: inline-block;
+  vertical-align: middle;
+  animation: temperatureGlow 2s ease-in-out infinite alternate;
+}
+
+.temperature-adjustment-indicator:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+@keyframes temperatureGlow {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Tooltip styling for temperature adjustments */
+.metric-value {
+  position: relative;
+}
+
+.temperature-adjustment-indicator[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-gray-900);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: var(--spacing-xs);
+}
+
+.temperature-adjustment-indicator[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-gray-900);
+  z-index: 1001;
+}

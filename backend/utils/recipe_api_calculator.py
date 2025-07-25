@@ -1,9 +1,11 @@
 from utils.brewing_calculation_core import (
     calc_abv_core,
     calc_fg_core,
+    calc_fg_with_mash_temp,
     calc_ibu_core,
     calc_og_core,
     calc_srm_core,
+    calc_temperature_adjusted_attenuation,
     convert_to_ounces,
     convert_to_pounds,
 )
@@ -63,7 +65,7 @@ def calculate_og_preview(recipe_data):
 
 
 def calculate_fg_preview(recipe_data):
-    """Calculate final gravity using yeast attenuation"""
+    """Calculate final gravity using yeast attenuation and mash temperature effects"""
     import logging
 
     logger = logging.getLogger(__name__)
@@ -89,8 +91,31 @@ def calculate_fg_preview(recipe_data):
     og = calculate_og_preview(recipe_data)
     # logger.info(f"🔍 FG Calculation - OG: {og:.3f}, Attenuation: {max_attenuation}%")
 
-    fg_result = calc_fg_core(og, max_attenuation)
-    # logger.info(f"🔍 FG Calculation - Final FG: {fg_result}")
+    # Check if recipe has mash temperature data for enhanced FG calculation
+    mash_temp = recipe_data.get("mash_temperature")
+    if mash_temp and max_attenuation > 0:
+        # Convert mash temperature to Fahrenheit if needed
+        mash_temp_f = float(mash_temp)
+        mash_temp_unit = recipe_data.get("mash_temp_unit", "F")
+        if mash_temp_unit == "C":
+            mash_temp_f = (mash_temp_f * 9 / 5) + 32
+
+        # Only apply temperature adjustment if different from baseline (152°F/67°C)
+        baseline_temp_f = 152.0
+        temp_tolerance = 0.5  # Allow small tolerance for floating point comparisons
+
+        if abs(mash_temp_f - baseline_temp_f) > temp_tolerance:
+            # Use temperature-adjusted FG calculation
+            fg_result = calc_fg_with_mash_temp(og, max_attenuation, mash_temp_f)
+            # logger.info(f"🔍 FG Calculation - Temperature-adjusted FG: {fg_result} (mash temp: {mash_temp_f}°F, deviation: {mash_temp_f - baseline_temp_f}°F)")
+        else:
+            # At baseline temperature - use standard calculation
+            fg_result = calc_fg_core(og, max_attenuation)
+            # logger.info(f"🔍 FG Calculation - Baseline temperature FG: {fg_result} (mash temp: {mash_temp_f}°F)")
+    else:
+        # Fall back to standard FG calculation (no mash temperature data)
+        fg_result = calc_fg_core(og, max_attenuation)
+        # logger.info(f"🔍 FG Calculation - Standard FG: {fg_result}")
 
     return fg_result
 

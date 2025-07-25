@@ -228,6 +228,24 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               recipe.batch_size > 10 ? "l" : "gal"
             ) as BatchSizeUnit;
           }
+          
+          // Convert mash temperature to user's preferred units if needed
+          if (recipe.mash_temperature && recipe.mash_temp_unit) {
+            const userPreferredUnit = unitSystem === "metric" ? "C" : "F";
+            
+            if (recipe.mash_temp_unit !== userPreferredUnit) {
+              // Convert temperature to user's preferred unit
+              if (userPreferredUnit === "C" && recipe.mash_temp_unit === "F") {
+                // Convert F to C
+                recipe.mash_temperature = Math.round(((recipe.mash_temperature - 32) * 5 / 9) * 10) / 10;
+                recipe.mash_temp_unit = "C";
+              } else if (userPreferredUnit === "F" && recipe.mash_temp_unit === "C") {
+                // Convert C to F
+                recipe.mash_temperature = Math.round(((recipe.mash_temperature * 9 / 5) + 32) * 10) / 10;
+                recipe.mash_temp_unit = "F";
+              }
+            }
+          }
           ingredients = recipeData.ingredients || [];
           originalRecipeRef.current = recipeData as Recipe; // Store original for change detection
         }
@@ -339,6 +357,8 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         "efficiency",
         "boil_time",
         "batch_size_unit",
+        "mash_temperature",
+        "mash_temp_unit",
       ];
       if (calculationFields.includes(field)) {
         try {

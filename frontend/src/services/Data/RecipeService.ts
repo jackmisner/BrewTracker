@@ -208,6 +208,13 @@ class RecipeService {
         ? parseFloat(recipeData.efficiency.toString())
         : undefined,
       notes: recipeData.notes?.trim() || "",
+      mash_temperature: recipeData.mash_temperature
+        ? parseFloat(recipeData.mash_temperature.toString())
+        : undefined,
+      mash_temp_unit: recipeData.mash_temp_unit || undefined,
+      mash_time: recipeData.mash_time
+        ? parseInt(recipeData.mash_time.toString())
+        : undefined,
       ingredients: [],
     };
 
@@ -280,6 +287,9 @@ class RecipeService {
       estimated_abv: rawRecipe.estimated_abv,
       estimated_ibu: rawRecipe.estimated_ibu,
       estimated_srm: rawRecipe.estimated_srm,
+      mash_temperature: rawRecipe.mash_temperature,
+      mash_temp_unit: rawRecipe.mash_temp_unit,
+      mash_time: rawRecipe.mash_time,
       ingredients: rawRecipe.ingredients || [],
     };
 
@@ -352,6 +362,9 @@ class RecipeService {
       "boil_time",
       "efficiency",
       "notes",
+      "mash_temperature",
+      "mash_temp_unit",
+      "mash_time",
     ];
 
     for (const field of fieldsToCompare) {

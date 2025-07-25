@@ -136,6 +136,10 @@ class RecipeContext:
                 "amounts_normalized": self._evaluate_amounts_normalized,
                 "caramel_malts_in_recipe": self._evaluate_caramel_malts_in_recipe,
                 "roasted_grains_in_recipe": self._evaluate_roasted_grains_in_recipe,
+                # Mash temperature conditions for workflow
+                "mash_temp_available_and_high": self._evaluate_mash_temp_available_and_high,
+                "mash_temp_available_and_low": self._evaluate_mash_temp_available_and_low,
+                "yeast_substitution_available": self._evaluate_yeast_substitution_available,
             }
         )
 
@@ -162,6 +166,7 @@ class RecipeContext:
                 "increase_roasted_grains": self._execute_strategy_dynamic,
                 "reduce_roasted_grains": self._execute_strategy_dynamic,
                 "reduce_darkest_base_malt": self._execute_strategy_dynamic,
+                "mash_temperature_adjustment": self._execute_strategy_dynamic,
             }
         )
 
@@ -384,6 +389,47 @@ class RecipeContext:
             for ingredient in ingredients
             if ingredient.get("type") == "grain"
         )
+
+    def _evaluate_mash_temp_available_and_high(
+        self, config: Dict[str, Any] = None
+    ) -> bool:
+        """Check if mash temperature is available and can be lowered (currently high)."""
+        mash_temp = self.recipe.get("mash_temperature")
+        if not mash_temp:
+            return False
+
+        # Convert to Fahrenheit for consistent evaluation
+        mash_temp_f = float(mash_temp)
+        mash_temp_unit = self.recipe.get("mash_temp_unit", "F")
+        if mash_temp_unit == "C":
+            mash_temp_f = (mash_temp_f * 9 / 5) + 32
+
+        # Consider "high" if above 152°F (can be lowered for higher fermentability)
+        return mash_temp_f > 152.0
+
+    def _evaluate_mash_temp_available_and_low(
+        self, config: Dict[str, Any] = None
+    ) -> bool:
+        """Check if mash temperature is available and can be raised (currently low)."""
+        mash_temp = self.recipe.get("mash_temperature")
+        if not mash_temp:
+            return False
+
+        # Convert to Fahrenheit for consistent evaluation
+        mash_temp_f = float(mash_temp)
+        mash_temp_unit = self.recipe.get("mash_temp_unit", "F")
+        if mash_temp_unit == "C":
+            mash_temp_f = (mash_temp_f * 9 / 5) + 32
+
+        # Consider "low" if below 152°F (can be raised for lower fermentability)
+        return mash_temp_f < 152.0
+
+    def _evaluate_yeast_substitution_available(
+        self, config: Dict[str, Any] = None
+    ) -> bool:
+        """Check if yeast substitution is available (recipe contains yeast)."""
+        ingredients = self.recipe.get("ingredients", [])
+        return any(ingredient.get("type") == "yeast" for ingredient in ingredients)
 
     def _metric_in_range(self, metric_name: str, style_ranges: Dict[str, Any]) -> bool:
         """Check if a specific metric is within style range."""

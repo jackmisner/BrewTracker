@@ -665,8 +665,74 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
             </div>
           ))}
         </div>
+
+        {/* Grain Weight Total Display for Compact View */}
+        {(() => {
+          const grainTotal = calculateGrainTotal();
+          const hasGrains = ingredients.some(ingredient => ingredient.type === 'grain');
+          
+          if (!hasGrains) return null;
+          
+          return (
+            <div className="grain-total-section">
+              <div className="grain-total-display">
+                <span className="grain-total-label">Total Grain Weight:</span>
+                <span className="grain-total-value">
+                  {grainTotal.weight} {grainTotal.unit.toUpperCase()}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
+  };
+
+  // Calculate total grain weight
+  const calculateGrainTotal = (): { weight: number; unit: string } => {
+    const grainIngredients = ingredients.filter(ingredient => ingredient.type === 'grain');
+    
+    if (grainIngredients.length === 0) {
+      return { weight: 0, unit: 'kg' }; // Default unit
+    }
+    
+    // Convert all grain weights to kg for calculation
+    let totalWeightKg = 0;
+    
+    grainIngredients.forEach(grain => {
+      const amount = parseFloat(grain.amount?.toString() || '0');
+      if (isNaN(amount)) return;
+      
+      const unit = grain.unit?.toLowerCase();
+      let weightInKg = 0;
+      
+      if (unit === 'kg') {
+        weightInKg = amount;
+      } else if (unit === 'g') {
+        weightInKg = amount / 1000;
+      } else if (unit === 'lb') {
+        weightInKg = amount * 0.453592;
+      } else if (unit === 'oz') {
+        weightInKg = amount * 0.0283495;
+      } else {
+        // Default to kg if unit is unknown
+        weightInKg = amount;
+      }
+      
+      totalWeightKg += weightInKg;
+    });
+    
+    // Return in appropriate unit based on the first grain's unit or user preference
+    const firstGrainUnit = grainIngredients[0]?.unit?.toLowerCase();
+    
+    if (firstGrainUnit === 'g' || (firstGrainUnit === 'kg' && totalWeightKg < 1)) {
+      return { weight: Math.round(totalWeightKg * 1000 * 10) / 10, unit: 'g' };
+    } else if (firstGrainUnit === 'lb' || firstGrainUnit === 'oz') {
+      const totalWeightLb = totalWeightKg / 0.453592;
+      return { weight: Math.round(totalWeightLb * 10) / 10, unit: 'lb' };
+    } else {
+      return { weight: Math.round(totalWeightKg * 10) / 10, unit: 'kg' };
+    }
   };
 
   // Return compact view if compact prop is true
@@ -876,6 +942,25 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Grain Weight Total Display */}
+      {(() => {
+        const grainTotal = calculateGrainTotal();
+        const hasGrains = ingredients.some(ingredient => ingredient.type === 'grain');
+        
+        if (!hasGrains) return null;
+        
+        return (
+          <div className="grain-total-section">
+            <div className="grain-total-display">
+              <span className="grain-total-label">Total Grain Weight:</span>
+              <span className="grain-total-value">
+                {grainTotal.weight} {grainTotal.unit.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {isEditing && (
         <div className="editing-help">

@@ -2,7 +2,7 @@
 # Implements 9-step sequential gating based on corrected flowchart logic
 
 workflow_name: "Recipe Style Optimization"
-version: "2.0"
+version: "3.0"
 description: "Sequential gating optimization following BJCP style guidelines"
 start_node: "start"
 
@@ -151,16 +151,36 @@ nodes:
     yes_path: "step5_abv_check"
     no_path: "fg_correction_flow"
 
-  # FG CORRECTION SUB-FLOW
+  # FG CORRECTION SUB-FLOW - Enhanced with mash temperature options
   fg_correction_flow:
     type: "multi_decision"
-    description: "FG Correction: Yeast substitution"
+    description: "FG Correction: Choose adjustment method"
     conditions:
       - condition: "fg_too_high"
-        path: "fg_higher_attenuation_yeast"
+        path: "fg_high_correction_options"
       - condition: "fg_too_low"
-        path: "fg_lower_attenuation_yeast"
+        path: "fg_low_correction_options"
     default_path: "step4_fg_check"
+
+  # FG too high: Multiple correction options
+  fg_high_correction_options:
+    type: "multi_decision"
+    description: "FG high: Choose correction method"
+    conditions:
+      - condition: "mash_temp_available_and_high" # Can lower mash temp
+        path: "fg_lower_mash_temperature"
+      - condition: "yeast_substitution_available"
+        path: "fg_higher_attenuation_yeast"
+    default_path: "fg_higher_attenuation_yeast"
+
+  fg_lower_mash_temperature:
+    type: "action"
+    strategy: "mash_temperature_adjustment"
+    description: "Lower mash temperature for higher fermentability"
+    parameters:
+      direction: "decrease"
+      target_fermentability: "higher"
+    next_node: "step4_fg_check"
 
   fg_higher_attenuation_yeast:
     type: "action"
@@ -169,6 +189,26 @@ nodes:
     parameters:
       target_attenuation: "higher"
       maintain_style_compliance: true
+    next_node: "step4_fg_check"
+
+  # FG too low: Multiple correction options
+  fg_low_correction_options:
+    type: "multi_decision"
+    description: "FG low: Choose correction method"
+    conditions:
+      - condition: "mash_temp_available_and_low" # Can raise mash temp
+        path: "fg_raise_mash_temperature"
+      - condition: "yeast_substitution_available"
+        path: "fg_lower_attenuation_yeast"
+    default_path: "fg_lower_attenuation_yeast"
+
+  fg_raise_mash_temperature:
+    type: "action"
+    strategy: "mash_temperature_adjustment"
+    description: "Raise mash temperature for lower fermentability"
+    parameters:
+      direction: "increase"
+      target_fermentability: "lower"
     next_node: "step4_fg_check"
 
   fg_lower_attenuation_yeast:

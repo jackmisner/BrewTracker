@@ -294,7 +294,7 @@ const HopInput: React.FC<HopInputProps> = ({
   const getTimePlaceholder = (): string => {
     switch (hopForm.use) {
       case "boil":
-        return "60 min";
+        return "Time";
       case "whirlpool":
         return "15 min";
       case "dry-hop":

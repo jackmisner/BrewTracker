@@ -13,6 +13,8 @@ interface CalculationData {
   efficiency: number;
   boil_time: number;
   ingredients: RecipeIngredient[];
+  mash_temperature?: number; // Mash temperature for FG calculations
+  mash_temp_unit?: "F" | "C"; // Temperature unit
 }
 
 interface BalanceAnalysis {
@@ -97,13 +99,27 @@ class MetricService {
         return this.calculationCache.get(cacheKey)!;
       }
 
-      const response = await ApiService.recipes.calculateMetricsPreview({
+      const requestPayload = {
         batch_size: calculationData.batch_size,
         batch_size_unit: calculationData.batch_size_unit,
         efficiency: calculationData.efficiency,
         boil_time: calculationData.boil_time,
         ingredients: calculationData.ingredients,
+        mash_temperature: calculationData.mash_temperature,
+        mash_temp_unit: calculationData.mash_temp_unit,
+      };
+
+      console.log("MetricService: API request payload:", {
+        ...requestPayload,
+        ingredients: `${requestPayload.ingredients.length} ingredients`,
+        yeastIngredients: requestPayload.ingredients.filter(ing => ing.type === 'yeast').map(yeast => ({
+          name: yeast.name,
+          attenuation: yeast.attenuation,
+          improved_attenuation_estimate: yeast.improved_attenuation_estimate
+        }))
       });
+
+      const response = await ApiService.recipes.calculateMetricsPreview(requestPayload);
       const metrics = this.processMetricsResponse(
         response.data.data || response.data
       );
@@ -137,6 +153,8 @@ class MetricService {
       efficiency: parseFloat((recipeData.efficiency || 75).toString()),
       boil_time: parseInt((recipeData.boil_time || 60).toString()),
       ingredients: this.formatIngredientsForCalculation(ingredients),
+      mash_temperature: recipeData.mash_temperature ? parseFloat(recipeData.mash_temperature.toString()) : undefined,
+      mash_temp_unit: recipeData.mash_temp_unit || undefined,
     };
 
     return calculationData;
