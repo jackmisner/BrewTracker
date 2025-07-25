@@ -987,6 +987,81 @@ class NormalizeAmountsStrategy(OptimizationStrategy):
             return round(amount, 2)
 
 
+class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
+    """
+    Research-backed strategy for adjusting mash temperature to achieve target FG through fermentability control.
+
+    Based on scientific literature:
+    - "Understanding Enzymes - Homebrew Science" (Brew Your Own Magazine)
+    - John Palmer's "How to Brew"
+    - JASBC papers on enzyme thermostability
+    - "1% less attenuation for every degree above 151°F" (brewing literature)
+    """
+
+    def execute(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Adjust mash temperature to influence wort fermentability and FG."""
+        parameters = parameters or {}
+        direction = parameters.get(
+            "direction", "decrease"
+        )  # "increase" or "decrease" FG
+        target_fermentability = parameters.get(
+            "target_fermentability", "higher"
+        )  # "higher" or "lower"
+
+        changes = []
+
+        # Get current mash temperature from recipe
+        current_temp = self.recipe.get("mash_temperature", 152.0)
+        temp_unit = self.recipe.get("mash_temp_unit", "F")
+
+        # Convert to Fahrenheit for consistent calculations
+        if temp_unit == "C":
+            current_temp_f = (current_temp * 9 / 5) + 32
+        else:
+            current_temp_f = current_temp
+
+        # Determine new temperature based on direction
+        if direction == "decrease" or target_fermentability == "higher":
+            # Lower FG by reducing mash temperature (more fermentable)
+            # Conservative 2-4°F reduction, staying within reasonable brewing bounds
+            new_temp_f = max(148, current_temp_f - 3)
+            change_desc = f"Lower mash temperature for higher fermentability (more β-amylase activity)"
+            fermentability_effect = (
+                "Increases fermentable sugar production, leading to lower FG"
+            )
+        else:
+            # Raise FG by increasing mash temperature (less fermentable)
+            # Conservative 2-4°F increase, staying within reasonable brewing bounds
+            new_temp_f = min(158, current_temp_f + 3)
+            change_desc = f"Raise mash temperature for lower fermentability (more α-amylase activity)"
+            fermentability_effect = "Increases dextrin production, leading to higher FG"
+
+        # Convert back to original unit if needed
+        if temp_unit == "C":
+            new_temp = (new_temp_f - 32) * 5 / 9
+        else:
+            new_temp = new_temp_f
+
+        # Only suggest change if temperature is different
+        if abs(new_temp - current_temp) >= 1:
+            changes.append(
+                {
+                    "type": "modify_recipe_parameter",
+                    "parameter": "mash_temperature",
+                    "old_value": current_temp,
+                    "new_value": round(new_temp),
+                    "unit": temp_unit,
+                    "reason": change_desc,
+                    "brewing_science": fermentability_effect,
+                    "impact_type": "important",
+                    "confidence": "high",  # Well-established brewing science
+                    "category": "process_adjustment",
+                }
+            )
+
+        return changes
+
+
 # Strategy registry for dynamic loading
 STRATEGY_REGISTRY = {
     # Base malt strategies
@@ -1006,6 +1081,8 @@ STRATEGY_REGISTRY = {
     "hop_ibu_adjustment": HopIBUAdjustmentStrategy,
     "yeast_substitution": YeastSubstitutionStrategy,
     "normalize_amounts": NormalizeAmountsStrategy,
+    # Mash temperature strategy
+    "mash_temperature_adjustment": MashTemperatureAdjustmentStrategy,
 }
 
 
