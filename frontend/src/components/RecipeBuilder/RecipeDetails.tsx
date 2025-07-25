@@ -237,6 +237,44 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
             />
             <small className="form-help-text">{getEfficiencyGuidance()}</small>
           </div>
+
+          <div className="form-group">
+            <label htmlFor="mash_temperature">
+              Mash Temperature 
+              <span className="unit-indicator">
+                ({recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")})
+              </span>
+            </label>
+            <div className="input-group">
+              <input
+                type="number"
+                id="mash_temperature"
+                name="mash_temperature"
+                value={recipe.mash_temperature || ""}
+                onChange={handleChange}
+                className="form-control"
+                min={unitSystem === "metric" ? "60" : "140"}
+                max={unitSystem === "metric" ? "77" : "170"}
+                step="1"
+                placeholder={unitSystem === "metric" ? "67" : "152"}
+                disabled={saving}
+              />
+              <select
+                name="mash_temp_unit"
+                value={recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")}
+                onChange={handleChange}
+                className="input-addon"
+                disabled={saving}
+              >
+                <option value="F">°F</option>
+                <option value="C">°C</option>
+              </select>
+            </div>
+            <small className="form-help-text">
+              Affects wort fermentability: Lower temps ({unitSystem === "metric" ? "64-67°C" : "148-152°F"}) = more fermentable (lower FG), 
+              Higher temps ({unitSystem === "metric" ? "68-70°C" : "154-158°F"}) = less fermentable (higher FG)
+            </small>
+          </div>
         </div>
         <div className="form-group">
           <label htmlFor="description">Description</label>

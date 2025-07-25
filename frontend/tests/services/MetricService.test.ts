@@ -228,6 +228,8 @@ describe("MetricService", () => {
         efficiency: 75,
         boil_time: 60,
         ingredients: [],
+        mash_temperature: undefined,
+        mash_temp_unit: undefined,
       });
     });
 
@@ -249,6 +251,42 @@ describe("MetricService", () => {
       expect(result.batch_size_unit).toBe("l");
       expect(result.efficiency).toBe(80);
       expect(result.boil_time).toBe(90);
+    });
+
+    test("includes mash temperature fields when provided", () => {
+      const recipeData = {
+        batch_size: 5,
+        efficiency: 75,
+        boil_time: 60,
+        mash_temperature: 152,
+        mash_temp_unit: "F" as const,
+      };
+      const ingredients = [];
+
+      const result = metricService.prepareCalculationData(
+        recipeData,
+        ingredients
+      );
+
+      expect(result.mash_temperature).toBe(152);
+      expect(result.mash_temp_unit).toBe("F");
+    });
+
+    test("sets mash temperature fields to undefined when not provided", () => {
+      const recipeData = {
+        batch_size: 5,
+        efficiency: 75,
+        boil_time: 60,
+      };
+      const ingredients = [];
+
+      const result = metricService.prepareCalculationData(
+        recipeData,
+        ingredients
+      );
+
+      expect(result.mash_temperature).toBeUndefined();
+      expect(result.mash_temp_unit).toBeUndefined();
     });
   });
 
