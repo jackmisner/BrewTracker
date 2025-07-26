@@ -67,7 +67,7 @@ class FlowchartAIService:
 
     def analyze_recipe(
         self,
-        recipe_data: Dict[str, Any],
+        complete_recipe: Dict[str, Any],
         style_id: Optional[str] = None,
         unit_system: str = "imperial",
         workflow_name: Optional[str] = None,
@@ -76,7 +76,7 @@ class FlowchartAIService:
         Analyze a recipe using the flowchart-based approach.
 
         Args:
-            recipe_data: Recipe data including ingredients, batch size, etc.
+            complete_recipe: Complete recipe object including all metadata and ingredients
             style_id: Optional MongoDB ObjectId for specific style analysis
             unit_system: Unit system preference (metric/imperial)
             workflow_name: Optional workflow name (defaults to recipe_optimization)
@@ -101,12 +101,23 @@ class FlowchartAIService:
                         "optimization_targets": [],
                     }
 
+            # Extract recipe_data for workflow execution (maintain compatibility)
+            recipe_data = {
+                "ingredients": complete_recipe.get("ingredients", []),
+                "batch_size": complete_recipe.get("batch_size", 5.0),
+                "batch_size_unit": complete_recipe.get("batch_size_unit", "l"),
+                "efficiency": complete_recipe.get("efficiency", 75),
+                "boil_time": complete_recipe.get("boil_time", 60),
+                "mash_temperature": complete_recipe.get("mash_temperature", 152),
+                "mash_temp_unit": complete_recipe.get("mash_temp_unit", "F"),
+            }
+
             # Execute the workflow
             workflow_result = engine.execute_workflow(recipe_data, style_guidelines)
 
-            # Convert result to API format
+            # Convert result to API format - pass complete recipe for preservation
             result = self._convert_workflow_result_to_api_format(
-                workflow_result, recipe_data, style_analysis, unit_system
+                workflow_result, complete_recipe, style_analysis, unit_system
             )
 
             return result
@@ -291,8 +302,22 @@ class FlowchartAIService:
     def _apply_changes_to_recipe(
         self, original_recipe: Dict[str, Any], changes: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Apply a list of changes to a recipe and return the modified recipe."""
-        # Create a deep copy to avoid modifying original
+        """
+        Apply a list of changes to a recipe and return the modified recipe.
+        
+        This method preserves all user-defined fields including:
+        - name, style, description, notes (user content)
+        - is_public, version, parent_recipe_id (recipe management)
+        - recipe_id, user_id, username (identity)
+        - created_at, updated_at (timestamps)
+        - batch_size, batch_size_unit, boil_time, efficiency (user-controlled brewing params)
+        
+        Only modifies optimization-relevant fields:
+        - mash_temperature, mash_temp_unit (for FG control)
+        - ingredients (additions, modifications, removals)
+        - estimated_* fields (calculated metrics)
+        """
+        # Create a deep copy to avoid modifying original - preserves ALL fields
         import copy
 
         modified_recipe = copy.deepcopy(original_recipe)
@@ -362,12 +387,61 @@ class FlowchartAIService:
     def _convert_changes_to_api_format(
         self, changes: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Convert internal change format to API format expected by frontend."""
+        """
+        Convert internal change format to API format expected by frontend.
+        
+        Filters out intermediate iteration steps and returns only final net changes
+        to provide a clean summary for the user interface.
+        """
+        # Group changes by ingredient and field to eliminate iteration steps
+        change_groups = {}
+        recipe_param_changes = {}
+        
+        for change in changes:
+            change_type = change.get("type", "ingredient_modified")
+            
+            if change_type == "modify_recipe_parameter":
+                # Recipe parameter changes - keep the latest value
+                parameter = change.get("parameter")
+                if parameter:
+                    recipe_param_changes[parameter] = change
+                    
+            elif change_type in ["ingredient_modified", "ingredient_added", "ingredient_removed"]:
+                # Ingredient changes - group by name and field
+                ingredient_name = change.get("ingredient_name", "")
+                field = change.get("field", "amount")
+                key = f"{ingredient_name}:{field}:{change_type}"
+                
+                # For ingredient_added/removed, we want to keep all instances
+                if change_type in ["ingredient_added", "ingredient_removed"]:
+                    # Use a unique key to avoid grouping
+                    key = f"{key}:{len(change_groups)}"
+                
+                change_groups[key] = change
+
+        # Convert grouped changes to API format
         api_changes = []
 
-        for change in changes:
+        # Add recipe parameter changes
+        for parameter, change in recipe_param_changes.items():
             api_change = {
-                "type": change.get("type", "ingredient_modified"),
+                "type": "modify_recipe_parameter",
+                "ingredient_name": "",  # No ingredient for recipe parameters
+                "field": parameter,
+                "parameter": parameter,
+                "original_value": change.get("current_value"),
+                "optimized_value": change.get("new_value"),
+                "unit": "",
+                "change_reason": f"Adjusted {parameter} for optimization",
+            }
+            api_changes.append(api_change)
+
+        # Add ingredient changes
+        for key, change in change_groups.items():
+            change_type = change.get("type", "ingredient_modified")
+            
+            api_change = {
+                "type": change_type,
                 "ingredient_name": change.get("ingredient_name", ""),
                 "field": change.get("field", "amount"),
                 "original_value": change.get("current_value"),
@@ -376,27 +450,14 @@ class FlowchartAIService:
                 "change_reason": change.get("change_reason", "Optimization change"),
             }
 
-            # Add ingredient-specific fields
-            if change.get("type") == "ingredient_added":
-                api_change.update(
-                    {
-                        "ingredient_type": change.get("ingredient_data", {}).get(
-                            "type", ""
-                        ),
-                        "amount": change.get("ingredient_data", {}).get("amount", 0),
-                        "unit": change.get("ingredient_data", {}).get("unit", ""),
-                    }
-                )
-            elif change.get("type") == "modify_recipe_parameter":
-                # Handle recipe parameter changes for frontend
-                api_change.update(
-                    {
-                        "parameter": change.get("parameter"),
-                        "field": change.get("parameter"),  # Use parameter name as field
-                        "ingredient_name": "",  # No ingredient for recipe parameters
-                        "change_reason": f"Adjusted {change.get('parameter')} for optimization",
-                    }
-                )
+            # Add type-specific fields
+            if change_type == "ingredient_added":
+                ingredient_data = change.get("ingredient_data", {})
+                api_change.update({
+                    "ingredient_type": ingredient_data.get("type", ""),
+                    "amount": ingredient_data.get("amount", 0),
+                    "unit": ingredient_data.get("unit", ""),
+                })
 
             api_changes.append(api_change)
 

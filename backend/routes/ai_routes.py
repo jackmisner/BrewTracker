@@ -29,11 +29,16 @@ def analyze_recipe():
 
     Expected payload:
     {
-        "recipe_data": {
+        "complete_recipe": {
+            "name": "Recipe Name",
+            "style": "American Pale Ale", 
             "ingredients": [...],
             "batch_size": 5.0,
             "batch_size_unit": "gal",
-            "efficiency": 75
+            "efficiency": 75,
+            "mash_temperature": 152,
+            "mash_temp_unit": "F",
+            ... (all recipe fields)
         },
         "style_id": "optional-style-guide-id",
         "unit_system": "metric" | "imperial"  # optional, defaults to user preference
@@ -44,6 +49,7 @@ def analyze_recipe():
         "current_metrics": {...},
         "style_analysis": {...},
         "suggestions": [...],
+        "optimized_recipe": {...},  # Complete recipe with all fields preserved
         "analysis_timestamp": "..."
     }
     """
@@ -60,9 +66,10 @@ def analyze_recipe():
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        recipe_data = data.get("recipe_data")
-        if not recipe_data:
-            return jsonify({"error": "recipe_data is required"}), 400
+        # Accept both old format (recipe_data) and new format (complete_recipe) for backward compatibility
+        complete_recipe = data.get("complete_recipe") or data.get("recipe_data")
+        if not complete_recipe:
+            return jsonify({"error": "complete_recipe is required"}), 400
 
         # Get style ID (optional)
         style_id = data.get("style_id")
@@ -85,7 +92,7 @@ def analyze_recipe():
             f"🔬 Using flowchart-based analysis with workflow: {workflow_name or 'default'}"
         )
         analysis_result = flowchart_ai_service.analyze_recipe(
-            recipe_data,
+            complete_recipe,
             style_id=style_id,
             unit_system=unit_system,
             workflow_name=workflow_name,
@@ -113,11 +120,16 @@ def optimize_recipe():
 
     Expected payload:
     {
-        "recipe_data": {
+        "complete_recipe": {
+            "name": "Recipe Name",
+            "style": "American Pale Ale",
             "ingredients": [...],
             "batch_size": 5.0,
             "batch_size_unit": "gal",
-            "efficiency": 75
+            "efficiency": 75,
+            "mash_temperature": 152,
+            "mash_temp_unit": "F",
+            ... (all recipe fields)
         },
         "style_id": "optional-style-guide-id",
         "workflow_name": "optional-workflow-name",  # defaults to "recipe_optimization"
@@ -130,8 +142,8 @@ def optimize_recipe():
         "iterations_completed": 3,
         "original_metrics": {...},
         "optimized_metrics": {...},
-        "optimized_recipe": {...},
-        "recipe_changes": [...],
+        "optimized_recipe": {...},  # Complete recipe with all fields preserved
+        "recipe_changes": [...],  # Cleaned summary of final changes only
         "optimization_history": [...],
         "execution_path": [...],  # detailed workflow execution path
         "analysis_timestamp": "..."
@@ -150,9 +162,10 @@ def optimize_recipe():
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        recipe_data = data.get("recipe_data")
-        if not recipe_data:
-            return jsonify({"error": "recipe_data is required"}), 400
+        # Accept both old format (recipe_data) and new format (complete_recipe) for backward compatibility
+        complete_recipe = data.get("complete_recipe") or data.get("recipe_data")
+        if not complete_recipe:
+            return jsonify({"error": "complete_recipe is required"}), 400
 
         # Get optional parameters
         style_id = data.get("style_id")
@@ -165,12 +178,12 @@ def optimize_recipe():
 
         logger.info(f"🔬 Optimizing recipe using flowchart workflow: {workflow_name}")
         logger.info(
-            f"🔍 Recipe has {len(recipe_data.get('ingredients', []))} ingredients"
+            f"🔍 Recipe '{complete_recipe.get('name', 'Unnamed')}' has {len(complete_recipe.get('ingredients', []))} ingredients"
         )
 
         # Perform flowchart-based optimization
         optimization_result = flowchart_ai_service.analyze_recipe(
-            recipe_data,
+            complete_recipe,
             style_id=style_id,
             unit_system=unit_system,
             workflow_name=workflow_name,
