@@ -31,7 +31,7 @@ def analyze_recipe():
     {
         "complete_recipe": {
             "name": "Recipe Name",
-            "style": "American Pale Ale", 
+            "style": "American Pale Ale",
             "ingredients": [...],
             "batch_size": 5.0,
             "batch_size_unit": "gal",

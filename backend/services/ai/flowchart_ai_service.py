@@ -304,14 +304,14 @@ class FlowchartAIService:
     ) -> Dict[str, Any]:
         """
         Apply a list of changes to a recipe and return the modified recipe.
-        
+
         This method preserves all user-defined fields including:
         - name, style, description, notes (user content)
         - is_public, version, parent_recipe_id (recipe management)
         - recipe_id, user_id, username (identity)
         - created_at, updated_at (timestamps)
         - batch_size, batch_size_unit, boil_time, efficiency (user-controlled brewing params)
-        
+
         Only modifies optimization-relevant fields:
         - mash_temperature, mash_temp_unit (for FG control)
         - ingredients (additions, modifications, removals)
@@ -389,34 +389,61 @@ class FlowchartAIService:
     ) -> List[Dict[str, Any]]:
         """
         Convert internal change format to API format expected by frontend.
-        
+
         Filters out intermediate iteration steps and returns only final net changes
-        to provide a clean summary for the user interface.
+        to provide a clean summary for the user interface. Suppresses ALL
+        modifications for newly added ingredients, showing only the final addition.
         """
+        # Track ingredients that were added in this workflow
+        added_ingredients = set()
+
+        # First pass: identify all ingredient additions
+        for change in changes:
+            if change.get("type") == "ingredient_added":
+                added_ingredients.add(change.get("ingredient_name", ""))
+
         # Group changes by ingredient and field to eliminate iteration steps
         change_groups = {}
         recipe_param_changes = {}
-        
+
         for change in changes:
             change_type = change.get("type", "ingredient_modified")
-            
+            ingredient_name = change.get("ingredient_name", "")
+
             if change_type == "modify_recipe_parameter":
                 # Recipe parameter changes - keep the latest value
                 parameter = change.get("parameter")
                 if parameter:
                     recipe_param_changes[parameter] = change
-                    
-            elif change_type in ["ingredient_modified", "ingredient_added", "ingredient_removed"]:
+
+            elif change_type in [
+                "ingredient_modified",
+                "ingredient_added",
+                "ingredient_removed",
+            ]:
+                # Skip ALL modifications for newly added ingredients
+                # Only show the addition, not any subsequent modifications
+                if (
+                    change_type == "ingredient_modified"
+                    and ingredient_name in added_ingredients
+                ):
+                    # Update the corresponding addition with the final amount (if it's an amount change)
+                    if change.get("field") == "amount":
+                        self._update_addition_amount(
+                            change_groups, ingredient_name, change.get("new_value")
+                        )
+                    # Skip this modification change entirely
+                    continue
+
                 # Ingredient changes - group by name and field
-                ingredient_name = change.get("ingredient_name", "")
                 field = change.get("field", "amount")
                 key = f"{ingredient_name}:{field}:{change_type}"
-                
+
                 # For ingredient_added/removed, we want to keep all instances
                 if change_type in ["ingredient_added", "ingredient_removed"]:
                     # Use a unique key to avoid grouping
                     key = f"{key}:{len(change_groups)}"
-                
+
                 change_groups[key] = change
 
         # Convert grouped changes to API format
@@ -439,7 +466,7 @@ class FlowchartAIService:
         # Add ingredient changes
         for key, change in change_groups.items():
             change_type = change.get("type", "ingredient_modified")
-            
+
             api_change = {
                 "type": change_type,
                 "ingredient_name": change.get("ingredient_name", ""),
@@ -453,15 +480,91 @@ class FlowchartAIService:
             # Add type-specific fields
             if change_type == "ingredient_added":
                 ingredient_data = change.get("ingredient_data", {})
-                api_change.update({
-                    "ingredient_type": ingredient_data.get("type", ""),
-                    "amount": ingredient_data.get("amount", 0),
-                    "unit": ingredient_data.get("unit", ""),
-                })
+                api_change.update(
+                    {
+                        "ingredient_type": ingredient_data.get("type", ""),
+                        "amount": ingredient_data.get("amount", 0),
+                        "unit": ingredient_data.get("unit", ""),
+                    }
+                )
 
             api_changes.append(api_change)
 
         return api_changes
+
+    def _is_normalization_change(self, change: Dict[str, Any]) -> bool:
+        """
+        Determine if a change is purely a normalization adjustment.
+
+        Normalization changes are typically:
+        - Amount field modifications
+        - Where the values are close (within reasonable brewing tolerance)
+        - Made during the normalization step of the workflow
+        """
+        field = change.get("field", "")
+        if field != "amount":
+            return False
+
+        current_value = change.get("current_value")
+        new_value = change.get("new_value")
+        change_reason = change.get("change_reason", "").lower()
+
+        # Check if this is explicitly a normalization change
+        if "normalization" in change_reason or "normalize" in change_reason:
+            return True
+
+        # Check if values are close enough to be considered normalization
+        # (within 5% or 25g, whichever is larger)
+        if current_value and new_value:
+            try:
+                current_val = float(current_value)
+                new_val = float(new_value)
+
+                # Calculate tolerance - 5% of current value or 25g, whichever is larger
+                tolerance = max(abs(current_val * 0.05), 25.0)
+                diff = abs(new_val - current_val)
+
+                # If the difference is small and the new value is "rounder"
+                # (ends in 0 or 5), it's likely a normalization
+                if diff <= tolerance:
+                    # Check if new value is "rounder" (ends in 0, 5, 25, 50, etc.)
+                    new_val_int = int(new_val)
+                    if (
+                        new_val_int % 25 == 0
+                        or new_val_int % 10 == 0
+                        or new_val_int % 5 == 0
+                    ):
+                        return True
+
+            except (ValueError, TypeError):
+                pass
+
+        return False
+
+    def _update_addition_amount(
+        self,
+        change_groups: Dict[str, Dict[str, Any]],
+        ingredient_name: str,
+        new_amount: Any,
+    ) -> None:
+        """
+        Update the amount in an ingredient addition to reflect the normalized value.
+        """
+        # Find the addition entry for this ingredient
+        for key, change in change_groups.items():
+            if (
+                change.get("type") == "ingredient_added"
+                and change.get("ingredient_name") == ingredient_name
+            ):
+
+                # Update the ingredient_data amount to show the final normalized amount
+                ingredient_data = change.get("ingredient_data", {})
+                if ingredient_data:
+                    ingredient_data["amount"] = new_amount
+
+                # Also update the new_value for consistency
+                change["new_value"] = new_amount
+                break
 
     def get_available_workflows(self) -> List[str]:
         """Get list of available workflow names."""

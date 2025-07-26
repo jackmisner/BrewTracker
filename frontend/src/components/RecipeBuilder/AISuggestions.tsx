@@ -6,7 +6,7 @@ import {
   CreateRecipeIngredientData,
 } from "../../types";
 import { useUnits } from "../../contexts/UnitContext";
-import { formatIngredientAmount } from "../../utils/formatUtils";
+import { formatIngredientAmount, formatIbu } from "../../utils/formatUtils";
 import { Services } from "../../services";
 
 interface Suggestion {
@@ -847,7 +847,10 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                             isImproved ? "improved" : ""
                           }`}
                         >
-                          {originalValue} → {optimizedValue}
+                          {metric === "IBU" 
+                            ? `${formatIbu(originalValue)} → ${formatIbu(optimizedValue)}`
+                            : `${originalValue} → ${optimizedValue}`
+                          }
                           {isImproved && (
                             <span className="metric-checkmark">✓</span>
                           )}

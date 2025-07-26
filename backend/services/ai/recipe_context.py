@@ -373,7 +373,7 @@ class RecipeContext:
 
     def _evaluate_amounts_normalized(self, config: Dict[str, Any] = None) -> bool:
         """Check if ingredient amounts are normalized to brewing-friendly values.
-        
+
         This method uses the same logic as NormalizeAmountsStrategy to ensure
         consistency and prevent infinite normalization loops.
         """
@@ -381,18 +381,22 @@ class RecipeContext:
         for ingredient in ingredients:
             current_amount = ingredient.get("amount", 0)
             unit = ingredient.get("unit", "lb")
-            
+
             # Use the same normalization logic as NormalizeAmountsStrategy
-            normalized_amount = self._normalize_amount_for_evaluation(current_amount, unit)
-            
+            normalized_amount = self._normalize_amount_for_evaluation(
+                current_amount, unit
+            )
+
             # If current amount differs from what it should be normalized to, it's not normalized
-            if abs(current_amount - normalized_amount) > 0.001:  # Small tolerance for floating point
+            if (
+                abs(current_amount - normalized_amount) > 0.001
+            ):  # Small tolerance for floating point
                 return False
         return True
-    
+
     def _normalize_amount_for_evaluation(self, amount: float, unit: str) -> float:
         """Normalize amount using same logic as NormalizeAmountsStrategy.
-        
+
         This ensures the detection logic matches the actual normalization behavior.
         """
         if unit in ["lb", "lbs", "pound", "pounds"]:
