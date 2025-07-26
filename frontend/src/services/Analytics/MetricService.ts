@@ -109,17 +109,9 @@ class MetricService {
         mash_temp_unit: calculationData.mash_temp_unit,
       };
 
-      console.log("MetricService: API request payload:", {
-        ...requestPayload,
-        ingredients: `${requestPayload.ingredients.length} ingredients`,
-        yeastIngredients: requestPayload.ingredients.filter(ing => ing.type === 'yeast').map(yeast => ({
-          name: yeast.name,
-          attenuation: yeast.attenuation,
-          improved_attenuation_estimate: yeast.improved_attenuation_estimate
-        }))
-      });
-
-      const response = await ApiService.recipes.calculateMetricsPreview(requestPayload);
+      const response = await ApiService.recipes.calculateMetricsPreview(
+        requestPayload
+      );
       const metrics = this.processMetricsResponse(
         response.data.data || response.data
       );
@@ -153,7 +145,9 @@ class MetricService {
       efficiency: parseFloat((recipeData.efficiency || 75).toString()),
       boil_time: parseInt((recipeData.boil_time || 60).toString()),
       ingredients: this.formatIngredientsForCalculation(ingredients),
-      mash_temperature: recipeData.mash_temperature ? parseFloat(recipeData.mash_temperature.toString()) : undefined,
+      mash_temperature: recipeData.mash_temperature
+        ? parseFloat(recipeData.mash_temperature.toString())
+        : undefined,
       mash_temp_unit: recipeData.mash_temp_unit || undefined,
     };
 

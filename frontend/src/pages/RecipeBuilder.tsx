@@ -69,6 +69,7 @@ function RecipeBuilder(): React.ReactElement {
     importRecipeData,
     scaleRecipe,
     saveRecipe,
+
     clearError,
     refreshAvailableIngredients,
 
@@ -460,6 +461,7 @@ function RecipeBuilder(): React.ReactElement {
             onUpdateRecipe: updateRecipe,
             onBulkUpdateRecipe: bulkUpdateRecipe,
             importIngredients: importIngredients,
+
             disabled: addingIngredient || updatingIngredient || saving,
           }),
 
@@ -499,7 +501,9 @@ function RecipeBuilder(): React.ReactElement {
                 "button",
                 {
                   type: "button",
-                  className: `btn btn-primary ${!canSave ? "btn-disabled" : ""}`,
+                  className: `btn btn-primary ${
+                    !canSave ? "btn-disabled" : ""
+                  }`,
                   disabled: !canSave || saving,
                   onClick: (e) => {
                     e.preventDefault();

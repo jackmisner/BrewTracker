@@ -392,7 +392,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       // Check if internal optimization was performed
       if (response.optimization_performed && response.optimized_recipe) {
-        
         // Show optimization results instead of individual suggestions
         setOptimizationResult({
           performed: true,
@@ -668,14 +667,17 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       // NOTE: We exclude estimated_* fields because they should be recalculated
       // when brewing parameters change (like mash temperature)
       const recipeParameters: Partial<Recipe> = {
-        // Only include brewing parameters that can be optimized by the AI system
+        // Brewing parameters that can be optimized by the AI system
         mash_temperature: optimizedRecipe.mash_temperature,
         mash_temp_unit: optimizedRecipe.mash_temp_unit,
         mash_time: optimizedRecipe.mash_time,
-        // Excluded: estimated_* fields - these will be recalculated automatically
-        // when brewing parameters change via the useRecipeBuilder hook
+        // Pre-calculated metrics from backend - avoids frontend calculation timing issues
+        estimated_og: optimizedRecipe.estimated_og,
+        estimated_fg: optimizedRecipe.estimated_fg,
+        estimated_abv: optimizedRecipe.estimated_abv,
+        estimated_ibu: optimizedRecipe.estimated_ibu,
+        estimated_srm: optimizedRecipe.estimated_srm,
       };
-
 
       // Remove undefined values to avoid overwriting with undefined
       Object.keys(recipeParameters).forEach((key) => {
@@ -691,8 +693,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           if (_onBulkUpdateRecipe) {
             const updates = Object.entries(recipeParameters)
               .filter(([_, value]) => value !== undefined)
-              .map(([field, value]) => ({ field: field as keyof Recipe, value }));
-            
+              .map(([field, value]) => ({
+                field: field as keyof Recipe,
+                value,
+              }));
+
             await _onBulkUpdateRecipe(updates);
           } else if (onUpdateRecipe) {
             // Fallback to individual updates if bulk update not available

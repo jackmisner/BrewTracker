@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from models.mongo_models import BeerStyleGuide
+from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 from .flowchart_engine import FlowchartEngine, WorkflowResult
 from .workflow_config_loader import load_workflow
@@ -386,6 +387,28 @@ class FlowchartAIService:
                     )
 
         modified_recipe["ingredients"] = ingredients
+
+        # Calculate and add metrics for the optimized recipe
+        # This ensures the frontend receives pre-calculated metrics
+        # and doesn't need to trigger recalculation
+        try:
+            calculated_metrics = calculate_all_metrics_preview(modified_recipe)
+            modified_recipe.update(
+                {
+                    "estimated_og": calculated_metrics["og"],
+                    "estimated_fg": calculated_metrics["fg"],
+                    "estimated_abv": calculated_metrics["abv"],
+                    "estimated_ibu": calculated_metrics["ibu"],
+                    "estimated_srm": calculated_metrics["srm"],
+                }
+            )
+            logger.info(
+                f"✅ Pre-calculated metrics for optimized recipe: OG={calculated_metrics['og']:.3f}, FG={calculated_metrics['fg']:.3f}, ABV={calculated_metrics['abv']:.1f}%, IBU={calculated_metrics['ibu']}, SRM={calculated_metrics['srm']:.1f}"
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to calculate metrics for optimized recipe: {e}")
+            # Don't include metrics if calculation fails - let frontend handle it
+
         return modified_recipe
 
     def _convert_changes_to_api_format(
