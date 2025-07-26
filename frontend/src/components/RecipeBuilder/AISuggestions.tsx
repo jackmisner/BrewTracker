@@ -89,37 +89,45 @@ const getOptimizedChangesSummary = (
   // Track recipe parameter changes (like mash temperature)
   if (currentRecipe && optimizedRecipe) {
     const recipeParams = [
-      { 
-        key: 'mash_temperature', 
-        display: 'Mash Temperature',
-        unitKey: 'mash_temp_unit',
-        formatValue: (value: number, unit: string) => `${Math.round(value * 10) / 10}°${unit}`
+      {
+        key: "mash_temperature",
+        display: "Mash Temperature",
+        unitKey: "mash_temp_unit",
+        formatValue: (value: number, unit: string) =>
+          `${Math.round(value * 10) / 10}°${unit}`,
       },
-      { 
-        key: 'boil_time', 
-        display: 'Boil Time',
-        formatValue: (value: number) => `${value} min`
+      {
+        key: "boil_time",
+        display: "Boil Time",
+        formatValue: (value: number) => `${value} min`,
       },
-      { 
-        key: 'efficiency', 
-        display: 'Efficiency',
-        formatValue: (value: number) => `${value}%`
-      }
+      {
+        key: "efficiency",
+        display: "Efficiency",
+        formatValue: (value: number) => `${value}%`,
+      },
     ];
 
     for (const param of recipeParams) {
       const currentValue = (currentRecipe as any)[param.key];
       const optimizedValue = (optimizedRecipe as any)[param.key];
-      
+
       if (optimizedValue !== undefined && currentValue !== optimizedValue) {
-        const unit = param.unitKey ? (optimizedRecipe as any)[param.unitKey] || (currentRecipe as any)[param.unitKey] : '';
+        const unit = param.unitKey
+          ? (optimizedRecipe as any)[param.unitKey] ||
+            (currentRecipe as any)[param.unitKey]
+          : "";
         changes.push({
           type: "recipe_parameter_modified",
           parameter_name: param.display,
           parameter_key: param.key,
-          original_value: param.formatValue ? param.formatValue(currentValue, unit) : currentValue,
-          optimized_value: param.formatValue ? param.formatValue(optimizedValue, unit) : optimizedValue,
-          unit: unit
+          original_value: param.formatValue
+            ? param.formatValue(currentValue, unit)
+            : currentValue,
+          optimized_value: param.formatValue
+            ? param.formatValue(optimizedValue, unit)
+            : optimizedValue,
+          unit: unit,
         });
       }
     }
@@ -131,7 +139,7 @@ const getOptimizedChangesSummary = (
     for (const change of recipeChanges) {
       if (change.type === "ingredient_modified") {
         const modifications: any[] = [];
-        
+
         if (change.field === "amount") {
           modifications.push({
             field: "amount",
@@ -166,8 +174,7 @@ const getOptimizedChangesSummary = (
           amount: change.optimized_value || change.amount,
           unit: change.unit,
         });
-      }
-      else if (change.type === "ingredient_removed") {
+      } else if (change.type === "ingredient_removed") {
         changes.push({
           type: "ingredient_removed",
           ingredient_name: change.ingredient_name,
@@ -210,8 +217,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   // Convert backend API suggestions to frontend format
   const convertBackendSuggestions = useCallback(
     (backendSuggestions: any[]): Suggestion[] => {
-      console.log("🔍 AI DEBUG: Raw backend suggestions received:", JSON.stringify(backendSuggestions, null, 2));
-      
       // Filter out optimization_summary suggestions
       const filteredSuggestions = backendSuggestions.filter(
         (suggestion) => suggestion.type !== "optimization_summary"
@@ -240,10 +245,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   ): IngredientChange[] => {
     if (!Array.isArray(backendChanges)) return [];
 
-    console.log("🔍 AI DEBUG: Converting backend changes to frontend format:", JSON.stringify(backendChanges, null, 2));
-
     return backendChanges.map((change, index) => {
-      console.log("🔍 AI DEBUG: Processing backend change:", JSON.stringify(change, null, 2));
       const frontendChange = {
         ingredientId: change.ingredient_id || `change-${index}`,
         ingredientName:
@@ -336,7 +338,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         id: recipe.id,
         created_at: recipe.created_at,
         updated_at: recipe.updated_at,
-        
+
         // Recipe-specific fields
         recipe_id: recipe.recipe_id,
         user_id: recipe.user_id,
@@ -349,24 +351,24 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         is_public: recipe.is_public,
         version: recipe.version,
         parent_recipe_id: recipe.parent_recipe_id,
-        
+
         // Brewing parameters
         boil_time: recipe.boil_time,
         efficiency: recipe.efficiency,
         notes: recipe.notes,
-        
+
         // Mash temperature fields
         mash_temperature: recipe.mash_temperature,
         mash_temp_unit: recipe.mash_temp_unit,
         mash_time: recipe.mash_time,
-        
+
         // Calculated/estimated values
         estimated_og: recipe.estimated_og,
         estimated_fg: recipe.estimated_fg,
         estimated_abv: recipe.estimated_abv,
         estimated_ibu: recipe.estimated_ibu,
         estimated_srm: recipe.estimated_srm,
-        
+
         // Ingredients (complete ingredient data)
         ingredients: ingredients.map((ing) => ({
           ingredient_id: ing.ingredient_id,
@@ -384,22 +386,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         })),
       };
 
-      // Call backend AI API using Services (flowchart-based analysis only)
-      console.log("🔍 AI DEBUG: Sending complete recipe to backend:", JSON.stringify({
-        complete_recipe: completeRecipe,
-        style_id: styleId,
-        unit_system: unitSystem,
-        workflow_name: "recipe_optimization",
-      }, null, 2));
-      
       const response = await Services.AI.service.analyzeRecipe({
         complete_recipe: completeRecipe,
         style_id: styleId,
         unit_system: unitSystem,
         workflow_name: "recipe_optimization",
       });
-      
-      console.log("🔍 AI DEBUG: Raw backend response received:", JSON.stringify(response, null, 2));
 
       // Check if internal optimization was performed
       if (response.optimization_performed && response.optimized_recipe) {
@@ -453,12 +445,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     if (disabled) return;
 
     try {
-      console.log("🔍 AI DEBUG: Starting to apply suggestion:", suggestion);
-      console.log("🔍 AI DEBUG: Raw backend changes received:", JSON.stringify(suggestion.changes, null, 2));
-      
       // Process each change separately for better error handling and clearer logic
       for (const change of suggestion.changes) {
-        console.log("🔍 AI DEBUG: Processing individual change:", JSON.stringify(change, null, 2));
         // Handle new ingredient additions
         if (change.isNewIngredient && change.newIngredientData) {
           // Fetch available ingredients for new ingredient addition
@@ -624,11 +612,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           updateData.unit = change.unit as any;
         }
 
-        console.log("🔍 AI DEBUG: About to update ingredient:", existingIngredient.name);
-        console.log("🔍 AI DEBUG: Current ingredient state:", JSON.stringify(existingIngredient, null, 2));
-        console.log("🔍 AI DEBUG: Update data being applied:", JSON.stringify(updateData, null, 2));
-        console.log("🔍 AI DEBUG: Change field:", change.field, "Current Value:", change.currentValue, "Suggested Value:", change.suggestedValue);
-
         // Use the direct update mechanism that leverages existing validation and state management
         try {
           await onUpdateIngredient(existingIngredient.id!, updateData);
@@ -677,11 +660,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     if (disabled) return;
 
     try {
-      console.log("🔍 AI DEBUG: Applying optimized recipe using complete replacement");
-      console.log("🔍 AI DEBUG: Optimized recipe received:", JSON.stringify(optimization.optimizedRecipe, null, 2));
-      
       const optimizedRecipe = optimization.optimizedRecipe;
-      
+
       if (!optimizedRecipe) {
         throw new Error("No optimized recipe provided");
       }
@@ -700,7 +680,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       };
 
       // Remove undefined values to avoid overwriting with undefined
-      Object.keys(recipeParameters).forEach(key => {
+      Object.keys(recipeParameters).forEach((key) => {
         if (recipeParameters[key as keyof Recipe] === undefined) {
           delete recipeParameters[key as keyof Recipe];
         }
@@ -708,7 +688,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       // Step 1: Apply recipe parameter updates
       if (Object.keys(recipeParameters).length > 0) {
-        console.log("🔍 AI DEBUG: Applying recipe parameter updates:", JSON.stringify(recipeParameters, null, 2));
         try {
           // Use importRecipeData to handle all recipe metadata properly
           if (onUpdateRecipe) {
@@ -718,31 +697,30 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               }
             }
           }
-          console.log("✅ AI DEBUG: Successfully applied recipe parameter updates");
         } catch (error) {
-          console.error("❌ APPLY: Failed to apply recipe parameter updates:", error);
+          console.error(
+            "❌ APPLY: Failed to apply recipe parameter updates:",
+            error
+          );
           throw error;
         }
       }
 
       // Step 2: Replace ingredients completely
-      if (optimizedRecipe.ingredients && Array.isArray(optimizedRecipe.ingredients)) {
-        console.log("🔍 AI DEBUG: Replacing ingredients completely with optimized list");
-        console.log("🔍 AI DEBUG: Optimized ingredients:", JSON.stringify(optimizedRecipe.ingredients, null, 2));
-        
+      if (
+        optimizedRecipe.ingredients &&
+        Array.isArray(optimizedRecipe.ingredients)
+      ) {
         try {
           // Use importIngredients to replace the entire ingredient list
           // This function handles all the complex ingredient management automatically
           await importIngredients(optimizedRecipe.ingredients);
-          console.log("✅ AI DEBUG: Successfully replaced all ingredients");
         } catch (error) {
           console.error("❌ APPLY: Failed to replace ingredients:", error);
           throw error;
         }
       }
 
-      console.log("✅ AI DEBUG: Complete recipe replacement applied successfully");
-      
       // Clear the optimization result and show success message
       setOptimizationResult(null);
       setHasAnalyzed(false);
@@ -758,7 +736,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       );
     }
   };
-
 
   // Clear suggestions
   const clearSuggestions = (): void => {
@@ -847,10 +824,11 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                             isImproved ? "improved" : ""
                           }`}
                         >
-                          {metric === "IBU" 
-                            ? `${formatIbu(originalValue)} → ${formatIbu(optimizedValue)}`
-                            : `${originalValue} → ${optimizedValue}`
-                          }
+                          {metric === "IBU"
+                            ? `${formatIbu(originalValue)} → ${formatIbu(
+                                optimizedValue
+                              )}`
+                            : `${originalValue} → ${optimizedValue}`}
                           {isImproved && (
                             <span className="metric-checkmark">✓</span>
                           )}
@@ -972,8 +950,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                         )}
                         {change.type === "recipe_parameter_modified" && (
                           <div>
-                            <strong>Modified:</strong> {change.parameter_name} from{" "}
-                            {change.original_value} to {change.optimized_value}
+                            <strong>Modified:</strong> {change.parameter_name}{" "}
+                            from {change.original_value} to{" "}
+                            {change.optimized_value}
                           </div>
                         )}
                         <div className="change-description">

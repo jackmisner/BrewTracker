@@ -130,7 +130,7 @@ class MetricService {
       // Limit cache size
       if (this.calculationCache.size > 50) {
         const firstKey = this.calculationCache.keys().next().value;
-        this.calculationCache.delete(firstKey);
+        this.calculationCache.delete(firstKey!);
       }
 
       return metrics;
