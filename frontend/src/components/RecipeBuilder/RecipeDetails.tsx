@@ -75,6 +75,8 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   const batchSizeUnit =
     recipe.batch_size_unit || (unitSystem === "metric" ? "l" : "gal");
 
+  const mashTempDefault = recipe.mash_temperature || (unitSystem === "metric" ? 67 : 152);
+
   // Determine if recipe was created in metric or imperial
   const recipeUnitSystem = batchSizeUnit === "l" ? "metric" : "imperial";
 
@@ -250,7 +252,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
                 type="number"
                 id="mash_temperature"
                 name="mash_temperature"
-                value={recipe.mash_temperature || ""}
+                value={recipe.mash_temperature || mashTempDefault}
                 onChange={handleChange}
                 className="form-control"
                 min={unitSystem === "metric" ? "60" : "140"}

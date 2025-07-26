@@ -108,8 +108,12 @@ class FlowchartAIService:
                 "batch_size_unit": complete_recipe.get("batch_size_unit", "l"),
                 "efficiency": complete_recipe.get("efficiency", 75),
                 "boil_time": complete_recipe.get("boil_time", 60),
-                "mash_temperature": complete_recipe.get("mash_temperature", 152),
-                "mash_temp_unit": complete_recipe.get("mash_temp_unit", "F"),
+                "mash_temperature": complete_recipe.get(
+                    "mash_temperature", 152 if unit_system == "imperial" else 67
+                ),
+                "mash_temp_unit": complete_recipe.get(
+                    "mash_temp_unit", "F" if unit_system == "imperial" else "C"
+                ),
             }
 
             # Execute the workflow

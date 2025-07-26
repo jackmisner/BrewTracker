@@ -66,8 +66,7 @@ def analyze_recipe():
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        # Accept both old format (recipe_data) and new format (complete_recipe) for backward compatibility
-        complete_recipe = data.get("complete_recipe") or data.get("recipe_data")
+        complete_recipe = data.get("complete_recipe")
         if not complete_recipe:
             return jsonify({"error": "complete_recipe is required"}), 400
 
@@ -84,13 +83,6 @@ def analyze_recipe():
         # Get optional workflow name
         workflow_name = data.get("workflow_name")  # Optional workflow name
 
-        # The frontend already sends recipe data in the user's preferred units,
-        # so no conversion is needed here.
-
-        # Use flowchart-based analysis (only option now)
-        logger.info(
-            f"🔬 Using flowchart-based analysis with workflow: {workflow_name or 'default'}"
-        )
         analysis_result = flowchart_ai_service.analyze_recipe(
             complete_recipe,
             style_id=style_id,

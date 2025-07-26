@@ -474,9 +474,6 @@ class RecipeContext:
         """Check if mash temperature is available and can be raised (currently low)."""
         mash_temp = self.recipe.get("mash_temperature")
         recipe_info = self.recipe
-        logger.info(
-            f"🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️🌡️ Evaluating recipe {recipe_info} mash_temp_available_and_low: {mash_temp}"
-        )
         # Debug logging to understand why mash temp path isn't taken
         logger.info(
             f"🌡️ mash_temp_available_and_low check: mash_temp={mash_temp}, mash_temp_unit={self.recipe.get('mash_temp_unit')}"
