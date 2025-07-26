@@ -56,6 +56,9 @@ interface UseRecipeBuilderReturn {
 
   // Core actions
   updateRecipe: (field: keyof Recipe, value: any) => Promise<void>;
+  bulkUpdateRecipe: (
+    updates: Array<{ field: keyof Recipe; value: any }>
+  ) => Promise<void>;
   addIngredient: (
     type: IngredientType,
     ingredientData: CreateRecipeIngredientData
@@ -228,20 +231,27 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               recipe.batch_size > 10 ? "l" : "gal"
             ) as BatchSizeUnit;
           }
-          
+
           // Convert mash temperature to user's preferred units if needed
           if (recipe.mash_temperature && recipe.mash_temp_unit) {
             const userPreferredUnit = unitSystem === "metric" ? "C" : "F";
-            
+
             if (recipe.mash_temp_unit !== userPreferredUnit) {
               // Convert temperature to user's preferred unit
               if (userPreferredUnit === "C" && recipe.mash_temp_unit === "F") {
                 // Convert F to C
-                recipe.mash_temperature = Math.round(((recipe.mash_temperature - 32) * 5 / 9) * 10) / 10;
+                recipe.mash_temperature =
+                  Math.round((((recipe.mash_temperature - 32) * 5) / 9) * 10) /
+                  10;
                 recipe.mash_temp_unit = "C";
-              } else if (userPreferredUnit === "F" && recipe.mash_temp_unit === "C") {
+              } else if (
+                userPreferredUnit === "F" &&
+                recipe.mash_temp_unit === "C"
+              ) {
                 // Convert C to F
-                recipe.mash_temperature = Math.round(((recipe.mash_temperature * 9 / 5) + 32) * 10) / 10;
+                recipe.mash_temperature =
+                  Math.round(((recipe.mash_temperature * 9) / 5 + 32) * 10) /
+                  10;
                 recipe.mash_temp_unit = "F";
               }
             }
@@ -383,6 +393,67 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             error: "Failed to recalculate metrics",
           }));
         }
+      }
+    },
+    [state.recipe, state.ingredients]
+  );
+
+  // Bulk update recipe fields
+  const bulkUpdateRecipe = useCallback(
+    async (
+      updates: Array<{ field: keyof Recipe; value: any }>
+    ): Promise<void> => {
+      try {
+        setState((prev) => ({ ...prev, calculatingMetrics: true }));
+
+        // Apply all updates to create the final recipe
+        let updatedRecipe = { ...state.recipe };
+        for (const update of updates) {
+          updatedRecipe = { ...updatedRecipe, [update.field]: update.value };
+        }
+
+        setState((prev) => ({
+          ...prev,
+          recipe: updatedRecipe,
+          hasUnsavedChanges: true,
+        }));
+
+        // Check if any field affects calculations
+        const calculationFields: (keyof Recipe)[] = [
+          "batch_size",
+          "efficiency",
+          "boil_time",
+          "batch_size_unit",
+          "mash_temperature",
+          "mash_temp_unit",
+        ];
+
+        const needsRecalculation = updates.some((update) =>
+          calculationFields.includes(update.field)
+        );
+
+        if (needsRecalculation) {
+          const metrics = await Services.metrics.calculateMetricsDebounced(
+            "recipe-builder",
+            updatedRecipe,
+            state.ingredients
+          );
+
+          setState((prev) => ({
+            ...prev,
+            metrics,
+            calculatingMetrics: false,
+          }));
+        } else {
+          setState((prev) => ({ ...prev, calculatingMetrics: false }));
+        }
+      } catch (error) {
+        console.error("Error bulk updating recipe:", error);
+        setState((prev) => ({
+          ...prev,
+          calculatingMetrics: false,
+          error: "Failed to update recipe",
+        }));
       }
     },
     [state.recipe, state.ingredients]
@@ -636,39 +707,30 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               throw new Error(`Ingredient with ID ${ingredientId} not found`);
             }
 
-            console.log(`🔍 BULK UPDATE: Processing existing ingredient ${existingIngredient.name}`);
-            console.log(`🔍 BULK UPDATE: Existing ingredient use: "${existingIngredient.use}"`);
-            console.log(`🔍 BULK UPDATE: Update data:`, updatedData);
-
             // Validate the updated ingredient data
             const validationData = {
-                ingredient_id:
-                  updatedData.ingredient_id || existingIngredient.ingredient_id,
-                amount: updatedData.amount || existingIngredient.amount,
-                unit: updatedData.unit || existingIngredient.unit,
-                use: updatedData.use || existingIngredient.use,
-                time: updatedData.time || existingIngredient.time,
-                alpha_acid:
-                  updatedData.alpha_acid || existingIngredient.alpha_acid,
-                color: updatedData.color || existingIngredient.color,
-              } as CreateRecipeIngredientData;
-            
-            console.log(`🔍 BULK UPDATE: Validation data for ${existingIngredient.name}:`, validationData);
-            
+              ingredient_id:
+                updatedData.ingredient_id || existingIngredient.ingredient_id,
+              amount: updatedData.amount || existingIngredient.amount,
+              unit: updatedData.unit || existingIngredient.unit,
+              use: updatedData.use || existingIngredient.use,
+              time: updatedData.time || existingIngredient.time,
+              alpha_acid:
+                updatedData.alpha_acid || existingIngredient.alpha_acid,
+              color: updatedData.color || existingIngredient.color,
+            } as CreateRecipeIngredientData;
+
             const validation = Services.ingredient.validateIngredientData(
               existingIngredient.type,
               validationData
             );
 
             if (!validation.isValid) {
-              console.log(`🔍 BULK UPDATE: Validation FAILED for ${existingIngredient.name}:`, validation.errors);
               throw new Error(
                 `Validation failed for ${
                   existingIngredient.name
                 }: ${validation.errors.join(", ")}`
               );
-            } else {
-              console.log(`🔍 BULK UPDATE: Validation PASSED for ${existingIngredient.name}`);
             }
 
             // Update the ingredient in the array
@@ -680,10 +742,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
         const sortedIngredients =
           Services.ingredient.sortIngredients(updatedIngredients);
-        
-        console.log(`🔍 BULK UPDATE: About to update state with ${sortedIngredients.length} ingredients`);
-        console.log(`🔍 BULK UPDATE: Sorted ingredients:`, sortedIngredients.map(ing => `${ing.name} (${ing.amount}${ing.unit})`));
-        
+
         // Update state immediately for better UX
         setState((prev) => ({
           ...prev,
@@ -693,14 +752,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           calculatingMetrics: true,
         }));
 
-        console.log(`🔍 BULK UPDATE: State updated, now recalculating metrics...`);
-        
         // Create updated recipe object with new ingredients for consistent metrics calculation
         const updatedRecipe = {
           ...currentRecipe,
           // Ensure recipe has the updated ingredients for metrics calculation
         };
-        
+
         // Recalculate metrics with consistent recipe and ingredients
         const metrics = await Services.metrics.calculateMetricsDebounced(
           "recipe-builder",
@@ -708,32 +765,17 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        console.log(`🔍 BULK UPDATE: Metrics calculated, updating final state...`);
-        console.log(`🔍 BULK UPDATE: New metrics:`, metrics);
-
         setState((prev) => {
-          console.log(`🔍 BULK UPDATE: Final state update - prev ingredients:`, prev.ingredients.map(ing => `${ing.name} (${ing.amount}${ing.unit})`));
-          console.log(`🔍 BULK UPDATE: Final state update - new metrics:`, metrics);
-          console.log(`🔍 BULK UPDATE: Final state update - updating calculatingMetrics from ${prev.calculatingMetrics} to false`);
-          
           // Ensure we're only updating metrics if ingredients haven't changed
-          const currentIngredientIds = prev.ingredients.map(ing => `${ing.id}-${ing.amount}`).sort().join(',');
-          const expectedIngredientIds = sortedIngredients.map(ing => `${ing.id}-${ing.amount}`).sort().join(',');
-          
-          if (currentIngredientIds !== expectedIngredientIds) {
-            console.log(`🔍 BULK UPDATE: Ingredients mismatch detected! Current: ${currentIngredientIds.substring(0, 100)}...`);
-            console.log(`🔍 BULK UPDATE: Expected: ${expectedIngredientIds.substring(0, 100)}...`);
-          }
-          
+
           return {
             ...prev,
             metrics,
             calculatingMetrics: false,
           };
         });
-        
+
         // Bulk update completed successfully
-        
       } catch (error) {
         console.error("Error bulk updating ingredients:", error);
         setState((prev) => ({
@@ -747,7 +789,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         throw error;
       }
     },
-    [state.recipe] // Remove state dependencies to prevent stale closures
+    [state.ingredients, state.recipe] // Remove state dependencies to prevent stale closures
   );
 
   // Remove ingredient
@@ -1247,6 +1289,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
     // Core actions
     updateRecipe,
+    bulkUpdateRecipe,
     addIngredient,
     updateIngredient,
     bulkUpdateIngredients,

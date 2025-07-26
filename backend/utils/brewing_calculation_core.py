@@ -52,7 +52,12 @@ def calc_ibu_core(hops_data, og, batch_size_gal):
 
     for weight_oz, alpha_acid, time, use_type in hops_data:
         # Utilization calculations
-        utilization_factor = 0.3 if use_type == "whirlpool" else 1.0
+        if use_type == "boil":
+            utilization_factor = 1.0
+        elif use_type == "whirlpool":
+            utilization_factor = 0.3
+        else:
+            utilization_factor = 0
         gravity_factor = 1.65 * pow(0.000125, og - 1.0)
         time_factor = (1.0 - pow(2.718, -0.04 * time)) / 4.15
         utilization = gravity_factor * time_factor * utilization_factor

@@ -125,8 +125,6 @@ class CacheManager {
    * Invalidate caches when a brew session is deleted
    */
   onBrewSessionDeleted(sessionData: BrewSessionEventData): void {
-    console.log("Cache invalidation: Brew session deleted", sessionData);
-
     // Clear all related caches
     if (sessionData.recipe_id) {
       BrewSessionService.clearRecipeCache(sessionData.recipe_id);
@@ -147,7 +145,6 @@ class CacheManager {
    * Clear all caches
    */
   clearAllCaches(): void {
-    console.log("Cache invalidation: Clearing all caches");
     BrewSessionService.clearCache();
     attenuationAnalyticsServiceInstance.clearCache();
 
@@ -159,7 +156,6 @@ class CacheManager {
    * Force refresh for a specific recipe
    */
   forceRefreshRecipe(recipeId: ID): void {
-    console.log("Cache invalidation: Force refresh recipe", recipeId);
     BrewSessionService.clearRecipeCache(recipeId);
 
     // Emit event for components to react

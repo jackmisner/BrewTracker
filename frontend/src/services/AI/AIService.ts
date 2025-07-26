@@ -8,12 +8,17 @@ import ApiService from "../api";
 import { Recipe, RecipeIngredient, RecipeMetrics } from "../../types";
 
 export interface AIAnalysisRequest {
-  recipe_data: {
+  // Support both old format (recipe_data) and new format (complete_recipe)
+  recipe_data?: {
     ingredients: RecipeIngredient[];
     batch_size: number;
     batch_size_unit: string;
     efficiency: number;
+    // Optional: Additional recipe metadata can be added here
+    mash_temperature?: number; // Optional mash temperature for analysis
+    mash_temp_unit?: string; // Optional unit for mash temperature (e.g., "F" or "C")
   };
+  complete_recipe?: Recipe; // New: Complete recipe object with all fields
   style_id?: string; // Optional MongoDB ObjectId for specific style analysis
   unit_system?: "metric" | "imperial";
   workflow_name?: string; // Optional workflow name for flowchart analysis
@@ -39,12 +44,7 @@ export interface AIAnalysisResponse {
   iterations_completed?: number;
   original_metrics?: RecipeMetrics;
   optimized_metrics?: RecipeMetrics;
-  optimized_recipe?: {
-    ingredients: RecipeIngredient[];
-    batch_size: number;
-    batch_size_unit: string;
-    efficiency: number;
-  };
+  optimized_recipe?: Recipe; // Complete recipe object with all fields preserved
   recipe_changes?: RecipeChange[];
   optimization_history?: OptimizationHistoryEntry[];
 }

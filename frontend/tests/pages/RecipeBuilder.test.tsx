@@ -17,21 +17,17 @@ jest.mock("../../src/services/User/UserSettingsService", () => ({
   updateUserSettings: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock Services object with new organized structure
+// Mock Services object with current organized structure
 jest.mock("../../src/services", () => ({
   Services: {
     AI: {
-      cascadingEffects: jest.fn().mockImplementation(() => ({
-        predictChanges: jest.fn().mockReturnValue({}),
-        optimizeRecipe: jest.fn().mockReturnValue(null),
-      })),
-      smartBaseMalt: jest.fn().mockImplementation(() => ({
-        optimizeBaseMalt: jest.fn().mockReturnValue(null),
-      })),
-      enhancedStyleCompliance: jest.fn().mockImplementation(() => ({
-        analyzeCompliance: jest.fn().mockReturnValue(null),
-        generateOptimizationSuggestion: jest.fn().mockReturnValue(null),
-      })),
+      service: {
+        analyzeRecipe: jest.fn().mockResolvedValue({
+          suggestions: [],
+          current_metrics: {},
+          optimization_performed: false,
+        }),
+      },
     },
     BeerXML: {
       service: {

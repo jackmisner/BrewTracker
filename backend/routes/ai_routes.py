@@ -29,11 +29,16 @@ def analyze_recipe():
 
     Expected payload:
     {
-        "recipe_data": {
+        "complete_recipe": {
+            "name": "Recipe Name",
+            "style": "American Pale Ale",
             "ingredients": [...],
             "batch_size": 5.0,
             "batch_size_unit": "gal",
-            "efficiency": 75
+            "efficiency": 75,
+            "mash_temperature": 152,
+            "mash_temp_unit": "F",
+            ... (all recipe fields)
         },
         "style_id": "optional-style-guide-id",
         "unit_system": "metric" | "imperial"  # optional, defaults to user preference
@@ -44,6 +49,7 @@ def analyze_recipe():
         "current_metrics": {...},
         "style_analysis": {...},
         "suggestions": [...],
+        "optimized_recipe": {...},  # Complete recipe with all fields preserved
         "analysis_timestamp": "..."
     }
     """
@@ -60,9 +66,9 @@ def analyze_recipe():
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
-        recipe_data = data.get("recipe_data")
-        if not recipe_data:
-            return jsonify({"error": "recipe_data is required"}), 400
+        complete_recipe = data.get("complete_recipe")
+        if not complete_recipe:
+            return jsonify({"error": "complete_recipe is required"}), 400
 
         # Get style ID (optional)
         style_id = data.get("style_id")
@@ -77,15 +83,8 @@ def analyze_recipe():
         # Get optional workflow name
         workflow_name = data.get("workflow_name")  # Optional workflow name
 
-        # The frontend already sends recipe data in the user's preferred units,
-        # so no conversion is needed here.
-
-        # Use flowchart-based analysis (only option now)
-        logger.info(
-            f"🔬 Using flowchart-based analysis with workflow: {workflow_name or 'default'}"
-        )
         analysis_result = flowchart_ai_service.analyze_recipe(
-            recipe_data,
+            complete_recipe,
             style_id=style_id,
             unit_system=unit_system,
             workflow_name=workflow_name,
@@ -103,96 +102,6 @@ def analyze_recipe():
     except Exception as e:
         logger.error(f"Recipe analysis failed: {str(e)}")
         return jsonify({"error": "Recipe analysis failed", "details": str(e)}), 500
-
-
-@ai_bp.route("/optimize-recipe", methods=["POST"])
-@jwt_required()
-def optimize_recipe():
-    """
-    Optimize a recipe using flowchart-based analysis
-
-    Expected payload:
-    {
-        "recipe_data": {
-            "ingredients": [...],
-            "batch_size": 5.0,
-            "batch_size_unit": "gal",
-            "efficiency": 75
-        },
-        "style_id": "optional-style-guide-id",
-        "workflow_name": "optional-workflow-name",  # defaults to "recipe_optimization"
-        "unit_system": "metric" | "imperial"  # optional, defaults to user preference
-    }
-
-    Returns:
-    {
-        "optimization_performed": true,
-        "iterations_completed": 3,
-        "original_metrics": {...},
-        "optimized_metrics": {...},
-        "optimized_recipe": {...},
-        "recipe_changes": [...],
-        "optimization_history": [...],
-        "execution_path": [...],  # detailed workflow execution path
-        "analysis_timestamp": "..."
-    }
-    """
-    try:
-        # Get current user to determine unit preferences
-        current_user_id = get_jwt_identity()
-        user = User.objects(id=current_user_id).first()
-
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        # Parse request data
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No JSON data provided"}), 400
-
-        recipe_data = data.get("recipe_data")
-        if not recipe_data:
-            return jsonify({"error": "recipe_data is required"}), 400
-
-        # Get optional parameters
-        style_id = data.get("style_id")
-        workflow_name = data.get("workflow_name", "recipe_optimization")
-        unit_system = data.get("unit_system") or user.get_preferred_units()
-
-        # Validate unit system
-        if unit_system not in ["metric", "imperial"]:
-            unit_system = "imperial"  # Default fallback
-
-        logger.info(f"🔬 Optimizing recipe using flowchart workflow: {workflow_name}")
-        logger.info(
-            f"🔍 Recipe has {len(recipe_data.get('ingredients', []))} ingredients"
-        )
-
-        # Perform flowchart-based optimization
-        optimization_result = flowchart_ai_service.analyze_recipe(
-            recipe_data,
-            style_id=style_id,
-            unit_system=unit_system,
-            workflow_name=workflow_name,
-        )
-
-        # Add metadata specific to optimization endpoint
-        optimization_result["unit_system"] = unit_system
-        optimization_result["workflow_name"] = workflow_name
-        optimization_result["user_preferences"] = {
-            "preferred_units": user.get_preferred_units(),
-            "default_batch_size": user.get_default_batch_size(),
-        }
-
-        logger.info(
-            f"✅ Optimization completed. Changes made: {len(optimization_result.get('recipe_changes', []))}"
-        )
-
-        return jsonify(optimization_result), 200
-
-    except Exception as e:
-        logger.error(f"Recipe optimization failed: {str(e)}", exc_info=True)
-        return jsonify({"error": "Recipe optimization failed", "details": str(e)}), 500
 
 
 @ai_bp.route("/health", methods=["GET"])

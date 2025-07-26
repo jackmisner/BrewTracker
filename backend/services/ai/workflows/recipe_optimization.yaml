@@ -282,7 +282,7 @@ nodes:
     description: "Increase hop amounts/times for higher IBU"
     parameters:
       strategy: "increase_time_then_amount"
-      max_time: 60
+      max_time: 30  # Conservative max to prevent whirlpool timing issues
       amount_increment: 0.25
     next_node: "step6_ibu_check"
 

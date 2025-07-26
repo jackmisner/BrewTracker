@@ -593,6 +593,27 @@ class MongoDBService:
             new_recipe.boil_time = original_recipe.boil_time
             new_recipe.efficiency = original_recipe.efficiency
             new_recipe.notes = original_recipe.notes
+            if (
+                not original_recipe.mash_temperature
+                or original_recipe["mash_temperature"] is None
+            ):
+                if user and user.get_preferred_units() == "metric":
+                    new_recipe["mash_temperature"] = (
+                        67.0  # Celsius - balanced enzyme activity
+                    )
+                    new_recipe["mash_temp_unit"] = "C"
+                else:
+                    new_recipe["mash_temperature"] = (
+                        152.0  # Fahrenheit - balanced enzyme activity
+                    )
+                    new_recipe["mash_temp_unit"] = "F"
+
+            # Ensure mash_temp_unit is set if temperature is provided
+            if not original_recipe.mash_temp_unit and original_recipe.mash_temperature:
+                if user and user.get_preferred_units() == "metric":
+                    new_recipe["mash_temp_unit"] = "C"
+                else:
+                    new_recipe["mash_temp_unit"] = "F"
 
             # Set unit system to cloner's preference
             new_recipe.unit_system = unit_system

@@ -293,11 +293,6 @@ describe("CacheManager", () => {
 
         cacheManager.addEventListener("brew-session-deleted", eventListener);
         cacheManager.onBrewSessionDeleted(sessionData);
-
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          "Cache invalidation: Brew session deleted",
-          sessionData
-        );
         expect(BrewSessionService.clearRecipeCache).toHaveBeenCalledWith(
           "recipe-456"
         );
@@ -329,10 +324,6 @@ describe("CacheManager", () => {
 
         cacheManager.addEventListener("cache-cleared", eventListener);
         cacheManager.clearAllCaches();
-
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          "Cache invalidation: Clearing all caches"
-        );
         expect(BrewSessionService.clearCache).toHaveBeenCalled();
         expect(eventListener).toHaveBeenCalled();
       });
@@ -346,10 +337,6 @@ describe("CacheManager", () => {
         cacheManager.addEventListener("recipe-refresh", eventListener);
         cacheManager.forceRefreshRecipe(recipeId);
 
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          "Cache invalidation: Force refresh recipe",
-          recipeId
-        );
         expect(BrewSessionService.clearRecipeCache).toHaveBeenCalledWith(
           recipeId
         );
