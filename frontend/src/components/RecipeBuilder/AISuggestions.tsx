@@ -310,9 +310,6 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     setError(null);
 
     try {
-      // Legacy recipe data format (no longer used but kept for reference)
-      // const recipeData = { ... };
-
       // Look up style ID from recipe style name for proper style compliance analysis
       let styleId: string | undefined;
       if (recipe.style) {
