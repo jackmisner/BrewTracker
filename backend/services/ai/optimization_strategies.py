@@ -674,22 +674,48 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
         """Adjust hop quantities and timing for IBU targets."""
         parameters = parameters or {}
         strategy_type = parameters.get("strategy", "increase_time_then_amount")
-        max_time = parameters.get("max_time", 60)
+        
+        # Use recipe's actual boil time as the maximum time limit, not hardcoded value
+        recipe_boil_time = self.recipe.get("boil_time", 60)
+        max_time = min(parameters.get("max_time", 60), recipe_boil_time)
+        
         min_amount = parameters.get("min_amount", 0.25)
         amount_increment = parameters.get("amount_increment", 0.25)
 
         changes = []
         hops = self._find_ingredients_by_type("hop")
+        
+        # Only consider boil hops for timing adjustments
+        # Whirlpool, dry hop, and other usage types should not have their timing modified
         bittering_hops = [
             h for h in hops if h.get("use") == "boil" and h.get("time", 0) >= 30
         ]
 
         if not bittering_hops:
+            # If no boil hops available, try to adjust amounts of other hop types without changing timing
+            other_hops = [h for h in hops if h.get("use") != "boil"]
+            if other_hops and strategy_type in ["increase_time_then_amount", "reduce_amount_then_time"]:
+                # Find highest contributing non-boil hop using simple amount * alpha_acid calculation
+                # (no time factor since these aren't boil hops)
+                highest_other_hop = self._find_highest_non_boil_hop(other_hops)
+                if highest_other_hop:
+                    current_ibu = self.metrics.get("IBU", 0)
+                    target_ibu = self._calculate_target_ibu()
+                    
+                    if strategy_type == "increase_time_then_amount" and current_ibu < target_ibu:
+                        changes.extend(self._increase_hop_amount_only(highest_other_hop, amount_increment))
+                    elif strategy_type == "reduce_amount_then_time" and current_ibu > target_ibu:
+                        changes.extend(self._reduce_hop_amount_only(highest_other_hop, min_amount))
             return changes
 
         # Find the hop with highest IBU contribution
         highest_ibu_hop = self._find_highest_ibu_hop(bittering_hops)
         if not highest_ibu_hop:
+            return changes
+
+        # SAFETY CHECK: Ensure we only modify boil hops
+        if highest_ibu_hop.get("use") != "boil":
+            logger.warning(f"HopIBUAdjustmentStrategy: Attempted to modify non-boil hop {highest_ibu_hop.get('name')} ({highest_ibu_hop.get('use')}). Skipping.")
             return changes
 
         current_ibu = self.metrics.get("IBU", 0)
@@ -714,22 +740,61 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
     def _find_highest_ibu_hop(
         self, hops: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
-        """Find the hop with highest IBU contribution."""
+        """Find the hop with highest IBU contribution among BOIL HOPS ONLY.
+        
+        This function should ONLY be called with boil hops. 
+        Whirlpool, dry hop, and other usage types have different IBU calculations
+        and should not be processed by this function.
+        """
         if not hops:
             return None
 
-        # Simplified IBU contribution calculation
+        # Filter to ensure we only process boil hops - safety check
+        boil_hops = [h for h in hops if h.get("use") == "boil"]
+        if not boil_hops:
+            return None
+
+        # Simplified IBU contribution calculation for BOIL HOPS ONLY
+        best_hop = None
+        best_contribution = 0
+
+        for hop in boil_hops:
+            amount = hop.get("amount", 0)
+            alpha_acid = hop.get("alpha_acid", 5.0)
+            time = hop.get("time", 60)
+
+            # Boil time utilization approximation (only valid for boil hops)
+            time_factor = min(time / 60, 1.0)
+            contribution = amount * alpha_acid * time_factor
+
+            if contribution > best_contribution:
+                best_contribution = contribution
+                best_hop = hop
+
+        return best_hop
+
+    def _find_highest_non_boil_hop(
+        self, hops: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
+        """Find the hop with highest IBU contribution among NON-BOIL HOPS.
+        
+        This uses a simplified calculation since whirlpool/dry hop IBU contribution
+        is calculated differently than boil hops.
+        """
+        if not hops:
+            return None
+
+        # Simplified IBU contribution calculation for NON-BOIL HOPS
         best_hop = None
         best_contribution = 0
 
         for hop in hops:
             amount = hop.get("amount", 0)
             alpha_acid = hop.get("alpha_acid", 5.0)
-            time = hop.get("time", 60)
-
-            # Simplified contribution: amount * alpha_acid * time_factor
-            time_factor = min(time / 60, 1.0)  # Boil time utilization approximation
-            contribution = amount * alpha_acid * time_factor
+            
+            # For non-boil hops, use simple amount * alpha_acid
+            # (no time factor since these have different IBU contribution models)
+            contribution = amount * alpha_acid
 
             if contribution > best_contribution:
                 best_contribution = contribution
@@ -757,9 +822,16 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
         changes = []
         current_time = hop.get("time", 60)
         current_amount = hop.get("amount", 0)
+        hop_use = hop.get("use", "boil")
+        hop_name = hop.get("name", "unknown")
 
-        # Try increasing time first (if under max)
-        if current_time < max_time:
+        # CRITICAL SAFETY CHECK: This function should ONLY receive boil hops
+        if hop_use != "boil":
+            logger.error(f"_increase_hop_ibu called with non-boil hop: {hop_name} ({hop_use}). This should never happen!")
+            return changes
+
+        # Only increase time for boil hops - never modify timing for whirlpool, dry hop, etc.
+        if current_time < max_time and hop_use == "boil":
             new_time = min(current_time + 15, max_time)  # Increase by 15 minutes
             changes.append(
                 {
@@ -773,8 +845,17 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
                 }
             )
         else:
-            # Increase amount
+            # Increase amount (for both boil hops at max time and non-boil hops)
             new_amount = current_amount + amount_increment
+            
+            # Preserve timing context for non-boil hops
+            if hop_use != "boil":
+                hop_time = hop.get("time", "")
+                timing_info = f"{hop_time} min" if hop_time else ""
+                change_reason = f'Increased {hop.get("name")} amount to {new_amount} {hop.get("unit")} for higher IBU (timing preserved: {hop_use} {timing_info})'
+            else:
+                change_reason = f'Increased {hop.get("name")} amount to {new_amount} {hop.get("unit")} for higher IBU'
+            
             changes.append(
                 {
                     "type": "ingredient_modified",
@@ -783,7 +864,7 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
                     "current_value": current_amount,
                     "new_value": new_amount,
                     "unit": hop.get("unit"),
-                    "change_reason": f'Increased {hop.get("name")} amount to {new_amount} {hop.get("unit")} for higher IBU',
+                    "change_reason": change_reason,
                 }
             )
 
@@ -796,10 +877,31 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
         changes = []
         current_amount = hop.get("amount", 0)
         current_time = hop.get("time", 60)
+        hop_use = hop.get("use", "boil")
+        hop_name = hop.get("name", "unknown")
+        unit_system = hop.get("unit", "oz")
+        
+        # CRITICAL SAFETY CHECK: This function should ONLY receive boil hops
+        if hop_use != "boil":
+            logger.error(f"_reduce_hop_ibu called with non-boil hop: {hop_name} ({hop_use}). This should never happen!")
+            return changes
+        if unit_system == "g":
+            adjustment_amount = 5  # 5g increments for metric
+        else:
+            adjustment_amount = 0.25  # 0.25oz increments for imperial
 
         # Try reducing amount first (if above minimum)
         if current_amount > min_amount:
-            new_amount = max(current_amount - 0.25, min_amount)
+            new_amount = max(current_amount - adjustment_amount, min_amount)
+            
+            # Preserve timing context for non-boil hops
+            if hop_use != "boil":
+                hop_time = hop.get("time", "")
+                timing_info = f"{hop_time} min" if hop_time else ""
+                change_reason = f'Reduced {hop.get("name")} amount to {new_amount} {hop.get("unit")} for lower IBU (timing preserved: {hop_use} {timing_info})'
+            else:
+                change_reason = f'Reduced {hop.get("name")} amount to {new_amount} {hop.get("unit")} for lower IBU'
+            
             changes.append(
                 {
                     "type": "ingredient_modified",
@@ -808,11 +910,11 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
                     "current_value": current_amount,
                     "new_value": new_amount,
                     "unit": hop.get("unit"),
-                    "change_reason": f'Reduced {hop.get("name")} amount to {new_amount} {hop.get("unit")} for lower IBU',
+                    "change_reason": change_reason,
                 }
             )
-        elif current_time > 15:
-            # Reduce time if amount at minimum
+        elif current_time > 15 and hop_use == "boil":
+            # Only reduce time for boil hops - never modify timing for whirlpool, dry hop, etc.
             new_time = max(current_time - 10, 15)
             changes.append(
                 {
@@ -825,7 +927,67 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
                     "change_reason": f'Reduced {hop.get("name")} boil time to {new_time} min for lower IBU',
                 }
             )
+        # If it's a non-boil hop at minimum amount, we can't reduce it further without changing usage type
+        # which we should never do - just return empty changes
 
+        return changes
+
+    def _increase_hop_amount_only(
+        self, hop: Dict[str, Any], amount_increment: float
+    ) -> List[Dict[str, Any]]:
+        """Increase hop amount without changing timing (for non-boil hops like whirlpool, dry hop)."""
+        changes = []
+        current_amount = hop.get("amount", 0)
+        new_amount = current_amount + amount_increment
+        
+        hop_use = hop.get("use", "unknown")
+        hop_time = hop.get("time", "")
+        timing_info = f"{hop_time} min" if hop_time else ""
+        
+        changes.append(
+            {
+                "type": "ingredient_modified",
+                "ingredient_name": hop.get("name"),
+                "field": "amount",
+                "current_value": current_amount,
+                "new_value": new_amount,
+                "unit": hop.get("unit"),
+                "change_reason": f'Increased {hop.get("name")} amount to {new_amount} {hop.get("unit")} for higher IBU (timing preserved: {hop_use} {timing_info})',
+            }
+        )
+        return changes
+
+    def _reduce_hop_amount_only(
+        self, hop: Dict[str, Any], min_amount: float
+    ) -> List[Dict[str, Any]]:
+        """Reduce hop amount without changing timing (for non-boil hops like whirlpool, dry hop)."""
+        changes = []
+        current_amount = hop.get("amount", 0)
+        unit_system = hop.get("unit", "oz")
+        
+        if unit_system == "g":
+            adjustment_amount = 5  # 5g increments for metric
+        else:
+            adjustment_amount = 0.25  # 0.25oz increments for imperial
+            
+        new_amount = max(current_amount - adjustment_amount, min_amount)
+        
+        if new_amount != current_amount:
+            hop_use = hop.get("use", "unknown")
+            hop_time = hop.get("time", "")
+            timing_info = f"{hop_time} min" if hop_time else ""
+            
+            changes.append(
+                {
+                    "type": "ingredient_modified",
+                    "ingredient_name": hop.get("name"),
+                    "field": "amount",
+                    "current_value": current_amount,
+                    "new_value": new_amount,
+                    "unit": hop.get("unit"),
+                    "change_reason": f'Reduced {hop.get("name")} amount to {new_amount} {hop.get("unit")} for lower IBU (timing preserved: {hop_use} {timing_info})',
+                }
+            )
         return changes
 
 

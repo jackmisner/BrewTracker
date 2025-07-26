@@ -372,18 +372,55 @@ class RecipeContext:
         return evaluator
 
     def _evaluate_amounts_normalized(self, config: Dict[str, Any] = None) -> bool:
-        """Check if ingredient amounts are normalized to brewing-friendly values."""
+        """Check if ingredient amounts are normalized to brewing-friendly values.
+        
+        This method uses the same logic as NormalizeAmountsStrategy to ensure
+        consistency and prevent infinite normalization loops.
+        """
         ingredients = self.recipe.get("ingredients", [])
         for ingredient in ingredients:
-            amount = ingredient.get("amount", 0)
-            # Check if amounts are reasonable brewing increments (multiples of 0.25 for small amounts)
-            if amount > 0 and amount < 1:
-                if (amount * 4) % 1 != 0:  # Not a quarter increment
-                    return False
-            elif amount >= 1:
-                if amount % 0.5 != 0:  # Not a half increment for larger amounts
-                    return False
+            current_amount = ingredient.get("amount", 0)
+            unit = ingredient.get("unit", "lb")
+            
+            # Use the same normalization logic as NormalizeAmountsStrategy
+            normalized_amount = self._normalize_amount_for_evaluation(current_amount, unit)
+            
+            # If current amount differs from what it should be normalized to, it's not normalized
+            if abs(current_amount - normalized_amount) > 0.001:  # Small tolerance for floating point
+                return False
         return True
+    
+    def _normalize_amount_for_evaluation(self, amount: float, unit: str) -> float:
+        """Normalize amount using same logic as NormalizeAmountsStrategy.
+        
+        This ensures the detection logic matches the actual normalization behavior.
+        """
+        if unit in ["lb", "lbs", "pound", "pounds"]:
+            if amount < 1:
+                return round(amount * 4) / 4  # Quarter pound increments
+            else:
+                return round(amount * 2) / 2  # Half pound increments
+
+        elif unit in ["oz", "ounces"]:
+            if amount < 2:
+                return round(amount * 4) / 4  # Quarter ounce increments
+            else:
+                return round(amount * 2) / 2  # Half ounce increments
+
+        elif unit in ["kg", "kilograms"]:
+            if amount < 0.5:
+                return round(amount * 20) / 20  # 50g increments
+            else:
+                return round(amount * 10) / 10  # 100g increments
+
+        elif unit in ["g", "grams"]:
+            if amount < 100:
+                return round(amount / 25) * 25  # 25g increments
+            else:
+                return round(amount / 50) * 50  # 50g increments
+
+        else:
+            return round(amount, 2)
 
     def _evaluate_caramel_malts_in_recipe(self, config: Dict[str, Any] = None) -> bool:
         """Check if recipe contains caramel/crystal malts."""
