@@ -142,19 +142,13 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
           : "Clone Recipe"}
       </button>
 
-      {!isPublicRecipe && (
+      {!isPublicRecipe && !compact && (
         <button
           className={`${buttonClass} delete-button`}
           onClick={handleDelete}
           disabled={isDeleting}
         >
-          {isDeleting
-            ? compact
-              ? "Deleting..."
-              : "Deleting Recipe..."
-            : compact
-            ? "Delete"
-            : "Delete Recipe"}
+          {isDeleting ? "Deleting Recipe..." : "Delete Recipe"}
         </button>
       )}
 

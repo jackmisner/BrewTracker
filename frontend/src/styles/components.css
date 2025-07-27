@@ -149,6 +149,16 @@
   color: var(--color-red-600);
 }
 
+.recipe-card-button.brew-button {
+  background-color: #10b981; /* emerald-500 - consistent with ViewRecipe */
+  color: white;
+  flex-grow: 1;
+}
+
+.recipe-card-button.brew-button:hover {
+  background-color: #059669; /* emerald-600 - consistent with ViewRecipe */
+}
+
 
 @media (max-width: 480px) {
   .recipe-card-actions {
