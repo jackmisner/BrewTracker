@@ -667,3 +667,10 @@ export function formatTime(
     return `${Math.round(numTime)} min`;
   }
 }
+
+// Form input utility function to select all text on focus
+export function selectAllOnFocus(
+  e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+): void {
+  e.target.select();
+}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import { Ingredient, IngredientFormData } from "../../../types";
+import { selectAllOnFocus } from "../../../utils/formatUtils";
 import "../../../styles/SearchableSelect.css";
 
 interface UnitOption {
@@ -38,15 +39,6 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-  // Get default amount based on unit system
-  const getDefaultAmount = (): string => {
-    const preferredUnit = getPreferredUnit("weight");
-    if (unitSystem === "metric") {
-      return preferredUnit === "kg" ? "1" : "1000";
-    } else {
-      return preferredUnit === "lb" ? "1" : "16";
-    }
-  };
 
   const [fermentableForm, setFermentableForm] = useState<FermentableFormData>({
     ingredient_id: "",
@@ -113,7 +105,8 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
         ...prev,
         ingredient_id: selectedFermentable.ingredient_id,
         color: selectedFermentable.color?.toString() || "",
-        amount: prev.amount || getDefaultAmount(), // Set default amount if empty
+        // Set default amount when ingredient is selected (but empty)
+        amount: prev.amount || (unitSystem === "metric" ? "1" : "1"),
         selectedIngredient: selectedFermentable,
       }));
 
@@ -268,14 +261,11 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               name="amount"
               value={fermentableForm.amount}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               step="0.1"
               min="0"
               max={unitSystem === "metric" ? "50000" : "1600"}
-              placeholder={
-                fermentableForm.selectedIngredient
-                  ? "Amount"
-                  : getAmountPlaceholder()
-              }
+              placeholder={getAmountPlaceholder()}
               className={`amount-input ${errors.amount ? "error" : ""}`}
               disabled={disabled}
               required
@@ -330,6 +320,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               name="color"
               value={fermentableForm.color}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               step="0.1"
               min="0"
               max="600"

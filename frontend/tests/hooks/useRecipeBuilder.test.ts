@@ -128,6 +128,8 @@ describe("useRecipeBuilder", () => {
         description: "",
         boil_time: 60,
         efficiency: 75,
+        mash_temperature: 152, // Default imperial temperature
+        mash_temp_unit: "F", // Default imperial unit
         is_public: false,
         notes: "",
         ingredients: [],

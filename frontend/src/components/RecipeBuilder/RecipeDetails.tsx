@@ -3,6 +3,7 @@ import { useUnits } from "../../contexts/UnitContext";
 import { Link } from "react-router";
 import BeerStyleSelector from "./BeerStyles/BeerStyleSelector";
 import { Recipe, RecipeMetrics } from "../../types";
+import { selectAllOnFocus } from "../../utils/formatUtils";
 
 interface RecipeDetailsProps {
   recipe: Recipe;
@@ -70,15 +71,16 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   };
 
   // Use the recipe's stored batch size and unit - don't convert
-  const displayBatchSize =
-    recipe.batch_size || (unitSystem === "metric" ? 19 : 5);
+  // Treat 0 as empty for new recipes
+  const displayBatchSize = recipe.batch_size && recipe.batch_size > 0 ? recipe.batch_size : undefined;
   const batchSizeUnit =
     recipe.batch_size_unit || (unitSystem === "metric" ? "l" : "gal");
 
-  const mashTempDefault = recipe.mash_temperature || (unitSystem === "metric" ? 67 : 152);
+  // Determine if recipe was created in metric or imperial (use current unit system if no batch size set)
+  const recipeUnitSystem = displayBatchSize ? (batchSizeUnit === "l" ? "metric" : "imperial") : unitSystem;
 
-  // Determine if recipe was created in metric or imperial
-  const recipeUnitSystem = batchSizeUnit === "l" ? "metric" : "imperial";
+  // Don't set default temperature values for new recipes
+  const displayMashTemp = recipe.mash_temperature;
 
   // Get unit-specific properties based on the recipe's original unit system
   const getBatchSizeProps = (): BatchSizeProps => {
@@ -168,15 +170,17 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           <div className="form-group">
             <label htmlFor="batch_size">
               Batch Size ({batchSizeProps.unit}) *
-              <span className="unit-indicator">
-                {displayBatchSize} {batchSizeUnit.toUpperCase()}
-              </span>
+              {displayBatchSize && (
+                <span className="unit-indicator">
+                  {displayBatchSize} {batchSizeUnit.toUpperCase()}
+                </span>
+              )}
             </label>
             <input
               type="number"
               id="batch_size"
               name="batch_size"
-              value={displayBatchSize}
+              value={displayBatchSize || ""}
               onChange={(e) => {
                 // Update both batch size and unit
                 handleChange(e);
@@ -185,6 +189,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
                   onChange("batch_size_unit" as keyof Recipe, batchSizeUnit);
                 }
               }}
+              onFocus={selectAllOnFocus}
               className="form-control"
               min={batchSizeProps.min}
               max={batchSizeProps.max}
@@ -212,6 +217,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               name="boil_time"
               value={recipe.boil_time || ""}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               className="form-control"
               min="15"
               max="180"
@@ -230,6 +236,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               name="efficiency"
               value={recipe.efficiency || ""}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               className="form-control"
               min="50"
               max="95"
@@ -244,7 +251,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
             <label htmlFor="mash_temperature">
               Mash Temperature 
               <span className="unit-indicator">
-                ({recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")})
+                ({recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")})
               </span>
             </label>
             <div className="input-group">
@@ -252,18 +259,19 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
                 type="number"
                 id="mash_temperature"
                 name="mash_temperature"
-                value={recipe.mash_temperature || mashTempDefault}
+                value={displayMashTemp || ""}
                 onChange={handleChange}
+                onFocus={selectAllOnFocus}
                 className="form-control"
-                min={unitSystem === "metric" ? "60" : "140"}
-                max={unitSystem === "metric" ? "77" : "170"}
+                min={recipeUnitSystem === "metric" ? "60" : "140"}
+                max={recipeUnitSystem === "metric" ? "77" : "170"}
                 step="1"
-                placeholder={unitSystem === "metric" ? "67" : "152"}
+                placeholder={recipeUnitSystem === "metric" ? "67" : "152"}
                 disabled={saving}
               />
               <select
                 name="mash_temp_unit"
-                value={recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")}
+                value={recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")}
                 onChange={handleChange}
                 className="input-addon"
                 disabled={saving}

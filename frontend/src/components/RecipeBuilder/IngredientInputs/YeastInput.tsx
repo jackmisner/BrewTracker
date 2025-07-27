@@ -3,6 +3,7 @@ import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import AttenuationBadge from "../../AttenuationAnalytics/AttenuationBadge";
 import { Ingredient, IngredientFormData } from "../../../types";
+import { selectAllOnFocus } from "../../../utils/formatUtils";
 import "../../../styles/SearchableSelect.css";
 import "../../../styles/AttenuationAnalytics.css";
 
@@ -293,6 +294,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
               name="amount"
               value={yeastForm.amount}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               className={`amount-input ${errors.amount ? "error" : ""}`}
               placeholder={
                 yeastForm.selectedIngredient ? "Amount" : getAmountPlaceholder()
