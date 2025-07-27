@@ -1,6 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router";
-import { Recipe } from "../types";
+import { Recipe, ID } from "../types";
 import {
   formatGravity,
   formatAbv,
@@ -8,29 +7,25 @@ import {
   formatSrm,
   getSrmColour,
 } from "../utils/formatUtils";
+import RecipeActions from "./RecipeActions";
 
 interface CompactRecipeCardProps {
   recipe: Recipe;
   showActionsInCard?: boolean;
+  isPublicRecipe?: boolean;
+  originalAuthor?: string;
+  onDelete?: (recipeId: ID) => void;
+  refreshTrigger?: (() => void) | null;
 }
 
 const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
   recipe,
   showActionsInCard = true,
+  isPublicRecipe = false,
+  originalAuthor,
+  onDelete,
+  refreshTrigger = null,
 }) => {
-  const navigate = useNavigate();
-
-  const handleView = (): void => {
-    navigate(`/recipes/${recipe.recipe_id}`);
-  };
-
-  const handleEdit = (): void => {
-    navigate(`/recipes/${recipe.recipe_id}/edit`);
-  };
-
-  const handleBrew = (): void => {
-    navigate(`/brew-sessions/new?recipeId=${recipe.recipe_id}`);
-  };
 
   return (
     <div className="compact-recipe-card">
@@ -86,17 +81,15 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
 
       {/* Actions */}
       {showActionsInCard && (
-        <div className="compact-card-actions">
-          <button onClick={handleView} className="compact-action-button view">
-            View
-          </button>
-          <button onClick={handleEdit} className="compact-action-button edit">
-            Edit
-          </button>
-          <button onClick={handleBrew} className="compact-action-button brew">
-            Brew
-          </button>
-        </div>
+        <RecipeActions
+          recipe={recipe}
+          onDelete={onDelete}
+          refreshTrigger={refreshTrigger}
+          showViewButton={true}
+          compact={true}
+          isPublicRecipe={isPublicRecipe}
+          originalAuthor={originalAuthor}
+        />
       )}
     </div>
   );

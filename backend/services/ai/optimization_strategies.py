@@ -1335,8 +1335,10 @@ class NormalizeAmountsStrategy(OptimizationStrategy):
         """Normalize ingredient amounts to brewing increments."""
         changes = []
         ingredients = self.recipe.get("ingredients", [])
-
-        for ingredient in ingredients:
+        normalizable_ingredients = [
+            ing for ing in ingredients if ing.get("type") in ["grain", "hop"]
+        ]
+        for ingredient in normalizable_ingredients:
             current_amount = ingredient.get("amount", 0)
             unit = ingredient.get("unit", "lb")
 

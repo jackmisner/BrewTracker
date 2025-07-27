@@ -360,6 +360,32 @@ def clone_recipe(recipe_id):
         return jsonify({"error": message}), 400
 
 
+@recipes_bp.route("/<recipe_id>/clone-public", methods=["POST"])
+@jwt_required()
+def clone_public_recipe(recipe_id):
+    user_id = get_jwt_identity()
+
+    try:
+        # Validate ObjectId format
+        ObjectId(recipe_id)
+    except (InvalidId, ValueError):
+        return jsonify({"error": "Invalid recipe ID format"}), 400
+
+    # Get original author from request body
+    data = request.get_json()
+    original_author = data.get("originalAuthor", "Unknown") if data else "Unknown"
+
+    # Clone the public recipe
+    cloned_recipe, message = MongoDBService.clone_public_recipe(
+        recipe_id, user_id, original_author
+    )
+
+    if cloned_recipe:
+        return jsonify(cloned_recipe.to_dict()), 201
+    else:
+        return jsonify({"error": message}), 400
+
+
 @recipes_bp.route("/<recipe_id>/versions", methods=["GET"])
 @jwt_required()
 def get_recipe_versions(recipe_id):

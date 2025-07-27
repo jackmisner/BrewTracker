@@ -660,6 +660,109 @@ class MongoDBService:
             return None, str(e)
 
     @staticmethod
+    def clone_public_recipe(recipe_id, user_id, original_author):
+        """Create an unlinked copy of a public recipe with attribution"""
+        try:
+            # Get the original recipe
+            original_recipe = Recipe.objects(id=recipe_id).first()
+            if not original_recipe:
+                return None, "Original recipe not found"
+
+            # Check if the recipe is public
+            if not original_recipe.is_public:
+                return None, "Recipe is not public"
+
+            # Get the cloner's unit system preference
+            user = User.objects(id=user_id).first()
+            unit_system = user.get_preferred_units() if user else "imperial"
+
+            # Create new recipe object as an unlinked copy
+            new_recipe = Recipe()
+            new_recipe.user_id = ObjectId(user_id)
+
+            # Keep original name without version suffix (no versioning for public clones)
+            new_recipe.name = original_recipe.name
+
+            # Copy fields from the original recipe
+            new_recipe.style = original_recipe.style
+            new_recipe.batch_size = original_recipe.batch_size
+            new_recipe.batch_size_unit = original_recipe.batch_size_unit
+            new_recipe.description = original_recipe.description
+            new_recipe.is_public = False  # Cloned recipes start as private
+            new_recipe.boil_time = original_recipe.boil_time
+            new_recipe.efficiency = original_recipe.efficiency
+
+            # Add attribution to notes field
+            original_notes = original_recipe.notes or ""
+            attribution_text = (
+                f"Cloned from {original_recipe.name} by {original_author}"
+            )
+
+            if original_notes:
+                new_recipe.notes = f"{original_notes}\n\n{attribution_text}"
+            else:
+                new_recipe.notes = attribution_text
+
+            # Handle mash temperature with user preference
+            if (
+                not original_recipe.mash_temperature
+                or original_recipe.mash_temperature is None
+            ):
+                if user and user.get_preferred_units() == "metric":
+                    new_recipe.mash_temperature = 67.0  # Celsius
+                    new_recipe.mash_temp_unit = "C"
+                else:
+                    new_recipe.mash_temperature = 152.0  # Fahrenheit
+                    new_recipe.mash_temp_unit = "F"
+            else:
+                new_recipe.mash_temperature = original_recipe.mash_temperature
+                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit
+
+            # Set unit system to cloner's preference
+            new_recipe.unit_system = unit_system
+
+            # NO parent-child relationship for public clones
+            new_recipe.parent_recipe_id = None
+            new_recipe.version = 1  # Always version 1 for unlinked copies
+
+            # Copy metrics from the original recipe
+            new_recipe.estimated_og = original_recipe.estimated_og
+            new_recipe.estimated_fg = original_recipe.estimated_fg
+            new_recipe.estimated_abv = original_recipe.estimated_abv
+            new_recipe.estimated_ibu = original_recipe.estimated_ibu
+            new_recipe.estimated_srm = original_recipe.estimated_srm
+
+            # Copy ingredients from the original recipe
+            for ing in original_recipe.ingredients:
+                new_ing = RecipeIngredient()
+                new_ing.ingredient_id = ing.ingredient_id
+                new_ing.name = ing.name
+                new_ing.type = ing.type
+                new_ing.grain_type = ing.grain_type
+                new_ing.amount = ing.amount
+                new_ing.unit = ing.unit
+                new_ing.use = ing.use
+                new_ing.time = ing.time
+                new_ing.potential = ing.potential
+                new_ing.color = ing.color
+                new_ing.alpha_acid = ing.alpha_acid
+                new_ing.attenuation = ing.attenuation
+                new_recipe.ingredients.append(new_ing)
+
+            # Set creation timestamps
+            now = datetime.now(UTC)
+            new_recipe.created_at = now
+            new_recipe.updated_at = now
+
+            # Save the new recipe
+            new_recipe.save()
+
+            return new_recipe, "Public recipe cloned successfully with attribution"
+        except Exception as e:
+            print(f"Database error cloning public recipe: {e}")
+            return None, str(e)
+
+    @staticmethod
     def search_recipes(query, page=1, per_page=10):
         """Search recipes by name or style"""
         try:
