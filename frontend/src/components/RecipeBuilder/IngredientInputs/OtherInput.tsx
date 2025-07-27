@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import { Ingredient, IngredientFormData } from "../../../types";
+import { selectAllOnFocus } from "../../../utils/formatUtils";
 import "../../../styles/SearchableSelect.css";
 
 interface UnitOption {
@@ -383,6 +384,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               name="amount"
               value={otherForm.amount}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               placeholder={
                 otherForm.selectedIngredient ? "Amount" : getAmountPlaceholder()
               }
@@ -455,6 +457,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               name="time"
               value={otherForm.time}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               placeholder="Time (min)"
               className="adjunct-time-input"
               min="0"

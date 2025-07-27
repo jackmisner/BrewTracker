@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import { Ingredient, IngredientFormData } from "../../../types";
+import { selectAllOnFocus } from "../../../utils/formatUtils";
 import "../../../styles/SearchableSelect.css";
 
 interface UnitOption {
@@ -344,6 +345,7 @@ const HopInput: React.FC<HopInputProps> = ({
               name="amount"
               value={hopForm.amount}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               step="0.1"
               min="0"
               max={hopForm.unit === "oz" ? "10" : "300"}
@@ -404,6 +406,7 @@ const HopInput: React.FC<HopInputProps> = ({
               name="alpha_acid"
               value={hopForm.alpha_acid}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               step="0.1"
               min="0"
               max="25"
@@ -424,6 +427,7 @@ const HopInput: React.FC<HopInputProps> = ({
               name="time"
               value={hopForm.time}
               onChange={handleChange}
+              onFocus={selectAllOnFocus}
               step="1"
               min="0"
               placeholder={

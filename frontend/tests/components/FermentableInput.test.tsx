@@ -142,20 +142,20 @@ describe("FermentableInput", () => {
     const user = userEvent.setup();
     renderWithUnitProvider(<FermentableInput {...defaultProps} />);
 
-    // Select an ingredient (this will pre-fill the amount)
+    // Select an ingredient (should set default amount of 1)
     const searchableSelect = screen
       .getByTestId("searchable-select")
       .querySelector("input");
     await user.type(searchableSelect!, "pale malt");
 
-    // Wait for pre-filling to complete
+    // Verify amount field shows default value when ingredient is selected
     await waitFor(() => {
-      const amountInput = screen.getByPlaceholderText("Amount");
+      const amountInput = screen.getByPlaceholderText("1");
       expect((amountInput as HTMLInputElement).value).toBe("1");
     });
 
-    // Clear the pre-filled amount to test validation
-    const amountInput = screen.getByPlaceholderText("Amount");
+    // Clear the amount to test validation
+    const amountInput = screen.getByPlaceholderText("1");
     await user.clear(amountInput);
 
     // Try to submit

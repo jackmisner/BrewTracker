@@ -116,14 +116,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       recipe_id: "",
       name: "",
       style: "",
-      batch_size: unitSystem === "metric" ? 19 : 5, // Use 19L for metric, 5 gal for imperial
-      batch_size_unit: (unitSystem === "metric" ? "l" : "gal") as BatchSizeUnit, // Add unit field
+      batch_size: 0, // Use 0 as placeholder for new recipes (will use placeholders in UI)
+      batch_size_unit: (unitSystem === "metric" ? "l" : "gal") as BatchSizeUnit, // Set unit preference but no default size
       description: "",
-      boil_time: 60,
-      efficiency: 75,
-      // Initialize mash temperature defaults based on unit system
-      mash_temperature: unitSystem === "metric" ? 67 : 152, // 67°C for metric, 152°F for imperial
-      mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit
+      boil_time: undefined, // Don't set default values for new recipes
+      efficiency: undefined, // Don't set default values for new recipes
+      mash_temperature: undefined, // Don't set default values for new recipes
+      mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit preference
       is_public: false,
       notes: "",
       ingredients: [],
