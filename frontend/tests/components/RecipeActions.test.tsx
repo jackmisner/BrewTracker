@@ -73,8 +73,10 @@ describe("RecipeActions", () => {
     expect(screen.getByText("View")).toBeInTheDocument();
     expect(screen.getByText("Edit")).toBeInTheDocument();
     expect(screen.getByText("Clone")).toBeInTheDocument();
-    expect(screen.getByText("Delete")).toBeInTheDocument();
     expect(screen.getByText("Brew")).toBeInTheDocument();
+    
+    // Delete button should NOT be visible in compact mode
+    expect(screen.queryByText("Delete")).not.toBeInTheDocument();
   });
 
   test("hides view button when showViewButton is false", () => {
