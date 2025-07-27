@@ -186,28 +186,28 @@ describe("CompactRecipeCard", () => {
       expect(container.querySelector(".compact-recipe-style")).toBeInTheDocument();
       expect(container.querySelector(".compact-color-swatch")).toBeInTheDocument();
       expect(container.querySelector(".compact-recipe-metrics")).toBeInTheDocument();
-      expect(container.querySelector(".compact-card-actions")).toBeInTheDocument();
+      expect(container.querySelector(".recipe-card-actions")).toBeInTheDocument();
     });
 
     it("applies correct CSS classes to metric elements", () => {
       const { container } = renderWithRouter(<CompactRecipeCard recipe={mockRecipe} />);
       
       const metrics = container.querySelectorAll(".compact-metric");
-      expect(metrics).toHaveLength(4);
+      expect(metrics).toHaveLength(4); // OG, FG, ABV, IBU
       
       const metricValues = container.querySelectorAll(".compact-metric-value");
-      expect(metricValues).toHaveLength(5);
+      expect(metricValues).toHaveLength(5); // OG, FG, ABV, IBU, SRM
       
       const metricLabels = container.querySelectorAll(".compact-metric-label");
-      expect(metricLabels).toHaveLength(5);
+      expect(metricLabels).toHaveLength(5); // OG, FG, ABV, IBU, SRM
     });
 
     it("applies correct CSS classes to action buttons", () => {
       const { container } = renderWithRouter(<CompactRecipeCard recipe={mockRecipe} />);
       
-      expect(container.querySelector(".compact-action-button.view")).toBeInTheDocument();
-      expect(container.querySelector(".compact-action-button.edit")).toBeInTheDocument();
-      expect(container.querySelector(".compact-action-button.brew")).toBeInTheDocument();
+      expect(container.querySelector(".recipe-card-button.view-button")).toBeInTheDocument();
+      expect(container.querySelector(".recipe-card-button.edit-button")).toBeInTheDocument();
+      expect(container.querySelector(".recipe-card-button.brew-button")).toBeInTheDocument();
     });
   });
 

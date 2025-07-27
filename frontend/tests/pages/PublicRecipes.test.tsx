@@ -16,25 +16,14 @@ jest.mock("../../src/services/api", () => ({
   },
 }));
 
-// Mock CompactRecipeCard component
-jest.mock("../../src/components/CompactRecipeCard", () => {
-  return function MockCompactRecipeCard({ recipe }) {
-    return (
-      <div data-testid={`recipe-card-${recipe.recipe_id}`}>
-        <h3>{recipe.name}</h3>
-        <p>{recipe.style}</p>
-        <p>OG: {recipe.estimated_og}</p>
-      </div>
-    );
-  };
-});
-
-// Mock useNavigate
+// Mock useNavigate first
 const mockNavigate = jest.fn();
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,
 }));
+
+// Don't mock CompactRecipeCard - use the real implementation with mocked APIs
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
@@ -177,9 +166,9 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      expect(screen.getByTestId("recipe-card-recipe-1")).toBeInTheDocument();
-      expect(screen.getByTestId("recipe-card-recipe-2")).toBeInTheDocument();
-      expect(screen.getByTestId("recipe-card-recipe-3")).toBeInTheDocument();
+      expect(screen.getByText("American IPA")).toBeInTheDocument();
+      expect(screen.getByText("Imperial Stout")).toBeInTheDocument();
+      expect(screen.getByText("German Lager")).toBeInTheDocument();
     });
 
     it("displays recipe information correctly", async () => {
@@ -203,7 +192,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone");
+      const cloneButtons = screen.getAllByRole("button", { name: /clone/i });
       expect(cloneButtons).toHaveLength(3);
     });
 
@@ -255,9 +244,7 @@ describe("PublicRecipes", () => {
       });
 
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-      expect(
-        screen.queryByTestId("recipe-card-recipe-1")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("American IPA")).not.toBeInTheDocument();
     });
 
     it("logs error to console when API fails", async () => {
@@ -418,10 +405,12 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone");
+      const cloneButtons = screen.getAllByRole("button", { name: /clone/i });
       fireEvent.click(cloneButtons[0]);
 
-      expect(ApiService.recipes.clonePublic).toHaveBeenCalledWith("recipe-1", "brewer1");
+      await waitFor(() => {
+        expect(ApiService.recipes.clonePublic).toHaveBeenCalledWith("recipe-1", "brewer1");
+      });
     });
 
     it("navigates to edit page after successful clone", async () => {
@@ -436,7 +425,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone");
+      const cloneButtons = screen.getAllByRole("button", { name: /clone/i });
       fireEvent.click(cloneButtons[0]);
 
       await waitFor(() => {
@@ -456,7 +445,7 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      const cloneButtons = screen.getAllByText("Clone");
+      const cloneButtons = screen.getAllByRole("button", { name: /clone/i });
       fireEvent.click(cloneButtons[0]);
 
       await waitFor(() => {
@@ -557,8 +546,8 @@ describe("PublicRecipes", () => {
         expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
       });
 
-      expect(screen.queryByTestId(/recipe-card/)).not.toBeInTheDocument();
-      expect(screen.queryByText("Clone")).not.toBeInTheDocument();
+      expect(screen.queryByText("American IPA")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /clone/i })).not.toBeInTheDocument();
     });
   });
 
