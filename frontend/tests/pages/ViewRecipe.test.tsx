@@ -115,7 +115,7 @@ describe("ViewRecipe", () => {
         renderWithProviders(<ViewRecipe />);
       });
 
-      expect(screen.getByText("Loading recipe...")).toBeInTheDocument();
+      expect(screen.getByText("Loading...")).toBeInTheDocument();
     });
 
     it("displays loading state for brew sessions separately", async () => {
@@ -663,7 +663,7 @@ describe("ViewRecipe", () => {
       // Should not call fetchRecipe when recipeId is missing
       expect(RecipeService.fetchRecipe).not.toHaveBeenCalled();
       // Should show loading state indefinitely or navigate away
-      expect(screen.getByText("Loading recipe...")).toBeInTheDocument();
+      expect(screen.getByText("Loading...")).toBeInTheDocument();
     });
 
     it("handles brew session date formatting edge cases", async () => {

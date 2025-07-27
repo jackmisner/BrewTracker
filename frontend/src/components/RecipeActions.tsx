@@ -113,6 +113,7 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
 
   const buttonClass = compact ? "recipe-card-button" : "recipe-action-button";
 
+
   return (
     <div className={containerClass}>
       {showViewButton && (

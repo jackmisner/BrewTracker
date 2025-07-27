@@ -265,6 +265,8 @@ class RecipeService {
     const processedRecipe: Recipe = {
       id: rawRecipe.recipe_id || rawRecipe._id || rawRecipe.id || "",
       recipe_id: rawRecipe.recipe_id || rawRecipe._id || rawRecipe.id,
+      user_id: rawRecipe.user_id,
+      username: rawRecipe.username,
       name: rawRecipe.name || "",
       style: rawRecipe.style || "",
       batch_size: parseFloat(rawRecipe.batch_size) || 5,

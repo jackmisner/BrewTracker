@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Services } from "../services";
+import ApiService from "../services/api";
 import CompactRecipeHeader from "../components/CompactRecipeHeader";
 import CompactRecipeInfo from "../components/CompactRecipeInfo";
 import IngredientsList from "../components/RecipeBuilder/IngredientsList";
@@ -11,6 +12,7 @@ import {
   BrewSession,
   BrewSessionSummary,
   ID,
+  User,
 } from "../types";
 import {
   formatGravity,
@@ -41,6 +43,8 @@ const ViewRecipe: React.FC = () => {
   const { recipeId } = useParams<{ recipeId: ID }>();
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
@@ -49,6 +53,24 @@ const ViewRecipe: React.FC = () => {
     useState<BrewSessionSummary | null>(null);
   const [brewingStats, setBrewingStats] = useState<BrewingStats | null>(null);
   const [sessionsLoading, setSessionsLoading] = useState<boolean>(false);
+
+  // Fetch current user profile to determine ownership
+  useEffect(() => {
+    const fetchCurrentUser = async (): Promise<void> => {
+      try {
+        setUserLoading(true);
+        const response = await ApiService.auth.getProfile();
+        setCurrentUser(response.data as unknown as User);
+      } catch (err: any) {
+        console.error("Error fetching current user:", err);
+        // Don't set error state - this is not critical for viewing recipes
+      } finally {
+        setUserLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchRecipe = async (): Promise<void> => {
@@ -103,8 +125,8 @@ const ViewRecipe: React.FC = () => {
     }
   }, [recipeId]);
 
-  if (loading) {
-    return <div className="text-center py-10">Loading recipe...</div>;
+  if (loading || userLoading) {
+    return <div className="text-center py-10">Loading...</div>;
   }
 
   if (error) {
@@ -119,9 +141,27 @@ const ViewRecipe: React.FC = () => {
     return <div className="text-center py-10">Recipe not found</div>;
   }
 
+  // Determine if current user owns this recipe
+  // Only show edit/delete if we have both user and recipe data, and they match
+  const isRecipeOwner = Boolean(
+    currentUser && 
+    recipe && 
+    currentUser.user_id && 
+    recipe.user_id && 
+    String(currentUser.user_id) === String(recipe.user_id)
+  );
+  
+  // For public recipes or when we can't determine ownership, treat as public
+  const isPublicRecipe = !isRecipeOwner;
+
   return (
     <div className="view-recipe-container">
-      <CompactRecipeHeader recipe={recipe} showViewButton={false} />
+      <CompactRecipeHeader 
+        recipe={recipe} 
+        showViewButton={false} 
+        isPublicRecipe={isPublicRecipe}
+        originalAuthor={recipe.username || (isPublicRecipe ? "Recipe Author" : "Unknown")}
+      />
 
       <div className="view-recipe-content">
         <div className="view-recipe-top-section">
@@ -362,7 +402,12 @@ const ViewRecipe: React.FC = () => {
         </div>
 
         <div className="view-recipe-actions">
-          <RecipeActions recipe={recipe} showViewButton={false} />
+          <RecipeActions 
+            recipe={recipe} 
+            showViewButton={false} 
+            isPublicRecipe={isPublicRecipe}
+            originalAuthor={recipe.username}
+          />
         </div>
       </div>
     </div>

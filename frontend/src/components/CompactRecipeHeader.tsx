@@ -14,6 +14,8 @@ interface CompactRecipeHeaderProps {
   recipe: Recipe;
   onDelete?: (recipeId: ID) => void;
   showViewButton?: boolean;
+  isPublicRecipe?: boolean;
+  originalAuthor?: string;
 }
 
 interface VersionHistoryData {
@@ -33,6 +35,8 @@ const CompactRecipeHeader: React.FC<CompactRecipeHeaderProps> = ({
   recipe,
   onDelete,
   showViewButton = true,
+  isPublicRecipe = false,
+  originalAuthor,
 }) => {
   const navigate = useNavigate();
   const [versionHistory, setVersionHistory] =
@@ -74,10 +78,24 @@ const CompactRecipeHeader: React.FC<CompactRecipeHeaderProps> = ({
   const handleClone = async (): Promise<void> => {
     setIsCloning(true);
     try {
-      const response = await ApiService.recipes.clone(recipe.recipe_id);
+      let response;
+
+      if (isPublicRecipe && originalAuthor) {
+        // For public recipes, clone with attribution
+        response = await ApiService.recipes.clonePublic(
+          recipe.recipe_id,
+          originalAuthor
+        );
+      } else {
+        // For own recipes, use regular clone (linked)
+        response = await ApiService.recipes.clone(recipe.recipe_id);
+      }
 
       if (response.status === 201) {
-        alert(`Recipe cloned successfully!`);
+        const successMessage = isPublicRecipe
+          ? `Recipe cloned successfully with attribution to ${originalAuthor}!`
+          : `Recipe cloned successfully!`;
+        alert(successMessage);
         navigate(`/recipes/${(response.data as any).recipe_id}/edit`);
       }
     } catch (error: any) {
@@ -227,12 +245,14 @@ const CompactRecipeHeader: React.FC<CompactRecipeHeaderProps> = ({
             </button>
           )}
 
-          <button
-            className="recipe-card-button edit-button"
-            onClick={handleEdit}
-          >
-            Edit
-          </button>
+          {!isPublicRecipe && (
+            <button
+              className="recipe-card-button edit-button"
+              onClick={handleEdit}
+            >
+              Edit
+            </button>
+          )}
 
           <button
             className="recipe-card-button clone-button"
@@ -245,14 +265,16 @@ const CompactRecipeHeader: React.FC<CompactRecipeHeaderProps> = ({
       </div>
 
       {/* Delete Button - Positioned separately for safety */}
-      <button
-        className="compact-recipe-header-delete-button"
-        onClick={handleDelete}
-        disabled={isDeleting}
-        title="Delete Recipe"
-      >
-        {isDeleting ? "Deleting..." : "Delete"}
-      </button>
+      {!isPublicRecipe && (
+        <button
+          className="compact-recipe-header-delete-button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          title="Delete Recipe"
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </button>
+      )}
     </div>
   );
 };

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
 import ApiService from "../services/api";
 import CompactRecipeCard from "../components/CompactRecipeCard";
-import RecipeActions from "../components/RecipeActions";
 import { Recipe } from "../types";
 import "../styles/PublicRecipes.css";
 
@@ -323,19 +322,17 @@ const PublicRecipes: React.FC = () => {
                 key={recipe.recipe_id}
                 className="public-recipe-card-wrapper"
               >
-                <CompactRecipeCard recipe={recipe} showActionsInCard={false} />
+                <CompactRecipeCard 
+                  recipe={recipe} 
+                  showActionsInCard={true}
+                  isPublicRecipe={true}
+                  originalAuthor={recipe.username || "Unknown"}
+                />
                 <div className="public-recipe-info">
                   <span className="public-recipe-author">
                     by {recipe.username || "Unknown"}
                   </span>
                 </div>
-                <RecipeActions
-                  recipe={recipe}
-                  isPublicRecipe={true}
-                  originalAuthor={recipe.username || "Unknown"}
-                  compact={true}
-                  showViewButton={true}
-                />
               </div>
             ))}
           </div>
