@@ -32,6 +32,109 @@ class OptimizationStrategy:
         """Execute the optimization strategy."""
         raise NotImplementedError
 
+    def _normalize_ingredient_amount(self, ingredient: Dict[str, Any]) -> float:
+        """
+        Normalize ingredient amount to base units for consistent calculations.
+
+        This ensures that whether ingredients are stored in large units (kg/lb)
+        or base units (g/oz), we work with consistent values.
+
+        Returns amount in base units (grams for metric, ounces for imperial).
+        """
+        from utils.unit_conversions import UnitConverter
+
+        amount = ingredient.get("amount", 0)
+        unit = ingredient.get("unit", "g")
+
+        # Detect unit system from the unit
+        unit_lower = unit.lower()
+        if unit_lower in ["g", "kg"]:
+            # Metric system - normalize to grams
+            return UnitConverter.convert_weight(amount, unit, "g")
+        elif unit_lower in ["oz", "lb", "lbs"]:
+            # Imperial system - normalize to ounces
+            return UnitConverter.convert_weight(amount, unit, "oz")
+        else:
+            # Unknown unit - return as-is
+            return amount
+
+    def _denormalize_ingredient_amount(
+        self, normalized_amount: float, original_ingredient: Dict[str, Any]
+    ) -> float:
+        """
+        Convert normalized amount back to the original ingredient's unit.
+
+        This ensures we return amounts in the same unit system as the original.
+        """
+        from utils.unit_conversions import UnitConverter
+
+        original_unit = original_ingredient.get("unit", "g")
+        unit_lower = original_unit.lower()
+
+        if unit_lower in ["g", "kg"]:
+            # Metric system - convert from grams back to original unit
+            return UnitConverter.convert_weight(normalized_amount, "g", original_unit)
+        elif unit_lower in ["oz", "lb", "lbs"]:
+            # Imperial system - convert from ounces back to original unit
+            return UnitConverter.convert_weight(normalized_amount, "oz", original_unit)
+        else:
+            # Unknown unit - return as-is
+            return normalized_amount
+
+    def _get_base_unit_for_ingredient(self, ingredient: Dict[str, Any]) -> str:
+        """Get the appropriate base unit for an ingredient based on its current unit."""
+        unit = ingredient.get("unit", "g")
+        unit_lower = unit.lower()
+
+        if unit_lower in ["g", "kg"]:
+            return "g"  # Metric base unit
+        elif unit_lower in ["oz", "lb", "lbs"]:
+            return "oz"  # Imperial base unit
+        else:
+            return unit  # Keep unknown units as-is
+
+    def _get_minimum_amount_in_base_units(
+        self, ingredient_type: str, unit_system: str
+    ) -> float:
+        """Get minimum practical amount in base units for an ingredient type."""
+        if unit_system == "metric":
+            # Metric minimums (in grams)
+            if ingredient_type == "grain":
+                return 25.0  # 25g minimum
+            elif ingredient_type == "hop":
+                return 5.0  # 5g minimum
+            else:
+                return 10.0  # 10g general minimum
+        else:
+            # Imperial minimums (in ounces)
+            if ingredient_type == "grain":
+                return 0.5  # 0.5oz minimum
+            elif ingredient_type == "hop":
+                return 0.25  # 0.25oz minimum
+            else:
+                return 0.1  # 0.1oz general minimum
+
+    def _get_increment_in_base_units(
+        self, ingredient_type: str, unit_system: str
+    ) -> float:
+        """Get standard increment in base units for an ingredient type."""
+        if unit_system == "metric":
+            # Metric increments (in grams)
+            if ingredient_type == "grain":
+                return 25.0  # 25g increments
+            elif ingredient_type == "hop":
+                return 5.0  # 5g increments
+            else:
+                return 10.0  # 10g general increment
+        else:
+            # Imperial increments (in ounces)
+            if ingredient_type == "grain":
+                return 0.5  # 0.5oz increments
+            elif ingredient_type == "hop":
+                return 0.25  # 0.25oz increments
+            else:
+                return 0.1  # 0.1oz general increment
+
     def _find_ingredients_by_type(self, ingredient_type: str) -> List[Dict[str, Any]]:
         """Find all ingredients of a specific type."""
         ingredients = self.recipe.get("ingredients", [])
@@ -120,7 +223,13 @@ class BaseMaltOGOnlyStrategy(OptimizationStrategy):
         # Apply proportional increase to all base malts
         for grain in base_malts:
             current_amount = grain.get("amount", 0)
-            new_amount = current_amount * (1 + required_increase)
+
+            # Normalize to base units for consistent calculations
+            normalized_current = self._normalize_ingredient_amount(grain)
+            normalized_new = normalized_current * (1 + required_increase)
+
+            # Convert back to original units
+            new_amount = self._denormalize_ingredient_amount(normalized_new, grain)
 
             changes.append(
                 {
@@ -172,7 +281,15 @@ class BaseMaltOGandSRMStrategy(OptimizationStrategy):
 
             # Use conservative 25% increase to avoid massive jumps
             increase_percentage = 0.25
-            new_amount = current_amount * (1 + increase_percentage)
+
+            # Normalize to base units for consistent calculations
+            normalized_current = self._normalize_ingredient_amount(munich_dark_grain)
+            normalized_new = normalized_current * (1 + increase_percentage)
+
+            # Convert back to original units
+            new_amount = self._denormalize_ingredient_amount(
+                normalized_new, munich_dark_grain
+            )
 
             changes.append(
                 {
@@ -202,22 +319,41 @@ class BaseMaltOGandSRMStrategy(OptimizationStrategy):
 
             if db_ingredient:
                 # Calculate Munich Dark amount needed - use conservative approach
-                total_grain_weight = sum(g.get("amount", 0) for g in grains)
+                # Use normalized amounts for consistent calculation regardless of units
+                total_grain_weight_normalized = sum(
+                    self._normalize_ingredient_amount(g) for g in grains
+                )
 
                 # Determine the unit system from existing grains
                 sample_grain = grains[0] if grains else {}
                 grain_unit = sample_grain.get("unit", "lb")
+                unit_system = (
+                    "metric" if grain_unit.lower() in ["g", "kg"] else "imperial"
+                )
 
-                if grain_unit in ["g", "kg"]:
-                    # Metric system - add modest amount (50-200g)
-                    munich_amount = max(total_grain_weight * 0.05, 50)  # 5% or min 50g
-                    target_unit = "g"
+                # Calculate amount in base units (5% of total or minimum, whichever is larger)
+                munich_amount_normalized = max(
+                    total_grain_weight_normalized * 0.05,
+                    self._get_minimum_amount_in_base_units("grain", unit_system),
+                )
+
+                # Convert to appropriate display unit for the recipe
+                if unit_system == "metric":
+                    # Convert to grams or kg based on amount size
+                    if munich_amount_normalized >= 500:
+                        munich_amount = munich_amount_normalized / 1000
+                        target_unit = "kg"
+                    else:
+                        munich_amount = munich_amount_normalized
+                        target_unit = "g"
                 else:
-                    # Imperial system - add modest amount (0.1-0.5 lb)
-                    munich_amount = max(
-                        total_grain_weight * 0.05, 0.1
-                    )  # 5% or min 0.1 lb
-                    target_unit = "lb"
+                    # Convert to ounces or pounds based on amount size
+                    if munich_amount_normalized >= 8:
+                        munich_amount = munich_amount_normalized / 16
+                        target_unit = "lb"
+                    else:
+                        munich_amount = munich_amount_normalized
+                        target_unit = "oz"
 
                 changes.append(
                     {
@@ -290,24 +426,28 @@ class BaseMaltReductionStrategy(OptimizationStrategy):
 
         if maintain_malt_ratios:
             # Reduce all base malts proportionally
-            total_base_weight = sum(g.get("amount", 0) for g in base_malts)
-
             for grain in base_malts:
                 current_amount = grain.get("amount", 0)
-                new_amount = current_amount * (1 - reduction_percentage)
 
-                # Ensure reasonable minimum amount based on original proportion
-                if grain.get("unit") in ["lb", "lbs"]:
-                    # Imperial: minimum 0.1 lb, but allow smaller reductions if needed
-                    min_amount = max(
-                        0.1, current_amount * 0.1
-                    )  # At least 10% of original
-                else:
-                    # Metric: minimum 25g, but allow smaller reductions if needed
-                    min_amount = max(
-                        25, current_amount * 0.1
-                    )  # At least 10% of original
-                new_amount = max(new_amount, min_amount)
+                # Normalize to base units for consistent calculations
+                normalized_current = self._normalize_ingredient_amount(grain)
+                normalized_new = normalized_current * (1 - reduction_percentage)
+
+                # Determine unit system and apply appropriate minimum
+                unit_system = (
+                    "metric"
+                    if grain.get("unit", "").lower() in ["g", "kg"]
+                    else "imperial"
+                )
+                min_amount_normalized = self._get_minimum_amount_in_base_units(
+                    "grain", unit_system
+                )
+
+                # Ensure we don't go below practical minimum
+                normalized_new = max(normalized_new, min_amount_normalized)
+
+                # Convert back to original units
+                new_amount = self._denormalize_ingredient_amount(normalized_new, grain)
 
                 changes.append(
                     {
@@ -399,13 +539,24 @@ class ABVTargetedStrategy(OptimizationStrategy):
         # Apply adjustment to all base malts proportionally
         for grain in base_malts:
             current_amount = grain.get("amount", 0)
-            new_amount = current_amount * (1 + adjustment_factor)
 
-            # Ensure minimum viable amount
-            min_amount = (
-                0.1 if grain.get("unit") in ["lb", "lbs"] else 50
-            )  # 0.1 lb or 50g
-            new_amount = max(new_amount, min_amount)
+            # Normalize to base units for consistent calculations
+            normalized_current = self._normalize_ingredient_amount(grain)
+            normalized_new = normalized_current * (1 + adjustment_factor)
+
+            # Determine unit system and apply appropriate minimum
+            unit_system = (
+                "metric" if grain.get("unit", "").lower() in ["g", "kg"] else "imperial"
+            )
+            min_amount_normalized = self._get_minimum_amount_in_base_units(
+                "grain", unit_system
+            )
+
+            # Ensure we don't go below practical minimum
+            normalized_new = max(normalized_new, min_amount_normalized)
+
+            # Convert back to original units
+            new_amount = self._denormalize_ingredient_amount(normalized_new, grain)
 
             changes.append(
                 {
@@ -461,7 +612,13 @@ class RoastedMaltIncreaseStrategy(OptimizationStrategy):
                 increase_factor = min(
                     srm_increase_needed / current_srm, 0.5
                 )  # Cap at 50% increase
-                new_amount = current_amount * (1 + increase_factor)
+
+                # Normalize to base units for consistent calculations
+                normalized_current = self._normalize_ingredient_amount(grain)
+                normalized_new = normalized_current * (1 + increase_factor)
+
+                # Convert back to original units
+                new_amount = self._denormalize_ingredient_amount(normalized_new, grain)
 
                 changes.append(
                     {
@@ -483,22 +640,33 @@ class RoastedMaltIncreaseStrategy(OptimizationStrategy):
 
             if darkest_roasted:
                 # Calculate minimum amount needed - use conservative approach
-                total_grain_weight = sum(g.get("amount", 0) for g in grains)
+                # Use normalized amounts for consistent calculation regardless of units
+                total_grain_weight_normalized = sum(
+                    self._normalize_ingredient_amount(g) for g in grains
+                )
 
                 # Determine the unit system from existing grains
                 sample_grain = grains[0] if grains else {}
                 grain_unit = sample_grain.get("unit", "lb")
+                unit_system = (
+                    "metric" if grain_unit.lower() in ["g", "kg"] else "imperial"
+                )
 
-                if grain_unit in ["g", "kg"]:
-                    # Metric system - add very small amount (25-50g) for roasted grains
-                    roasted_amount = max(25, total_grain_weight * 0.01)  # 1% or min 25g
+                # Calculate amount in base units (1% of total or minimum, whichever is larger)
+                roasted_amount_normalized = max(
+                    total_grain_weight_normalized * 0.01,
+                    self._get_minimum_amount_in_base_units("grain", unit_system),
+                )
+
+                # Convert to appropriate display unit for the recipe
+                if unit_system == "metric":
+                    # For roasted grains, usually keep in grams
+                    roasted_amount = roasted_amount_normalized
                     target_unit = "g"
                 else:
-                    # Imperial system - add very small amount (0.05-0.1 lb)
-                    roasted_amount = max(
-                        0.05, total_grain_weight * 0.01
-                    )  # 1% or min 0.05 lb
-                    target_unit = "lb"
+                    # For imperial, use ounces for small amounts
+                    roasted_amount = roasted_amount_normalized
+                    target_unit = "oz"
 
                 changes.append(
                     {
@@ -559,14 +727,26 @@ class RoastedMaltDecreaseStrategy(OptimizationStrategy):
             reduction_factor = min(
                 srm_reduction_needed / current_srm, 0.8
             )  # Cap reduction
-            new_amount = current_amount * (1 - reduction_factor)
 
-            # Allow reduction to 0 if it brings SRM into spec
-            min_amount = 0.01  # Very small amount, will be normalized to 0 if needed
-            new_amount = max(new_amount, min_amount)
+            # Normalize to base units for consistent calculations
+            normalized_current = self._normalize_ingredient_amount(grain)
+            normalized_new = normalized_current * (1 - reduction_factor)
 
-            # If reducing to near zero, might as well remove completely
-            if new_amount < 0.05:  # Less than ~22g
+            # Determine unit system for minimum amount checking
+            unit_system = (
+                "metric" if grain.get("unit", "").lower() in ["g", "kg"] else "imperial"
+            )
+            min_amount_normalized = self._get_minimum_amount_in_base_units(
+                "grain", unit_system
+            )
+
+            # Allow reduction to very small amounts
+            normalized_new = max(
+                normalized_new, min_amount_normalized * 0.1
+            )  # 10% of minimum
+
+            # If reducing to very small amount, remove completely
+            if normalized_new < min_amount_normalized * 0.5:  # Less than 50% of minimum
                 changes.append(
                     {
                         "type": "ingredient_removed",
@@ -575,6 +755,9 @@ class RoastedMaltDecreaseStrategy(OptimizationStrategy):
                     }
                 )
             else:
+                # Convert back to original units
+                new_amount = self._denormalize_ingredient_amount(normalized_new, grain)
+
                 changes.append(
                     {
                         "type": "ingredient_modified",
@@ -865,7 +1048,16 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
             )
         else:
             # Increase amount (for both boil hops at max time and non-boil hops)
-            new_amount = current_amount + amount_increment
+            # Normalize to base units for consistent calculations
+            normalized_current = self._normalize_ingredient_amount(hop)
+            unit_system = (
+                "metric" if hop.get("unit", "").lower() in ["g"] else "imperial"
+            )
+            increment_normalized = self._get_increment_in_base_units("hop", unit_system)
+            normalized_new = normalized_current + increment_normalized
+
+            # Convert back to original units
+            new_amount = self._denormalize_ingredient_amount(normalized_new, hop)
 
             # Preserve timing context for non-boil hops
             if hop_use != "boil":
@@ -906,14 +1098,24 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
                 f"_reduce_hop_ibu called with non-boil hop: {hop_name} ({hop_use}). This should never happen!"
             )
             return changes
-        if unit_system == "g":
-            adjustment_amount = 5  # 5g increments for metric
-        else:
-            adjustment_amount = 0.25  # 0.25oz increments for imperial
+        # Normalize to base units for consistent calculations
+        normalized_current = self._normalize_ingredient_amount(hop)
+        unit_system_detected = (
+            "metric" if hop.get("unit", "").lower() in ["g"] else "imperial"
+        )
+        increment_normalized = self._get_increment_in_base_units(
+            "hop", unit_system_detected
+        )
+        min_amount_normalized = self._get_minimum_amount_in_base_units(
+            "hop", unit_system_detected
+        )
 
         # Try reducing amount first (if above minimum)
-        if current_amount > min_amount:
-            new_amount = max(current_amount - adjustment_amount, min_amount)
+        if normalized_current > min_amount_normalized:
+            normalized_new = max(
+                normalized_current - increment_normalized, min_amount_normalized
+            )
+            new_amount = self._denormalize_ingredient_amount(normalized_new, hop)
 
             # Preserve timing context for non-boil hops
             if hop_use != "boil":
@@ -959,7 +1161,15 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
         """Increase hop amount without changing timing (for non-boil hops like whirlpool, dry hop)."""
         changes = []
         current_amount = hop.get("amount", 0)
-        new_amount = current_amount + amount_increment
+
+        # Normalize to base units for consistent calculations
+        normalized_current = self._normalize_ingredient_amount(hop)
+        unit_system = "metric" if hop.get("unit", "").lower() in ["g"] else "imperial"
+        increment_normalized = self._get_increment_in_base_units("hop", unit_system)
+        normalized_new = normalized_current + increment_normalized
+
+        # Convert back to original units
+        new_amount = self._denormalize_ingredient_amount(normalized_new, hop)
 
         hop_use = hop.get("use", "unknown")
         hop_time = hop.get("time", "")
@@ -984,16 +1194,23 @@ class HopIBUAdjustmentStrategy(OptimizationStrategy):
         """Reduce hop amount without changing timing (for non-boil hops like whirlpool, dry hop)."""
         changes = []
         current_amount = hop.get("amount", 0)
-        unit_system = hop.get("unit", "oz")
 
-        if unit_system == "g":
-            adjustment_amount = 5  # 5g increments for metric
-        else:
-            adjustment_amount = 0.25  # 0.25oz increments for imperial
+        # Normalize to base units for consistent calculations
+        normalized_current = self._normalize_ingredient_amount(hop)
+        unit_system = "metric" if hop.get("unit", "").lower() in ["g"] else "imperial"
+        increment_normalized = self._get_increment_in_base_units("hop", unit_system)
+        min_amount_normalized = self._get_minimum_amount_in_base_units(
+            "hop", unit_system
+        )
 
-        new_amount = max(current_amount - adjustment_amount, min_amount)
+        normalized_new = max(
+            normalized_current - increment_normalized, min_amount_normalized
+        )
 
-        if new_amount != current_amount:
+        if normalized_new != normalized_current:
+            # Convert back to original units
+            new_amount = self._denormalize_ingredient_amount(normalized_new, hop)
+
             hop_use = hop.get("use", "unknown")
             hop_time = hop.get("time", "")
             timing_info = f"{hop_time} min" if hop_time else ""
@@ -1197,6 +1414,25 @@ class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
         current_temp = self.recipe.get("mash_temperature", 152.0)
         temp_unit = self.recipe.get("mash_temp_unit", "F")
 
+        # If no explicit temperature or unit, infer from recipe's unit system
+        if not self.recipe.get("mash_temperature") or not self.recipe.get(
+            "mash_temp_unit"
+        ):
+            # Infer unit system from batch size unit
+            batch_size_unit = self.recipe.get("batch_size_unit", "gal")
+            if batch_size_unit.lower() in ["l", "liters"]:
+                # Metric system
+                if not self.recipe.get("mash_temperature"):
+                    current_temp = 67.0  # Default metric temperature
+                if not self.recipe.get("mash_temp_unit"):
+                    temp_unit = "C"
+            else:
+                # Imperial system
+                if not self.recipe.get("mash_temperature"):
+                    current_temp = 152.0  # Default imperial temperature
+                if not self.recipe.get("mash_temp_unit"):
+                    temp_unit = "F"
+
         # Convert to Fahrenheit for consistent calculations
         if temp_unit == "C":
             current_temp_f = (current_temp * 9 / 5) + 32
@@ -1242,15 +1478,19 @@ class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
                 }
             )
 
-            # Also ensure mash_temp_unit is set if not already present
-            if not self.recipe.get("mash_temp_unit"):
+            # Always ensure mash_temp_unit is explicitly set in the optimized recipe
+            # This prevents unit confusion in the frontend
+            if (
+                not self.recipe.get("mash_temp_unit")
+                or self.recipe.get("mash_temp_unit") != temp_unit
+            ):
                 changes.append(
                     {
                         "type": "modify_recipe_parameter",
                         "parameter": "mash_temp_unit",
-                        "old_value": None,
+                        "old_value": self.recipe.get("mash_temp_unit"),
                         "new_value": temp_unit,
-                        "reason": "Set mash temperature unit",
+                        "reason": "Set mash temperature unit to match temperature value",
                         "impact_type": "minor",
                         "confidence": "high",
                         "category": "process_adjustment",

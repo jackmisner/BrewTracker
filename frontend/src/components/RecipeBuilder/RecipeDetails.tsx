@@ -75,10 +75,10 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   const batchSizeUnit =
     recipe.batch_size_unit || (unitSystem === "metric" ? "l" : "gal");
 
-  const mashTempDefault = recipe.mash_temperature || (unitSystem === "metric" ? 67 : 152);
-
   // Determine if recipe was created in metric or imperial
   const recipeUnitSystem = batchSizeUnit === "l" ? "metric" : "imperial";
+
+  const mashTempDefault = recipe.mash_temperature || (recipeUnitSystem === "metric" ? 67 : 152);
 
   // Get unit-specific properties based on the recipe's original unit system
   const getBatchSizeProps = (): BatchSizeProps => {
@@ -244,7 +244,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
             <label htmlFor="mash_temperature">
               Mash Temperature 
               <span className="unit-indicator">
-                ({recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")})
+                ({recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")})
               </span>
             </label>
             <div className="input-group">
@@ -255,15 +255,15 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
                 value={recipe.mash_temperature || mashTempDefault}
                 onChange={handleChange}
                 className="form-control"
-                min={unitSystem === "metric" ? "60" : "140"}
-                max={unitSystem === "metric" ? "77" : "170"}
+                min={recipeUnitSystem === "metric" ? "60" : "140"}
+                max={recipeUnitSystem === "metric" ? "77" : "170"}
                 step="1"
-                placeholder={unitSystem === "metric" ? "67" : "152"}
+                placeholder={recipeUnitSystem === "metric" ? "67" : "152"}
                 disabled={saving}
               />
               <select
                 name="mash_temp_unit"
-                value={recipe.mash_temp_unit || (unitSystem === "metric" ? "C" : "F")}
+                value={recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")}
                 onChange={handleChange}
                 className="input-addon"
                 disabled={saving}

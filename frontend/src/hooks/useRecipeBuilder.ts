@@ -121,6 +121,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       description: "",
       boil_time: 60,
       efficiency: 75,
+      // Initialize mash temperature defaults based on unit system
+      mash_temperature: unitSystem === "metric" ? 67 : 152, // 67°C for metric, 152°F for imperial
+      mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit
       is_public: false,
       notes: "",
       ingredients: [],
@@ -200,6 +203,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           description: "",
           boil_time: 60,
           efficiency: 75,
+          // Initialize mash temperature defaults based on unit system
+          mash_temperature: unitSystem === "metric" ? 67 : 152, // 67°C for metric, 152°F for imperial
+          mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit
           is_public: false,
           notes: "",
           ingredients: [],
