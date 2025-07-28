@@ -21,6 +21,13 @@ import PublicRecipes from "./pages/PublicRecipes";
 import UserSettings from "./pages/UserSettings";
 import IngredientManager from "./pages/IngredientManager";
 import AttenuationAnalyticsPage from "./pages/AttenuationAnalytics";
+import About from "./pages/About";
+import Help from "./pages/Help";
+import FAQ from "./pages/FAQ";
+import ReportBug from "./pages/ReportBug";
+import FeatureRequest from "./pages/FeatureRequest";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 // Components
 import Layout from "./components/Header/Layout";
@@ -138,6 +145,34 @@ const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "help",
+        element: <Help />,
+      },
+      {
+        path: "faq",
+        element: <FAQ />,
+      },
+      {
+        path: "report-bug",
+        element: <ReportBug />,
+      },
+      {
+        path: "feature-request",
+        element: <FeatureRequest />,
+      },
+      {
+        path: "privacy",
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: "terms",
+        element: <TermsOfService />,
       },
       {
         path: "",

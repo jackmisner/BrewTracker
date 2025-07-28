@@ -95,7 +95,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: var(--spacing-md);
+  margin-top: auto;
+  padding-top: var(--spacing-md);
   gap: var(--spacing-sm);
 }
 
@@ -111,31 +112,31 @@
   white-space: nowrap;
 }
 
-.recipe-card-button.clone-button {
-  background-color: var(--color-amber-400);
-  color: white;
-}
-
-.recipe-card-button.clone-button:hover {
-  background-color: var(--color-amber-500);
-}
-
 .recipe-card-button.view-button {
-  background-color: var(--color-amber-500);
+  background-color: var(--color-amber-600);
   color: white;
 }
 
 .recipe-card-button.view-button:hover {
-  background-color: var(--color-amber-600);
+  background-color: var(--color-amber-700);
 }
 
 .recipe-card-button.edit-button {
-  background-color: var(--color-amber-600);
+  background-color: var(--color-slate-600);
   color: white;
 }
 
 .recipe-card-button.edit-button:hover {
-  background-color: var(--color-amber-700);
+  background-color: var(--color-slate-700);
+}
+
+.recipe-card-button.clone-button {
+  background-color: var(--color-blue-600);
+  color: white;
+}
+
+.recipe-card-button.clone-button:hover {
+  background-color: var(--color-blue-700);
 }
 
 .recipe-card-button.delete-button {
@@ -150,13 +151,13 @@
 }
 
 .recipe-card-button.brew-button {
-  background-color: #10b981; /* emerald-500 - consistent with ViewRecipe */
+  background-color: var(--color-green-600);
   color: white;
   flex-grow: 1;
 }
 
 .recipe-card-button.brew-button:hover {
-  background-color: #059669; /* emerald-600 - consistent with ViewRecipe */
+  background-color: var(--color-green-700);
 }
 
 

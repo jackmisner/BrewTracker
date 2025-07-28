@@ -1,7 +1,8 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "1.3.2",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@tanstack/react-query": "^5.80.6",
     "@testing-library/dom": "^10.4.0",
@@ -43,8 +44,18 @@
     "setupFilesAfterEnv": [
       "<rootDir>/tests/setupTests.ts"
     ],
-    "moduleFileExtensions": ["js", "jsx", "ts", "tsx", "json", "node"],
-    "moduleDirectories": ["node_modules", "src"],
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "ts",
+      "tsx",
+      "json",
+      "node"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
     "extensionsToTreatAsEsm": [],
     "resolver": null,
     "collectCoverageFrom": [
@@ -56,7 +67,11 @@
       "!src/**/*.d.ts",
       "!src/types/**/*"
     ],
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "coverageDirectory": "coverage",
     "coverageThreshold": {
       "global": {
