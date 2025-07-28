@@ -177,6 +177,7 @@ const Dashboard: React.FC = () => {
                   recipe={recipe}
                   showActionsInCard={true}
                   isPublicRecipe={false}
+                  isDashboardVariant={true}
                   onDelete={(recipeId) => {
                     // Handle recipe deletion - refresh the dashboard data
                     setRecentRecipes((prev) =>

@@ -63,7 +63,7 @@ jest.mock("../src/pages/Dashboard", () => {
   };
 });
 
-jest.mock("../src/components/Header/Layout", () => {
+jest.mock("../src/components/Layout/Layout", () => {
   return function MockLayout({ user, onLogout, children }: { user: any; onLogout: () => void; children: React.ReactNode }) {
     return (
       <div data-testid="layout">

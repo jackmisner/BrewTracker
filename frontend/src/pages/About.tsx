@@ -99,7 +99,7 @@ const About: React.FC = () => {
               </li>
               <li>
                 <a 
-                  href="https://linkedin.com/in/jackmisner" 
+                  href="https://www.linkedin.com/in/jack-d-misner/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

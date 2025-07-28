@@ -1,3 +1,18 @@
+/**
+ * FAQ page component for BrewTracker.
+ *
+ * Displays a categorized list of frequently asked questions with expandable answers.
+ * Users can filter questions by category and expand/collapse individual FAQ items.
+ * Includes a contact/help section for further assistance.
+ *
+ * @component
+ *
+ * @example
+ * // Usage in a route
+ * <FAQ />
+ *
+ * @returns {JSX.Element} The rendered FAQ page.
+ */
 import React, { useState } from "react";
 
 interface FAQItem {

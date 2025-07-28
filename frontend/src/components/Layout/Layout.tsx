@@ -1,6 +1,16 @@
+/**
+ * Layout component that provides a consistent page structure with a header, main content area, and footer.
+ *
+ * @param user - The current authenticated user, or null if not logged in.
+ * @param onLogout - Callback function to handle user logout.
+ * @param children - The main content to be rendered within the layout.
+ *
+ * @remarks
+ * This component wraps its children with a header and footer, and manages layout styling using Tailwind CSS classes.
+ */
 import React from "react";
 import Header from "./Header";
-import Footer from "../Footer/Footer";
+import Footer from "./Footer";
 import { User } from "../../types";
 
 interface LayoutProps {

@@ -3,10 +3,10 @@
    ========================================================================== */
 
 .ingredient-manager-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   padding: 2rem 1rem;
-  background-color: #f9fafb; /* gray-50 - matches Dashboard.css */
+  background-color: transparent;
   height: 100vh;
   max-height: 100vh;
   display: flex;

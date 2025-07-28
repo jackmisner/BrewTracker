@@ -77,7 +77,10 @@ homebrew-tracker/
 │   │   ├── components/
 │   │   │   ├── BeerXML/                                  # BeerXML import/export components with ingredient matching and validation
 │   │   │   ├── BrewSessions/                             # Brew session management with fermentation tracking and progress monitoring
-│   │   │   ├── Header/                                   # Application header with responsive navigation and user authentication status
+│   │   │   ├── Layout/
+│   │   │   │   ├── Footer.tsx                            # A multi-column footer with project links, help resources, and legal information
+│   │   │   │   ├── Header.tsx                            # Header component for BrewTracker with the main navigation bar, including logo, navigation links, and user actions
+│   │   │   │   └── Layout.tsx                            # Layout component that provides a consistent page structure with a header, main content area, and footer
 │   │   │   ├── RecipeBuilder/                            # Complex recipe creation interface with real-time calculations, ingredient management, and AI suggestions
 │   │   │   ├── CompactRecipeCard.tsx                     # Unified recipe display component with SRM color swatches, metrics grid, and action filtering
 │   │   │   ├── RecipeActions.tsx                         # Action buttons for recipe operations with public recipe access control (edit, delete, clone, share)
@@ -89,14 +92,21 @@ homebrew-tracker/
 │   │   │   └── useRecipeBuilder.ts                       # Recipe builder state management and validation logic
 │   │   ├── images/                                       # Static image assets (logos, icons, placeholders)
 │   │   ├── pages/
+│   │   │   ├── About.tsx                                 # An "About Me" page so you can learn all about me
 │   │   │   ├── AllRecipes.tsx                            # Personal recipe library with advanced fuzzy search and recipe sorting
 │   │   │   ├── AttenuationAnalytics.tsx                  # Yeast attenuation analytics dashboard with real-world performance data
 │   │   │   ├── Dashboard.tsx                             # User dashboard with recent activity, quick stats, and navigation shortcuts
+│   │   │   ├── FAQ.tsx                                   # A categorized list of frequently asked questions with expandable answers
+│   │   │   ├── FeatureRequest.tsx                        # Renders a form for users to submit feature requests for the BrewTracker application. Submissions are passed to GitHub.
+│   │   │   ├── Help.tsx                                  # Help page component that provides a comprehensive user guide for BrewTracker
 │   │   │   ├── IngredientManager.tsx                     # Ingredient database management with creation, editing, and bulk operations
 │   │   │   ├── Login.tsx                                 # User authentication login page
+│   │   │   ├── PrivacyPolicy.tsx                         # Privacy Policy for BrewTracker
 │   │   │   ├── PublicRecipes.tsx                         # Community recipe sharing with unified design, search, sorting, style filtering, and access control
 │   │   │   ├── RecipeBuilder.tsx                         # Create and edit recipes with ingredient management
 │   │   │   ├── Register.tsx                              # User registration page with account creation form
+│   │   │   ├── ReportBug.tsx                             # A form for reporting bugs in BrewTracker which opens a pre-filled GitHub issue creation page in a new tab upon submission
+│   │   │   ├── TermsOfService.tsx                        # Terms of Service for BrewTracker
 │   │   │   ├── UserSettings.tsx                          # User preferences for units, account details, and application settings
 │   │   │   └── ViewRecipe.tsx                            # Detailed recipe view with calculations, brew sessions, and sharing options
 │   │   ├── services/                                     # TypeScript service layer for API communication and business logic
@@ -139,6 +149,8 @@ homebrew-tracker/
 │   ├── tests/                                            # Jest + TypeScript tests for React components and utilities
 │   ├── package.json                                      # Node.js dependencies, scripts, and project configuration
 │   └── .env                                              # Environment variables for API URLs and frontend configuration
+├── LICENSE                                               # GNU GENERAL PUBLIC LICENSE Version 3
+├── LICENSE-HEADER.txt                                    # License header for BrewTracker
 └── README.md                                             # The document you are currently reading!
 ```
 
@@ -442,12 +454,14 @@ pytest -v
 BrewTracker is free software licensed under the **GNU General Public License v3.0 or later**.
 
 This ensures that:
+
 - ✅ The software remains **completely free** for all homebrewers
-- ✅ Any improvements must be **shared back** with the brewing community  
+- ✅ Any improvements must be **shared back** with the brewing community
 - ✅ Commercial derivatives must **also be open source**
 - ✅ Brewing knowledge and calculations **stay accessible** to everyone
 
 ### What this means for you:
+
 - **Homebrewers**: Use freely, modify for your needs, share improvements
 - **Brewing Clubs**: Customize for your group and contribute back enhancements
 - **Developers**: Contribute code improvements that benefit all brewers

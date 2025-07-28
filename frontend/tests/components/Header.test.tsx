@@ -2,7 +2,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
-import Header from "../../src/components/Header/Header";
+import Header from "../../src/components/Layout/Header";
 
 const renderWithRouter = (component: any) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
