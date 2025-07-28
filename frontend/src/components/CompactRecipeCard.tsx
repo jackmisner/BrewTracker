@@ -16,6 +16,7 @@ interface CompactRecipeCardProps {
   originalAuthor?: string;
   onDelete?: (recipeId: ID) => void;
   refreshTrigger?: (() => void) | null;
+  isDashboardVariant?: boolean;
 }
 
 const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
@@ -25,6 +26,7 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
   originalAuthor,
   onDelete,
   refreshTrigger = null,
+  isDashboardVariant = false,
 }) => {
 
   return (
@@ -36,12 +38,14 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
             {recipe.style || "No style specified"}
           </p>
         </div>
+        {!isDashboardVariant && (
           <div className="compact-metric-SRM">
             <div className="compact-metric-value">
               {formatSrm(recipe.estimated_srm)}
             </div>
             <div className="compact-metric-label">SRM</div>
           </div>
+        )}
         <div
           className="compact-color-swatch"
           style={{
@@ -52,7 +56,7 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
       </div>
 
       {/* Compact Metrics */}
-      <div className="compact-recipe-metrics">
+      <div className={`compact-recipe-metrics ${isDashboardVariant ? 'dashboard-variant' : ''}`}>
         <div className="compact-metric">
           <div className="compact-metric-value">
             {formatGravity(recipe.estimated_og)}
@@ -77,6 +81,14 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
           </div>
           <div className="compact-metric-label">IBU</div>
         </div>
+        {isDashboardVariant && (
+          <div className="compact-metric">
+            <div className="compact-metric-value">
+              {formatSrm(recipe.estimated_srm)}
+            </div>
+            <div className="compact-metric-label">SRM</div>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

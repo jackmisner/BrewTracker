@@ -1,8 +1,8 @@
 /* Dashboard.css - Enhanced styling for the brewing dashboard */
 
 .dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   padding: 2rem 1rem;
   background-color: transparent;
   min-height: 100vh;
@@ -377,6 +377,20 @@
 .view-all-link:hover {
   text-decoration: underline;
   color: #b45309;
+}
+
+/* Dashboard-specific CompactRecipeCard button layout */
+.dashboard-container .recipe-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dashboard-container .recipe-card-actions .recipe-card-button:not(.brew-button) {
+  flex: 1; /* View, Edit, Clone share equal space in first 50% */
+}
+
+.dashboard-container .recipe-card-actions .recipe-card-button.brew-button {
+  flex: 3; /* Brew button takes same space as the other 3 combined */
 }
 
 /* Responsive Design */

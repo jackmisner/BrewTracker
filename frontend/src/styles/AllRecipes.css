@@ -337,6 +337,11 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
+/* Dashboard variant with 5 columns for all metrics */
+.compact-recipe-metrics.dashboard-variant {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .compact-metric {
   text-align: center;
 }
