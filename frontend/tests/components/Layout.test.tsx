@@ -2,10 +2,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
-import Layout from "../../src/components/Header/Layout";
+import Layout from "../../src/components/Layout/Layout";
 
 // Mock the Header component
-jest.mock("../../src/components/Header/Header", () => ({ user, onLogout }: { user: any; onLogout: any }) => (
+jest.mock("../../src/components/Layout/Header", () => ({ user, onLogout }: { user: any; onLogout: any }) => (
   <div data-testid="header-mock">
     Header - {user ? user.name : "Guest"}
     <button onClick={onLogout}>Logout</button>
@@ -13,7 +13,7 @@ jest.mock("../../src/components/Header/Header", () => ({ user, onLogout }: { use
 ));
 
 // Mock the Footer component
-jest.mock("../../src/components/Footer/Footer", () => () => (
+jest.mock("../../src/components/Layout/Footer", () => () => (
   <div data-testid="footer-mock">Footer</div>
 ));
 

@@ -1,3 +1,17 @@
+/**
+ * Header component for the Brewtracker application.
+ *
+ * Renders the main navigation bar, including logo, navigation links, and user actions.
+ * The layout and available links change depending on whether a user is logged in.
+ *
+ * @param user - The currently authenticated user, or null if not logged in.
+ * @param onLogout - Callback function to be called when the user clicks the logout button.
+ *
+ * @remarks
+ * - Displays navigation links for recipes, brew sessions, and management tools when a user is logged in.
+ * - Shows login and registration links when no user is authenticated.
+ * - Uses the application's logo and styles defined in `Header.css`.
+ */
 import React from "react";
 import { Link } from "react-router";
 import { User } from "../../types";

@@ -1,3 +1,19 @@
+/**
+ * Help page component that provides a comprehensive user guide for BrewTracker.
+ *
+ * This page includes step-by-step instructions and explanations for:
+ * - Getting started with creating and managing recipes
+ * - Understanding recipe actions and versioning
+ * - Brewing calculations and unit conversions
+ * - Tracking brew sessions and their statuses
+ * - Utilizing AI-powered recipe optimization features
+ * - Advanced features such as BeerXML import/export, yeast analytics, and ingredient management
+ * - Tips and best practices for organizing recipes and accurate brewing
+ * - Support resources including FAQ, bug reporting, feature requests, and contact information
+ *
+ * @component
+ * @returns {JSX.Element} The rendered Help page with user guide content.
+ */
 import React from "react";
 
 const Help: React.FC = () => {

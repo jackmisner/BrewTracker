@@ -1,3 +1,14 @@
+/**
+ * Footer component for the BrewTracker application.
+ *
+ * Renders a multi-column footer with project links, help resources, and legal information.
+ * Includes external links to GitHub, brewing resources, and license information, as well as
+ * internal navigation links for reporting bugs, requesting features, and accessing help pages.
+ * Displays the current application version and year.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered footer element.
+ */
 import React from "react";
 import { Link } from "react-router";
 import packageJson from "../../../package.json";
@@ -119,7 +130,8 @@ const Footer: React.FC = () => {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © {currentYear} BrewTracker. Built with ❤️ for the brewing community.
+            © {currentYear} BrewTracker. Built with ❤️ for the brewing
+            community.
           </p>
         </div>
       </div>

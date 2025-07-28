@@ -30,7 +30,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 
 // Components
-import Layout from "./components/Header/Layout";
+import Layout from "./components/Layout/Layout";
 import BrewSessionList from "./components/BrewSessions/BrewSessionList";
 import CreateBrewSession from "./components/BrewSessions/CreateBrewSession";
 import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";

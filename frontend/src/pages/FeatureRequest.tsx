@@ -1,3 +1,14 @@
+/**
+ * FeatureRequest component renders a form for users to submit feature requests for the BrewTracker application.
+ * 
+ * - Collects details such as feature title, description, use case, proposed solution, alternatives, browser info, priority, and category.
+ * - On submission, opens a pre-filled GitHub issue creation page in a new tab with the provided information.
+ * - Displays submission status messages and resets the form after submission.
+ * - Requires a GitHub account to complete the feature request submission.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered feature request form and related UI.
+ */
 import React, { useState } from "react";
 
 interface FeatureRequestForm {

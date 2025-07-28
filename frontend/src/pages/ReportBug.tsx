@@ -1,3 +1,22 @@
+/**
+ * React component for reporting bugs in the BrewTracker application.
+ *
+ * Renders a form that collects detailed bug information from the user, including:
+ * - Bug title
+ * - Severity level
+ * - Description
+ * - Steps to reproduce
+ * - Expected and actual behavior
+ * - Browser information (auto-filled)
+ *
+ * On submission, the form opens a pre-filled GitHub issue creation page in a new tab,
+ * allowing users to submit their bug report directly to the project's GitHub repository.
+ *
+ * Displays submission status messages and resets the form after submission.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered bug report form.
+ */
 import React, { useState } from "react";
 
 interface BugReportForm {
