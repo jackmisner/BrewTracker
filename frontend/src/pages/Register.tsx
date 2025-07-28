@@ -163,15 +163,50 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
 
   return (
     <div data-testid="auth-wrapper" className="auth-wrapper">
-      <div data-testid="auth-container" className="auth-container">
-        <h2 data-testid="auth-title" className="auth-title">
-          Create Account
-        </h2>
-        <p data-testid="auth-subtitle" className="auth-subtitle">
-          Join the brewing community
-        </p>
+      <div className="auth-split-layout">
+        {/* Welcome Section */}
+        <div className="auth-welcome-section">
+          <div className="auth-welcome-content">
+            <h1 className="auth-welcome-title">Start Your Brewing Journey</h1>
+            <p className="auth-welcome-subtitle">
+              Join thousands of brewers perfecting their craft
+            </p>
+            <ul className="auth-features-list">
+              <li className="auth-feature-item">
+                <span className="auth-feature-icon">🌟</span>
+                Free forever - no hidden costs
+              </li>
+              <li className="auth-feature-item">
+                <span className="auth-feature-icon">🔬</span>
+                Advanced brewing calculations
+              </li>
+              <li className="auth-feature-item">
+                <span className="auth-feature-icon">📚</span>
+                BJCP style guidelines built-in
+              </li>
+              <li className="auth-feature-item">
+                <span className="auth-feature-icon">👥</span>
+                Share recipes with the community
+              </li>
+              <li className="auth-feature-item">
+                <span className="auth-feature-icon">🏆</span>
+                Track your brewing achievements
+              </li>
+            </ul>
+          </div>
+        </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {/* Form Section */}
+        <div className="auth-form-section">
+          <div data-testid="auth-container" className="auth-container">
+            <h2 data-testid="auth-title" className="auth-title">
+              Create Account
+            </h2>
+            <p data-testid="auth-subtitle" className="auth-subtitle">
+              Join the brewing community
+            </p>
+
+            {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-form-group">
@@ -282,11 +317,13 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
           </button>
         </form>
 
-        <div className="auth-nav">
-          <p className="auth-nav-text">Already have an account?</p>
-          <a href="/login" className="auth-nav-link">
-            Sign in here
-          </a>
+            <div className="auth-nav">
+              <p className="auth-nav-text">Already have an account?</p>
+              <a href="/login" className="auth-nav-link">
+                Sign in here
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
