@@ -437,9 +437,29 @@ pytest -v
 - **CI/CD**: Automated testing on push and pull requests
 - **Coverage Reports**: Integrated with Codecov for tracking
 
+## 📄 License
+
+BrewTracker is free software licensed under the **GNU General Public License v3.0 or later**.
+
+This ensures that:
+- ✅ The software remains **completely free** for all homebrewers
+- ✅ Any improvements must be **shared back** with the brewing community  
+- ✅ Commercial derivatives must **also be open source**
+- ✅ Brewing knowledge and calculations **stay accessible** to everyone
+
+### What this means for you:
+- **Homebrewers**: Use freely, modify for your needs, share improvements
+- **Brewing Clubs**: Customize for your group and contribute back enhancements
+- **Developers**: Contribute code improvements that benefit all brewers
+- **Commercial Users**: Can use internally but must release any modifications
+
+See the [GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.html) for complete details.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+By contributing to BrewTracker, you agree that your contributions will be licensed under the same GPL v3 license.
 
 ### Development Guidelines
 
