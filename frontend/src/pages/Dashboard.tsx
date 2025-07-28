@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import ApiService from "../services/api";
-import {
-  formatGravity,
-  formatAbv,
-  formatIbu,
-  formatSrm,
-  getSrmColour,
-} from "../utils/formatUtils";
+// Format utilities are now handled by individual components
 import { Recipe, BrewSession, ID } from "../types";
+import CompactRecipeCard from "../components/CompactRecipeCard";
+import CompactBrewSessionCard from "../components/CompactBrewSessionCard";
 import "../styles/Dashboard.css";
+import "../styles/AllRecipes.css"; // For CompactBrewSessionCard styles
 
 interface DashboardStats {
   totalRecipes: number;
@@ -93,33 +90,6 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const getStatusColor = (status: string): string => {
-    const colors: Record<string, string> = {
-      planned: "#3b82f6",
-      "in-progress": "#f59e0b",
-      fermenting: "#8b5cf6",
-      conditioning: "#10b981",
-      completed: "#059669",
-      archived: "#6b7280",
-    };
-    return colors[status] || "#6b7280";
-  };
-
-  const formatDate = (dateString: string | Date): string => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const handleNavigateToRecipe = (recipeId: ID): void => {
-    navigate(`/recipes/${recipeId}`);
-  };
-
-  const handleNavigateToEditRecipe = (recipeId: ID): void => {
-    navigate(`/recipes/${recipeId}/edit`);
-  };
-
-  const handleNavigateToBrewSession = (recipeId: ID): void => {
-    navigate(`/brew-sessions/new?recipeId=${recipeId}`);
-  };
 
   const handleNavigateToSession = (sessionId: ID): void => {
     navigate(`/brew-sessions/${sessionId}`);
@@ -202,75 +172,22 @@ const Dashboard: React.FC = () => {
           <div className="cards-container">
             {recentRecipes.length > 0 ? (
               recentRecipes.map((recipe) => (
-                <div key={recipe.recipe_id} className="recipe-card">
-                  <div className="recipe-card-header">
-                    <div className="recipe-info">
-                      <h3 className="recipe-name">{recipe.name}</h3>
-                      <p className="recipe-style">{recipe.style}</p>
-                    </div>
-                    <div
-                      className="color-swatch"
-                      style={{
-                        backgroundColor: getSrmColour(recipe.estimated_srm),
-                      }}
-                      title={`SRM: ${formatSrm(recipe.estimated_srm)}`}
-                    ></div>
-                  </div>
-
-                  {/* Metrics */}
-                  <div className="recipe-metrics">
-                    <div className="metric">
-                      <div className="metric-value">
-                        {formatGravity(recipe.estimated_og)}
-                      </div>
-                      <div className="metric-label">OG</div>
-                    </div>
-                    <div className="metric">
-                      <div className="metric-value">
-                        {formatAbv(recipe.estimated_abv)}
-                      </div>
-                      <div className="metric-label">ABV</div>
-                    </div>
-                    <div className="metric">
-                      <div className="metric-value">
-                        {formatIbu(recipe.estimated_ibu)}
-                      </div>
-                      <div className="metric-label">IBU</div>
-                    </div>
-                    <div className="metric">
-                      <div className="metric-value">
-                        {formatSrm(recipe.estimated_srm)}
-                      </div>
-                      <div className="metric-label">SRM</div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="card-actions">
-                    <button
-                      onClick={() => handleNavigateToRecipe(recipe.recipe_id)}
-                      className="action-button view"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleNavigateToEditRecipe(recipe.recipe_id)
-                      }
-                      className="action-button edit"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleNavigateToBrewSession(recipe.recipe_id)
-                      }
-                      className="action-button brew"
-                    >
-                      Brew
-                    </button>
-                  </div>
-                </div>
+                <CompactRecipeCard
+                  key={recipe.recipe_id}
+                  recipe={recipe}
+                  showActionsInCard={true}
+                  isPublicRecipe={false}
+                  onDelete={(recipeId) => {
+                    // Handle recipe deletion - refresh the dashboard data
+                    setRecentRecipes((prev) =>
+                      prev.filter((r) => r.recipe_id !== recipeId)
+                    );
+                  }}
+                  refreshTrigger={() => {
+                    // Refresh dashboard data when needed
+                    window.location.reload();
+                  }}
+                />
               ))
             ) : (
               <div className="empty-state">
@@ -301,99 +218,12 @@ const Dashboard: React.FC = () => {
           <div className="cards-container">
             {recentSessions.length > 0 ? (
               recentSessions.map((session) => (
-                <div key={session.session_id} className="session-card">
-                  <div className="session-card-header">
-                    <div className="session-info">
-                      <h3 className="session-name">
-                        {session.name ||
-                          `Session #${session.session_id
-                            .toString()
-                            .substring(0, 6)}`}
-                      </h3>
-                      <p className="session-date">
-                        {formatDate(session.brew_date)}
-                      </p>
-                    </div>
-                    <span
-                      className="status-badge"
-                      style={{
-                        backgroundColor: `${getStatusColor(
-                          session.status || ""
-                        )}20`,
-                        color: getStatusColor(session.status || ""),
-                      }}
-                    >
-                      {(session.status || "").replace("-", " ")}
-                    </span>
-                  </div>
-
-                  {/* Session Metrics */}
-                  <div className="session-metrics">
-                    <div className="metric">
-                      <div className="metric-value">
-                        {session.actual_og
-                          ? formatGravity(session.actual_og)
-                          : "TBD"}
-                      </div>
-                      <div className="metric-label">OG</div>
-                    </div>
-                    <div className="metric">
-                      <div className="metric-value">
-                        {session.actual_fg
-                          ? formatGravity(session.actual_fg)
-                          : "TBD"}
-                      </div>
-                      <div className="metric-label">FG</div>
-                    </div>
-                    <div className="metric">
-                      <div className="metric-value">
-                        {session.actual_abv
-                          ? formatAbv(session.actual_abv)
-                          : "TBD"}
-                      </div>
-                      <div className="metric-label">ABV</div>
-                    </div>
-                  </div>
-
-                  {/* Rating for completed sessions */}
-                  {session.batch_rating && (
-                    <div className="session-rating">
-                      <span className="rating-label">Rating:</span>
-                      <div className="stars">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            className={`star ${
-                              i < (session.batch_rating || 0) ? "filled" : ""
-                            }`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="card-actions">
-                    <button
-                      onClick={() =>
-                        handleNavigateToSession(session.session_id)
-                      }
-                      className="action-button view"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleNavigateToEditSession(session.session_id)
-                      }
-                      className="action-button edit"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
+                <CompactBrewSessionCard
+                  key={session.session_id}
+                  session={session}
+                  onView={(sessionId) => handleNavigateToSession(sessionId)}
+                  onEdit={(sessionId) => handleNavigateToEditSession(sessionId)}
+                />
               ))
             ) : (
               <div className="empty-state">

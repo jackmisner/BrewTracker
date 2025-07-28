@@ -26,6 +26,65 @@
 }
 
 /* ==========================================================================
+   About Page Photo Sections
+   ========================================================================== */
+.about-photo-section {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1rem;
+}
+
+.about-photo {
+  max-width: 500px;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  margin: 0 auto 1rem;
+  display: block;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-photo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.homebrew-photo {
+  max-width: 600px;
+}
+
+.photo-caption {
+  font-style: italic;
+  color: #6b7280;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Mobile responsiveness for photos */
+@media (max-width: 768px) {
+  .about-photo-section {
+    margin: 1.5rem 0;
+    padding: 0.5rem;
+  }
+  
+  .about-photo {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .photo-caption {
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
+}
+
+/* ==========================================================================
    Loading States
    ========================================================================== */
 .loading-container {

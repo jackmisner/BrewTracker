@@ -4,7 +4,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  background-color: #f9fafb;
+  background-color: transparent;
   min-height: 100vh;
 }
 
@@ -194,24 +194,27 @@
 /* Recipe Metrics */
 .recipe-metrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 0.5rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .metric {
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .metric-value {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #92400e;
   margin-bottom: 0.25rem;
 }
 
 .metric-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #6b7280;
 }
 
@@ -393,7 +396,16 @@
   }
   
   .recipe-metrics {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 0.4rem;
+  }
+  
+  .recipe-metrics .metric-value {
+    font-size: 0.875rem;
+  }
+  
+  .recipe-metrics .metric-label {
+    font-size: 0.6rem;
   }
   
   .session-metrics {
