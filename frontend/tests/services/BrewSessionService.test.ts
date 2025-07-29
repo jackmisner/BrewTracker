@@ -810,7 +810,7 @@ describe("BrewSessionService", () => {
       expect(formatted).toEqual({
         name: "Test Session",
         status: "planned",
-        notes: "",
+        // notes should not be included since it wasn't in the original data
       });
     });
   });

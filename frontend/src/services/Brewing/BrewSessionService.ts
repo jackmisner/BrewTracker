@@ -593,11 +593,18 @@ class BrewSessionService {
    * Format session data for API submission
    */
   formatBrewSessionForApi(sessionData: Partial<BrewSession>): any {
-    const formatted: any = {
-      name: sessionData.name?.trim() || "",
-      status: sessionData.status || "planned",
-      notes: sessionData.notes?.trim() || "",
-    };
+    const formatted: any = {};
+
+    // Only include fields that are explicitly provided
+    if (sessionData.hasOwnProperty('name')) {
+      formatted.name = sessionData.name?.trim() || "";
+    }
+    if (sessionData.hasOwnProperty('status')) {
+      formatted.status = sessionData.status || "planned";
+    }
+    if (sessionData.hasOwnProperty('notes')) {
+      formatted.notes = sessionData.notes?.trim() || "";
+    }
 
     // Add optional fields only if they have values
     if (sessionData.recipe_id) formatted.recipe_id = sessionData.recipe_id;

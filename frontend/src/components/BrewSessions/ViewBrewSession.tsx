@@ -46,6 +46,7 @@ const ViewBrewSession: React.FC = () => {
         const sessionData = await Services.brewSession.fetchBrewSession(
           sessionId
         );
+        console.log("Fetched brew session data:", sessionData);
         setSession(sessionData);
 
         // Fetch the related recipe if it exists
