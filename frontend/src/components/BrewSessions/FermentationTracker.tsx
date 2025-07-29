@@ -15,18 +15,16 @@ import { useUnits } from "../../contexts/UnitContext";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import DryHopTracker from "./DryHopTracker";
 import { FermentationEntry, BrewSession, Recipe, ID } from "../../types";
-import {
-  formatGravity,
-  formatAttenuation,
-
-} from "../../utils/formatUtils";
+import { formatGravity, formatAttenuation } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
 interface FermentationTrackerProps {
   sessionId: ID;
   recipeData?: Partial<Recipe>;
   sessionData?: Partial<BrewSession>;
-  onUpdateSession?: (updateData: Partial<BrewSession>) => void;
+  onUpdateSession?: (
+    updateData: Partial<BrewSession> & { needsRefresh?: boolean }
+  ) => void;
 }
 
 interface FormData {
@@ -226,14 +224,20 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       // Format data for submission (no temperature conversion - backend will handle storage)
       const entry = {
         gravity: formData.gravity ? parseFloat(formData.gravity) : undefined,
-        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+        temperature: formData.temperature
+          ? parseFloat(formData.temperature)
+          : undefined,
         ph: formData.ph ? parseFloat(formData.ph) : undefined,
         notes: formData.notes || undefined,
         entry_date: new Date().toISOString(),
       };
 
       // Submit data
-      await Services.brewSession.addFermentationEntry(sessionId, entry, unitSystem);
+      await Services.brewSession.addFermentationEntry(
+        sessionId,
+        entry,
+        unitSystem
+      );
 
       // Update the brew session if this is the first gravity reading
       if (fermentationData.length === 0 && entry.gravity) {
@@ -321,12 +325,12 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
       await Services.brewSession.updateBrewSession(sessionId, updateData);
 
-      // Notify parent component of the update
+      // Notify parent component of the update with refresh flag
       if (onUpdateSession) {
-        onUpdateSession(updateData);
+        onUpdateSession({ ...updateData, needsRefresh: true });
       }
 
-      // Refresh data to reflect changes
+      // Refresh fermentation data to reflect changes
       fetchFermentationData();
     } catch (err: any) {
       console.error("Error updating session to completed:", err);
@@ -355,13 +359,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   const calculateGravityDomain = (): [number, number] => {
     // Get the actual OG from session data, fallback to recipe estimate, then to highest gravity reading
     let actualOG = sessionData?.actual_og || recipeData?.estimated_og;
-    
+
     // If we have gravity readings, use the highest one as potential OG
     if (!actualOG && chartData && chartData.length > 0) {
       const gravityValues = chartData
-        .map(entry => entry.gravity)
+        .map((entry) => entry.gravity)
         .filter((gravity): gravity is number => gravity !== null);
-      
+
       if (gravityValues.length > 0) {
         actualOG = Math.max(...gravityValues);
       }
@@ -369,137 +373,185 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
     // Set domain based on OG: 1.000 to OG + 10 gravity points (0.010)
     if (actualOG) {
-      return [1.000, actualOG + 0.010];
+      return [1.0, actualOG + 0.01];
     }
 
     // Fallback if no OG data available
-    return [1.000, 1.100];
+    return [1.0, 1.1];
   };
 
   const gravityDomain = calculateGravityDomain();
 
-  // Calculate fermentation rate (daily gravity drop)
-  const calculateFermentationRate = (): { dailyRate: number | null; analysis: string } => {
+  // Calculate fermentation rate (daily gravity drop) with session status awareness
+  const calculateFermentationRate = (): {
+    dailyRate: number | null;
+    analysis: string;
+  } => {
     if (!chartData || chartData.length < 2) {
-      return { dailyRate: null, analysis: "Need at least 2 readings to calculate rate" };
+      return {
+        dailyRate: null,
+        analysis: "Need at least 2 readings to calculate rate",
+      };
     }
 
-    const validEntries = chartData.filter(entry => entry.gravity !== null);
+    const validEntries = chartData.filter((entry) => entry.gravity !== null);
     if (validEntries.length < 2) {
       return { dailyRate: null, analysis: "Need at least 2 gravity readings" };
     }
 
+    // Check if session is completed - affects how we interpret the rate
+    const isCompleted = sessionData?.status === "completed";
+
     try {
       // Sort by date to ensure proper calculation (using ISO date string)
-      const sortedEntries = [...validEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
+      const sortedEntries = [...validEntries].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
       // Calculate rate between last two readings
       const latest = sortedEntries[sortedEntries.length - 1];
       const previous = sortedEntries[sortedEntries.length - 2];
-      
+
       const latestDate = new Date(latest.date);
       const previousDate = new Date(previous.date);
-      
+
       // Validate dates
       if (isNaN(latestDate.getTime()) || isNaN(previousDate.getTime())) {
         return { dailyRate: null, analysis: "Invalid date format in readings" };
       }
-      
-      const gravityDrop = (previous.gravity! - latest.gravity!);
+
+      const gravityDrop = previous.gravity! - latest.gravity!;
       const timeDiff = latestDate.getTime() - previousDate.getTime();
       const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-      
+
       if (daysDiff <= 0) {
-        return { dailyRate: null, analysis: "Readings taken on same day or invalid date order" };
+        return {
+          dailyRate: null,
+          analysis: "Readings taken on same day or invalid date order",
+        };
       }
 
       const dailyRate = gravityDrop / daysDiff;
-      
+
       // Validate the result
       if (isNaN(dailyRate)) {
-        return { dailyRate: null, analysis: "Error calculating fermentation rate" };
+        return {
+          dailyRate: null,
+          analysis: "Error calculating fermentation rate",
+        };
       }
-      
-      // Provide analysis
+
+      // Provide session status-aware analysis
       let analysis = "";
-      if (dailyRate > 0.008) {
-        analysis = "Very fast fermentation";
-      } else if (dailyRate > 0.004) {
-        analysis = "Active fermentation";
-      } else if (dailyRate > 0.001) {
-        analysis = "Slow fermentation";
-      } else if (dailyRate > 0) {
-        analysis = "Very slow fermentation";
+
+      if (isCompleted) {
+        // For completed sessions, provide context-appropriate messaging
+        if (dailyRate > 0.004) {
+          analysis = "Fermentation completed successfully";
+        } else if (dailyRate > 0.001) {
+          analysis = "Fermentation completed at steady pace";
+        } else {
+          analysis = "Fermentation completed (final gravity stable)";
+        }
       } else {
-        analysis = "Fermentation may have stalled";
+        // For active sessions, use traditional fermentation rate analysis
+        if (dailyRate > 0.008) {
+          analysis = "Very fast fermentation";
+        } else if (dailyRate > 0.004) {
+          analysis = "Active fermentation";
+        } else if (dailyRate > 0.001) {
+          analysis = "Slow fermentation";
+        } else if (dailyRate > 0) {
+          analysis = "Very slow fermentation";
+        } else {
+          analysis = "Fermentation may have stalled";
+        }
       }
 
       return { dailyRate, analysis };
     } catch (error) {
       console.error("Error calculating fermentation rate:", error);
-      return { dailyRate: null, analysis: "Error calculating fermentation rate" };
+      return {
+        dailyRate: null,
+        analysis: "Error calculating fermentation rate",
+      };
     }
   };
 
   const fermentationRate = calculateFermentationRate();
 
   // Calculate fermentation phase markers
-  const calculatePhaseMarkers = (): Array<{ date: string; phase: string; label: string; color: string }> => {
-    const markers: Array<{ date: string; phase: string; label: string; color: string }> = [];
-    
+  const calculatePhaseMarkers = (): Array<{
+    date: string;
+    phase: string;
+    label: string;
+    color: string;
+  }> => {
+    const markers: Array<{
+      date: string;
+      phase: string;
+      label: string;
+      color: string;
+    }> = [];
+
     // Add fermentation start marker
     if (sessionData?.fermentation_start_date) {
       markers.push({
         date: sessionData.fermentation_start_date,
         phase: "start",
         label: "🧪 Fermentation Start",
-        color: "#28a745"
+        color: "#28a745",
       });
     }
-    
+
     // Add dry hop markers from the session data
-    if (sessionData?.dry_hop_additions && sessionData.dry_hop_additions.length > 0) {
+    if (
+      sessionData?.dry_hop_additions &&
+      sessionData.dry_hop_additions.length > 0
+    ) {
       sessionData.dry_hop_additions.forEach((addition) => {
         markers.push({
           date: addition.addition_date,
           phase: "dry_hop_add",
           label: `🌿 Add ${addition.hop_name}`,
-          color: "#ffc107"
+          color: "#ffc107",
         });
-        
+
         // Add removal marker if present
         if (addition.removal_date) {
           markers.push({
             date: addition.removal_date,
             phase: "dry_hop_remove",
             label: `🗑️ Remove ${addition.hop_name}`,
-            color: "#fd7e14"
+            color: "#fd7e14",
           });
         }
       });
     }
-    
+
     // Add fermentation end marker
     if (sessionData?.fermentation_end_date) {
       markers.push({
         date: sessionData.fermentation_end_date,
         phase: "end",
         label: "🏁 Fermentation Complete",
-        color: "#dc3545"
+        color: "#dc3545",
       });
     }
-    
+
     // Add packaging marker
     if (sessionData?.packaging_date) {
       markers.push({
         date: sessionData.packaging_date,
         phase: "packaging",
         label: "📦 Packaged",
-        color: "#6f42c1"
+        color: "#6f42c1",
       });
     }
-    
-    return markers.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return markers.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
   };
 
   const phaseMarkers = calculatePhaseMarkers();
@@ -574,7 +626,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   step="0.1"
                   id="temperature"
                   name="temperature"
-                  placeholder={unitSystem === "metric" ? "e.g. 20.0" : "e.g. 68.5"}
+                  placeholder={
+                    unitSystem === "metric" ? "e.g. 20.0" : "e.g. 68.5"
+                  }
                   value={formData.temperature}
                   onChange={handleChange}
                   className="fermentation-input"
@@ -675,7 +729,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Min:</span>
                       <span className="fermentation-stat-value">
-                        {Math.round(stats.temperature.min)}°{unitSystem === "metric" ? "C" : "F"}
+                        {Math.round(stats.temperature.min)}°
+                        {unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -684,7 +739,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Max:</span>
                       <span className="fermentation-stat-value">
-                        {Math.round(stats.temperature.max)}°{unitSystem === "metric" ? "C" : "F"}
+                        {Math.round(stats.temperature.max)}°
+                        {unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -693,7 +749,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Avg:</span>
                       <span className="fermentation-stat-value">
-                        {Math.round(stats.temperature.avg)}°{unitSystem === "metric" ? "C" : "F"}
+                        {Math.round(stats.temperature.avg)}°
+                        {unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -728,7 +785,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   )}
                 </div>
               )}
-              
+
               {/* Fermentation Rate Card */}
               {fermentationRate.dailyRate !== null && (
                 <div className="fermentation-stat-card">
@@ -866,77 +923,88 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     />
                     <Tooltip />
                     <Legend />
-                    
+
                     {/* Expected FG Reference Line */}
-                    {recipeData.estimated_fg && chartData && chartData.length > 0 && (() => {
-                      // Custom label component positioned at the left side
-                      const CustomFGLabel = (props: any) => {
-                        const { viewBox } = props;
-                        if (!viewBox) return null;
-                        
-                        const { x, y } = viewBox;
-                        
+                    {recipeData.estimated_fg &&
+                      chartData &&
+                      chartData.length > 0 &&
+                      (() => {
+                        // Custom label component positioned at the left side
+                        const CustomFGLabel = (props: any) => {
+                          const { viewBox } = props;
+                          if (!viewBox) return null;
+
+                          const { x, y } = viewBox;
+
+                          return (
+                            <text
+                              x={x + 20} // Position near left edge with small margin
+                              y={y - 10} // Position above the line
+                              fill="#ff7300"
+                              fontSize="12"
+                              fontWeight="bold"
+                              textAnchor="start"
+                              dominantBaseline="middle"
+                              style={{
+                                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                                padding: "2px 4px",
+                                borderRadius: "3px",
+                              }}
+                            >
+                              {`Expected FG: ${formatGravity(
+                                recipeData.estimated_fg
+                              )}`}
+                            </text>
+                          );
+                        };
+
                         return (
-                          <text
-                            x={x + 20} // Position near left edge with small margin
-                            y={y - 10}  // Position above the line
-                            fill="#ff7300"
-                            fontSize="12"
-                            fontWeight="bold"
-                            textAnchor="start"
-                            dominantBaseline="middle"
-                            style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              padding: "2px 4px",
-                              borderRadius: "3px"
-                            }}
-                          >
-                            {`Expected FG: ${formatGravity(recipeData.estimated_fg)}`}
-                          </text>
+                          <ReferenceLine
+                            y={recipeData.estimated_fg}
+                            yAxisId="gravity"
+                            stroke="#ff7300"
+                            strokeDasharray="5 5"
+                            label={<CustomFGLabel />}
+                          />
                         );
-                      };
-                      
-                      return (
-                        <ReferenceLine
-                          y={recipeData.estimated_fg}
-                          yAxisId="gravity"
-                          stroke="#ff7300"
-                          strokeDasharray="5 5"
-                          label={<CustomFGLabel />}
-                        />
-                      );
-                    })()}
-                    
+                      })()}
+
                     {/* Fermentation Phase Markers */}
-                    {chartData && chartData.length > 0 && phaseMarkers && phaseMarkers.length > 0 && phaseMarkers.map((marker, index) => {
-                      // Convert marker date to display format to match chart data
-                      const displayDate = new Date(marker.date).toLocaleDateString();
-                      return (
-                        <ReferenceLine
-                          key={`phase-${index}`}
-                          x={displayDate}
-                          yAxisId="gravity"
-                          stroke={marker.color}
-                          strokeDasharray="3 3"
-                          strokeWidth={2}
-                          label={{
-                            value: marker.label,
-                            position: "top",
-                            offset: 10,
-                            style: { 
-                              fontSize: "14px", 
-                              fill: marker.color, 
-                              fontWeight: "bold",
-                              backgroundColor: "rgba(255, 255, 255, 0.8)",
-                              padding: "2px 4px",
-                              borderRadius: "3px",
-                              border: `1px solid ${marker.color}`
-                            }
-                          }}
-                        />
-                      );
-                    })}
-                    
+                    {chartData &&
+                      chartData.length > 0 &&
+                      phaseMarkers &&
+                      phaseMarkers.length > 0 &&
+                      phaseMarkers.map((marker, index) => {
+                        // Convert marker date to display format to match chart data
+                        const displayDate = new Date(
+                          marker.date
+                        ).toLocaleDateString();
+                        return (
+                          <ReferenceLine
+                            key={`phase-${index}`}
+                            x={displayDate}
+                            yAxisId="gravity"
+                            stroke={marker.color}
+                            strokeDasharray="3 3"
+                            strokeWidth={2}
+                            label={{
+                              value: marker.label,
+                              position: "top",
+                              offset: 10,
+                              style: {
+                                fontSize: "14px",
+                                fill: marker.color,
+                                fontWeight: "bold",
+                                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                                padding: "2px 4px",
+                                borderRadius: "3px",
+                                border: `1px solid ${marker.color}`,
+                              },
+                            }}
+                          />
+                        );
+                      })}
+
                     <Line
                       yAxisId="gravity"
                       type="monotone"
@@ -950,7 +1018,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       type="monotone"
                       dataKey="temperature"
                       stroke="#82ca9d"
-                      name={`Temperature (${unitSystem === "metric" ? "°C" : "°F"})`}
+                      name={`Temperature (${
+                        unitSystem === "metric" ? "°C" : "°F"
+                      })`}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -966,8 +1036,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                 <div className="timeline-track">
                   {phaseMarkers.map((marker, index) => (
                     <div key={`timeline-${index}`} className="timeline-event">
-                      <div 
-                        className="timeline-event-marker" 
+                      <div
+                        className="timeline-event-marker"
                         style={{ backgroundColor: marker.color }}
                         title={marker.label}
                       ></div>
@@ -975,12 +1045,21 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         <div className="timeline-event-date">
                           {(() => {
                             // Special handling for fermentation start/end dates which should be date-only
-                            if (marker.phase === "start" || marker.phase === "end" || marker.phase === "packaging") {
+                            if (
+                              marker.phase === "start" ||
+                              marker.phase === "end" ||
+                              marker.phase === "packaging"
+                            ) {
                               // For fermentation milestones, always show just the date
                               if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
                                 // Pure date format - parse carefully to avoid timezone issues
-                                const [year, month, day] = marker.date.split('-');
-                                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+                                const [year, month, day] =
+                                  marker.date.split("-");
+                                return new Date(
+                                  parseInt(year),
+                                  parseInt(month) - 1,
+                                  parseInt(day)
+                                ).toLocaleDateString();
                               } else {
                                 // If it's a timestamp, extract just the date part
                                 const date = new Date(marker.date);
@@ -989,21 +1068,34 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                             } else {
                               // For dry hop additions/removals, show full timestamp
                               const date = new Date(marker.date);
-                              return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                              return (
+                                date.toLocaleDateString() +
+                                " " +
+                                date.toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              );
                             }
                           })()}
                         </div>
-                        <div className="timeline-event-label">{marker.label}</div>
-                        {marker.phase === "dry_hop_add" && sessionData?.dry_hop_additions && (
-                          <div className="timeline-event-details">
-                            {(() => {
-                              const addition = sessionData.dry_hop_additions.find(
-                                (add) => add.addition_date === marker.date
-                              );
-                              return addition ? `${addition.amount} ${addition.amount_unit}` : '';
-                            })()}
-                          </div>
-                        )}
+                        <div className="timeline-event-label">
+                          {marker.label}
+                        </div>
+                        {marker.phase === "dry_hop_add" &&
+                          sessionData?.dry_hop_additions && (
+                            <div className="timeline-event-details">
+                              {(() => {
+                                const addition =
+                                  sessionData.dry_hop_additions.find(
+                                    (add) => add.addition_date === marker.date
+                                  );
+                                return addition
+                                  ? `${addition.amount} ${addition.amount_unit}`
+                                  : "";
+                              })()}
+                            </div>
+                          )}
                       </div>
                     </div>
                   ))}
@@ -1058,7 +1150,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         </td>
                         <td>
                           {entry.temperature
-                            ? `${Math.round(entry.temperature)}°${unitSystem === "metric" ? "C" : "F"}`
+                            ? `${Math.round(entry.temperature)}°${
+                                unitSystem === "metric" ? "C" : "F"
+                              }`
                             : "-"}
                         </td>
                         <td>{entry.ph ? entry.ph.toFixed(1) : "-"}</td>
@@ -1080,7 +1174,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           </div>
 
           {/* Dry Hop Tracking */}
-          <DryHopTracker 
+          <DryHopTracker
             sessionId={sessionId}
             recipeData={recipeData}
             onSessionUpdate={onUpdateSession}
