@@ -347,6 +347,44 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
   const chartData = formatChartData();
 
+  // Calculate gravity domain for chart Y-axis
+  const calculateGravityDomain = (): [number, number] => {
+    if (!chartData || chartData.length === 0) {
+      return [1.000, 1.100]; // Default range
+    }
+
+    const gravityValues = chartData
+      .map(entry => entry.gravity)
+      .filter((gravity): gravity is number => gravity !== null);
+
+    if (gravityValues.length === 0) {
+      return [1.000, 1.100]; // Default range if no gravity data
+    }
+
+    if (gravityValues.length === 1) {
+      // For single data point, show +/- 0.010 from the value (10 gravity points)
+      const gravity = gravityValues[0];
+      const min = Math.max(1.000, gravity - 0.010); // Don't go below 1.000
+      const max = gravity + 0.010;
+      return [min, max];
+    }
+
+    // For multiple data points, use min/max with some padding
+    const minGravity = Math.min(...gravityValues);
+    const maxGravity = Math.max(...gravityValues);
+    const range = maxGravity - minGravity;
+    
+    // Add 10% padding on each side, minimum 0.005 (5 gravity points)
+    const padding = Math.max(range * 0.1, 0.005);
+    
+    return [
+      Math.max(1.000, minGravity - padding), // Don't go below 1.000
+      maxGravity + padding
+    ];
+  };
+
+  const gravityDomain = calculateGravityDomain();
+
   // Calculate attenuation if possible
   const calculateAttenuation = (): string | null => {
     if (fermentationData.length < 2) {
@@ -682,7 +720,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis yAxisId="gravity" domain={["auto", "auto"]} />
+                    <YAxis yAxisId="gravity" domain={gravityDomain} />
                     <YAxis
                       yAxisId="temp"
                       orientation="right"
