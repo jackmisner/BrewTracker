@@ -20,6 +20,28 @@ export interface FermentationEntry {
   notes?: string;
 }
 
+export interface DryHopAddition {
+  addition_date: string; // ISO date string
+  hop_name: string;
+  hop_type?: string; // Pellet, Leaf, Extract, etc.
+  amount: number;
+  amount_unit: string; // oz, g, etc.
+  duration_days?: number; // Planned duration in days
+  removal_date?: string; // ISO date string when removed
+  notes?: string;
+  phase?: string; // fermentation, secondary, etc.
+}
+
+export interface DryHopAdditionFormData {
+  hop_name: string;
+  hop_type?: string;
+  amount: number | null;
+  amount_unit: string;
+  duration_days?: number | null;
+  notes?: string;
+  phase?: string;
+}
+
 // Main brew session interface
 export interface BrewSession extends BaseEntity {
   session_id: ID;
@@ -43,6 +65,9 @@ export interface BrewSession extends BaseEntity {
 
   // Fermentation tracking data
   fermentation_data: FermentationEntry[];
+  
+  // Dry hop additions tracking
+  dry_hop_additions: DryHopAddition[];
 
   // Notes and ratings
   notes?: string;

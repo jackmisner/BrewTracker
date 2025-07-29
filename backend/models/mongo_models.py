@@ -681,6 +681,39 @@ class FermentationEntry(EmbeddedDocument):
         }
 
 
+class DryHopAddition(EmbeddedDocument):
+    """Embedded document for tracking dry hop additions during fermentation"""
+
+    addition_date = DateTimeField(required=True, default=lambda: datetime.now(UTC))
+    hop_name = StringField(required=True, max_length=100)
+    hop_type = StringField(max_length=50)  # Pellet, Leaf, Extract, etc.
+    amount = FloatField(required=True)  # Amount of hops added
+    amount_unit = StringField(required=True, max_length=10)  # oz, g, etc.
+    duration_days = IntField()  # Planned duration in days (optional)
+    removal_date = DateTimeField()  # When hops were removed (optional)
+    notes = StringField()  # Any additional notes
+    phase = StringField(
+        max_length=20, default="fermentation"
+    )  # fermentation, secondary, etc.
+
+    def to_dict(self):
+        return {
+            "addition_date": (
+                self.addition_date.isoformat() if self.addition_date else None
+            ),
+            "hop_name": self.hop_name,
+            "hop_type": self.hop_type,
+            "amount": self.amount,
+            "amount_unit": self.amount_unit,
+            "duration_days": self.duration_days,
+            "removal_date": (
+                self.removal_date.isoformat() if self.removal_date else None
+            ),
+            "notes": self.notes,
+            "phase": self.phase,
+        }
+
+
 # Brew session model
 class BrewSession(Document):
     recipe_id = ObjectIdField(required=True)
@@ -704,6 +737,9 @@ class BrewSession(Document):
 
     # Fermentation tracking - list of fermentation data entries
     fermentation_data = ListField(EmbeddedDocumentField(FermentationEntry))
+
+    # Dry hop additions tracking
+    dry_hop_additions = ListField(EmbeddedDocumentField(DryHopAddition))
 
     # Tasting and notes
     notes = StringField()
@@ -776,6 +812,9 @@ class BrewSession(Document):
                 else None
             ),
             "fermentation_data": [entry.to_dict() for entry in self.fermentation_data],
+            "dry_hop_additions": [
+                addition.to_dict() for addition in self.dry_hop_additions
+            ],
             "notes": self.notes,
             "tasting_notes": self.tasting_notes,
             "batch_rating": self.batch_rating,

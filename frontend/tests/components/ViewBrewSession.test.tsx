@@ -445,6 +445,7 @@ describe("ViewBrewSession", () => {
         {
           estimated_og: mockRecipe.estimated_og,
           estimated_fg: mockRecipe.estimated_fg,
+          ingredients: mockRecipe.ingredients,
         }
       );
       expect(

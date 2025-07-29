@@ -1,5 +1,6 @@
 import ApiService from "../api";
-import { BrewSession, ID, GravityStabilizationAnalysis } from "../../types";
+import { BrewSession, ID, GravityStabilizationAnalysis, DryHopAddition } from "../../types";
+import { AddDryHopAdditionRequest } from "../../types/api";
 
 // Service-specific interfaces
 interface BrewSessionValidation {
@@ -938,6 +939,51 @@ class BrewSessionService {
    */
   clearCache(): void {
     this.sessionsCache.clear();
+  }
+
+  // Dry Hop Addition Methods
+  
+  /**
+   * Get all dry hop additions for a brew session
+   */
+  async getDryHopAdditions(sessionId: ID) {
+    return ApiService.brewSessions.getDryHopAdditions(sessionId);
+  }
+
+  /**
+   * Add a new dry hop addition to a brew session
+   */
+  async addDryHopAddition(sessionId: ID, additionData: AddDryHopAdditionRequest) {
+    const result = await ApiService.brewSessions.addDryHopAddition(sessionId, additionData);
+    
+    // Clear session cache to ensure fresh data
+    this.clearSessionCache(sessionId);
+    
+    return result;
+  }
+
+  /**
+   * Update a dry hop addition (e.g., mark as removed)
+   */
+  async updateDryHopAddition(sessionId: ID, additionIndex: number, updateData: Partial<DryHopAddition>) {
+    const result = await ApiService.brewSessions.updateDryHopAddition(sessionId, additionIndex, updateData);
+    
+    // Clear session cache to ensure fresh data
+    this.clearSessionCache(sessionId);
+    
+    return result;
+  }
+
+  /**
+   * Delete a dry hop addition
+   */
+  async deleteDryHopAddition(sessionId: ID, additionIndex: number) {
+    const result = await ApiService.brewSessions.deleteDryHopAddition(sessionId, additionIndex);
+    
+    // Clear session cache to ensure fresh data
+    this.clearSessionCache(sessionId);
+    
+    return result;
   }
 }
 

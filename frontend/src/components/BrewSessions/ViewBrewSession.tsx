@@ -541,11 +541,16 @@ const ViewBrewSession: React.FC = () => {
             recipeData={{
               estimated_og: recipe?.estimated_og,
               estimated_fg: recipe?.estimated_fg,
+              ingredients: recipe?.ingredients, // Pass full ingredients for dry hop extraction
             }}
             sessionData={{
               status: session.status,
               actual_og: session.actual_og,
               actual_fg: session.actual_fg,
+              dry_hop_additions: session.dry_hop_additions,
+              fermentation_start_date: session.fermentation_start_date,
+              fermentation_end_date: session.fermentation_end_date,
+              packaging_date: session.packaging_date,
             }}
             onUpdateSession={(updatedData: Partial<BrewSession>) => {
               const updatedSession = { ...session, ...updatedData };
