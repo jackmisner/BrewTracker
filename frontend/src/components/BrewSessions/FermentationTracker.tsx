@@ -842,7 +842,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           )}
 
           {/* Chart visualization - only show if we have data */}
-          {chartData.length > 0 && (
+          {chartData && chartData.length > 0 && (
             <div className="brew-session-section">
               <h3 className="section-title">Fermentation Progress</h3>
               <div className="fermentation-chart">
@@ -868,7 +868,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <Legend />
                     
                     {/* Target FG Reference Line */}
-                    {recipeData.estimated_fg && (
+                    {recipeData.estimated_fg && chartData && chartData.length > 0 && (
                       <ReferenceLine
                         y={recipeData.estimated_fg}
                         yAxisId="gravity"
@@ -879,13 +879,14 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     )}
                     
                     {/* Fermentation Phase Markers */}
-                    {phaseMarkers.map((marker, index) => {
+                    {chartData && chartData.length > 0 && phaseMarkers && phaseMarkers.length > 0 && phaseMarkers.map((marker, index) => {
                       // Convert marker date to display format to match chart data
                       const displayDate = new Date(marker.date).toLocaleDateString();
                       return (
                         <ReferenceLine
                           key={`phase-${index}`}
                           x={displayDate}
+                          yAxisId="gravity"
                           stroke={marker.color}
                           strokeDasharray="3 3"
                           strokeWidth={2}

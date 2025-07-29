@@ -34,7 +34,10 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
 
     // Find all dry hop ingredients from recipe
     const dryHopIngredients = recipeData.ingredients.filter(
-      ingredient => ingredient.use === "dry_hop"
+      ingredient => {
+        // Handle both "dry_hop" and "dry-hop" formats for robustness
+        return ingredient.use === "dry_hop" || ingredient.use === "dry-hop";
+      }
     );
 
     // Create RecipeDryHop objects with tracking information
@@ -44,9 +47,11 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
         sessionHop => sessionHop.hop_name.toLowerCase() === ingredient.name.toLowerCase()
       );
 
+      const plannedDays = ingredient.time ? Math.round(ingredient.time / (24 * 60)) : undefined;
+      
       return {
         ingredient,
-        plannedDays: ingredient.time || undefined, // Time field represents planned days in fermenter
+        plannedDays, // Convert minutes to days
         addedToFermenter: !!matchingSessionHop,
         additionDate: matchingSessionHop?.addition_date,
         removalDate: matchingSessionHop?.removal_date,
