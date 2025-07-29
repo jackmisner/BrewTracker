@@ -1153,6 +1153,17 @@ class MongoDBService:
             session = BrewSession.objects(id=session_id).first()
             if not session or not session.fermentation_data:
                 return None, "No fermentation data available"
+            return MongoDBService.get_fermentation_stats_from_session(session)
+        except Exception as e:
+            print(f"Database error: {e}")
+            return None, str(e)
+
+    @staticmethod
+    def get_fermentation_stats_from_session(session):
+        """Calculate fermentation statistics from a session object (used for temperature conversion)"""
+        try:
+            if not session or not session.fermentation_data:
+                return None, "No fermentation data available"
 
             # Sort entries by date
             entries = sorted(session.fermentation_data, key=lambda x: x.entry_date)
@@ -1169,10 +1180,8 @@ class MongoDBService:
                     temperature_data.append(
                         {"date": entry_date, "value": entry.temperature}
                     )
-
                 if entry.gravity is not None:
                     gravity_data.append({"date": entry_date, "value": entry.gravity})
-
                 if entry.ph is not None:
                     ph_data.append({"date": entry_date, "value": entry.ph})
 

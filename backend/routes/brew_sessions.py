@@ -42,6 +42,8 @@ def get_brew_sessions():
 @brew_sessions_bp.route("/<session_id>", methods=["GET"])
 @jwt_required()
 def get_brew_session(session_id):
+    from models.mongo_models import User
+
     session = BrewSession.objects(id=session_id).first()
 
     if not session:
@@ -58,11 +60,20 @@ def get_brew_session(session_id):
 @brew_sessions_bp.route("", methods=["POST"])
 @jwt_required()
 def create_brew_session():
+    from models.mongo_models import User
+
     user_id = get_jwt_identity()
     data = request.get_json()
 
     # Add user_id to the session data
     data["user_id"] = ObjectId(user_id)
+
+    # Set temperature unit based on user preferences
+    user = User.objects(id=user_id).first()
+    if user:
+        preferred_units = user.get_preferred_units()
+        preferred_temp_unit = "C" if preferred_units == "metric" else "F"
+        data["temperature_unit"] = preferred_temp_unit
 
     # Create brew session
     session = MongoDBService.create_brew_session(data)
@@ -136,6 +147,8 @@ def delete_brew_session(session_id):
 @brew_sessions_bp.route("/<session_id>/fermentation", methods=["GET"])
 @jwt_required()
 def get_fermentation_data(session_id):
+    from models.mongo_models import User
+
     user_id = get_jwt_identity()
 
     # Check access permission
@@ -146,7 +159,7 @@ def get_fermentation_data(session_id):
     if str(session.user_id) != user_id:
         return jsonify({"error": "Access denied"}), 403
 
-    # Get fermentation data
+    # Get fermentation data (already stored in correct units)
     data, message = MongoDBService.get_fermentation_data(session_id)
 
     # Always return 200 if session exists and user has access
@@ -165,6 +178,8 @@ def get_fermentation_data(session_id):
 @brew_sessions_bp.route("/<session_id>/fermentation", methods=["POST"])
 @jwt_required()
 def add_fermentation_entry(session_id):
+    from models.mongo_models import User
+
     user_id = get_jwt_identity()
     data = request.get_json()
 
@@ -176,11 +191,20 @@ def add_fermentation_entry(session_id):
     if str(session.user_id) != user_id:
         return jsonify({"error": "Access denied"}), 403
 
+    # Get user's preferred temperature unit and set session temperature unit
+    user = User.objects(id=user_id).first()
+    if user:
+        preferred_units = user.get_preferred_units()
+        preferred_temp_unit = "C" if preferred_units == "metric" else "F"
+        # Set the session's temperature unit to match user preference
+        session.temperature_unit = preferred_temp_unit
+        session.save()
+
     # Add fermentation entry
     success, message = MongoDBService.add_fermentation_entry(session_id, data)
 
     if success:
-        # Get updated fermentation data
+        # Get updated fermentation data (already in user's preferred units)
         updated_data, _ = MongoDBService.get_fermentation_data(session_id)
         return jsonify(updated_data), 201
     else:
@@ -243,6 +267,8 @@ def delete_fermentation_entry(session_id, entry_index):
 @brew_sessions_bp.route("/<session_id>/fermentation/stats", methods=["GET"])
 @jwt_required()
 def get_fermentation_stats(session_id):
+    from models.mongo_models import User
+
     user_id = get_jwt_identity()
 
     # Check access permission
@@ -253,7 +279,7 @@ def get_fermentation_stats(session_id):
     if str(session.user_id) != user_id:
         return jsonify({"error": "Access denied"}), 403
 
-    # Get fermentation statistics
+    # Get fermentation statistics (already in correct units)
     stats, message = MongoDBService.get_fermentation_stats(session_id)
 
     if stats is not None:

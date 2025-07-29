@@ -10,12 +10,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Services } from "../../services";
+import { useUnits } from "../../contexts/UnitContext";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { FermentationEntry, BrewSession, Recipe, ID } from "../../types";
 import {
   formatGravity,
   formatAttenuation,
-  formatTemperature,
+
 } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
@@ -71,6 +72,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   sessionData = {},
   onUpdateSession,
 }) => {
+  const { unitSystem } = useUnits();
   const [fermentationData, setFermentationData] = useState<FermentationEntry[]>(
     []
   );
@@ -218,19 +220,17 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     try {
       setSubmitting(true);
 
-      // Format data for submission
+      // Format data for submission (no temperature conversion - backend will handle storage)
       const entry = {
         gravity: formData.gravity ? parseFloat(formData.gravity) : undefined,
-        temperature: formData.temperature
-          ? parseFloat(formData.temperature)
-          : undefined,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
         ph: formData.ph ? parseFloat(formData.ph) : undefined,
         notes: formData.notes || undefined,
         entry_date: new Date().toISOString(),
       };
 
       // Submit data
-      await Services.brewSession.addFermentationEntry(sessionId, entry);
+      await Services.brewSession.addFermentationEntry(sessionId, entry, unitSystem);
 
       // Update the brew session if this is the first gravity reading
       if (fermentationData.length === 0 && entry.gravity) {
@@ -410,14 +410,14 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   htmlFor="temperature"
                   className="fermentation-input-label"
                 >
-                  Temperature (°F)
+                  Temperature ({unitSystem === "metric" ? "°C" : "°F"})
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   id="temperature"
                   name="temperature"
-                  placeholder="e.g. 68.5"
+                  placeholder={unitSystem === "metric" ? "e.g. 20.0" : "e.g. 68.5"}
                   value={formData.temperature}
                   onChange={handleChange}
                   className="fermentation-input"
@@ -518,7 +518,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Min:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.min, "f")}
+                        {Math.round(stats.temperature.min)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -527,7 +527,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Max:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.max, "f")}
+                        {Math.round(stats.temperature.max)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -536,7 +536,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Avg:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.avg, "f")}
+                        {Math.round(stats.temperature.avg)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -703,7 +703,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       type="monotone"
                       dataKey="temperature"
                       stroke="#82ca9d"
-                      name="Temperature (°F)"
+                      name={`Temperature (${unitSystem === "metric" ? "°C" : "°F"})`}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -757,7 +757,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         </td>
                         <td>
                           {entry.temperature
-                            ? formatTemperature(entry.temperature, "f")
+                            ? `${Math.round(entry.temperature)}°${unitSystem === "metric" ? "C" : "F"}`
                             : "-"}
                         </td>
                         <td>{entry.ph ? entry.ph.toFixed(1) : "-"}</td>

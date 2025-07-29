@@ -772,6 +772,28 @@ describe("BrewSessionService", () => {
       );
       expect(result.errors).toContain("pH must be between 3.0 and 9.0");
     });
+
+    test("validates metric temperature range correctly", () => {
+      const validMetricEntry = {
+        temperature: 20, // Valid Celsius
+      };
+
+      const result = brewSessionService.validateFermentationEntry(validMetricEntry, "metric");
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    test("catches metric temperature validation errors", () => {
+      const invalidMetricEntry = {
+        temperature: 60, // Too high for Celsius (should be max 49°C)
+      };
+
+      const result = brewSessionService.validateFermentationEntry(invalidMetricEntry, "metric");
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Temperature must be between 0°C and 49°C");
+    });
   });
 
   describe("formatBrewSessionForApi", () => {
