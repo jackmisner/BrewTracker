@@ -461,7 +461,8 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Fermentation Data Log")).toBeInTheDocument();
-        expect(screen.getByText("Date & Time")).toBeInTheDocument();
+        expect(screen.getByText("Date")).toBeInTheDocument();
+        expect(screen.getByText("Time")).toBeInTheDocument();
         // Use more specific selectors for table headers to avoid conflicts with stats
         expect(
           screen.getByRole("columnheader", { name: "Gravity" })

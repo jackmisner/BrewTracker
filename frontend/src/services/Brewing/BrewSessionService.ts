@@ -380,6 +380,34 @@ class BrewSessionService {
   }
 
   /**
+   * Update fermentation entry
+   */
+  async updateFermentationEntry(
+    sessionId: ID,
+    entryIndex: number,
+    entryData: any,
+    unitSystem: string = "imperial"
+  ): Promise<any> {
+    try {
+      // Validate entry data
+      this.validateFermentationEntry(entryData, unitSystem);
+
+      const response = await ApiService.brewSessions.updateFermentationEntry(
+        sessionId,
+        entryIndex,
+        entryData
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating fermentation entry:", error);
+      throw this.createBrewSessionError(
+        "Failed to update fermentation entry",
+        error
+      );
+    }
+  }
+
+  /**
    * Get fermentation statistics
    */
   async getFermentationStats(sessionId: ID): Promise<any | null> {
