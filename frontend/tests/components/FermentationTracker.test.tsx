@@ -7,6 +7,29 @@ import { renderWithProviders } from "../testUtils";
 // Mock the CSS import
 jest.mock("../../src/styles/BrewSessions.css", () => ({}));
 
+// Mock DryHopTracker component
+jest.mock("../../src/components/BrewSessions/DryHopTracker", () => {
+  return function MockDryHopTracker({ sessionId, recipeData, onSessionUpdate }: any) {
+    return (
+      <div data-testid="dry-hop-tracker">
+        <h3>Dry Hop Schedule</h3>
+        <p>No dry hops found in this recipe.</p>
+      </div>
+    );
+  };
+});
+
+// Mock GravityStabilizationAnalysis component
+jest.mock("../../src/components/BrewSessions/GravityStabilizationAnalysis", () => {
+  return function MockGravityStabilizationAnalysis({ sessionId, onSuggestCompletion }: any) {
+    return (
+      <div data-testid="gravity-stabilization-analysis">
+        <p>Gravity analysis component</p>
+      </div>
+    );
+  };
+});
+
 // Mock Services
 jest.mock("../../src/services", () => ({
   Services: {
@@ -17,6 +40,10 @@ jest.mock("../../src/services", () => ({
       deleteFermentationEntry: jest.fn(),
       updateBrewSession: jest.fn(),
       analyzeFermentationCompletion: jest.fn(),
+      getDryHopAdditions: jest.fn(),
+      addDryHopAddition: jest.fn(),
+      updateDryHopAddition: jest.fn(),
+      deleteDryHopAddition: jest.fn(),
     },
   },
 }));
@@ -30,6 +57,7 @@ jest.mock("recharts", () => ({
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
   Legend: () => <div data-testid="legend" />,
+  ReferenceLine: () => <div data-testid="reference-line" />,
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
   ),
@@ -97,6 +125,22 @@ const mockStats = {
 const mockRecipeData = {
   estimated_og: 1.06,
   estimated_fg: 1.01,
+  ingredients: [
+    {
+      name: "Galaxy",
+      amount: 1.5,
+      unit: "oz",
+      use: "dry-hop",
+      time: 4320, // 3 days in minutes
+    },
+    {
+      name: "Mosaic",
+      amount: 1.25,
+      unit: "oz", 
+      use: "dry-hop",
+      time: 4320, // 3 days in minutes
+    }
+  ],
 };
 
 const mockSessionData = {
@@ -136,6 +180,10 @@ describe("FermentationTracker", () => {
     (Services.brewSession.deleteFermentationEntry as jest.Mock).mockResolvedValue(undefined);
     (Services.brewSession.updateBrewSession as jest.Mock).mockResolvedValue(undefined);
     (Services.brewSession.analyzeFermentationCompletion as jest.Mock).mockResolvedValue(null);
+    (Services.brewSession.getDryHopAdditions as jest.Mock).mockResolvedValue({ data: { dry_hop_additions: [] } });
+    (Services.brewSession.addDryHopAddition as jest.Mock).mockResolvedValue(undefined);
+    (Services.brewSession.updateDryHopAddition as jest.Mock).mockResolvedValue(undefined);
+    (Services.brewSession.deleteDryHopAddition as jest.Mock).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -413,7 +461,8 @@ describe("FermentationTracker", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Fermentation Data Log")).toBeInTheDocument();
-        expect(screen.getByText("Date & Time")).toBeInTheDocument();
+        expect(screen.getByText("Date")).toBeInTheDocument();
+        expect(screen.getByText("Time")).toBeInTheDocument();
         // Use more specific selectors for table headers to avoid conflicts with stats
         expect(
           screen.getByRole("columnheader", { name: "Gravity" })

@@ -541,21 +541,43 @@ const ViewBrewSession: React.FC = () => {
             recipeData={{
               estimated_og: recipe?.estimated_og,
               estimated_fg: recipe?.estimated_fg,
+              ingredients: recipe?.ingredients, // Pass full ingredients for dry hop extraction
             }}
             sessionData={{
               status: session.status,
               actual_og: session.actual_og,
               actual_fg: session.actual_fg,
+              dry_hop_additions: session.dry_hop_additions,
+              fermentation_start_date: session.fermentation_start_date,
+              fermentation_end_date: session.fermentation_end_date,
+              packaging_date: session.packaging_date,
             }}
-            onUpdateSession={(updatedData: Partial<BrewSession>) => {
-              const updatedSession = { ...session, ...updatedData };
-              setSession(updatedSession);
+            onUpdateSession={async (updatedData: Partial<BrewSession> & { needsRefresh?: boolean }) => {
+              // If needsRefresh is true, refetch the entire session
+              if (updatedData.needsRefresh) {
+                try {
+                  const freshSessionData = await Services.brewSession.fetchBrewSession(sessionId);
+                  setSession(freshSessionData);
+                  
+                  // Invalidate caches
+                  invalidateBrewSessionCaches.onUpdated({
+                    session_id: sessionId,
+                    recipe_id: freshSessionData.recipe_id,
+                  });
+                } catch (error) {
+                  console.error('Error refreshing session data:', error);
+                }
+              } else {
+                // Normal update path
+                const updatedSession = { ...session, ...updatedData };
+                setSession(updatedSession);
 
-              // Invalidate caches when fermentation data is updated
-              invalidateBrewSessionCaches.onUpdated({
-                session_id: sessionId,
-                recipe_id: updatedSession.recipe_id,
-              });
+                // Invalidate caches when fermentation data is updated
+                invalidateBrewSessionCaches.onUpdated({
+                  session_id: sessionId,
+                  recipe_id: updatedSession.recipe_id,
+                });
+              }
             }}
           />
         )}

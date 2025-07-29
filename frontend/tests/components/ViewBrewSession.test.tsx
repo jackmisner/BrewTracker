@@ -445,6 +445,7 @@ describe("ViewBrewSession", () => {
         {
           estimated_og: mockRecipe.estimated_og,
           estimated_fg: mockRecipe.estimated_fg,
+          ingredients: mockRecipe.ingredients,
         }
       );
       expect(
@@ -453,6 +454,10 @@ describe("ViewBrewSession", () => {
         status: mockSession.status,
         actual_og: mockSession.actual_og,
         actual_fg: mockSession.actual_fg,
+        dry_hop_additions: mockSession.dry_hop_additions,
+        fermentation_start_date: mockSession.fermentation_start_date,
+        fermentation_end_date: mockSession.fermentation_end_date,
+        packaging_date: mockSession.packaging_date,
       });
 
       // Test updating session from fermentation tracker

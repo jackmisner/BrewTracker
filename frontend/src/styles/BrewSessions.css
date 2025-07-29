@@ -919,3 +919,190 @@
 .rating-star.filled {
   color: #fbbf24; /* amber-400 */
 }
+
+/* Fermentation Timeline Styles */
+.fermentation-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.fermentation-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e5e7eb; /* gray-200 */
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -2rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  z-index: 1;
+  margin-top: 0.25rem;
+}
+
+.timeline-content {
+  margin-left: 1rem;
+  flex: 1;
+}
+
+.timeline-date {
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.timeline-label {
+  font-weight: 600;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 0.25rem;
+}
+
+.timeline-details {
+  font-size: 0.875rem;
+  color: #4b5563; /* gray-600 */
+  font-style: italic;
+}
+
+/* Status badges for dry hop tracker */
+.status-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background-color: #dcfce7; /* green-100 */
+  color: #166534; /* green-800 */
+}
+
+.status-badge.removed {
+  background-color: #fef3c7; /* amber-100 */
+  color: #92400e; /* amber-800 */
+}
+
+/* Horizontal Timeline Styles */
+.fermentation-timeline-horizontal {
+  background-color: #f9fafb; /* gray-50 */
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.timeline-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  position: relative;
+  align-items: flex-start;
+}
+
+.timeline-event {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  flex: 1;
+  text-align: center;
+}
+
+.timeline-event-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-event-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.timeline-event-date {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+  font-weight: 500;
+  background-color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  white-space: nowrap;
+}
+
+.timeline-event-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937; /* gray-800 */
+  line-height: 1.25;
+  max-width: 120px;
+  word-wrap: break-word;
+}
+
+.timeline-event-details {
+  font-size: 0.75rem;
+  color: #4b5563; /* gray-600 */
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Connecting line between timeline events */
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  top: 8px; /* Half the marker height */
+  left: 8px; /* Half the marker width */
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(to right, 
+    transparent 0%, 
+    #d1d5db 10%, 
+    #d1d5db 90%, 
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timeline-track {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .timeline-track::before {
+    display: none;
+  }
+  
+  .timeline-event {
+    min-width: auto;
+    width: 100%;
+    max-width: 200px;
+  }
+}

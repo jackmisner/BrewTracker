@@ -1470,7 +1470,7 @@ class MongoDBService:
             if actual_og and recipe:
                 # Get yeast ingredients to determine expected attenuation
                 yeast_ingredients = [
-                    ing for ing in recipe.ingredients if ing.ingredient_type == "yeast"
+                    ing for ing in recipe.ingredients if ing.type == "yeast"
                 ]
 
                 if yeast_ingredients:

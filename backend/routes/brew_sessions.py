@@ -2,7 +2,7 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from models.mongo_models import BrewSession, Recipe
+from models.mongo_models import BrewSession, DryHopAddition, Recipe
 from services.mongodb_service import MongoDBService
 
 brew_sessions_bp = Blueprint("brew_sessions", __name__)
@@ -311,3 +311,161 @@ def analyze_fermentation_completion(session_id):
         return jsonify(analysis), 200
     else:
         return jsonify({"error": message}), 400
+
+
+# Dry Hop Addition Routes
+@brew_sessions_bp.route("/<session_id>/dry-hops", methods=["GET"])
+@jwt_required()
+def get_dry_hop_additions(session_id):
+    """Get all dry hop additions for a brew session"""
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Return dry hop additions
+    dry_hops = [addition.to_dict() for addition in session.dry_hop_additions]
+    return jsonify({"dry_hop_additions": dry_hops}), 200
+
+
+@brew_sessions_bp.route("/<session_id>/dry-hops", methods=["POST"])
+@jwt_required()
+def add_dry_hop_addition(session_id):
+    """Add a new dry hop addition to a brew session"""
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ["hop_name", "amount", "amount_unit"]
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        # Create new dry hop addition
+        dry_hop = DryHopAddition(
+            hop_name=data["hop_name"],
+            hop_type=data.get("hop_type", ""),
+            amount=float(data["amount"]),
+            amount_unit=data["amount_unit"],
+            duration_days=data.get("duration_days"),
+            notes=data.get("notes", ""),
+            phase=data.get("phase", "fermentation"),
+        )
+
+        # Add to session
+        session.dry_hop_additions.append(dry_hop)
+        session.save()
+
+        return (
+            jsonify(
+                {
+                    "message": "Dry hop addition added successfully",
+                    "addition": dry_hop.to_dict(),
+                }
+            ),
+            201,
+        )
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to add dry hop addition: {str(e)}"}), 400
+
+
+@brew_sessions_bp.route("/<session_id>/dry-hops/<int:addition_index>", methods=["PUT"])
+@jwt_required()
+def update_dry_hop_addition(session_id, addition_index):
+    """Update a dry hop addition (e.g., mark as removed)"""
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Check if addition index is valid
+    if addition_index >= len(session.dry_hop_additions):
+        return jsonify({"error": "Dry hop addition not found"}), 404
+
+    try:
+        data = request.get_json()
+        dry_hop = session.dry_hop_additions[addition_index]
+
+        # Update fields if provided
+        if "removal_date" in data:
+            from datetime import datetime, timezone
+
+            if data["removal_date"]:
+                dry_hop.removal_date = datetime.fromisoformat(
+                    data["removal_date"].replace("Z", "+00:00")
+                )
+            else:
+                dry_hop.removal_date = None
+
+        if "notes" in data:
+            dry_hop.notes = data["notes"]
+
+        if "duration_days" in data:
+            dry_hop.duration_days = data["duration_days"]
+
+        session.save()
+
+        return (
+            jsonify(
+                {
+                    "message": "Dry hop addition updated successfully",
+                    "addition": dry_hop.to_dict(),
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to update dry hop addition: {str(e)}"}), 400
+
+
+@brew_sessions_bp.route(
+    "/<session_id>/dry-hops/<int:addition_index>", methods=["DELETE"]
+)
+@jwt_required()
+def delete_dry_hop_addition(session_id, addition_index):
+    """Delete a dry hop addition"""
+    user_id = get_jwt_identity()
+
+    # Check access permission
+    session = BrewSession.objects(id=session_id).first()
+    if not session:
+        return jsonify({"error": "Brew session not found"}), 404
+
+    if str(session.user_id) != user_id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Check if addition index is valid
+    if addition_index >= len(session.dry_hop_additions):
+        return jsonify({"error": "Dry hop addition not found"}), 404
+
+    try:
+        # Remove the addition
+        session.dry_hop_additions.pop(addition_index)
+        session.save()
+
+        return jsonify({"message": "Dry hop addition deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete dry hop addition: {str(e)}"}), 400

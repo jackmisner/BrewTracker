@@ -6,7 +6,7 @@ import {
   RecipeSearchFilters,
 } from "./recipe";
 import { BeerStyleGuide, StyleAnalysis, StyleSuggestion } from "./beer-styles";
-import { BrewSession, FermentationEntry } from "./brew-session";
+import { BrewSession, FermentationEntry, DryHopAddition } from "./brew-session";
 import { User, UserSettings } from "./user";
 import { ApiResponse, PaginatedResponse, ID } from "./common";
 
@@ -365,3 +365,24 @@ export interface AttenuationSystemStatsResponse
     high_confidence_yeast: number;
     data_coverage_percentage: number;
   }> {}
+
+// Dry Hop Addition API types
+export interface DryHopAdditionsResponse {
+  dry_hop_additions: DryHopAddition[];
+}
+
+export interface AddDryHopAdditionRequest {
+  hop_name: string;
+  hop_type?: string;
+  amount: number;
+  amount_unit: string;
+  duration_days?: number;
+  notes?: string;
+  phase?: string;
+}
+
+export interface UpdateDryHopAdditionRequest {
+  removal_date?: string;
+  notes?: string;
+  duration_days?: number;
+}

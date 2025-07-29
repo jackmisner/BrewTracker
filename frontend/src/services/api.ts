@@ -56,6 +56,9 @@ import {
   UpdateFermentationEntryRequest,
   FermentationStatsResponse,
   GravityStabilizationAnalysisResponse,
+  DryHopAdditionsResponse,
+  AddDryHopAdditionRequest,
+  UpdateDryHopAdditionRequest,
 
   // BeerXML types
   BeerXMLExportResponse,
@@ -369,6 +372,28 @@ const ApiService = {
       sessionId: ID
     ): Promise<AxiosResponse<GravityStabilizationAnalysisResponse>> =>
       api.get(`/brew-sessions/${sessionId}/fermentation/analyze-completion`),
+    
+    // Dry hop addition endpoints
+    getDryHopAdditions: (
+      sessionId: ID
+    ): Promise<AxiosResponse<DryHopAdditionsResponse>> =>
+      api.get(`/brew-sessions/${sessionId}/dry-hops`),
+    addDryHopAddition: (
+      sessionId: ID,
+      additionData: AddDryHopAdditionRequest
+    ): Promise<AxiosResponse<{ message: string; addition: any }>> =>
+      api.post(`/brew-sessions/${sessionId}/dry-hops`, additionData),
+    updateDryHopAddition: (
+      sessionId: ID,
+      additionIndex: number,
+      updateData: UpdateDryHopAdditionRequest
+    ): Promise<AxiosResponse<{ message: string; addition: any }>> =>
+      api.put(`/brew-sessions/${sessionId}/dry-hops/${additionIndex}`, updateData),
+    deleteDryHopAddition: (
+      sessionId: ID,
+      additionIndex: number
+    ): Promise<AxiosResponse<{ message: string }>> =>
+      api.delete(`/brew-sessions/${sessionId}/dry-hops/${additionIndex}`),
   },
 
   // BeerXML endpoints
