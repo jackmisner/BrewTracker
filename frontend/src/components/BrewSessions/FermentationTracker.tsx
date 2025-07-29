@@ -874,7 +874,11 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         yAxisId="gravity"
                         stroke="#ff7300"
                         strokeDasharray="5 5"
-                        label={{ value: `Target FG: ${formatGravity(recipeData.estimated_fg)}`, position: "right" }}
+                        label={{ 
+                          value: `Target FG: ${formatGravity(recipeData.estimated_fg)}`, 
+                          position: "right",
+                          style: { fontSize: "12px", fill: "#ff7300" }
+                        }}
                       />
                     )}
                     
@@ -945,13 +949,20 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       <div className="timeline-event-content">
                         <div className="timeline-event-date">
                           {(() => {
-                            // Check if this is a date-only string (YYYY-MM-DD format)
-                            if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
-                              // For date-only strings, format directly without timezone issues
-                              const [year, month, day] = marker.date.split('-');
-                              return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+                            // Special handling for fermentation start/end dates which should be date-only
+                            if (marker.phase === "start" || marker.phase === "end" || marker.phase === "packaging") {
+                              // For fermentation milestones, always show just the date
+                              if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
+                                // Pure date format - parse carefully to avoid timezone issues
+                                const [year, month, day] = marker.date.split('-');
+                                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+                              } else {
+                                // If it's a timestamp, extract just the date part
+                                const date = new Date(marker.date);
+                                return date.toLocaleDateString();
+                              }
                             } else {
-                              // For full timestamps, show both date and time
+                              // For dry hop additions/removals, show full timestamp
                               const date = new Date(marker.date);
                               return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                             }

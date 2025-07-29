@@ -158,25 +158,6 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
     }
   };
 
-  // Handle deletion of manual dry hop entries (for any non-recipe dry hops)
-  const handleDeleteManualDryHop = async (index: number) => {
-    if (!window.confirm("Are you sure you want to delete this dry hop addition?")) {
-      return;
-    }
-
-    try {
-      await Services.brewSession.deleteDryHopAddition(sessionId, index);
-      await fetchSessionDryHops();
-      
-      // Notify parent component of session update
-      if (onSessionUpdate) {
-        onSessionUpdate({});
-      }
-    } catch (err: any) {
-      console.error("Error deleting dry hop:", err);
-      setError("Failed to delete dry hop addition");
-    }
-  };
 
   // Format date for display
   const formatDate = (dateString: string): string => {
@@ -337,63 +318,6 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
         </div>
       )}
 
-      {/* Manual dry hop additions section (for any non-recipe dry hops) */}
-      {sessionDryHops.length > 0 && (
-        <div style={{ marginTop: "2rem" }}>
-          <h4 className="section-title">Manual Additions</h4>
-          <div className="fermentation-table-responsive">
-            <table className="fermentation-table">
-              <thead>
-                <tr>
-                  <th>Date Added</th>
-                  <th>Hop Name</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sessionDryHops
-                  .filter(sessionHop => 
-                    !recipeDryHops.some(recipeHop => 
-                      recipeHop.ingredient.name.toLowerCase() === sessionHop.hop_name.toLowerCase()
-                    )
-                  )
-                  .map((hop, index) => {
-                    const daysInFermenter = calculateDaysInFermenter(hop);
-                    const isRemoved = !!hop.removal_date;
-                    
-                    return (
-                      <tr key={index}>
-                        <td>{formatDate(hop.addition_date)}</td>
-                        <td>{hop.hop_name}</td>
-                        <td>{hop.amount} {hop.amount_unit}</td>
-                        <td>
-                          <span className={`status-badge ${isRemoved ? "removed" : "active"}`}>
-                            {isRemoved ? "Removed" : "Active"}
-                          </span>
-                          {daysInFermenter !== null && (
-                            <div style={{ fontSize: "0.8em", color: "#666" }}>
-                              {daysInFermenter} days in fermenter
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            className="fermentation-delete-button"
-                            onClick={() => handleDeleteManualDryHop(index)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
