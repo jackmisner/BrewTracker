@@ -6,7 +6,7 @@ import "../../styles/BrewSessions.css";
 interface DryHopTrackerProps {
   sessionId: ID;
   recipeData?: Partial<Recipe>;
-  onSessionUpdate?: (updateData: Partial<BrewSession>) => void;
+  onSessionUpdate?: (updateData: Partial<BrewSession> & { needsRefresh?: boolean }) => void;
 }
 
 interface RecipeDryHop {
@@ -107,9 +107,10 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
       await Services.brewSession.addDryHopAddition(sessionId, submissionData);
       await fetchSessionDryHops(); // Refresh session data
       
-      // Notify parent component of session update
+      // Notify parent component to refresh session data
       if (onSessionUpdate) {
-        onSessionUpdate({});
+        // Signal that session data needs to be refetched
+        onSessionUpdate({ needsRefresh: true });
       }
       
     } catch (err: any) {
@@ -143,9 +144,10 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
       
       await fetchSessionDryHops(); // Refresh session data
       
-      // Notify parent component of session update
+      // Notify parent component to refresh session data
       if (onSessionUpdate) {
-        onSessionUpdate({});
+        // Signal that session data needs to be refetched
+        onSessionUpdate({ needsRefresh: true });
       }
       
     } catch (err: any) {
@@ -179,7 +181,15 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
   // Format date for display
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Check if this is a date-only string (YYYY-MM-DD format)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      // For date-only strings, just show the date
+      return date.toLocaleDateString();
+    } else {
+      // For full timestamps, show both date and time
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   };
 
   // Calculate days in fermenter
@@ -223,7 +233,6 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                 <th>Planned Duration</th>
                 <th>Status</th>
                 <th>Actual Timing</th>
-                <th>Performance</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -240,10 +249,10 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                   statusText = "Ready to Add";
                 } else if (isInFermenter) {
                   statusClass = "active";
-                  statusText = "In Fermenter";
+                  statusText = "Added to Fermenter";
                 } else if (isRemoved) {
                   statusClass = "removed";
-                  statusText = "Removed";
+                  statusText = "Removed from Fermenter";
                 }
 
                 return (
@@ -285,27 +294,6 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                       )}
                       {!recipeDryHop.additionDate && (
                         <span style={{ color: "#999" }}>Not added yet</span>
-                      )}
-                    </td>
-                    <td>
-                      {recipeDryHop.plannedDays && recipeDryHop.actualDaysInFermenter !== null && recipeDryHop.actualDaysInFermenter !== undefined ? (
-                        <div>
-                          {(() => {
-                            const variance = recipeDryHop.actualDaysInFermenter - recipeDryHop.plannedDays;
-                            const isOnTarget = Math.abs(variance) <= 1;
-                            return (
-                              <span style={{ 
-                                color: isOnTarget ? "#28a745" : Math.abs(variance) > 2 ? "#dc3545" : "#ffc107",
-                                fontSize: "0.8em",
-                                fontWeight: "bold"
-                              }}>
-                                {variance > 0 ? `+${variance}` : variance} days from plan
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      ) : (
-                        <span style={{ color: "#999", fontSize: "0.8em" }}>-</span>
                       )}
                     </td>
                     <td>

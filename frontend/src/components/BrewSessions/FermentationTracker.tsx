@@ -452,7 +452,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       markers.push({
         date: sessionData.fermentation_start_date,
         phase: "start",
-        label: "Fermentation Start",
+        label: "🧪 Fermentation Start",
         color: "#28a745"
       });
     }
@@ -463,7 +463,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         markers.push({
           date: addition.addition_date,
           phase: "dry_hop_add",
-          label: `Dry Hop: ${addition.hop_name}`,
+          label: `🌿 Add ${addition.hop_name}`,
           color: "#ffc107"
         });
         
@@ -472,7 +472,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           markers.push({
             date: addition.removal_date,
             phase: "dry_hop_remove",
-            label: `Remove: ${addition.hop_name}`,
+            label: `🗑️ Remove ${addition.hop_name}`,
             color: "#fd7e14"
           });
         }
@@ -484,7 +484,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       markers.push({
         date: sessionData.fermentation_end_date,
         phase: "end",
-        label: "Fermentation End",
+        label: "🏁 Fermentation Complete",
         color: "#dc3545"
       });
     }
@@ -494,7 +494,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       markers.push({
         date: sessionData.packaging_date,
         phase: "packaging",
-        label: "Packaging",
+        label: "📦 Packaged",
         color: "#6f42c1"
       });
     }
@@ -893,8 +893,16 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                           label={{
                             value: marker.label,
                             position: "top",
-                            offset: 5,
-                            style: { fontSize: "12px", fill: marker.color, fontWeight: "bold" }
+                            offset: 10,
+                            style: { 
+                              fontSize: "14px", 
+                              fill: marker.color, 
+                              fontWeight: "bold",
+                              backgroundColor: "rgba(255, 255, 255, 0.8)",
+                              padding: "2px 4px",
+                              borderRadius: "3px",
+                              border: `1px solid ${marker.color}`
+                            }
                           }}
                         />
                       );
@@ -934,7 +942,17 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     ></div>
                     <div className="timeline-content">
                       <div className="timeline-date">
-                        {new Date(marker.date).toLocaleDateString()} {new Date(marker.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {(() => {
+                          const date = new Date(marker.date);
+                          // Check if this is a date-only string (YYYY-MM-DD format)
+                          if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
+                            // For date-only strings, just show the date
+                            return date.toLocaleDateString();
+                          } else {
+                            // For full timestamps, show both date and time
+                            return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                          }
+                        })()}
                       </div>
                       <div className="timeline-label">{marker.label}</div>
                       {marker.phase === "dry_hop_add" && sessionData?.dry_hop_additions && (
