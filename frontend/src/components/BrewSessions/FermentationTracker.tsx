@@ -929,45 +929,49 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
             </div>
           )}
 
-          {/* Fermentation Phase Timeline */}
+          {/* Fermentation Phase Timeline - Horizontal */}
           {phaseMarkers.length > 0 && (
             <div className="brew-session-section">
               <h3 className="section-title">Fermentation Timeline</h3>
-              <div className="fermentation-timeline">
-                {phaseMarkers.map((marker, index) => (
-                  <div key={`timeline-${index}`} className="timeline-item">
-                    <div 
-                      className="timeline-marker" 
-                      style={{ backgroundColor: marker.color }}
-                    ></div>
-                    <div className="timeline-content">
-                      <div className="timeline-date">
-                        {(() => {
-                          const date = new Date(marker.date);
-                          // Check if this is a date-only string (YYYY-MM-DD format)
-                          if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
-                            // For date-only strings, just show the date
-                            return date.toLocaleDateString();
-                          } else {
-                            // For full timestamps, show both date and time
-                            return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                          }
-                        })()}
-                      </div>
-                      <div className="timeline-label">{marker.label}</div>
-                      {marker.phase === "dry_hop_add" && sessionData?.dry_hop_additions && (
-                        <div className="timeline-details">
+              <div className="fermentation-timeline-horizontal">
+                <div className="timeline-track">
+                  {phaseMarkers.map((marker, index) => (
+                    <div key={`timeline-${index}`} className="timeline-event">
+                      <div 
+                        className="timeline-event-marker" 
+                        style={{ backgroundColor: marker.color }}
+                        title={marker.label}
+                      ></div>
+                      <div className="timeline-event-content">
+                        <div className="timeline-event-date">
                           {(() => {
-                            const addition = sessionData.dry_hop_additions.find(
-                              (add) => add.addition_date === marker.date
-                            );
-                            return addition ? `${addition.amount} ${addition.amount_unit} - ${addition.hop_type || 'Pellet'}` : '';
+                            // Check if this is a date-only string (YYYY-MM-DD format)
+                            if (/^\d{4}-\d{2}-\d{2}$/.test(marker.date)) {
+                              // For date-only strings, format directly without timezone issues
+                              const [year, month, day] = marker.date.split('-');
+                              return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+                            } else {
+                              // For full timestamps, show both date and time
+                              const date = new Date(marker.date);
+                              return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            }
                           })()}
                         </div>
-                      )}
+                        <div className="timeline-event-label">{marker.label}</div>
+                        {marker.phase === "dry_hop_add" && sessionData?.dry_hop_additions && (
+                          <div className="timeline-event-details">
+                            {(() => {
+                              const addition = sessionData.dry_hop_additions.find(
+                                (add) => add.addition_date === marker.date
+                              );
+                              return addition ? `${addition.amount} ${addition.amount_unit}` : '';
+                            })()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
