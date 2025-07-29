@@ -867,20 +867,45 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <Tooltip />
                     <Legend />
                     
-                    {/* Target FG Reference Line */}
-                    {recipeData.estimated_fg && chartData && chartData.length > 0 && (
-                      <ReferenceLine
-                        y={recipeData.estimated_fg}
-                        yAxisId="gravity"
-                        stroke="#ff7300"
-                        strokeDasharray="5 5"
-                        label={{ 
-                          value: `Target FG: ${formatGravity(recipeData.estimated_fg)}`, 
-                          position: "right",
-                          style: { fontSize: "12px", fill: "#ff7300" }
-                        }}
-                      />
-                    )}
+                    {/* Expected FG Reference Line */}
+                    {recipeData.estimated_fg && chartData && chartData.length > 0 && (() => {
+                      // Custom label component positioned at the left side
+                      const CustomFGLabel = (props: any) => {
+                        const { viewBox } = props;
+                        if (!viewBox) return null;
+                        
+                        const { x, y } = viewBox;
+                        
+                        return (
+                          <text
+                            x={x + 20} // Position near left edge with small margin
+                            y={y - 10}  // Position above the line
+                            fill="#ff7300"
+                            fontSize="12"
+                            fontWeight="bold"
+                            textAnchor="start"
+                            dominantBaseline="middle"
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.8)",
+                              padding: "2px 4px",
+                              borderRadius: "3px"
+                            }}
+                          >
+                            {`Expected FG: ${formatGravity(recipeData.estimated_fg)}`}
+                          </text>
+                        );
+                      };
+                      
+                      return (
+                        <ReferenceLine
+                          y={recipeData.estimated_fg}
+                          yAxisId="gravity"
+                          stroke="#ff7300"
+                          strokeDasharray="5 5"
+                          label={<CustomFGLabel />}
+                        />
+                      );
+                    })()}
                     
                     {/* Fermentation Phase Markers */}
                     {chartData && chartData.length > 0 && phaseMarkers && phaseMarkers.length > 0 && phaseMarkers.map((marker, index) => {
