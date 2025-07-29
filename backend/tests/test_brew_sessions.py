@@ -476,7 +476,8 @@ class TestFermentationTracking:
         assert round(stats["gravity"]["drop"], 3) == 0.035
         assert stats["gravity"]["attenuation"] > 0  # Should be calculated
 
-        # Check temperature stats
+        # Check temperature stats (temperatures are stored in user's preferred units)
+        # Temperatures should be stored as entered: 67.0, 68.0, 68.5, 69.0
         assert stats["temperature"]["min"] == 67.0
         assert stats["temperature"]["max"] == 69.0
         assert 67.0 <= stats["temperature"]["avg"] <= 69.0

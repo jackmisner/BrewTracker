@@ -335,9 +335,9 @@ class BrewSessionService {
   /**
    * Add fermentation entry
    */
-  async addFermentationEntry(sessionId: ID, entryData: any): Promise<any> {
+  async addFermentationEntry(sessionId: ID, entryData: any, unitSystem: string = "imperial"): Promise<any> {
     try {
-      const validation = this.validateFermentationEntry(entryData);
+      const validation = this.validateFermentationEntry(entryData, unitSystem);
       if (!validation.isValid) {
         throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
       }
@@ -560,7 +560,7 @@ class BrewSessionService {
   /**
    * Validate fermentation entry data
    */
-  validateFermentationEntry(entryData: any): FermentationEntryValidation {
+  validateFermentationEntry(entryData: any, unitSystem: string = "imperial"): FermentationEntryValidation {
     const errors: string[] = [];
 
     if (
@@ -570,11 +570,19 @@ class BrewSessionService {
       errors.push("Gravity must be between 0.99 and 1.2");
     }
 
-    if (
-      entryData.temperature &&
-      (entryData.temperature < 32 || entryData.temperature > 120)
-    ) {
-      errors.push("Temperature must be between 32°F and 120°F");
+    if (entryData.temperature) {
+      // Temperature validation based on unit system
+      if (unitSystem === "metric") {
+        // Celsius range: 0°C to 49°C (32°F to 120°F equivalent)
+        if (entryData.temperature < 0 || entryData.temperature > 49) {
+          errors.push("Temperature must be between 0°C and 49°C");
+        }
+      } else {
+        // Fahrenheit range: 32°F to 120°F
+        if (entryData.temperature < 32 || entryData.temperature > 120) {
+          errors.push("Temperature must be between 32°F and 120°F");
+        }
+      }
     }
 
     if (entryData.ph && (entryData.ph < 3.0 || entryData.ph > 9.0)) {
@@ -593,11 +601,18 @@ class BrewSessionService {
    * Format session data for API submission
    */
   formatBrewSessionForApi(sessionData: Partial<BrewSession>): any {
-    const formatted: any = {
-      name: sessionData.name?.trim() || "",
-      status: sessionData.status || "planned",
-      notes: sessionData.notes?.trim() || "",
-    };
+    const formatted: any = {};
+
+    // Only include fields that are explicitly provided
+    if (sessionData.hasOwnProperty('name')) {
+      formatted.name = sessionData.name?.trim() || "";
+    }
+    if (sessionData.hasOwnProperty('status')) {
+      formatted.status = sessionData.status || "planned";
+    }
+    if (sessionData.hasOwnProperty('notes')) {
+      formatted.notes = sessionData.notes?.trim() || "";
+    }
 
     // Add optional fields only if they have values
     if (sessionData.recipe_id) formatted.recipe_id = sessionData.recipe_id;

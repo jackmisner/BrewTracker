@@ -625,7 +625,8 @@ describe("FermentationTracker", () => {
             ph: 4.2,
             notes: "Test notes",
             entry_date: expect.any(String),
-          })
+          }),
+          "imperial"
         );
       });
     });
@@ -922,7 +923,8 @@ describe("FermentationTracker", () => {
           "test-session-id",
           expect.objectContaining({
             gravity: 1.012,
-          })
+          }),
+          "imperial"
         );
       });
 
@@ -1060,7 +1062,8 @@ describe("FermentationTracker", () => {
             ph: undefined,
             notes: undefined,
             entry_date: expect.any(String),
-          })
+          }),
+          "imperial"
         );
       });
     });

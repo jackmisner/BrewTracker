@@ -10,12 +10,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Services } from "../../services";
+import { useUnits } from "../../contexts/UnitContext";
 import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
 import { FermentationEntry, BrewSession, Recipe, ID } from "../../types";
 import {
   formatGravity,
   formatAttenuation,
-  formatTemperature,
+
 } from "../../utils/formatUtils";
 import "../../styles/BrewSessions.css";
 
@@ -71,6 +72,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   sessionData = {},
   onUpdateSession,
 }) => {
+  const { unitSystem } = useUnits();
   const [fermentationData, setFermentationData] = useState<FermentationEntry[]>(
     []
   );
@@ -218,19 +220,17 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     try {
       setSubmitting(true);
 
-      // Format data for submission
+      // Format data for submission (no temperature conversion - backend will handle storage)
       const entry = {
         gravity: formData.gravity ? parseFloat(formData.gravity) : undefined,
-        temperature: formData.temperature
-          ? parseFloat(formData.temperature)
-          : undefined,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
         ph: formData.ph ? parseFloat(formData.ph) : undefined,
         notes: formData.notes || undefined,
         entry_date: new Date().toISOString(),
       };
 
       // Submit data
-      await Services.brewSession.addFermentationEntry(sessionId, entry);
+      await Services.brewSession.addFermentationEntry(sessionId, entry, unitSystem);
 
       // Update the brew session if this is the first gravity reading
       if (fermentationData.length === 0 && entry.gravity) {
@@ -347,6 +347,44 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
   const chartData = formatChartData();
 
+  // Calculate gravity domain for chart Y-axis
+  const calculateGravityDomain = (): [number, number] => {
+    if (!chartData || chartData.length === 0) {
+      return [1.000, 1.100]; // Default range
+    }
+
+    const gravityValues = chartData
+      .map(entry => entry.gravity)
+      .filter((gravity): gravity is number => gravity !== null);
+
+    if (gravityValues.length === 0) {
+      return [1.000, 1.100]; // Default range if no gravity data
+    }
+
+    if (gravityValues.length === 1) {
+      // For single data point, show +/- 0.010 from the value (10 gravity points)
+      const gravity = gravityValues[0];
+      const min = Math.max(1.000, gravity - 0.010); // Don't go below 1.000
+      const max = gravity + 0.010;
+      return [min, max];
+    }
+
+    // For multiple data points, use min/max with some padding
+    const minGravity = Math.min(...gravityValues);
+    const maxGravity = Math.max(...gravityValues);
+    const range = maxGravity - minGravity;
+    
+    // Add 10% padding on each side, minimum 0.005 (5 gravity points)
+    const padding = Math.max(range * 0.1, 0.005);
+    
+    return [
+      Math.max(1.000, minGravity - padding), // Don't go below 1.000
+      maxGravity + padding
+    ];
+  };
+
+  const gravityDomain = calculateGravityDomain();
+
   // Calculate attenuation if possible
   const calculateAttenuation = (): string | null => {
     if (fermentationData.length < 2) {
@@ -410,14 +448,14 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   htmlFor="temperature"
                   className="fermentation-input-label"
                 >
-                  Temperature (°F)
+                  Temperature ({unitSystem === "metric" ? "°C" : "°F"})
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   id="temperature"
                   name="temperature"
-                  placeholder="e.g. 68.5"
+                  placeholder={unitSystem === "metric" ? "e.g. 20.0" : "e.g. 68.5"}
                   value={formData.temperature}
                   onChange={handleChange}
                   className="fermentation-input"
@@ -518,7 +556,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Min:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.min, "f")}
+                        {Math.round(stats.temperature.min)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -527,7 +565,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Max:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.max, "f")}
+                        {Math.round(stats.temperature.max)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -536,7 +574,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                     <div className="fermentation-stat-row">
                       <span className="fermentation-stat-label">Avg:</span>
                       <span className="fermentation-stat-value">
-                        {formatTemperature(stats.temperature.avg, "f")}
+                        {Math.round(stats.temperature.avg)}°{unitSystem === "metric" ? "C" : "F"}
                       </span>
                     </div>
                   )}
@@ -682,7 +720,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis yAxisId="gravity" domain={["auto", "auto"]} />
+                    <YAxis yAxisId="gravity" domain={gravityDomain} />
                     <YAxis
                       yAxisId="temp"
                       orientation="right"
@@ -703,7 +741,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       type="monotone"
                       dataKey="temperature"
                       stroke="#82ca9d"
-                      name="Temperature (°F)"
+                      name={`Temperature (${unitSystem === "metric" ? "°C" : "°F"})`}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -757,7 +795,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         </td>
                         <td>
                           {entry.temperature
-                            ? formatTemperature(entry.temperature, "f")
+                            ? `${Math.round(entry.temperature)}°${unitSystem === "metric" ? "C" : "F"}`
                             : "-"}
                         </td>
                         <td>{entry.ph ? entry.ph.toFixed(1) : "-"}</td>

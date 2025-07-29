@@ -91,14 +91,18 @@ const mockRecipe = mockData.recipe({
 });
 
 describe("ViewBrewSession", () => {
-  // Mock console methods to suppress noise in test output
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
+  let consoleLogSpy: any;
+  let consoleWarnSpy: any;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    console.error = jest.fn();
-    console.warn = jest.fn();
+    
+    // Mock console.warn, console.error, and console.log
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    
     window.confirm = jest.fn(() => true); // Default to confirming all dialogs
 
     // Default successful session and recipe fetch
@@ -107,8 +111,10 @@ describe("ViewBrewSession", () => {
   });
 
   afterEach(() => {
-    console.error = originalConsoleError;
-    console.warn = originalConsoleWarn;
+    // Restore console mocks
+    consoleLogSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
     window.confirm = originalConfirm;
   });
 
