@@ -65,6 +65,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         window.google.accounts.id.initialize({
           client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
           callback: handleCredentialResponse,
+          use_fedcm_for_prompt: true,
         });
       } catch (error) {
         console.error("Failed to initialize Google Sign-In:", error);
@@ -82,14 +83,13 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     setIsLoading(true);
 
     try {
-      // Use the One Tap flow first
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          setIsLoading(false);
-          // If One Tap doesn't work, show an error
-          onError("Google Sign-In was cancelled or is not available");
-        }
-      });
+      // Use the One Tap flow with FedCM enabled
+      window.google.accounts.id.prompt();
+      
+      // Set a timeout to handle cases where prompt doesn't trigger callback
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 5000);
     } catch (error) {
       console.error("Google Sign-In error:", error);
       onError("Google Sign-In failed");
