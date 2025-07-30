@@ -383,9 +383,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     
     // Special handling for date and time fields
     if (field === "entry_date" && currentValue) {
-      // Extract just the date part (YYYY-MM-DD)
-      const date = new Date(currentValue);
-      editValue = date.toISOString().split('T')[0];
+      // Extract just the date part (YYYY-MM-DD) directly from ISO string to avoid timezone issues
+      editValue = currentValue.split('T')[0];
     } else if (field === "entry_time" && currentValue) {
       // Extract just the time part (HH:MM)
       const date = new Date(currentValue);
@@ -439,16 +438,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     if (field === "entry_date" || field === "entry_time") {
       // Parse the current ISO string to extract date and time components
       const currentISOString = entry.entry_date;
-      const currentDateTime = new Date(currentISOString);
       
       if (field === "entry_date") {
-        // Update date but keep existing time
-        const [year, month, day] = validation.value.split('-').map(Number);
-        
-        // Create new date with updated date but same time
-        const newDate = new Date(currentDateTime);
-        newDate.setFullYear(year, month - 1, day);
-        updatedEntry.entry_date = newDate.toISOString();
+        // Update date but keep existing time - avoid timezone conversion issues
+        // Extract the time part from the original ISO string and reconstruct with new date
+        const timeOnly = currentISOString.split('T')[1]; // Get time part (HH:MM:SS.sssZ)
+        const newISOString = `${validation.value}T${timeOnly}`;
+        updatedEntry.entry_date = newISOString;
       } else if (field === "entry_time") {
         // Update time but keep existing date - avoid timezone conversion issues
         const [hours, minutes] = validation.value.split(':').map(Number);
