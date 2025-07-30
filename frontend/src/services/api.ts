@@ -11,6 +11,8 @@ import {
   RegisterRequest,
   RegisterResponse,
   ProfileResponse,
+  GoogleAuthRequest,
+  GoogleAuthResponse,
 
   // User types
   ChangePasswordRequest,
@@ -138,6 +140,19 @@ const ApiService = {
 
     login: (credentials: LoginRequest): Promise<AxiosResponse<LoginResponse>> =>
       api.post("/auth/login", credentials),
+
+    googleAuth: (
+      googleData: GoogleAuthRequest
+    ): Promise<AxiosResponse<GoogleAuthResponse>> =>
+      api.post("/auth/google", googleData),
+
+    linkGoogle: (
+      googleData: GoogleAuthRequest
+    ): Promise<AxiosResponse<GoogleAuthResponse>> =>
+      api.post("/auth/link-google", googleData),
+
+    unlinkGoogle: (): Promise<AxiosResponse<GoogleAuthResponse>> =>
+      api.post("/auth/unlink-google"),
 
     getProfile: (): Promise<AxiosResponse<ProfileResponse>> =>
       api.get("/auth/profile"),

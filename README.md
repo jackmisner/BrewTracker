@@ -229,7 +229,8 @@ brew services start mongodb-community
 Create `frontend/.env`:
 
 ```plaintext
-REACT_APP_API_URL="http://localhost:5000"
+REACT_APP_API_URL="http://localhost:5000/api"
+REACT_APP_GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 ```
 
 #### Backend
@@ -239,9 +240,50 @@ Create `backend/.env`:
 ```plaintext
 MONGO_URI="mongodb://localhost:27017/brewtracker"
 JWT_SECRET_KEY="your_secret_key_here"
+SECRET_KEY="your_flask_secret_key_here"
 FLASK_APP="app.py"
 FLASK_ENV="development"
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
+
+### 🔐 Google Authentication Setup
+
+BrewTracker supports Google Sign-In for seamless user authentication. To enable this feature:
+
+#### 1. Create Google OAuth Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
+5. Configure the OAuth consent screen
+6. For **Application type**, select **Web application**
+7. Add your authorized domains:
+   - **Authorized JavaScript origins**:
+     - `http://localhost` (for development)
+     - `http://localhost:3000` (for development)
+     - `https://your-production-domain.com` (for production)
+   - **Authorized redirect URIs**:
+     - `http://localhost:3000` (for development)
+     - `https://your-production-domain.com` (for production)
+
+#### 2. Configure Environment Variables
+
+Add your Google OAuth credentials to both frontend and backend `.env` files:
+
+- **Frontend**: `REACT_APP_GOOGLE_CLIENT_ID` (Client ID only, no secret needed)
+- **Backend**: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (both values)
+
+#### 3. Features
+
+- **Sign In with Google**: Users can authenticate using their Google account
+- **Sign Up with Google**: New users can create accounts instantly
+- **Account Linking**: Existing users can link their Google account to their local account
+- **Secure Authentication**: Server-side token verification with Google's API
+- **JWT Integration**: Google authentication integrates seamlessly with existing JWT tokens
 
 ### 📦 Database Setup
 
@@ -327,7 +369,9 @@ Visit `http://localhost:3000` to access the application.
   - AI recipe suggestions with style compliance optimization and intelligent ingredient recommendations
 
 - 👥 User Experience
-  - Secure JWT-based authentication
+  - Secure JWT-based authentication with Google Sign-In support
+  - Google OAuth integration for seamless account creation and login
+  - Account linking between local and Google accounts
   - Responsive design optimized for desktop and mobile
   - Real-time recipe calculations and validation
   - Comprehensive search with Fuse.js fuzzy matching

@@ -36,6 +36,16 @@ export interface ProfileResponse {
   user: User;
 }
 
+export interface GoogleAuthRequest {
+  token: string;
+}
+
+export interface GoogleAuthResponse {
+  access_token: string;
+  user: User;
+  message: string;
+}
+
 // User API types
 export interface ChangePasswordRequest {
   current_password: string;
