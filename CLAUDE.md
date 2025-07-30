@@ -16,7 +16,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Start development server**: `cd backend && flask run`
 - **Run tests**: `cd backend && pytest`
+- **Run tests (parallel)**: `cd backend && pytest -n auto`
 - **Run tests with coverage**: `cd backend && pytest --cov`
+- **Run tests with coverage (parallel)**: `cd backend && pytest --cov -n auto`
 - **Test location**: `backend/tests/`
 - **Activate virtual environment**: `cd backend && source venv/bin/activate`
 

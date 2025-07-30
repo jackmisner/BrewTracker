@@ -38,6 +38,7 @@ pytest==8.4.0
 pytest-cov==6.1.1
 pytest-env==1.1.5
 pytest-mock==3.14.1
+pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 pytz==2025.2
