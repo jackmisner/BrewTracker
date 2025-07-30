@@ -3,7 +3,7 @@ import { useUnits } from "../../../contexts/UnitContext";
 import SearchableSelect from "../../SearchableSelect";
 import AttenuationBadge from "../../AttenuationAnalytics/AttenuationBadge";
 import { Ingredient, IngredientFormData } from "../../../types";
-import { selectAllOnFocus } from "../../../utils/formatUtils";
+import { selectAllOnFocus, convertUnit } from "../../../utils/formatUtils";
 import "../../../styles/SearchableSelect.css";
 import "../../../styles/AttenuationAnalytics.css";
 
@@ -264,8 +264,8 @@ const YeastInput: React.FC<YeastInputProps> = ({
     if (yeastInfo.min_temperature && yeastInfo.max_temperature) {
       // Show temperature in user's preferred units
       if (unitSystem === "metric") {
-        const minC = Math.round(((yeastInfo.min_temperature - 32) * 5) / 9);
-        const maxC = Math.round(((yeastInfo.max_temperature - 32) * 5) / 9);
+        const minC = Math.round(convertUnit(yeastInfo.min_temperature, "f", "c").value);
+        const maxC = Math.round(convertUnit(yeastInfo.max_temperature, "f", "c").value);
         info.push(`${minC}-${maxC}°C`);
       } else {
         info.push(

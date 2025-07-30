@@ -201,7 +201,10 @@ class UserSettingsService {
       (settingsData.default_batch_size <= 0 ||
         settingsData.default_batch_size > 100)
     ) {
-      errors.push("Default batch size must be between 0 and 100 gallons");
+      // Use unit-aware validation message
+      const unit = settingsData.preferred_units === "metric" ? "liters" : "gallons";
+      const maxValue = settingsData.preferred_units === "metric" ? "378" : "100";
+      errors.push(`Default batch size must be between 0 and ${maxValue} ${unit}`);
     }
 
     if (
