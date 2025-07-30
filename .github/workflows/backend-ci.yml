@@ -91,7 +91,7 @@ jobs:
           FLASK_ENV: "testing"
           SECRET_KEY: "test_secret_key_for_ci"
         run: |
-          pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=70 -v
+          pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=70 -v -n auto
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

@@ -10,13 +10,26 @@ from app import create_app
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     """Setup test database connection once for the entire test session"""
+    import os
+
     # Disconnect any existing connections
     disconnect()
 
-    # Connect to test database with proper UUID representation
-    connect(
-        host=config.TestConfig.MONGO_URI, uuidRepresentation="standard", alias="default"
-    )
+    # Get worker id for parallel execution (empty string if not parallel)
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "")
+
+    # Create worker-specific database name
+    if worker_id:
+        db_name = f"brewtracker_test_{worker_id}"
+    else:
+        db_name = "brewtracker_test"
+
+    # Construct MongoDB URI with worker-specific database
+    base_uri = config.TestConfig.MONGO_URI.rsplit("/", 1)[0]  # Remove existing db name
+    test_uri = f"{base_uri}/{db_name}"
+
+    # Connect to worker-specific test database with proper UUID representation
+    connect(host=test_uri, uuidRepresentation="standard", alias="default")
 
     yield
 
