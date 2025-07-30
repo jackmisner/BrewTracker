@@ -381,10 +381,11 @@ class RecipeContext:
         for ingredient in ingredients:
             current_amount = ingredient.get("amount", 0)
             unit = ingredient.get("unit", "lb")
+            ingredient_type = ingredient.get("type", "grain")
 
             # Use the same normalization logic as NormalizeAmountsStrategy
             normalized_amount = self._normalize_amount_for_evaluation(
-                current_amount, unit
+                current_amount, unit, ingredient_type
             )
 
             # If current amount differs from what it should be normalized to, it's not normalized
@@ -394,34 +395,45 @@ class RecipeContext:
                 return False
         return True
 
-    def _normalize_amount_for_evaluation(self, amount: float, unit: str) -> float:
-        """Normalize amount using same logic as NormalizeAmountsStrategy.
+    def _normalize_amount_for_evaluation(
+        self, amount: float, unit: str, ingredient_type: str = "grain"
+    ) -> float:
+        """
+        Normalize amount using same logic as NormalizeAmountsStrategy.
 
         This ensures the detection logic matches the actual normalization behavior.
+
+        For GRAINS:
+        - Imperial: lbs to 1/4 lb increments, oz to nearest oz
+        - Metric: kg to 0.05 (50g) increments, g to 25g increments
+
+        For HOPS:
+        - Imperial: lbs to 1/4 lb increments, oz to 1/4 oz increments
+        - Metric: kg to 0.05 (50g) increments, g to 5g increments
         """
         if unit in ["lb", "lbs", "pound", "pounds"]:
-            if amount < 1:
-                return round(amount * 4) / 4  # Quarter pound increments
-            else:
-                return round(amount * 2) / 2  # Half pound increments
+            # Both grains and hops: normalize to 1/4 lb increments
+            return round(amount * 4) / 4
 
         elif unit in ["oz", "ounces"]:
-            if amount < 2:
-                return round(amount * 4) / 4  # Quarter ounce increments
-            else:
-                return round(amount * 2) / 2  # Half ounce increments
+            if ingredient_type == "grain":
+                # Grains: round to nearest oz
+                return round(amount)
+            else:  # hops
+                # Hops: round to nearest 1/4 oz
+                return round(amount * 4) / 4
 
         elif unit in ["kg", "kilograms"]:
-            if amount < 0.5:
-                return round(amount * 20) / 20  # 50g increments
-            else:
-                return round(amount * 10) / 10  # 100g increments
+            # Both grains and hops: normalize to 0.05 increments (50g)
+            return round(amount * 20) / 20
 
         elif unit in ["g", "grams"]:
-            if amount < 100:
-                return round(amount / 25) * 25  # 25g increments
-            else:
-                return round(amount / 50) * 50  # 50g increments
+            if ingredient_type == "grain":
+                # Grains: normalize to 25g increments
+                return round(amount / 25) * 25
+            else:  # hops
+                # Hops: normalize to 5g increments
+                return round(amount / 5) * 5
 
         else:
             return round(amount, 2)
