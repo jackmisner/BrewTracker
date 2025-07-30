@@ -75,9 +75,14 @@ class UserSettings(EmbeddedDocument):
 class User(Document):
     username = StringField(required=True, unique=True, max_length=80)
     email = StringField(required=True, unique=True, max_length=120)
-    password_hash = StringField(required=True)
+    password_hash = StringField()  # Made optional for Google users
     created_at = DateTimeField(default=lambda: datetime.now(UTC))
     last_login = DateTimeField()
+
+    # Google OAuth fields
+    google_id = StringField(unique=True, sparse=True)  # sparse allows nulls
+    auth_provider = StringField(choices=["local", "google"], default="local")
+    google_profile_picture = StringField()  # Store Google profile image URL
 
     # Add settings as embedded document
     settings = EmbeddedDocumentField(UserSettings, default=UserSettings)
@@ -86,13 +91,33 @@ class User(Document):
     is_active = BooleanField(default=True)
     email_verified = BooleanField(default=False)
 
-    meta = {"collection": "users", "indexes": ["username", "email"]}
+    meta = {"collection": "users", "indexes": ["username", "email", "google_id"]}
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        if not self.password_hash:
+            return False  # Google users don't have passwords
         return check_password_hash(self.password_hash, password)
+
+    def set_google_info(self, google_id, profile_picture=None):
+        """Set Google authentication information"""
+        self.google_id = google_id
+        self.auth_provider = "google"
+        self.email_verified = True  # Google accounts are pre-verified
+        if profile_picture:
+            self.google_profile_picture = profile_picture
+
+    @classmethod
+    def find_by_google_id(cls, google_id):
+        """Find user by Google ID"""
+        return cls.objects(google_id=google_id).first()
+
+    @classmethod
+    def find_by_email(cls, email):
+        """Find user by email (for account linking)"""
+        return cls.objects(email=email).first()
 
     def update_settings(self, settings_data):
         """Update user settings safely"""
@@ -164,6 +189,8 @@ class User(Document):
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "is_active": self.is_active,
             "email_verified": self.email_verified,
+            "auth_provider": self.auth_provider,
+            "google_profile_picture": self.google_profile_picture,
             "settings": (
                 self.settings.to_dict() if self.settings else UserSettings().to_dict()
             ),

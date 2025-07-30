@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ApiService from "../services/api";
 import { User } from "../types";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import "../styles/Auth.css";
 
 interface LoginProps {
@@ -50,6 +51,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (token: string): Promise<void> => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await ApiService.auth.googleAuth({ token });
+      onLogin(response.data.user, response.data.access_token);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error ||
+          "Failed to sign in with Google. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string): void => {
+    setError(error);
   };
 
   return (
@@ -144,6 +166,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {loading ? "" : "Sign In"}
               </button>
             </form>
+
+            <div className="auth-divider">or</div>
+
+            <GoogleSignInButton
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              text="Sign in with Google"
+              disabled={loading}
+            />
 
             <div className="auth-nav">
               <p className="auth-nav-text">Don't have an account?</p>

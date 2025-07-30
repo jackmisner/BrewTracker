@@ -13,6 +13,10 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_TOKEN_LOCATION = ["headers"]
 
+    # Google OAuth configuration
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
     # MongoDB connection options
     MONGODB_SETTINGS = {"host": MONGO_URI, "uuidRepresentation": "standard"}
 
@@ -26,6 +30,8 @@ class ProductionConfig(Config):
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
     # Longer token expiry for production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
@@ -41,7 +47,13 @@ class ProductionConfig(Config):
     @classmethod
     def validate_required_vars(cls):
         """Validate that all required environment variables are set"""
-        required_vars = ["SECRET_KEY", "MONGO_URI", "JWT_SECRET_KEY"]
+        required_vars = [
+            "SECRET_KEY",
+            "MONGO_URI",
+            "JWT_SECRET_KEY",
+            "GOOGLE_CLIENT_ID",
+            "GOOGLE_CLIENT_SECRET",
+        ]
         missing_vars = [var for var in required_vars if not os.getenv(var)]
 
         if missing_vars:

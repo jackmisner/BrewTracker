@@ -28,6 +28,8 @@ export interface User extends BaseEntity {
   last_login?: string;
   is_active: boolean;
   email_verified: boolean;
+  auth_provider: "local" | "google";
+  google_profile_picture?: string;
   settings: UserSettings;
 }
 
@@ -54,6 +56,22 @@ export interface RegistrationFormData {
   password: string;
   confirm_password: string;
   accept_terms: boolean;
+}
+
+// Google authentication data
+export interface GoogleAuthData {
+  token: string;
+}
+
+// Google user info from token
+export interface GoogleUserInfo {
+  google_id: string;
+  email: string;
+  name: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  email_verified: boolean;
 }
 
 // Password change form data
@@ -100,6 +118,9 @@ export interface AuthContextState extends AuthState {
 export interface AuthContextActions {
   login: (credentials: LoginFormData) => Promise<User>;
   register: (userData: RegistrationFormData) => Promise<User>;
+  googleAuth: (googleData: GoogleAuthData) => Promise<User>;
+  linkGoogleAccount: (googleData: GoogleAuthData) => Promise<User>;
+  unlinkGoogleAccount: () => Promise<User>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<string>;
   updateProfile: (profileData: ProfileUpdateFormData) => Promise<User>;
