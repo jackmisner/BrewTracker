@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Fuse from "fuse.js";
 import ApiService from "../services/api";
 import { ingredientServiceInstance } from "../services";
+import { useUnits } from "../contexts/UnitContext";
+import { convertUnit } from "../utils/formatUtils";
 import { Ingredient, IngredientType } from "../types";
 import "../styles/IngredientManager.css";
 
@@ -38,6 +40,8 @@ interface GroupedIngredients {
 }
 
 const IngredientManager: React.FC = () => {
+  const { unitSystem } = useUnits();
+  
   // Form state
   const [formData, setFormData] = useState<IngredientFormData>({
     name: "",
@@ -369,13 +373,30 @@ const IngredientManager: React.FC = () => {
         errors.push("Alcohol tolerance should be between 0% and 20%");
       }
       if (formData.min_temperature && formData.max_temperature) {
-        if (
-          parseFloat(formData.min_temperature) >=
-          parseFloat(formData.max_temperature)
-        ) {
+        const minTemp = parseFloat(formData.min_temperature);
+        const maxTemp = parseFloat(formData.max_temperature);
+        
+        if (minTemp >= maxTemp) {
           errors.push(
             "Minimum temperature must be less than maximum temperature"
           );
+        }
+        
+        // Validate temperature ranges based on unit system
+        if (unitSystem === "metric") {
+          if (minTemp < 10 || minTemp > 38) {
+            errors.push("Minimum temperature should be between 10°C and 38°C");
+          }
+          if (maxTemp < 10 || maxTemp > 38) {
+            errors.push("Maximum temperature should be between 10°C and 38°C");
+          }
+        } else {
+          if (minTemp < 50 || minTemp > 100) {
+            errors.push("Minimum temperature should be between 50°F and 100°F");
+          }
+          if (maxTemp < 50 || maxTemp > 100) {
+            errors.push("Maximum temperature should be between 50°F and 100°F");
+          }
         }
       }
     }
@@ -409,11 +430,20 @@ const IngredientManager: React.FC = () => {
               "alpha_acid",
               "attenuation",
               "alcohol_tolerance",
-              "min_temperature",
-              "max_temperature",
             ].includes(key)
           ) {
             acc[key] = parseFloat(value as string);
+          } else if (key === "min_temperature" || key === "max_temperature") {
+            // Convert temperature to Fahrenheit for storage if user input was in Celsius
+            const tempValue = parseFloat(value as string);
+            if (unitSystem === "metric") {
+              // Convert from Celsius to Fahrenheit for storage
+              const converted = convertUnit(tempValue, "c", "f");
+              acc[key] = Math.round(converted.value);
+            } else {
+              // Already in Fahrenheit, store as-is
+              acc[key] = tempValue;
+            }
           } else {
             acc[key] = value;
           }
@@ -794,31 +824,31 @@ const IngredientManager: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Min Temperature (°F)</label>
+                    <label className="form-label">Min Temperature (°{unitSystem === "metric" ? "C" : "F"})</label>
                     <input
                       type="number"
                       name="min_temperature"
                       value={formData.min_temperature}
                       onChange={handleChange}
                       step="1"
-                      min="50"
-                      max="100"
-                      placeholder="e.g., 60"
+                      min={unitSystem === "metric" ? "10" : "50"}
+                      max={unitSystem === "metric" ? "38" : "100"}
+                      placeholder={unitSystem === "metric" ? "e.g., 15" : "e.g., 60"}
                       className="form-input"
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Max Temperature (°F)</label>
+                    <label className="form-label">Max Temperature (°{unitSystem === "metric" ? "C" : "F"})</label>
                     <input
                       type="number"
                       name="max_temperature"
                       value={formData.max_temperature}
                       onChange={handleChange}
                       step="1"
-                      min="50"
-                      max="100"
-                      placeholder="e.g., 72"
+                      min={unitSystem === "metric" ? "10" : "50"}
+                      max={unitSystem === "metric" ? "38" : "100"}
+                      placeholder={unitSystem === "metric" ? "e.g., 22" : "e.g., 72"}
                       className="form-input"
                     />
                   </div>
