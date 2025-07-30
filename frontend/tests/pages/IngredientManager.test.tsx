@@ -1,8 +1,9 @@
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
+import { renderWithProviders } from "../testUtils";
 import IngredientManager from "../../src/pages/IngredientManager";
 import ApiService from "../../src/services/api";
 import { ingredientServiceInstance } from "../../src/services";
@@ -99,7 +100,7 @@ describe("IngredientManager", () => {
 
   describe("Initial render and loading", () => {
     it("renders the component with initial form", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       expect(screen.getByText("Ingredient Manager")).toBeInTheDocument();
       expect(screen.getByText("Add New Ingredient")).toBeInTheDocument();
@@ -113,7 +114,7 @@ describe("IngredientManager", () => {
     });
 
     it("loads existing ingredients on mount", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(ApiService.ingredients.getAll).toHaveBeenCalledTimes(1);
@@ -124,7 +125,7 @@ describe("IngredientManager", () => {
     });
 
     it("displays ingredient count correctly", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(screen.getByText("3 ingredients total")).toBeInTheDocument();
@@ -134,7 +135,7 @@ describe("IngredientManager", () => {
     it("handles API error during initial load", async () => {
       (ApiService.ingredients.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(
@@ -154,7 +155,7 @@ describe("IngredientManager", () => {
         other: [],
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(screen.getByText("0 ingredients total")).toBeInTheDocument();
@@ -168,7 +169,7 @@ describe("IngredientManager", () => {
   describe("Form state management", () => {
     it("updates form fields when user types", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -180,7 +181,7 @@ describe("IngredientManager", () => {
 
     it("updates description field", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const descriptionInput = screen.getByPlaceholderText(
         "Optional description of the ingredient..."
@@ -192,7 +193,7 @@ describe("IngredientManager", () => {
 
     it("clears error and success messages when user starts typing", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Trigger an error by submitting empty form
       const submitButton = screen.getByText("Add Ingredient");
@@ -216,7 +217,7 @@ describe("IngredientManager", () => {
     });
 
     it("resets form to initial state", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Fill in some form data
       const nameInput = screen.getByPlaceholderText(
@@ -233,7 +234,7 @@ describe("IngredientManager", () => {
 
   describe("Ingredient type handling", () => {
     it("shows grain-specific fields when grain type is selected", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Grain should be selected by default
       expect(screen.getByText("Grain Properties")).toBeInTheDocument();
@@ -243,7 +244,7 @@ describe("IngredientManager", () => {
     });
 
     it("shows hop-specific fields when hop type is selected", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "hop" } });
@@ -253,7 +254,7 @@ describe("IngredientManager", () => {
     });
 
     it("shows yeast-specific fields when yeast type is selected", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -268,7 +269,7 @@ describe("IngredientManager", () => {
     });
 
     it("hides type-specific fields when other type is selected", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "other" } });
@@ -279,7 +280,7 @@ describe("IngredientManager", () => {
     });
 
     it("clears type-specific fields when changing ingredient type", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Fill in grain-specific field
       const colorInput = screen.getByPlaceholderText("e.g., 2.5");
@@ -299,7 +300,7 @@ describe("IngredientManager", () => {
 
   describe("Form validation", () => {
     it("validates required ingredient name", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const submitButton = screen.getByText("Add Ingredient");
       fireEvent.click(submitButton);
@@ -312,7 +313,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates grain potential range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -335,7 +336,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates grain color range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -356,7 +357,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates hop alpha acid range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "hop" } });
@@ -380,7 +381,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates yeast attenuation range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -404,7 +405,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates yeast alcohol tolerance range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -428,7 +429,7 @@ describe("IngredientManager", () => {
     });
 
     it("validates yeast temperature range", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -456,7 +457,7 @@ describe("IngredientManager", () => {
     });
 
     it("shows multiple validation errors", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const potentialInput = screen.getByPlaceholderText("e.g., 37");
       const colorInput = screen.getByPlaceholderText("e.g., 2.5");
@@ -486,7 +487,7 @@ describe("IngredientManager", () => {
         data: [...mockIngredients, { ingredient_id: 4, name: "New Grain" }],
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -523,7 +524,7 @@ describe("IngredientManager", () => {
     it("submits valid hop ingredient successfully", async () => {
       (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "hop" } });
@@ -551,7 +552,7 @@ describe("IngredientManager", () => {
     it("submits valid yeast ingredient successfully", async () => {
       (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -587,7 +588,7 @@ describe("IngredientManager", () => {
         () => new Promise(() => {}) // Never resolves
       );
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -606,7 +607,7 @@ describe("IngredientManager", () => {
         new Error("Server error")
       );
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -626,7 +627,7 @@ describe("IngredientManager", () => {
         new Error() // Error without message
       );
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -652,7 +653,7 @@ describe("IngredientManager", () => {
         },
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -674,7 +675,7 @@ describe("IngredientManager", () => {
     it("resets form after successful submission", async () => {
       (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -713,7 +714,7 @@ describe("IngredientManager", () => {
           data: newIngredientsList,
         });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(screen.getByText("3 ingredients total")).toBeInTheDocument();
@@ -735,7 +736,7 @@ describe("IngredientManager", () => {
     it("filters out empty fields from submission data", async () => {
       (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -768,7 +769,7 @@ describe("IngredientManager", () => {
     });
 
     it("initializes search input", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(
@@ -780,7 +781,7 @@ describe("IngredientManager", () => {
 
     it("updates search query when typing", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(
@@ -800,7 +801,7 @@ describe("IngredientManager", () => {
 
     it("shows clear search button when search has value", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(
@@ -820,7 +821,7 @@ describe("IngredientManager", () => {
 
     it("clears search when clear button is clicked", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(
@@ -843,7 +844,7 @@ describe("IngredientManager", () => {
 
     it("shows search help text when searching", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText(
@@ -876,7 +877,7 @@ describe("IngredientManager", () => {
       Fuse.mockImplementation(() => mockFuseInstance);
 
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Wait for initial load
       await waitFor(() => {
@@ -904,7 +905,7 @@ describe("IngredientManager", () => {
       Fuse.mockImplementation(() => mockFuseInstance);
 
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Wait for initial load
       await waitFor(() => {
@@ -929,7 +930,7 @@ describe("IngredientManager", () => {
 
   describe("Ingredient display", () => {
     it("displays grouped ingredients by type", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(screen.getByText("Grains & Fermentables")).toBeInTheDocument();
@@ -944,7 +945,7 @@ describe("IngredientManager", () => {
     });
 
     it("shows ingredient count for each type", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const typeCounts = screen.getAllByText(/\(\s*1\s*\)/);
@@ -954,7 +955,7 @@ describe("IngredientManager", () => {
 
     it("displays ingredient details correctly", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Wait for ingredients to load
       await waitFor(() => {
@@ -982,7 +983,7 @@ describe("IngredientManager", () => {
 
     it("shows ingredient properties based on type", async () => {
       const user = userEvent.setup();
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       // Wait for ingredients to load
       await waitFor(() => {
@@ -1018,7 +1019,7 @@ describe("IngredientManager", () => {
     });
 
     it("applies correct type colors", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         const grainHeader = screen.getByText("Grains & Fermentables");
@@ -1043,7 +1044,7 @@ describe("IngredientManager", () => {
         other: [],
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(
@@ -1055,7 +1056,7 @@ describe("IngredientManager", () => {
 
   describe("Grain type dropdown options", () => {
     it("shows all grain type options", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const grainTypeSelect = screen.getByDisplayValue("Select type...");
       const options = Array.from(grainTypeSelect.querySelectorAll("option"));
@@ -1072,7 +1073,7 @@ describe("IngredientManager", () => {
     });
 
     it("shows correct grain type labels", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const grainTypeSelect = screen.getByDisplayValue("Select type...");
       const options = Array.from(grainTypeSelect.querySelectorAll("option"));
@@ -1091,7 +1092,7 @@ describe("IngredientManager", () => {
 
   describe("Field constraints and placeholders", () => {
     it("sets correct input constraints for numeric fields", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const colorInput = screen.getByPlaceholderText("e.g., 2.5");
       expect(colorInput).toHaveAttribute("step", "0.5");
@@ -1105,7 +1106,7 @@ describe("IngredientManager", () => {
     });
 
     it("sets correct placeholders", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       expect(
         screen.getByPlaceholderText(
@@ -1116,7 +1117,7 @@ describe("IngredientManager", () => {
     });
 
     it("sets correct yeast field constraints", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const typeSelect = screen.getByDisplayValue("Grain/Fermentable");
       fireEvent.change(typeSelect, { target: { value: "yeast" } });
@@ -1144,7 +1145,7 @@ describe("IngredientManager", () => {
         data: "invalid data structure",
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         // With invalid data structure, ingredients becomes undefined || [] = []
@@ -1159,7 +1160,7 @@ describe("IngredientManager", () => {
         data: null,
       });
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(
@@ -1176,7 +1177,7 @@ describe("IngredientManager", () => {
       );
 
       // Should not crash the component
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       await waitFor(() => {
         expect(screen.getByText("Ingredient Manager")).toBeInTheDocument();
@@ -1184,7 +1185,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles form inputs with name attributes", () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -1203,7 +1204,7 @@ describe("IngredientManager", () => {
 
   describe("Error handling and messages", () => {
     it("displays error messages with proper styling", async () => {
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const submitButton = screen.getByText("Add Ingredient");
       fireEvent.click(submitButton);
@@ -1217,7 +1218,7 @@ describe("IngredientManager", () => {
     it("displays success messages with proper styling", async () => {
       (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"
@@ -1240,7 +1241,7 @@ describe("IngredientManager", () => {
         new Error("Network timeout")
       );
 
-      render(<IngredientManager />);
+      renderWithProviders(<IngredientManager />);
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Cascade Hops, Pilsner Malt, Wyeast 1056"

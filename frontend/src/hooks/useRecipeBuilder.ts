@@ -16,6 +16,7 @@ import {
   StyleSuggestion,
   RecipeAnalysis,
 } from "../types";
+import { convertUnit } from "../utils/formatUtils";
 
 // Hook state interface
 interface UseRecipeBuilderState {
@@ -244,19 +245,17 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             if (recipe.mash_temp_unit !== userPreferredUnit) {
               // Convert temperature to user's preferred unit
               if (userPreferredUnit === "C" && recipe.mash_temp_unit === "F") {
-                // Convert F to C
-                recipe.mash_temperature =
-                  Math.round((((recipe.mash_temperature - 32) * 5) / 9) * 10) /
-                  10;
+                // Convert F to C using formatUtils
+                const converted = convertUnit(recipe.mash_temperature, "f", "c");
+                recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "C";
               } else if (
                 userPreferredUnit === "F" &&
                 recipe.mash_temp_unit === "C"
               ) {
-                // Convert C to F
-                recipe.mash_temperature =
-                  Math.round(((recipe.mash_temperature * 9) / 5 + 32) * 10) /
-                  10;
+                // Convert C to F using formatUtils
+                const converted = convertUnit(recipe.mash_temperature, "c", "f");
+                recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "F";
               }
             }

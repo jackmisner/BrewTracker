@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
 import { Ingredient } from "../types";
+import { convertUnit } from "../utils/formatUtils";
 
 // Processed search result for internal use
 interface ProcessedSearchResult<T> {
@@ -286,7 +287,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
 
   // Helper function to convert temperature from Fahrenheit to Celsius
   const convertTemperature = (fahrenheit: number): number => {
-    return Math.round(((fahrenheit - 32) * 5) / 9);
+    return Math.round(convertUnit(fahrenheit, "f", "c").value);
   };
 
   // Format temperature range based on unit system

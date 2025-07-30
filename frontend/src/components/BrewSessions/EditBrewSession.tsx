@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
+import { useUnits } from "../../contexts/UnitContext";
 import {
   BrewSession,
   BrewSessionStatus,
@@ -28,6 +29,7 @@ interface EditBrewSessionFormData {
 const EditBrewSession: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const { unitSystem } = useUnits();
 
   const [session, setSession] = useState<BrewSession | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -315,7 +317,7 @@ const EditBrewSession: React.FC = () => {
 
             <div className="brew-session-form-group">
               <label htmlFor="mash_temp" className="brew-session-form-label">
-                Mash Temperature (°F)
+                Mash Temperature (°{unitSystem === "metric" ? "C" : "F"})
               </label>
               <input
                 type="number"
