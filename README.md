@@ -509,8 +509,14 @@ source venv/bin/activate
 # Run all tests (447 tests)
 pytest
 
+# Run tests in parallel for faster execution (recommended)
+pytest -n auto
+
 # Run tests with coverage reporting
 pytest --cov
+
+# Run tests with coverage reporting in parallel (fastest with coverage)
+pytest --cov -n auto
 
 # Run specific test module
 pytest tests/test_ingredients.py
@@ -518,6 +524,8 @@ pytest tests/test_ingredients.py
 # Run tests with verbose output
 pytest -v
 ```
+
+**Performance Tip**: Use `pytest -n auto` for parallel test execution, which automatically detects the number of CPU cores and runs tests concurrently for significantly faster test completion.
 
 ### Quality Assurance
 
