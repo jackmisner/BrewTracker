@@ -129,3 +129,40 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
         assert response.json["username"] == "testuser"
         assert response.json["email"] == "test@example.com"
+
+    def test_validate_username_reserved(self, client):
+        """Test username validation with reserved username"""
+        response = client.post(
+            "/api/auth/validate-username", json={"username": "admin"}
+        )
+        assert response.status_code == 200
+        data = response.json
+        assert data["valid"] is False
+        assert "reserved for system use" in data["error"]
+        assert "suggestions" in data
+
+    def test_validate_username_valid(self, client):
+        """Test username validation with valid username"""
+        response = client.post(
+            "/api/auth/validate-username", json={"username": "validuser123"}
+        )
+        assert response.status_code == 200
+        data = response.json
+        assert data["valid"] is True
+
+    def test_validate_username_too_short(self, client):
+        """Test username validation with too short username"""
+        response = client.post("/api/auth/validate-username", json={"username": "ab"})
+        assert response.status_code == 200
+        data = response.json
+        assert data["valid"] is False
+        assert "at least 3 characters" in data["error"]
+        assert len(data["suggestions"]) > 0
+
+    def test_validate_username_empty(self, client):
+        """Test username validation with empty username"""
+        response = client.post("/api/auth/validate-username", json={"username": ""})
+        assert response.status_code == 400
+        data = response.json
+        assert data["valid"] is False
+        assert "required" in data["error"]

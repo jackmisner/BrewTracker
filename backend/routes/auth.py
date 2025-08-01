@@ -74,6 +74,45 @@ def register():
     return jsonify({"message": "User created successfully"}), 201
 
 
+@auth_bp.route("/validate-username", methods=["POST"])
+def validate_username():
+    """Validate username for registration"""
+    data = request.get_json()
+    username = data.get("username", "").strip()
+
+    if not username:
+        return jsonify({"valid": False, "error": "Username is required"}), 400
+
+    # Validate username format and check if reserved
+    is_valid_username, username_error = UsernameValidationService.validate_username(
+        username
+    )
+    if not is_valid_username:
+        suggestions = UsernameValidationService.suggest_alternatives(username)
+        return (
+            jsonify(
+                {"valid": False, "error": username_error, "suggestions": suggestions}
+            ),
+            200,
+        )
+
+    # Check if username already exists
+    if User.objects(username=username).first():
+        suggestions = UsernameValidationService.suggest_alternatives(username)
+        return (
+            jsonify(
+                {
+                    "valid": False,
+                    "error": "Username already exists",
+                    "suggestions": suggestions,
+                }
+            ),
+            200,
+        )
+
+    return jsonify({"valid": True}), 200
+
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()

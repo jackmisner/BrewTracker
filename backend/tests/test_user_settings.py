@@ -303,6 +303,18 @@ class TestUserSettingsEndpoints:
         """Test deleting account successfully"""
         user, headers = authenticated_user
 
+        # Ensure system users exist for the test
+        import os
+        from pathlib import Path
+
+        from seeds.seed_system_users import seed_system_users
+
+        mongo_uri = os.environ.get(
+            "MONGO_URI", "mongodb://localhost:27017/brewtracker_test"
+        )
+        json_file_path = Path(__file__).parent.parent / "data" / "system_users.json"
+        seed_system_users(mongo_uri, str(json_file_path))
+
         delete_data = {
             "password": "password123",
             "confirmation": "DELETE",
@@ -313,13 +325,18 @@ class TestUserSettingsEndpoints:
         )
 
         assert response.status_code == 200
-        assert "Account deactivated successfully" in response.json["message"]
+        assert "Account deleted successfully" in response.json["message"]
 
-        # Verify user is deactivated
+        # Verify response includes the new data structure
+        response_data = response.json
+        assert "data_summary" in response_data
+        assert "actions_taken" in response_data
+        assert "preserve_public_recipes" in response_data
+        assert response_data["preserve_public_recipes"] is True  # Default value
+
+        # Verify user is actually deleted (not just deactivated)
         updated_user = User.objects(id=user.id).first()
-        assert updated_user.is_active is False
-        assert "deleted_user_" in updated_user.username
-        assert "deleted_" in updated_user.email
+        assert updated_user is None  # User should be completely deleted
 
     def test_delete_account_wrong_password(self, client, authenticated_user):
         """Test deleting account with wrong password"""
