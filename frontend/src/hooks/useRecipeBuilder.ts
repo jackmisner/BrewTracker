@@ -107,7 +107,7 @@ interface UseRecipeBuilderReturn {
 export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   const navigate = useNavigate();
   const originalRecipeRef = useRef<Recipe | null>(null);
-  const { unitSystem } = useUnits();
+  const { unitSystem, loading: unitContextLoading } = useUnits();
 
   // Consolidated state
   const [state, setState] = useState<UseRecipeBuilderState>({
@@ -173,6 +173,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     async function initialize(): Promise<void> {
       try {
         if (!effectMounted) {
+          return;
+        }
+
+        // Wait for unit context to finish loading before initializing recipe
+        if (unitContextLoading) {
           return;
         }
 
@@ -352,7 +357,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       effectMounted = false;
       Services.metrics.cancelCalculation("recipe-builder");
     };
-  }, [recipeId, unitSystem]); // Add unitSystem to dependencies
+  }, [recipeId, unitSystem, unitContextLoading]); // Add unitContextLoading to dependencies
 
   // Update recipe field
   const updateRecipe = useCallback(
