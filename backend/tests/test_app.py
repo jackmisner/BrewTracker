@@ -414,8 +414,8 @@ class TestAppIntegration:
             response = client.post(
                 "/api/auth/register",
                 json={
-                    "username": "test",
-                    "email": "test@test.com",
+                    "username": "validuser",
+                    "email": "validuser@test.com",
                     "password": "test123",
                 },
                 content_type="application/json",

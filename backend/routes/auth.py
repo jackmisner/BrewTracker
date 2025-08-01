@@ -6,6 +6,7 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 
 from models.mongo_models import User, UserSettings
 from services.google_oauth_service import GoogleOAuthService
+from services.username_validation_service import UsernameValidationService
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -34,10 +35,23 @@ def get_geo_info(ip):
 def register():
     data = request.get_json()
 
-    if User.objects(username=data.get("username")).first():
+    username = data.get("username", "").strip()
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    # Validate username format and check if reserved
+    is_valid_username, username_error = UsernameValidationService.validate_username(
+        username
+    )
+    if not is_valid_username:
+        return jsonify({"error": username_error}), 400
+
+    # Check if username already exists
+    if User.objects(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
 
-    if User.objects(email=data.get("email")).first():
+    # Check if email already exists
+    if User.objects(email=email).first():
         return jsonify({"error": "Email already exists"}), 400
 
     # Get user IP and geo info
@@ -53,10 +67,8 @@ def register():
     )
 
     # Create and save user
-    user = User(
-        username=data.get("username"), email=data.get("email"), settings=settings
-    )
-    user.set_password(data.get("password"))
+    user = User(username=username, email=email, settings=settings)
+    user.set_password(password)
     user.save()
 
     return jsonify({"message": "User created successfully"}), 201
