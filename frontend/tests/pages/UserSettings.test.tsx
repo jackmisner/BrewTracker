@@ -838,7 +838,7 @@ describe("UserSettings", () => {
       });
 
       expect(global.mockLocalStorage.removeItem).toHaveBeenCalledWith("token");
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     it("handles account deletion error", async () => {

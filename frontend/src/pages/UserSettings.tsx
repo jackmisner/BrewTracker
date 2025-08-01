@@ -311,7 +311,7 @@ const UserSettings: React.FC = () => {
       // Logout and redirect
       localStorage.removeItem("token");
       window.dispatchEvent(new Event("authChange"));
-      navigate("/");
+      navigate("/login");
     } catch (err: any) {
       setError(err.message || "Failed to delete account");
       setSaving(false);
