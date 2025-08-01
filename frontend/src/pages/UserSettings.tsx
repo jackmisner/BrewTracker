@@ -34,6 +34,7 @@ interface PasswordForm {
 interface DeleteForm {
   password: string;
   confirmation: string;
+  preserve_public_recipes: boolean;
 }
 
 interface PreferencesForm {
@@ -78,6 +79,7 @@ const UserSettings: React.FC = () => {
   const [deleteForm, setDeleteForm] = useState<DeleteForm>({
     password: "",
     confirmation: "",
+    preserve_public_recipes: true, // Default to preserving public recipes
   });
 
   const [preferencesForm, setPreferencesForm] = useState<PreferencesForm>({
@@ -886,8 +888,7 @@ const UserSettings: React.FC = () => {
                   <div className="danger-warning">
                     <p>
                       <strong>Warning:</strong> Account deletion is permanent
-                      and cannot be undone. All your recipes, brew sessions, and
-                      data will be lost.
+                      and cannot be undone. Your personal data, private recipes, and brew sessions will be permanently deleted.
                     </p>
                   </div>
 
@@ -895,6 +896,53 @@ const UserSettings: React.FC = () => {
                     onSubmit={handleDeleteAccount}
                     className="settings-form"
                   >
+                    {/* Data Preservation Choice */}
+                    <div className="form-group">
+                      <label className="form-label">
+                        What should happen to your public recipes?
+                      </label>
+                      <div className="radio-group">
+                        <label className="radio-option">
+                          <input
+                            type="radio"
+                            name="preserve_public_recipes"
+                            checked={deleteForm.preserve_public_recipes}
+                            onChange={() =>
+                              setDeleteForm({
+                                ...deleteForm,
+                                preserve_public_recipes: true,
+                              })
+                            }
+                            disabled={saving}
+                          />
+                          <span className="radio-label">
+                            <strong>Keep for community</strong> - Transfer public recipes to "Anonymous User" so others can still access them
+                          </span>
+                        </label>
+                        <label className="radio-option">
+                          <input
+                            type="radio"
+                            name="preserve_public_recipes"
+                            checked={!deleteForm.preserve_public_recipes}
+                            onChange={() =>
+                              setDeleteForm({
+                                ...deleteForm,
+                                preserve_public_recipes: false,
+                              })
+                            }
+                            disabled={saving}
+                          />
+                          <span className="radio-label">
+                            <strong>Delete everything</strong> - Permanently delete all recipes including public ones
+                          </span>
+                        </label>
+                      </div>
+                      <p className="form-help">
+                        {deleteForm.preserve_public_recipes
+                          ? "Recommended: Your public recipes will remain available to the community with anonymous attribution."
+                          : "Warning: This will permanently delete all your recipes, including those shared publicly."}
+                      </p>
+                    </div>
                     <div className="form-group">
                       <label htmlFor="delete_password" className="form-label">
                         Enter your password to confirm

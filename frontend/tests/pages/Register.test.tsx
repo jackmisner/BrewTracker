@@ -47,13 +47,13 @@ describe("Register Page", () => {
     const passwordInput = screen.getByLabelText("Password");
     const confirmPasswordInput = screen.getByLabelText("Confirm Password");
 
-    await user.type(usernameInput, "testuser");
-    await user.type(emailInput, "test@example.com");
+    await user.type(usernameInput, "exampleuser");
+    await user.type(emailInput, "example@example.com");
     await user.type(passwordInput, "testpassword");
     await user.type(confirmPasswordInput, "testpassword");
 
-    expect((usernameInput as HTMLInputElement).value).toBe("testuser");
-    expect((emailInput as HTMLInputElement).value).toBe("test@example.com");
+    expect((usernameInput as HTMLInputElement).value).toBe("exampleuser");
+    expect((emailInput as HTMLInputElement).value).toBe("example@example.com");
     expect((passwordInput as HTMLInputElement).value).toBe("testpassword");
     expect((confirmPasswordInput as HTMLInputElement).value).toBe("testpassword");
   });
@@ -105,6 +105,20 @@ describe("Register Page", () => {
   });
 
   test("successfully submits the form with valid data and logs in afterwards", async () => {
+    // Mock successful API responses
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+    (ApiService.auth.register as jest.Mock).mockResolvedValue({
+      data: { message: "User created successfully" }
+    });
+    (ApiService.auth.login as jest.Mock).mockResolvedValue({
+      data: { 
+        access_token: "test-token",
+        user: { id: "1", username: "exampleuser", email: "example@example.com" }
+      }
+    });
+
     render(<Register onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
@@ -113,23 +127,31 @@ describe("Register Page", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm Password");
     const submitButton = screen.getByRole("button", { name: "Create Account" });
 
-    await userEvent.type(usernameInput, "testuser");
-    await userEvent.type(emailInput, "test@example.com");
+    await userEvent.type(usernameInput, "exampleuser");
+    await userEvent.type(emailInput, "example@example.com");
     await userEvent.type(passwordInput, "password123");
     await userEvent.type(confirmPasswordInput, "password123");
+    
+    // Wait for username validation to complete (500ms debounce)
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "exampleuser"
+      });
+    }, { timeout: 1000 });
+
     fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(ApiService.auth.register).toHaveBeenCalledWith({
-        username: "testuser",
-        email: "test@example.com",
+        username: "exampleuser",
+        email: "example@example.com",
         password: "password123",
       });
     });
 
     await waitFor(() => {
       expect(ApiService.auth.login).toHaveBeenCalledWith({
-        username: "testuser",
+        username: "exampleuser",
         password: "password123",
       });
     });
@@ -137,6 +159,21 @@ describe("Register Page", () => {
 
   test("handles registration form submission via enter key", async () => {
     const user = userEvent.setup();
+    
+    // Mock successful API responses
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+    (ApiService.auth.register as jest.Mock).mockResolvedValue({
+      data: { message: "User created successfully" }
+    });
+    (ApiService.auth.login as jest.Mock).mockResolvedValue({
+      data: { 
+        access_token: "test-token",
+        user: { id: "1", username: "exampleuser", email: "example@example.com" }
+      }
+    });
+
     render(<Register onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
@@ -144,23 +181,31 @@ describe("Register Page", () => {
     const passwordInput = screen.getByLabelText("Password");
     const confirmPasswordInput = screen.getByLabelText("Confirm Password");
 
-    await userEvent.type(usernameInput, "testuser");
-    await userEvent.type(emailInput, "test@example.com");
+    await userEvent.type(usernameInput, "exampleuser");
+    await userEvent.type(emailInput, "example@example.com");
     await userEvent.type(passwordInput, "password123");
     await userEvent.type(confirmPasswordInput, "password123");
+    
+    // Wait for username validation to complete (500ms debounce)
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "exampleuser"
+      });
+    }, { timeout: 1000 });
+
     await user.keyboard("{Enter}");
 
     await waitFor(() => {
       expect(ApiService.auth.register).toHaveBeenCalledWith({
-        username: "testuser",
-        email: "test@example.com",
+        username: "exampleuser",
+        email: "example@example.com",
         password: "password123",
       });
     });
 
     await waitFor(() => {
       expect(ApiService.auth.login).toHaveBeenCalledWith({
-        username: "testuser",
+        username: "exampleuser",
         password: "password123",
       });
     });
@@ -168,21 +213,38 @@ describe("Register Page", () => {
 
   test("validates username length and shows/hides error", async () => {
     const user = userEvent.setup();
+    
+    // Mock username validation responses - first call will be for "abc" (valid)
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+
     render(<Register onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
 
-    // Test username too short
+    // Test username too short - this triggers immediate validation (no API call)
     await user.type(usernameInput, "ab");
+    
     expect(
       screen.getByText("Username must be at least 3 characters")
     ).toBeInTheDocument();
 
-    // Test username becomes valid (covers deletion of error)
+    // Test username becomes valid - this will trigger async validation after 500ms
     await user.type(usernameInput, "c");
-    expect(
-      screen.queryByText("Username must be at least 3 characters")
-    ).not.toBeInTheDocument();
+    
+    // Wait for async validation to complete and clear the error
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "abc"
+      });
+    }, { timeout: 1000 });
+    
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Username must be at least 3 characters")
+      ).not.toBeInTheDocument();
+    });
   });
 
   test("validates email format and shows/hides error", async () => {
@@ -282,8 +344,8 @@ describe("Register Page", () => {
     });
 
     // Fill form with valid data but mismatched passwords
-    await user.type(usernameInput, "testuser");
-    await user.type(emailInput, "test@example.com");
+    await user.type(usernameInput, "exampleuser");
+    await user.type(emailInput, "example@example.com");
     await user.type(passwordInput, "password123");
     await user.type(confirmPasswordInput, "password123");
 
@@ -321,6 +383,13 @@ describe("Register Page", () => {
 
   test("handles API registration error", async () => {
     const user = userEvent.setup();
+    
+    // Mock username validation to pass
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+    
+    // Mock registration to fail
     (ApiService.auth.register as jest.Mock).mockRejectedValue({
       response: { data: { error: "Username already exists" } },
     });
@@ -335,10 +404,17 @@ describe("Register Page", () => {
       name: "Create Account",
     });
 
-    await user.type(usernameInput, "testuser");
-    await user.type(emailInput, "test@example.com");
+    await user.type(usernameInput, "exampleuser");
+    await user.type(emailInput, "example@example.com");
     await user.type(passwordInput, "password123");
     await user.type(confirmPasswordInput, "password123");
+
+    // Wait for username validation to complete (500ms debounce)
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "exampleuser"
+      });
+    }, { timeout: 1000 });
 
     fireEvent.click(submitButton);
 
@@ -351,6 +427,13 @@ describe("Register Page", () => {
 
   test("handles API error without response data", async () => {
     const user = userEvent.setup();
+    
+    // Mock username validation to pass
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+    
+    // Mock registration to fail with network error
     (ApiService.auth.register as jest.Mock).mockRejectedValue(new Error("Network error"));
 
     render(<Register onLogin={mockOnLogin} />);
@@ -363,10 +446,17 @@ describe("Register Page", () => {
       name: "Create Account",
     });
 
-    await user.type(usernameInput, "testuser");
-    await user.type(emailInput, "test@example.com");
+    await user.type(usernameInput, "exampleuser");
+    await user.type(emailInput, "example@example.com");
     await user.type(passwordInput, "password123");
     await user.type(confirmPasswordInput, "password123");
+
+    // Wait for username validation to complete (500ms debounce)
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "exampleuser"
+      });
+    }, { timeout: 1000 });
 
     fireEvent.click(submitButton);
 
@@ -398,7 +488,12 @@ describe("Register Page", () => {
   test("shows loading state during submission", async () => {
     const user = userEvent.setup();
 
-    // Mock a slow API response
+    // Mock username validation to pass quickly
+    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+      data: { valid: true, suggestions: [] }
+    });
+
+    // Mock a slow API response for registration
     (ApiService.auth.register as jest.Mock).mockImplementation(
       () =>
         new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
@@ -409,7 +504,7 @@ describe("Register Page", () => {
           setTimeout(
             () =>
               resolve({
-                data: { user: {}, access_token: "token" },
+                data: { user: { id: "1", username: "exampleuser", email: "example@example.com" }, access_token: "token" },
               }),
             100
           )
@@ -426,10 +521,17 @@ describe("Register Page", () => {
       name: "Create Account",
     });
 
-    await user.type(usernameInput, "testuser");
-    await user.type(emailInput, "test@example.com");
+    await user.type(usernameInput, "exampleuser");
+    await user.type(emailInput, "example@example.com");
     await user.type(passwordInput, "password123");
     await user.type(confirmPasswordInput, "password123");
+
+    // Wait for username validation to complete (500ms debounce)
+    await waitFor(() => {
+      expect(ApiService.auth.validateUsername).toHaveBeenCalledWith({
+        username: "exampleuser"
+      });
+    }, { timeout: 1000 });
 
     fireEvent.click(submitButton);
 

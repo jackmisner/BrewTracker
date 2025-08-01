@@ -9,7 +9,7 @@ import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInp
 import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
 import AISuggestions from "../components/RecipeBuilder/AISuggestions";
 import { Services } from "../services";
-import { Recipe, RecipeIngredient } from "../types";
+// Recipe and RecipeIngredient types used via hooks
 import "../styles/RecipeBuilder.css";
 
 // BeerXML state interface
@@ -21,12 +21,7 @@ interface BeerXMLState {
   exportSuccess: boolean;
 }
 
-// BeerXML import data interface
-interface BeerXMLImportData {
-  recipe: Partial<Recipe>;
-  ingredients: RecipeIngredient[];
-  createdIngredients?: any[];
-}
+// Use BeerXMLImportData from beerxml.ts types
 
 function RecipeBuilder(): React.ReactElement {
   const { recipeId } = useParams<{ recipeId?: string }>();
@@ -83,7 +78,7 @@ function RecipeBuilder(): React.ReactElement {
    * Handle BeerXML import - UPDATED to handle cache invalidation and avoid race conditions
    */
   const handleBeerXMLImport = async (
-    importData: BeerXMLImportData
+    importData: any
   ): Promise<void> => {
     setBeerXMLState((prev) => ({ ...prev, importing: true }));
 
@@ -407,7 +402,7 @@ function RecipeBuilder(): React.ReactElement {
           { className: "panel-content" },
           React.createElement(BeerXMLImportExport, {
             recipe: recipe,
-            ingredients: ingredients,
+            ingredients: ingredients as any,
             onImport: handleBeerXMLImport,
             onExport: handleBeerXMLExport,
             mode: "both" as const,

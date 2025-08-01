@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ApiService from "../services/api";
 import { User } from "../types";
 import GoogleSignInButton from "../components/GoogleSignInButton";
@@ -22,6 +22,12 @@ interface FieldErrors {
   confirmPassword?: string;
 }
 
+interface UsernameValidationState {
+  isValidating: boolean;
+  isValid: boolean | null;
+  suggestions: string[];
+}
+
 const Register: React.FC<RegisterProps> = ({ onLogin }) => {
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
@@ -32,6 +38,68 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
   const [error, setError] = useState<string>("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [usernameValidation, setUsernameValidation] = useState<UsernameValidationState>({
+    isValidating: false,
+    isValid: null,
+    suggestions: []
+  });
+
+  // Debounced username validation
+  const validateUsernameAsync = useCallback(
+    async (username: string): Promise<void> => {
+      if (!username || username.length < 3) {
+        setUsernameValidation({
+          isValidating: false,
+          isValid: null,
+          suggestions: []
+        });
+        return;
+      }
+
+      setUsernameValidation(prev => ({ ...prev, isValidating: true }));
+
+      try {
+        const response = await ApiService.auth.validateUsername({ username });
+        const { valid, error, suggestions = [] } = response?.data || {};
+        
+        setUsernameValidation({
+          isValidating: false,
+          isValid: valid,
+          suggestions
+        });
+
+        // Update field errors based on validation result
+        setFieldErrors(prevErrors => {
+          const errors = { ...prevErrors };
+          if (!valid && error) {
+            errors.username = error;
+          } else {
+            delete errors.username;
+          }
+          return errors;
+        });
+      } catch (err) {
+        setUsernameValidation({
+          isValidating: false,
+          isValid: false,
+          suggestions: []
+        });
+        console.error("Username validation failed:", err);
+      }
+    },
+    [] // No dependencies needed since we use functional updates
+  );
+
+  // Debounce username validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (formData.username && formData.username.length >= 3) {
+        validateUsernameAsync(formData.username);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.username, validateUsernameAsync]);
 
   const validateField = (name: keyof RegisterFormData, value: string): void => {
     const errors = { ...fieldErrors };
@@ -40,8 +108,14 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
       case "username":
         if (value.length < 3) {
           errors.username = "Username must be at least 3 characters";
+          setUsernameValidation({
+            isValidating: false,
+            isValid: null,
+            suggestions: []
+          });
         } else {
-          delete errors.username;
+          // Don't clear username errors here - let async validation handle it
+          // Async validation will run via useEffect
         }
         break;
       case "email":
@@ -95,11 +169,23 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
 
   const getInputClassName = (fieldName: keyof RegisterFormData): string => {
     let className = "auth-input";
-    if (fieldErrors[fieldName]) {
-      className += " invalid";
-    } else if (formData[fieldName] && !fieldErrors[fieldName]) {
-      className += " valid";
+    
+    if (fieldName === "username") {
+      if (usernameValidation.isValidating) {
+        className += " validating";
+      } else if (fieldErrors.username) {
+        className += " invalid";
+      } else if (usernameValidation.isValid && formData.username) {
+        className += " valid";
+      }
+    } else {
+      if (fieldErrors[fieldName]) {
+        className += " invalid";
+      } else if (formData[fieldName] && !fieldErrors[fieldName]) {
+        className += " valid";
+      }
     }
+    
     return className;
   };
 
@@ -245,9 +331,39 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
               placeholder="Choose a username"
               required
             />
-            {fieldErrors.username && (
+            {usernameValidation.isValidating && (
+              <div className="auth-field-info">
+                🔄 Checking username availability...
+              </div>
+            )}
+            {fieldErrors.username && !usernameValidation.isValidating && (
               <div data-testid="auth-field-error" className="auth-field-error">
                 {fieldErrors.username}
+              </div>
+            )}
+            {usernameValidation.isValid && formData.username && !usernameValidation.isValidating && (
+              <div className="auth-field-success">
+                ✅ Username is available
+              </div>
+            )}
+            {usernameValidation.suggestions.length > 0 && !usernameValidation.isValidating && (
+              <div className="auth-suggestions">
+                <div className="auth-suggestions-title">Suggestions:</div>
+                <div className="auth-suggestions-list">
+                  {usernameValidation.suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className="auth-suggestion-button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, username: suggestion }));
+                        setFieldErrors(prev => ({ ...prev, username: undefined }));
+                      }}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

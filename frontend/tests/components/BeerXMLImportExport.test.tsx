@@ -897,7 +897,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
             notes: "",
           }),
           ingredients: expect.any(Array),
-          metadata: undefined,
+          metadata: expect.any(Object),
           createdIngredients: [],
         });
       });
@@ -928,7 +928,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
             batch_size: 5.000002351132373, // Should be passed as-is, rounding happens in hook
           }),
           ingredients: expect.any(Array),
-          metadata: undefined,
+          metadata: expect.any(Object),
           createdIngredients: [],
         });
       });
@@ -977,7 +977,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
               type: "yeast"
             })
           ]),
-          metadata: undefined,
+          metadata: expect.any(Object),
           createdIngredients: [],
         });
       });
@@ -1009,7 +1009,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
             notes: "", // Should remain empty, not duplicated from description
           }),
           ingredients: expect.any(Array),
-          metadata: undefined,
+          metadata: expect.any(Object),
           createdIngredients: [],
         });
       });

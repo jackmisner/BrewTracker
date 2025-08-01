@@ -32,6 +32,16 @@ export interface RegisterResponse {
   user: User;
 }
 
+export interface ValidateUsernameRequest {
+  username: string;
+}
+
+export interface ValidateUsernameResponse {
+  valid: boolean;
+  error?: string;
+  suggestions?: string[];
+}
+
 export interface ProfileResponse {
   user: User;
 }
@@ -55,6 +65,7 @@ export interface ChangePasswordRequest {
 export interface DeleteAccountRequest {
   password: string;
   confirmation: string;
+  preserve_public_recipes?: boolean;
 }
 
 export interface UserSettingsResponse {

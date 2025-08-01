@@ -47,12 +47,20 @@ export interface CreateRecipeIngredientData {
 // Form data for adding ingredients to recipes
 export interface IngredientFormData {
   ingredient_id: string;
+  name: string;
+  type: IngredientType;
   amount: string;
   unit: string;
   use?: string;
   time?: number | string;
   alpha_acid?: string;
   color?: string;
+  potential?: string;
+  grain_type?: GrainType;
+  yeast_type?: YeastType;
+  attenuation?: string;
+  manufacturer?: string;
+  description?: string;
 }
 
 // Ingredients organized by type for UI
