@@ -163,16 +163,16 @@ def google_auth():
     # New user - create account
     username = GoogleOAuthService.generate_username_from_google_info(google_info)
 
-    # Get location preferences (you might want to enhance this)
-    preferred_units, default_batch_size = (
-        GoogleOAuthService.get_user_location_preferences(google_info)
-    )
+    # Get user location preferences from IP address (same logic as regular registration)
+    ip = get_ip()
+    geo = get_geo_info(ip)
+    use_metric = geo["country_code"] != "US"
 
-    # Create user settings
+    # Create user settings with IP-based defaults
     settings = UserSettings(
-        preferred_units=preferred_units,
-        default_batch_size=default_batch_size,
-        timezone="UTC",  # Default, user can change later
+        preferred_units="metric" if use_metric else "imperial",
+        default_batch_size=19.0 if use_metric else 5.0,
+        timezone=geo["timezone"],
     )
 
     # Create new user
