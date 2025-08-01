@@ -23,7 +23,7 @@ This repository contains two applications:
 - 🔌 A backend Flask API - Python-based server handling recipe calculations and data storage
 
 ```
-homebrew-tracker/
+BrewTracker/
 ├── backend/
 │   ├── app.py                                            # Flask application factory with auto-seeding, CORS, and blueprint registration
 │   ├── config.py                                         # Environment-specific configuration classes (development, testing, production)
@@ -59,6 +59,7 @@ homebrew-tracker/
 │   │   │       ├── AI_flowchart.png                      # Graphical representation of the AI recipe analysis flowchart (showcased in README)
 │   │   │       └── recipe_optimization.yaml              # Configuration file for recipe analysis flowchart. Defines all nodes and paths
 │   │   ├── attenuation_service.py                        # Service for collecting and analyzing real-world yeast attenuation data
+│   │   ├── google_oauth_service.py                       # Google OAuth verification service for BrewTracker
 │   │   ├── ingredient_lookup_service.py                  # Provides centralized ingredient search, matching, and substitution logic for the AI optimization system.
 │   │   └── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
 │   ├── tests/                                            # pytest test suite for backend functionality
@@ -83,6 +84,7 @@ homebrew-tracker/
 │   │   │   │   └── Layout.tsx                            # Layout component that provides a consistent page structure with a header, main content area, and footer
 │   │   │   ├── RecipeBuilder/                            # Complex recipe creation interface with real-time calculations, ingredient management, and AI suggestions
 │   │   │   ├── CompactRecipeCard.tsx                     # Unified recipe display component with SRM color swatches, metrics grid, and action filtering
+│   │   │   ├── GoogleSignInButton.tsx                    # FedCM-compatible Google Sign-In component with modern authentication support
 │   │   │   ├── RecipeActions.tsx                         # Action buttons for recipe operations with public recipe access control (edit, delete, clone, share)
 │   │   │   └── SearchableSelect.ts                       # Fuzzy search component with Fuse.js for intelligent ingredient matching and suggestions
 │   │   ├── contexts/
@@ -284,6 +286,7 @@ Add your Google OAuth credentials to both frontend and backend `.env` files:
 - **Account Linking**: Existing users can link their Google account to their local account
 - **Secure Authentication**: Server-side token verification with Google's API
 - **JWT Integration**: Google authentication integrates seamlessly with existing JWT tokens
+- **FedCM Compatibility**: Modern Google Sign-In implementation using Federated Credential Management (FedCM) APIs
 
 ### 📦 Database Setup
 
@@ -370,7 +373,7 @@ Visit `http://localhost:3000` to access the application.
 
 - 👥 User Experience
   - Secure JWT-based authentication with Google Sign-In support
-  - Google OAuth integration for seamless account creation and login
+  - Google OAuth integration for seamless account creation and login with FedCM compatibility
   - Account linking between local and Google accounts
   - Responsive design optimized for desktop and mobile
   - Real-time recipe calculations and validation
