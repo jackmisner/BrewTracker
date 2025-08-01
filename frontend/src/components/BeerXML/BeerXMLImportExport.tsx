@@ -1,36 +1,27 @@
 import React, { useState, useRef } from "react";
 import { Services } from "../../services";
 import IngredientMatchingReview from "./IngredientMatchingReview";
-import { Recipe } from "../../types";
+import { Recipe, Ingredient } from "../../types";
+import {
+  BeerXMLImportData,
+  BeerXMLMetadata,
+  BeerXMLExportResult,
+  BeerXMLImportState,
+  BeerXMLExportState
+} from "../../types/beerxml";
 import "../../styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
   recipe?: Recipe;
-  ingredients?: any[]; // TODO: Define proper ingredient array type
-  onImport?: (importData: {
-    recipe: Recipe;
-    ingredients: any[];
-    metadata: any;
-    createdIngredients: any[];
-  }) => Promise<void>;
-  onExport?: (exportResult: { success: boolean; filename: string }) => void;
+  ingredients?: Ingredient[];
+  onImport?: (importData: BeerXMLImportData) => Promise<void>;
+  onExport?: (exportResult: BeerXMLExportResult) => void;
   mode?: "import" | "export" | "both";
 }
 
-interface ImportState {
-  isImporting: boolean;
-  uploadedFile: File | null;
-  parsedRecipes: any[]; // TODO: Define proper parsed recipe type
-  selectedRecipe: any | null; // TODO: Define proper selected recipe type
-  matchingResults: any[];
-  showMatchingReview: boolean;
-  error: string | null;
-}
-
-interface ExportState {
-  isExporting: boolean;
-  error: string | null;
-}
+// Use the comprehensive state interfaces from beerxml.ts
+type ImportState = BeerXMLImportState;
+type ExportState = BeerXMLExportState;
 
 const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   recipe,
@@ -49,13 +40,17 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     selectedRecipe: null,
     matchingResults: [],
     showMatchingReview: false,
+    importProgress: 0,
     error: null,
+    warnings: [],
   });
 
   // Export state
   const [exportState, setExportState] = useState<ExportState>({
     isExporting: false,
+    exportProgress: 0,
     error: null,
+    lastExportResult: null,
   });
 
   /**
@@ -103,7 +98,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       );
 
       // Parse BeerXML using backend
-      const parsedRecipes = await Services.BeerXML.service.parseBeerXML(
+      const parsedRecipes: any[] = await Services.BeerXML.service.parseBeerXML(
         fileContent
       );
       setImportState((prev) => ({
@@ -135,8 +130,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     }));
 
     try {
-      const matchingResults = await Services.BeerXML.service.matchIngredients(
-        importState.selectedRecipe.ingredients
+      const matchingResults: any[] = await Services.BeerXML.service.matchIngredients(
+        (importState.selectedRecipe as any)?.ingredients || []
       );
 
       setImportState((prev) => ({
@@ -158,18 +153,18 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   /**
    * Complete the import process - UPDATED to handle new structure
    */
-  const completeImport = async (importResult: any): Promise<void> => {
+  const completeImport = async (importResult: BeerXMLImportData | { ingredients: Ingredient[]; createdIngredients: Ingredient[] }): Promise<void> => {
     if (!importState.selectedRecipe || !onImport) return;
 
     try {
       // Handle both old and new structure for backwards compatibility
-      const finalizedIngredients = importResult.ingredients || importResult;
-      const createdIngredients = importResult.createdIngredients || [];
+      const finalizedIngredients = 'ingredients' in importResult ? importResult.ingredients : importResult as any;
+      const createdIngredients = 'createdIngredients' in importResult ? importResult.createdIngredients : [];
 
       await onImport({
-        recipe: importState.selectedRecipe,
+        recipe: importState.selectedRecipe as Recipe,
         ingredients: finalizedIngredients,
-        metadata: importState.selectedRecipe.metadata,
+        metadata: (importState.selectedRecipe as any)?.metadata || {} as BeerXMLMetadata,
         createdIngredients: createdIngredients, // Pass created ingredients for cache update
       });
 
@@ -181,7 +176,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         selectedRecipe: null,
         matchingResults: [],
         showMatchingReview: false,
+        importProgress: 0,
         error: null,
+        warnings: [],
       });
 
       // Clear file input
@@ -249,7 +246,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       selectedRecipe: null,
       matchingResults: [],
       showMatchingReview: false,
+      importProgress: 0,
       error: null,
+      warnings: [],
     });
 
     if (fileInputRef.current) {
@@ -353,7 +352,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   <label>Select recipe to import:</label>
                   <select
                     value={importState.parsedRecipes.indexOf(
-                      importState.selectedRecipe
+                      importState.selectedRecipe || importState.parsedRecipes[0]
                     )}
                     onChange={(e) =>
                       setImportState((prev) => ({
@@ -366,8 +365,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   >
                     {importState.parsedRecipes.map((recipe, index) => (
                       <option key={index} value={index}>
-                        {recipe?.recipe?.name || "Unknown Recipe"} (
-                        {recipe?.ingredients?.length || 0} ingredients)
+                        {recipe?.name || "Unknown Recipe"} (
+                        {(recipe as any)?.ingredients?.length || 0} ingredients)
                       </option>
                     ))}
                   </select>
@@ -388,24 +387,24 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     <div className="detail-row">
                       <span className="label">Style:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.style || "Not specified"}
+                        {(importState.selectedRecipe as any)?.style || "Not specified"}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Batch Size:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.batch_size?.toFixed(0) ||
+                        {(importState.selectedRecipe as any)?.batch_size?.toFixed(0) ||
                           "N/A"}{" "}
-                        {importState.selectedRecipe?.batch_size_unit === "l"
+                        {(importState.selectedRecipe as any)?.batch_size_unit === "l"
                           ? "L"
-                          : importState.selectedRecipe?.batch_size_unit ||
+                          : (importState.selectedRecipe as any)?.batch_size_unit ||
                             "gal"}
                       </span>
                     </div>
                     <div className="detail-row">
                       <span className="label">Ingredients:</span>
                       <span className="value">
-                        {importState.selectedRecipe?.ingredients?.length || 0}
+                        {(importState.selectedRecipe as any)?.ingredients?.length || 0}
                       </span>
                     </div>
                   </div>
@@ -416,7 +415,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     <div className="ingredient-types">
                       {["grain", "hop", "yeast", "other"].map((type) => {
                         const count =
-                          importState.selectedRecipe?.ingredients?.filter(
+                          (importState.selectedRecipe as any)?.ingredients?.filter(
                             (ing: any) => ing.type === type
                           ).length || 0;
                         if (count === 0) return null;

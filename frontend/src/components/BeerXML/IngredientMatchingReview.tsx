@@ -1,47 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Services } from "../../services";
 import ApiService from "../../services/api";
-import { IngredientType, IngredientUnit } from "../../types";
+import { Ingredient, IngredientFormData } from "../../types";
+import {
+  IngredientMatchResult,
+  IngredientMatchingDecision
+} from "../../types/beerxml";
 import "../../styles/IngredientMatchingReview.css";
 
-interface MatchingResult {
-  imported: {
-    ingredient_id: string;
-    name: string;
-    type: IngredientType;
-    amount: number;
-    unit: IngredientUnit;
-    use?: string;
-    time?: number;
-    alpha_acid?: number;
-    color?: number;
-    attenuation?: number;
-  };
-  best_match?: {
-    ingredient: any; // TODO: Define proper ingredient type
-    confidence: number;
-  };
-  bestMatch?: {
-    ingredient: any; // TODO: Define proper ingredient type
-    confidence: number;
-  };
-  matches: Array<{
-    ingredient: any; // TODO: Define proper ingredient type
-    confidence: number;
-    reasons: string[];
-  }>;
-  confidence: number;
-  requiresNewIngredient?: boolean;
-  suggestedIngredientData?: any; // TODO: Define proper ingredient data type
-}
-
-interface Decision {
-  imported: MatchingResult["imported"];
-  action: "use_existing" | "create_new";
-  selectedMatch: any | null; // TODO: Define proper ingredient type
-  newIngredientData: any | null; // TODO: Define proper ingredient data type
-  confidence: number;
-}
+// Use types from beerxml.ts
+type MatchingResult = IngredientMatchResult;
+type Decision = IngredientMatchingDecision;
 
 interface ReviewState {
   currentIndex: number;
@@ -58,10 +27,7 @@ interface MatchingSummary {
 
 interface IngredientMatchingReviewProps {
   matchingResults: MatchingResult[];
-  onComplete: (result: {
-    ingredients: any[];
-    createdIngredients: any[];
-  }) => Promise<void>;
+  onComplete: (result: any) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -88,7 +54,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
         result.best_match || result.bestMatch ? "use_existing" : "create_new",
       selectedMatch:
         (result.best_match || result.bestMatch)?.ingredient || null,
-      newIngredientData: result.suggestedIngredientData,
+      newIngredientData: result.suggestedIngredientData || null,
       confidence: result.confidence,
     }));
 
@@ -106,7 +72,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
 
     setMatchingSummary(
       Services.BeerXML.ingredientMatching.getMatchingSummary(
-        normalizedResults as any
+        normalizedResults as any[]
       )
     );
   }, [matchingResults]);
@@ -116,8 +82,8 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
    */
   const updateDecision = (
     action: "use_existing" | "create_new",
-    selectedMatch: any = null,
-    newIngredientData: any = null
+    selectedMatch: Ingredient | null = null,
+    newIngredientData: IngredientFormData | null = null
   ): void => {
     setReviewState((prev) => ({
       ...prev,
@@ -166,9 +132,9 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     }));
 
     try {
-      const finalizedIngredients = [];
-      const createdIngredients: any[] = []; // Track newly created ingredients
-      const newIngredientCache = new Map<string, any>(); // Cache for created ingredients to prevent duplicates
+      const finalizedIngredients: any[] = [];
+      const createdIngredients: Ingredient[] = []; // Track newly created ingredients
+      const newIngredientCache = new Map<string, Ingredient>(); // Cache for created ingredients to prevent duplicates
 
       for (const decision of reviewState.decisions) {
         if (decision.action === "use_existing" && decision.selectedMatch) {
@@ -198,10 +164,10 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
             .toLowerCase()
             .trim()}-${decision.newIngredientData.type}`;
 
-          let newIngredient;
+          let newIngredient: Ingredient;
           if (newIngredientCache.has(dedupeKey)) {
             // Reuse already created ingredient
-            newIngredient = newIngredientCache.get(dedupeKey);
+            newIngredient = newIngredientCache.get(dedupeKey)!;
           } else {
             // Create new ingredient
             newIngredient = await createNewIngredient(
@@ -249,10 +215,10 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
   /**
    * Create new ingredient via API
    */
-  const createNewIngredient = async (ingredientData: any): Promise<any> => {
+  const createNewIngredient = async (ingredientData: IngredientFormData): Promise<Ingredient> => {
     try {
-      const response = await ApiService.ingredients.create(ingredientData);
-      return response.data;
+      const response = await ApiService.ingredients.create(ingredientData as any);
+      return response.data as unknown as Ingredient;
     } catch (error: any) {
       console.error("Error creating ingredient:", error);
       throw new Error(`Failed to create ingredient: ${ingredientData.name}`);

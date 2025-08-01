@@ -1,0 +1,44 @@
+[
+  {
+    "username": "Anonymous User",
+    "email": "anonymous@brewtracker.system",
+    "description": "System account for anonymous recipe attribution when users delete their accounts. Public recipes from deleted accounts are transferred to this user to maintain community access while protecting user privacy.",
+    "settings": {
+      "preferred_units": "imperial",
+      "default_batch_size": 5.0,
+      "timezone": "UTC",
+      "contribute_anonymous_data": false,
+      "share_yeast_performance": false,
+      "share_recipe_metrics": false,
+      "public_recipes_default": false
+    }
+  },
+  {
+    "username": "BrewTracker System",
+    "email": "system@brewtracker.system", 
+    "description": "System account for automated processes, system-generated content, and administrative functions. Used for recipes and data created by automated systems or migration processes.",
+    "settings": {
+      "preferred_units": "imperial",
+      "default_batch_size": 5.0,
+      "timezone": "UTC",
+      "contribute_anonymous_data": false,
+      "share_yeast_performance": false,
+      "share_recipe_metrics": false,
+      "public_recipes_default": false
+    }
+  },
+  {
+    "username": "Community",
+    "email": "community@brewtracker.system",
+    "description": "System account for community-contributed recipes, shared templates, and collaborative brewing content. Represents the collective brewing community rather than individual users.",
+    "settings": {
+      "preferred_units": "imperial",
+      "default_batch_size": 5.0,
+      "timezone": "UTC",
+      "contribute_anonymous_data": true,
+      "share_yeast_performance": true,
+      "share_recipe_metrics": true,
+      "public_recipes_default": true
+    }
+  }
+]

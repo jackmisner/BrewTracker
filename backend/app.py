@@ -9,7 +9,7 @@ from mongoengine import connect, disconnect
 from mongoengine.connection import ConnectionFailure, get_connection
 
 import config
-from models.mongo_models import BeerStyleGuide, Ingredient
+from models.mongo_models import BeerStyleGuide, Ingredient, User
 from routes.ai_routes import ai_bp
 from routes.attenuation_analytics import attenuation_analytics_bp
 from routes.auth import auth_bp
@@ -165,6 +165,23 @@ def create_app(config_class=None):
             else:
                 print(
                     "Beer styles already exist in the database. Skipping beer style seed operation."
+                )
+
+            # Seed system users
+            if User.objects(email__endswith="@brewtracker.system").count() == 0:
+                print(
+                    "No system users found in database. Running system users seed operation..."
+                )
+                from seeds.seed_system_users import seed_system_users
+
+                json_file_path = Path(__file__).parent / "data" / "system_users.json"
+                mongo_uri = os.environ.get(
+                    "MONGO_URI", "mongodb://localhost:27017/brewtracker"
+                )
+                seed_system_users(mongo_uri, json_file_path)
+            else:
+                print(
+                    "System users already exist in the database. Skipping system users seed operation."
                 )
 
         except Exception as e:

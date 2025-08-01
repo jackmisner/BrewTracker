@@ -388,6 +388,65 @@
   font-size: 0.75rem;
 }
 
+/* Username validation states */
+.auth-input.validating {
+  border-color: #f59e0b; /* amber-500 */
+  position: relative;
+}
+
+.auth-input.validating:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.auth-field-info {
+  color: #f59e0b; /* amber-500 */
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Username suggestions */
+.auth-suggestions {
+  margin-top: 0.5rem;
+}
+
+.auth-suggestions-title {
+  color: #6b7280; /* gray-500 */
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.auth-suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.auth-suggestion-button {
+  background-color: #f3f4f6; /* gray-100 */
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #374151; /* gray-700 */
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.auth-suggestion-button:hover {
+  background-color: #e5e7eb; /* gray-200 */
+  border-color: #9ca3af; /* gray-400 */
+}
+
+.auth-suggestion-button:focus {
+  outline: none;
+  border-color: #d97706; /* amber-600 */
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.1);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .auth-wrapper {

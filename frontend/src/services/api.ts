@@ -10,6 +10,8 @@ import {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ValidateUsernameRequest,
+  ValidateUsernameResponse,
   ProfileResponse,
   GoogleAuthRequest,
   GoogleAuthResponse,
@@ -156,6 +158,11 @@ const ApiService = {
 
     getProfile: (): Promise<AxiosResponse<ProfileResponse>> =>
       api.get("/auth/profile"),
+
+    validateUsername: (
+      data: ValidateUsernameRequest
+    ): Promise<AxiosResponse<ValidateUsernameResponse>> =>
+      api.post("/auth/validate-username", data),
   },
 
   // User settings endpoints

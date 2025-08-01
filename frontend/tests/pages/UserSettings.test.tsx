@@ -833,6 +833,7 @@ describe("UserSettings", () => {
         expect(UserSettingsService.deleteAccount).toHaveBeenCalledWith({
           password: "password",
           confirmation: "DELETE",
+          preserve_public_recipes: true,
         });
       });
 

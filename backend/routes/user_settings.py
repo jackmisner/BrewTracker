@@ -5,6 +5,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash
 
 from models.mongo_models import User
+from services.user_deletion_service import UserDeletionService
 
 user_settings_bp = Blueprint("user_settings", __name__)
 
@@ -156,6 +157,9 @@ def delete_account():
     data = request.get_json()
     password = data.get("password")
     confirmation = data.get("confirmation")
+    preserve_public_recipes = data.get(
+        "preserve_public_recipes", True
+    )  # Default to preserving
 
     if not password:
         return jsonify({"error": "Password is required"}), 400
@@ -168,18 +172,55 @@ def delete_account():
         return jsonify({"error": "Password is incorrect"}), 400
 
     try:
-        # TODO: Also delete user's recipes, brew sessions, etc.
-        # This should be implemented carefully with proper cascade deletion
+        # Validate deletion preconditions
+        validation = UserDeletionService.validate_deletion_preconditions(user_id)
+        if not validation["valid"]:
+            return jsonify({"error": validation["error"]}), 400
 
-        # For now, just deactivate the account
-        user.is_active = False
-        user.username = f"deleted_user_{user.id}"
-        user.email = f"deleted_{user.id}@example.com"
-        user.save()
+        # Get preview of what will be deleted
+        preview = UserDeletionService.get_deletion_impact_preview(
+            user_id, preserve_public_recipes
+        )
+        if not preview["valid"]:
+            return jsonify({"error": preview["error"]}), 400
 
-        return jsonify({"message": "Account deactivated successfully"}), 200
+        # Perform the deletion
+        result = UserDeletionService.delete_user_data(user_id, preserve_public_recipes)
+        if not result["success"]:
+            return jsonify({"error": result["error"]}), 400
+
+        return (
+            jsonify(
+                {
+                    "message": "Account deleted successfully",
+                    "data_summary": result["data_summary"],
+                    "actions_taken": result["actions_taken"],
+                    "preserve_public_recipes": preserve_public_recipes,
+                }
+            ),
+            200,
+        )
+
     except Exception as e:
         return jsonify({"error": f"Failed to delete account: {str(e)}"}), 400
+
+
+@user_settings_bp.route("/delete-account/preview", methods=["POST"])
+@jwt_required()
+def get_delete_account_preview():
+    """Get a preview of what will be deleted when account is deleted"""
+    user_id = get_jwt_identity()
+
+    data = request.get_json()
+    preserve_public_recipes = data.get("preserve_public_recipes", True)
+
+    try:
+        preview = UserDeletionService.get_deletion_impact_preview(
+            user_id, preserve_public_recipes
+        )
+        return jsonify(preview), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to get deletion preview: {str(e)}"}), 400
 
 
 @user_settings_bp.route("/preferences/units", methods=["GET"])
