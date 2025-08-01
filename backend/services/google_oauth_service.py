@@ -1,6 +1,6 @@
 """Google OAuth verification service for BrewTracker"""
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 import requests
 from flask import current_app
@@ -96,29 +96,3 @@ class GoogleOAuthService:
             counter += 1
 
         return username
-
-    @staticmethod
-    def get_user_location_preferences(google_info: Dict) -> Tuple[str, float]:
-        """
-        Determine user's location preferences from Google info
-
-        Args:
-            google_info: Dictionary with Google user data
-
-        Returns:
-            Tuple of (unit_system, default_batch_size)
-        """
-        # Default to imperial units and 5 gallon batches (US default)
-        default_units = "imperial"
-        default_batch_size = 5.0
-
-        # In a real implementation, you might use Google's geolocation API
-        # or ask the user for their location preferences
-        # For now, we'll use the same logic as the IP-based detection
-
-        # You could enhance this by:
-        # 1. Using Google's geolocation data if available
-        # 2. Looking at the user's locale information
-        # 3. Asking the user during the signup flow
-
-        return default_units, default_batch_size
