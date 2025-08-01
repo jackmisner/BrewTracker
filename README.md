@@ -27,7 +27,7 @@ BrewTracker/
 ├── backend/
 │   ├── app.py                                            # Flask application factory with auto-seeding, CORS, and blueprint registration
 │   ├── config.py                                         # Environment-specific configuration classes (development, testing, production)
-│   ├── data/                                             # Static JSON data files for ingredients and beer style guides
+│   ├── data/                                             # Static JSON data files for ingredients, beer style guides, and system users
 │   ├── models/                                           # Database models
 │   │   ├── __init__.py
 │   │   └── mongo_models.py                               # MongoEngine ODM models with validation, relationships, and business logic
@@ -41,10 +41,11 @@ BrewTracker/
 │   │   ├── brew_sessions.py                              # Brew session tracking and fermentation management endpoints
 │   │   ├── ingredients.py                                # Ingredient CRUD operations, search endpoints, and yeast attenuation analytics
 │   │   ├── recipes.py                                    # Recipe CRUD operations and calculation endpoints
-│   │   └── user_settings.py                              # User preferences and account management endpoints
+│   │   └── user_settings.py                              # User preferences, account management, and secure account deletion endpoints
 │   ├── seeds/                                            # Database seeding scripts
 │   │   ├── seed_ingredients.py                           # Seeds ingredients from JSON data
-│   │   └── seed_beer_styles.py                           # Seeds beer style guides from JSON data
+│   │   ├── seed_beer_styles.py                           # Seeds beer style guides from JSON data
+│   │   └── seed_system_users.py                          # Seeds system users for account deletion and community features
 │   ├── services/                                         # Business logic layer
 │   │   ├── __init__.py
 │   │   ├── ai/                                           # AI recipe analysis and optimization services
@@ -61,7 +62,8 @@ BrewTracker/
 │   │   ├── attenuation_service.py                        # Service for collecting and analyzing real-world yeast attenuation data
 │   │   ├── google_oauth_service.py                       # Google OAuth verification service for BrewTracker
 │   │   ├── ingredient_lookup_service.py                  # Provides centralized ingredient search, matching, and substitution logic for the AI optimization system.
-│   │   └── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
+│   │   ├── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
+│   │   └── user_deletion_service.py                      # Comprehensive user account deletion with data preservation options
 │   ├── tests/                                            # pytest test suite for backend functionality
 │   ├── utils/                                            # Utility functions
 │   │   ├── __init__.py
@@ -106,10 +108,10 @@ BrewTracker/
 │   │   │   ├── PrivacyPolicy.tsx                         # Privacy Policy for BrewTracker
 │   │   │   ├── PublicRecipes.tsx                         # Community recipe sharing with unified design, search, sorting, style filtering, and access control
 │   │   │   ├── RecipeBuilder.tsx                         # Create and edit recipes with ingredient management
-│   │   │   ├── Register.tsx                              # User registration page with account creation form
+│   │   │   ├── Register.tsx                              # User registration page with real-time username validation and account creation form
 │   │   │   ├── ReportBug.tsx                             # A form for reporting bugs in BrewTracker which opens a pre-filled GitHub issue creation page in a new tab upon submission
 │   │   │   ├── TermsOfService.tsx                        # Terms of Service for BrewTracker
-│   │   │   ├── UserSettings.tsx                          # User preferences for units, account details, and application settings
+│   │   │   ├── UserSettings.tsx                          # User preferences, account management, and secure account deletion with data preservation options
 │   │   │   └── ViewRecipe.tsx                            # Detailed recipe view with calculations, brew sessions, and sharing options
 │   │   ├── services/                                     # TypeScript service layer for API communication and business logic
 │   │   │   ├── api.ts                                    # Low-level HTTP client with authentication and error handling
@@ -136,6 +138,7 @@ BrewTracker/
 │   │   ├── types/                                        # Comprehensive TypeScript type definitions for BrewTracker
 │   │   │   ├── api.ts                                    # API request/response interface definitions
 │   │   │   ├── beer-styles.ts                            # Beer style guide and analysis type definitions
+│   │   │   ├── beerxml.ts                                # Comprehensive BeerXML format handling and ingredient matching type definitions
 │   │   │   ├── brew-session.ts                           # Brew session and fermentation tracking types
 │   │   │   ├── common.ts                                 # Shared utility types and common interfaces
 │   │   │   ├── globals.d.ts                              # Global TypeScript declarations and module augmentations
@@ -297,6 +300,7 @@ When you first start the application:
 2. The application will check if ingredient data exists
 3. If no ingredients are found, it will automatically seed the database with initial ingredient data from `backend/data/brewtracker.ingredients.json` using `backend/seeds/seed_ingredients.py`
 4. Similarly, beer style guides will be seeded from `backend/data/beer_style_guides.json` using `backend/seeds/seed_beer_styles.py`
+5. System users (Anonymous User, BrewTracker System, Community) will be seeded from `backend/data/system_users.json` using `backend/seeds/seed_system_users.py` to support account deletion and community features
 
 To manually verify your MongoDB setup:
 
@@ -375,6 +379,8 @@ Visit `http://localhost:3000` to access the application.
   - Secure JWT-based authentication with Google Sign-In support
   - Google OAuth integration for seamless account creation and login with FedCM compatibility
   - Account linking between local and Google accounts
+  - Real-time username validation with availability checking and intelligent suggestions
+  - Secure account deletion with data preservation options for community contributions
   - Responsive design optimized for desktop and mobile
   - Real-time recipe calculations and validation
   - Comprehensive search with Fuse.js fuzzy matching
@@ -425,6 +431,31 @@ The system includes stringent quality checks:
 - ⚖️ **Base Malt Requirements**: Ensures base malts constitute ≥55% of grain bill
 - 🎯 **Conservative Adjustments**: Prefers safe, proven brewing techniques over aggressive changes
 
+## 🔐 System Users Architecture
+
+BrewTracker implements a sophisticated system users architecture to handle account deletion while preserving community contributions. This ensures that when users delete their accounts, valuable public recipes remain accessible to the brewing community.
+
+### System User Types
+
+- **Anonymous User** (`anonymous@brewtracker.system`): Receives public recipes from deleted accounts to maintain community access while protecting user privacy
+- **BrewTracker System** (`system@brewtracker.system`): Handles automated processes, system-generated content, and administrative functions
+- **Community** (`community@brewtracker.system`): Represents community-contributed recipes, shared templates, and collaborative brewing content
+
+### Account Deletion Features
+
+- **Data Preservation Choice**: Users can choose to preserve public recipes for the community or delete everything
+- **Secure Deletion Process**: Multi-step confirmation with password verification and "DELETE" confirmation
+- **Attribution Transfer**: Public recipes are transparently transferred to "Anonymous User" with proper attribution
+- **Complete Privacy**: All private data, personal recipes, and brew sessions are permanently deleted
+- **System Protection**: System users cannot be deleted, ensuring platform integrity
+
+### Technical Implementation
+
+- **Automatic Seeding**: System users are automatically created from `backend/data/system_users.json` on first run
+- **Service Integration**: `UserDeletionService` handles comprehensive account deletion with data preservation options
+- **Database Integrity**: Validates system user existence before allowing account deletions
+- **Audit Logging**: All deletion operations are logged for security and compliance purposes
+
 ## 💻 Tech Stack
 
 - Frontend:
@@ -446,8 +477,8 @@ The system includes stringent quality checks:
 
 ### Test Coverage Overview
 
-- **Frontend**: 1,671 tests with Jest and React Testing Library
-- **Backend**: 441 tests with pytest and mongomock
+- **Frontend**: 1,849 tests with Jest and React Testing Library
+- **Backend**: 447 tests with pytest and mongomock
 - **Coverage Target**: 70% minimum for both frontend and backend
 - **Total Test Suite**: Comprehensive end-to-end testing including component, service, and integration tests
 
@@ -456,7 +487,7 @@ The system includes stringent quality checks:
 ```bash
 cd frontend
 
-# Run all tests (1,671 tests)
+# Run all tests (1,849 tests)
 npm test
 
 # Run tests with coverage reporting
@@ -475,7 +506,7 @@ npm test -- --testPathPattern=CompactRecipeCard
 cd backend
 source venv/bin/activate
 
-# Run all tests (441 tests)
+# Run all tests (447 tests)
 pytest
 
 # Run tests with coverage reporting
