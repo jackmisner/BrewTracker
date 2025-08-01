@@ -1,7 +1,7 @@
 import React from "react";
 
 const TermsOfService: React.FC = () => {
-  const lastUpdated = "January 2025";
+  const lastUpdated = "July 2025";
 
   return (
     <div className="container">
