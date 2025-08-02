@@ -1,5 +1,6 @@
-// hooks/useRecipeBuilder.ts
-import { useState, useEffect, useCallback, useRef } from "react";
+// hooks/useRecipeBuilderMinimal.ts
+// Minimal working version with useReducer for core operations
+import { useReducer, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "../services";
 import { useUnits } from "../contexts/UnitContext";
@@ -17,28 +18,12 @@ import {
   RecipeAnalysis,
 } from "../types";
 import { convertUnit } from "../utils/formatUtils";
+import {
+  recipeBuilderReducer,
+  createInitialState,
+} from "../reducers";
 
-// Hook state interface
-interface UseRecipeBuilderState {
-  // Core data
-  recipe: Recipe;
-  ingredients: RecipeIngredient[];
-  availableIngredients: IngredientsByType;
-  metrics: RecipeMetrics;
-
-  // UI state
-  loading: boolean;
-  saving: boolean;
-  error: string | null;
-  hasUnsavedChanges: boolean;
-
-  // Operation flags
-  calculatingMetrics: boolean;
-  addingIngredient: boolean;
-  updatingIngredient: boolean;
-}
-
-// Return interface for the hook
+// Return interface for the hook (same API as before)
 interface UseRecipeBuilderReturn {
   // Core data
   recipe: Recipe;
@@ -101,7 +86,7 @@ interface UseRecipeBuilderReturn {
 }
 
 /**
- * Unified hook for recipe builder functionality
+ * Unified hook for recipe builder functionality using useReducer
  * Orchestrates all recipe building operations using the service layer
  */
 export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
@@ -109,87 +94,26 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   const originalRecipeRef = useRef<Recipe | null>(null);
   const { unitSystem, loading: unitContextLoading } = useUnits();
 
-  // Consolidated state
-  const [state, setState] = useState<UseRecipeBuilderState>({
-    // Core data
-    recipe: {
-      id: "",
-      recipe_id: "",
-      name: "",
-      style: "",
-      batch_size: 0, // Use 0 as placeholder for new recipes (will use placeholders in UI)
-      batch_size_unit: (unitSystem === "metric" ? "l" : "gal") as BatchSizeUnit, // Set unit preference but no default size
-      description: "",
-      boil_time: undefined, // Don't set default values for new recipes
-      efficiency: undefined, // Don't set default values for new recipes
-      mash_temperature: undefined, // Don't set default values for new recipes
-      mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit preference
-      is_public: false,
-      notes: "",
-      ingredients: [],
-      created_at: "",
-      updated_at: "",
-    } as Recipe,
-    ingredients: [],
-    availableIngredients: {
-      grain: [],
-      hop: [],
-      yeast: [],
-      other: [],
-    },
-    metrics: {
-      og: 1.0,
-      fg: 1.0,
-      abv: 0.0,
-      ibu: 0,
-      srm: 0,
-    },
-
-    // UI state
-    loading: true,
-    saving: false,
-    error: null,
-    hasUnsavedChanges: false,
-
-    // Operation flags
-    calculatingMetrics: false,
-    addingIngredient: false,
-    updatingIngredient: false,
-  });
-
-  // Beer style analysis state
-  const [styleAnalysis, setStyleAnalysis] = useState<StyleAnalysis | null>(
-    null
-  );
-  const [styleSuggestions, setStyleSuggestions] = useState<StyleSuggestion[]>(
-    []
+  // Initialize state with reducer
+  const [state, dispatch] = useReducer(
+    recipeBuilderReducer,
+    createInitialState(unitSystem)
   );
 
   // Initialize data on mount
   useEffect(() => {
-    // Each effect run gets its own mounted flag
     let effectMounted = true;
 
     async function initialize(): Promise<void> {
       try {
-        if (!effectMounted) {
+        if (!effectMounted || unitContextLoading) {
           return;
         }
 
-        // Wait for unit context to finish loading before initializing recipe
-        if (unitContextLoading) {
-          return;
-        }
-
-        setState((prev) => ({
-          ...prev,
-          loading: true,
-          error: null,
-        }));
+        dispatch({ type: 'INITIALIZE_START', payload: { unitSystem } });
 
         // Load available ingredients first
-        const availableIngredients =
-          await Services.ingredient.fetchIngredients();
+        const availableIngredients = await Services.ingredient.fetchIngredients();
 
         if (!effectMounted) {
           return;
@@ -201,16 +125,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           recipe_id: "",
           name: "",
           style: "",
-          batch_size: unitSystem === "metric" ? 19 : 5, // Use 19L for metric, 5 gal for imperial
-          batch_size_unit: (unitSystem === "metric"
-            ? "l"
-            : "gal") as BatchSizeUnit, // Add unit field
+          batch_size: unitSystem === "metric" ? 19 : 5,
+          batch_size_unit: (unitSystem === "metric" ? "l" : "gal") as BatchSizeUnit,
           description: "",
           boil_time: 60,
           efficiency: 75,
-          // Initialize mash temperature defaults based on unit system
-          mash_temperature: unitSystem === "metric" ? 67 : 152, // 67°C for metric, 152°F for imperial
-          mash_temp_unit: unitSystem === "metric" ? "C" : "F", // Set appropriate unit
+          mash_temperature: unitSystem === "metric" ? 67 : 152,
+          mash_temp_unit: unitSystem === "metric" ? "C" : "F",
           is_public: false,
           notes: "",
           ingredients: [],
@@ -237,10 +158,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           recipe = recipeData as Recipe;
           // Ensure batch_size_unit is set for existing recipes
           if (!recipe.batch_size_unit) {
-            // Infer from batch size value - if it's around 19, it's probably metric
-            recipe.batch_size_unit = (
-              recipe.batch_size > 10 ? "l" : "gal"
-            ) as BatchSizeUnit;
+            recipe.batch_size_unit = (recipe.batch_size > 10 ? "l" : "gal") as BatchSizeUnit;
           }
 
           // Convert mash temperature to user's preferred units if needed
@@ -248,17 +166,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             const userPreferredUnit = unitSystem === "metric" ? "C" : "F";
 
             if (recipe.mash_temp_unit !== userPreferredUnit) {
-              // Convert temperature to user's preferred unit
               if (userPreferredUnit === "C" && recipe.mash_temp_unit === "F") {
-                // Convert F to C using formatUtils
                 const converted = convertUnit(recipe.mash_temperature, "f", "c");
                 recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "C";
-              } else if (
-                userPreferredUnit === "F" &&
-                recipe.mash_temp_unit === "C"
-              ) {
-                // Convert C to F using formatUtils
+              } else if (userPreferredUnit === "F" && recipe.mash_temp_unit === "C") {
                 const converted = convertUnit(recipe.mash_temperature, "c", "f");
                 recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "F";
@@ -266,18 +178,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             }
           }
           ingredients = recipeData.ingredients || [];
-          originalRecipeRef.current = recipeData as Recipe; // Store original for change detection
+          originalRecipeRef.current = recipeData as Recipe;
         }
 
         // Calculate initial metrics
-        // If editing an existing recipe, try to use existing estimated metrics first
         if (
           recipeId &&
-          (recipe.estimated_og ||
-            recipe.estimated_fg ||
-            recipe.estimated_abv ||
-            recipe.estimated_ibu ||
-            recipe.estimated_srm)
+          (recipe.estimated_og || recipe.estimated_fg || recipe.estimated_abv || recipe.estimated_ibu || recipe.estimated_srm)
         ) {
           metrics = {
             og: recipe.estimated_og || 1.0,
@@ -287,7 +194,6 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             srm: recipe.estimated_srm || 0,
           };
         } else if (ingredients.length === 0) {
-          // For new recipes with no ingredients, use default values
           metrics = {
             og: 1.0,
             fg: 1.0,
@@ -296,23 +202,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             srm: 0,
           };
         } else {
-          // Calculate metrics from ingredients
           try {
-            // Add timeout to metrics calculation
-            const metricsPromise = Services.metrics.calculateMetrics(
-              recipe,
-              ingredients
-            );
+            const metricsPromise = Services.metrics.calculateMetrics(recipe, ingredients);
             const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(
-                () => reject(new Error("Metrics calculation timeout")),
-                10000
-              )
+              setTimeout(() => reject(new Error("Metrics calculation timeout")), 10000)
             );
-
             metrics = await Promise.race([metricsPromise, timeoutPromise]);
           } catch (metricsError) {
-            // Use default metrics if calculation fails
             metrics = {
               og: 1.0,
               fg: 1.0,
@@ -327,48 +223,38 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           return;
         }
 
-        setState((prev) => ({
-          ...prev,
-          recipe,
-          ingredients: Services.ingredient.sortIngredients(ingredients),
-          availableIngredients,
-          metrics,
-          loading: false,
-          hasUnsavedChanges: false,
-        }));
+        dispatch({
+          type: 'INITIALIZE_SUCCESS',
+          payload: {
+            recipe,
+            ingredients: Services.ingredient.sortIngredients(ingredients),
+            availableIngredients,
+            metrics,
+          },
+        });
       } catch (error) {
-        console.error("CATCH BLOCK: Error initializing recipe builder:", error);
-        console.error("Error stack:", (error as Error).stack);
+        console.error("Error initializing recipe builder:", error);
         if (effectMounted) {
-          setState((prev) => ({
-            ...prev,
-            error:
-              (error as Error).message || "Failed to initialize recipe builder",
-            loading: false,
-          }));
+          dispatch({
+            type: 'INITIALIZE_ERROR',
+            payload: (error as Error).message || "Failed to initialize recipe builder",
+          });
         }
       }
     }
 
     initialize();
 
-    // Cleanup function
     return () => {
       effectMounted = false;
       Services.metrics.cancelCalculation("recipe-builder");
     };
-  }, [recipeId, unitSystem, unitContextLoading]); // Add unitContextLoading to dependencies
+  }, [recipeId, unitSystem, unitContextLoading]);
 
   // Update recipe field
   const updateRecipe = useCallback(
     async (field: keyof Recipe, value: any): Promise<void> => {
-      const updatedRecipe = { ...state.recipe, [field]: value };
-
-      setState((prev) => ({
-        ...prev,
-        recipe: updatedRecipe,
-        hasUnsavedChanges: true,
-      }));
+      dispatch({ type: 'UPDATE_RECIPE_FIELD', payload: { field, value } });
 
       // Recalculate metrics if field affects calculations
       const calculationFields: (keyof Recipe)[] = [
@@ -381,26 +267,22 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       ];
       if (calculationFields.includes(field)) {
         try {
-          setState((prev) => ({ ...prev, calculatingMetrics: true }));
+          dispatch({ type: 'CALCULATE_METRICS_START' });
 
+          const updatedRecipe = { ...state.recipe, [field]: value };
           const metrics = await Services.metrics.calculateMetricsDebounced(
             "recipe-builder",
             updatedRecipe,
             state.ingredients
           );
 
-          setState((prev) => ({
-            ...prev,
-            metrics,
-            calculatingMetrics: false,
-          }));
+          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
         } catch (error) {
           console.error("Error recalculating metrics:", error);
-          setState((prev) => ({
-            ...prev,
-            calculatingMetrics: false,
-            error: "Failed to recalculate metrics",
-          }));
+          dispatch({ 
+            type: 'CALCULATE_METRICS_ERROR', 
+            payload: "Failed to recalculate metrics" 
+          });
         }
       }
     },
@@ -413,19 +295,8 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       updates: Array<{ field: keyof Recipe; value: any }>
     ): Promise<void> => {
       try {
-        setState((prev) => ({ ...prev, calculatingMetrics: true }));
-
-        // Apply all updates to create the final recipe
-        let updatedRecipe = { ...state.recipe };
-        for (const update of updates) {
-          updatedRecipe = { ...updatedRecipe, [update.field]: update.value };
-        }
-
-        setState((prev) => ({
-          ...prev,
-          recipe: updatedRecipe,
-          hasUnsavedChanges: true,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_START' });
+        dispatch({ type: 'BULK_UPDATE_RECIPE', payload: updates });
 
         // Check if any field affects calculations
         const calculationFields: (keyof Recipe)[] = [
@@ -442,30 +313,31 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         );
 
         if (needsRecalculation) {
+          // Apply all updates to create the final recipe for calculation
+          let updatedRecipe = { ...state.recipe };
+          for (const update of updates) {
+            updatedRecipe = { ...updatedRecipe, [update.field]: update.value };
+          }
+
           const metrics = await Services.metrics.calculateMetricsDebounced(
             "recipe-builder",
             updatedRecipe,
             state.ingredients
           );
 
-          setState((prev) => ({
-            ...prev,
-            metrics,
-            calculatingMetrics: false,
-          }));
+          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
         } else {
-          setState((prev) => ({ ...prev, calculatingMetrics: false }));
+          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: state.metrics });
         }
       } catch (error) {
         console.error("Error bulk updating recipe:", error);
-        setState((prev) => ({
-          ...prev,
-          calculatingMetrics: false,
-          error: "Failed to update recipe",
-        }));
+        dispatch({ 
+          type: 'CALCULATE_METRICS_ERROR', 
+          payload: "Failed to update recipe" 
+        });
       }
     },
-    [state.recipe, state.ingredients]
+    [state.recipe, state.ingredients, state.metrics]
   );
 
   // Add ingredient
@@ -475,11 +347,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       ingredientData: CreateRecipeIngredientData
     ): Promise<void> => {
       try {
-        setState((prev) => ({
-          ...prev,
-          addingIngredient: true,
-          error: null,
-        }));
+        dispatch({ type: 'ADD_INGREDIENT_START' });
 
         // Validate ingredient data
         const validation = Services.ingredient.validateIngredientData(
@@ -498,17 +366,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         );
 
         const updatedIngredients = [...state.ingredients, newIngredient];
-        const sortedIngredients =
-          Services.ingredient.sortIngredients(updatedIngredients);
+        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
 
-        // Update state immediately for better UX
-        setState((prev) => ({
-          ...prev,
-          ingredients: sortedIngredients,
-          hasUnsavedChanges: true,
-          addingIngredient: false,
-          calculatingMetrics: true,
-        }));
+        dispatch({ 
+          type: 'ADD_INGREDIENT_SUCCESS', 
+          payload: { ingredient: newIngredient, sortedIngredients } 
+        });
 
         // Recalculate metrics
         const metrics = await Services.metrics.calculateMetricsDebounced(
@@ -517,19 +380,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
         console.error("Error adding ingredient:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to add ingredient",
-          addingIngredient: false,
-          calculatingMetrics: false,
-        }));
+        dispatch({ 
+          type: 'ADD_INGREDIENT_ERROR', 
+          payload: (error as Error).message || "Failed to add ingredient" 
+        });
       }
     },
     [state.recipe, state.ingredients, state.availableIngredients]
@@ -542,92 +399,57 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       updatedIngredientData: Partial<RecipeIngredient>
     ): Promise<void> => {
       try {
-        // Use functional setState to access current state and avoid stale closures
-        let currentIngredients: RecipeIngredient[] = [];
-        let currentRecipe: Recipe = state.recipe;
-        let existingIngredient: RecipeIngredient | undefined;
+        dispatch({ type: 'UPDATE_INGREDIENT_START' });
 
-        setState((prev) => {
-          currentIngredients = prev.ingredients;
-          currentRecipe = prev.recipe;
-
-          // Find the ingredient to update using current state
-          existingIngredient = currentIngredients.find(
-            (ing) => ing.id === ingredientId
-          );
-
-          return {
-            ...prev,
-            updatingIngredient: true,
-            error: null,
-          };
-        });
-
+        // Find the ingredient to update
+        const existingIngredient = state.ingredients.find(
+          (ing) => ing.id === ingredientId
+        );
         if (!existingIngredient) {
           throw new Error("Ingredient not found");
         }
 
-        // Validate the updated ingredient data
+        // Validate ingredient data
         const validation = Services.ingredient.validateIngredientData(
-          existingIngredient.type,
-          {
-            ingredient_id: updatedIngredientData.ingredient_id,
-            amount: updatedIngredientData.amount,
-            unit: updatedIngredientData.unit,
-            use: updatedIngredientData.use,
-            time: updatedIngredientData.time,
-            alpha_acid: updatedIngredientData.alpha_acid,
-            color: updatedIngredientData.color,
-          } as CreateRecipeIngredientData
+          existingIngredient.type as IngredientType,
+          updatedIngredientData as CreateRecipeIngredientData
         );
-
         if (!validation.isValid) {
-          throw new Error(validation.errors.join(", "));
+          throw new Error(
+            `Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`
+          );
         }
 
-        // Update the ingredient in the list using current ingredients
-        const updatedIngredients = currentIngredients.map((ing) =>
-          ing.id === ingredientId ? { ...ing, ...updatedIngredientData } : ing
+        // Update the ingredient
+        const updatedIngredient = { ...existingIngredient, ...updatedIngredientData };
+        const updatedIngredients = state.ingredients.map((ing) =>
+          ing.id === ingredientId ? updatedIngredient : ing
         );
+        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
 
-        const sortedIngredients =
-          Services.ingredient.sortIngredients(updatedIngredients);
-
-        // Update state immediately for better UX
-        setState((prev) => ({
-          ...prev,
-          ingredients: sortedIngredients,
-          hasUnsavedChanges: true,
-          updatingIngredient: false,
-          calculatingMetrics: true,
-        }));
+        dispatch({ 
+          type: 'UPDATE_INGREDIENT_SUCCESS', 
+          payload: { ingredient: updatedIngredient, sortedIngredients } 
+        });
 
         // Recalculate metrics
         const metrics = await Services.metrics.calculateMetricsDebounced(
           "recipe-builder",
-          currentRecipe,
+          state.recipe,
           sortedIngredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
         console.error("Error updating ingredient:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to update ingredient",
-          updatingIngredient: false,
-          calculatingMetrics: false,
-        }));
-
-        // Re-throw the error so the component can handle it
+        dispatch({ 
+          type: 'UPDATE_INGREDIENT_ERROR', 
+          payload: (error as Error).message || "Failed to update ingredient" 
+        });
         throw error;
       }
     },
-    [state.recipe] // Remove state dependencies to prevent stale closures
+    [state.recipe, state.ingredients]
   );
 
   // Bulk update ingredients
@@ -640,215 +462,102 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       }>
     ): Promise<void> => {
       try {
-        // Use functional setState to access current state and avoid stale closures
-        let currentRecipe: Recipe = state.recipe;
-        let currentIngredients: RecipeIngredient[] = [];
+        dispatch({ type: 'UPDATE_INGREDIENT_START' });
 
-        setState((prev) => {
-          currentIngredients = prev.ingredients;
-          currentRecipe = prev.recipe;
-          return {
-            ...prev,
-            updatingIngredient: true,
-            error: null,
-          };
-        });
+        let updatedIngredients = [...state.ingredients];
 
-        // Wait for setState to complete and ensure we have the current ingredients
-        if (currentIngredients.length === 0) {
-          // Fallback: if currentIngredients is still empty, use state.ingredients directly
-          currentIngredients = state.ingredients;
-        }
-
-        // Apply all updates to the current ingredients
-        let updatedIngredients = [...currentIngredients];
-
-        for (const { ingredientId, updatedData, isNewIngredient } of updates) {
-          if (isNewIngredient) {
-            // Handle new ingredient additions
-            const newIngredient: RecipeIngredient = {
-              id: ingredientId,
-              ingredient_id: updatedData.ingredient_id!,
-              name: updatedData.name!,
-              type: updatedData.type!,
-              amount: updatedData.amount!,
-              unit: updatedData.unit!,
-              grain_type: updatedData.grain_type,
-              color: updatedData.color,
-              potential: updatedData.potential,
-              use: updatedData.use,
-              time: updatedData.time,
-              alpha_acid: updatedData.alpha_acid,
-              attenuation: updatedData.attenuation,
-              improved_attenuation_estimate:
-                updatedData.improved_attenuation_estimate,
-            };
-            // Validate the new ingredient data
-            const validation = Services.ingredient.validateIngredientData(
-              newIngredient.type,
-              {
-                ingredient_id: newIngredient.ingredient_id,
-                amount: newIngredient.amount,
-                unit: newIngredient.unit,
-                use: newIngredient.use,
-                time: newIngredient.time,
-                alpha_acid: newIngredient.alpha_acid,
-                color: newIngredient.color,
-              } as CreateRecipeIngredientData
-            );
-
-            if (!validation.isValid) {
-              throw new Error(
-                `Validation failed for ${
-                  newIngredient.name
-                }: ${validation.errors.join(", ")}`
-              );
-            }
-
-            // Add the new ingredient to the array
+        // Process each update
+        for (const update of updates) {
+          if (update.isNewIngredient) {
+            // Add new ingredient
+            const newIngredient = update.updatedData as RecipeIngredient;
             updatedIngredients.push(newIngredient);
           } else {
-            // Handle existing ingredient updates
+            // Update existing ingredient
             const existingIngredient = updatedIngredients.find(
-              (ing) => ing.id === ingredientId
+              (ing) => ing.id === update.ingredientId
             );
-            if (!existingIngredient) {
-              throw new Error(`Ingredient with ID ${ingredientId} not found`);
-            }
+            if (existingIngredient) {
+              // Validate ingredient data
+              const validation = Services.ingredient.validateIngredientData(
+                existingIngredient.type as IngredientType,
+                update.updatedData as CreateRecipeIngredientData
+              );
+              if (!validation.isValid) {
+                throw new Error(
+                  `Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`
+                );
+              }
 
-            // Validate the updated ingredient data
-            const validationData = {
-              ingredient_id:
-                updatedData.ingredient_id || existingIngredient.ingredient_id,
-              amount: updatedData.amount || existingIngredient.amount,
-              unit: updatedData.unit || existingIngredient.unit,
-              use: updatedData.use || existingIngredient.use,
-              time: updatedData.time || existingIngredient.time,
-              alpha_acid:
-                updatedData.alpha_acid || existingIngredient.alpha_acid,
-              color: updatedData.color || existingIngredient.color,
-            } as CreateRecipeIngredientData;
-
-            const validation = Services.ingredient.validateIngredientData(
-              existingIngredient.type,
-              validationData
-            );
-
-            if (!validation.isValid) {
-              throw new Error(
-                `Validation failed for ${
-                  existingIngredient.name
-                }: ${validation.errors.join(", ")}`
+              // Update the ingredient in the array
+              updatedIngredients = updatedIngredients.map((ing) =>
+                ing.id === update.ingredientId ? { ...ing, ...update.updatedData } : ing
               );
             }
-
-            // Update the ingredient in the array
-            updatedIngredients = updatedIngredients.map((ing) =>
-              ing.id === ingredientId ? { ...ing, ...updatedData } : ing
-            );
           }
         }
 
-        const sortedIngredients =
-          Services.ingredient.sortIngredients(updatedIngredients);
+        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
 
-        // Update state immediately for better UX
-        setState((prev) => ({
-          ...prev,
-          ingredients: sortedIngredients,
-          hasUnsavedChanges: true,
-          updatingIngredient: false,
-          calculatingMetrics: true,
-        }));
+        dispatch({ 
+          type: 'BULK_UPDATE_INGREDIENTS_SUCCESS', 
+          payload: sortedIngredients 
+        });
 
-        // Create updated recipe object with new ingredients for consistent metrics calculation
-        const updatedRecipe = {
-          ...currentRecipe,
-          // Ensure recipe has the updated ingredients for metrics calculation
-        };
-
-        // Recalculate metrics with consistent recipe and ingredients
+        // Recalculate metrics
         const metrics = await Services.metrics.calculateMetricsDebounced(
           "recipe-builder",
-          updatedRecipe,
+          state.recipe,
           sortedIngredients
         );
 
-        setState((prev) => {
-          // Ensure we're only updating metrics if ingredients haven't changed
-
-          return {
-            ...prev,
-            metrics,
-            calculatingMetrics: false,
-          };
-        });
-
-        // Bulk update completed successfully
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
         console.error("Error bulk updating ingredients:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to update ingredients",
-          updatingIngredient: false,
-          calculatingMetrics: false,
-        }));
-
-        // Re-throw the error so the component can handle it
+        dispatch({ 
+          type: 'UPDATE_INGREDIENT_ERROR', 
+          payload: (error as Error).message || "Failed to update ingredients" 
+        });
         throw error;
       }
     },
-    [state.ingredients, state.recipe] // Remove state dependencies to prevent stale closures
+    [state.ingredients, state.recipe]
   );
 
   // Remove ingredient
   const removeIngredient = useCallback(
     async (ingredientId: string): Promise<void> => {
       try {
-        // Use functional setState to access current state and avoid stale closures
-        let currentRecipe: Recipe = state.recipe;
-        let currentIngredients: RecipeIngredient[] = state.recipe.ingredients;
+        if (!state.ingredients) {
+          throw new Error("No ingredients available to remove");
+        }
 
-        setState((prev) => {
-          currentIngredients = prev.ingredients;
-          currentRecipe = prev.recipe;
-          return prev;
-        });
-
-        const updatedIngredients = currentIngredients.filter(
+        const updatedIngredients = state.ingredients.filter(
           (ing) => ing.id !== ingredientId
         );
 
-        // Update state immediately
-        setState((prev) => ({
-          ...prev,
-          ingredients: updatedIngredients,
-          hasUnsavedChanges: true,
-          calculatingMetrics: true,
-        }));
+        dispatch({ 
+          type: 'REMOVE_INGREDIENT_SUCCESS', 
+          payload: updatedIngredients 
+        });
 
         // Recalculate metrics
         const metrics = await Services.metrics.calculateMetricsDebounced(
           "recipe-builder",
-          currentRecipe,
+          state.recipe,
           updatedIngredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
         console.error("Error removing ingredient:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to remove ingredient",
-          calculatingMetrics: false,
-        }));
+        dispatch({ 
+          type: 'REMOVE_INGREDIENT_ERROR', 
+          payload: (error as Error).message || "Failed to remove ingredient" 
+        });
       }
     },
-    [state.recipe] // Remove state dependencies to prevent stale closures
+    [state.recipe, state.ingredients]
   );
 
   // Scale recipe
@@ -864,35 +573,21 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           throw new Error("Invalid batch size for scaling");
         }
 
-        // Use functional setState to access current state and avoid stale closures
-        let currentRecipe: Recipe = state.recipe;
-        let currentIngredients: RecipeIngredient[] = [];
-
-        setState((prev) => {
-          currentRecipe = prev.recipe;
-          currentIngredients = prev.ingredients;
-          return prev;
-        });
-
         const { scaledRecipe, scalingFactor } = Services.recipe.scaleRecipe(
-          currentRecipe,
-          currentIngredients,
+          state.recipe,
+          state.ingredients,
           batchSize
         );
 
         const scaledIngredients = Services.ingredient.scaleIngredients(
-          currentIngredients,
+          state.ingredients,
           scalingFactor
         );
 
-        // Update state immediately
-        setState((prev) => ({
-          ...prev,
-          recipe: scaledRecipe,
-          ingredients: scaledIngredients,
-          hasUnsavedChanges: true,
-          calculatingMetrics: true,
-        }));
+        dispatch({ 
+          type: 'SCALE_RECIPE_SUCCESS', 
+          payload: { recipe: scaledRecipe, ingredients: scaledIngredients } 
+        });
 
         // Recalculate metrics
         const metrics = await Services.metrics.calculateMetricsDebounced(
@@ -901,21 +596,16 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           scaledIngredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
         console.error("Error scaling recipe:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to scale recipe",
-          calculatingMetrics: false,
-        }));
+        dispatch({ 
+          type: 'SCALE_RECIPE_ERROR', 
+          payload: (error as Error).message || "Failed to scale recipe" 
+        });
       }
     },
-    [state.recipe] // Remove state dependencies to prevent stale closures
+    [state.recipe, state.ingredients]
   );
 
   // Save recipe
@@ -926,40 +616,23 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       }
 
       try {
-        // Use functional setState to access current state and avoid stale closures
-        let currentRecipe: Recipe = state.recipe;
-        let currentIngredients: RecipeIngredient[] = [];
-        let currentMetrics: RecipeMetrics = state.metrics;
-
-        setState((prev) => {
-          currentRecipe = prev.recipe;
-          currentIngredients = prev.ingredients;
-          currentMetrics = prev.metrics;
-          return {
-            ...prev,
-            saving: true,
-            error: null,
-          };
-        });
+        dispatch({ type: 'SAVE_RECIPE_START' });
 
         const savedRecipe = await Services.recipe.saveRecipe(
           recipeId || null,
-          currentRecipe,
-          currentIngredients,
-          currentMetrics
+          state.recipe,
+          state.ingredients,
+          state.metrics
         );
 
         if (!savedRecipe) {
           throw new Error("Failed to save recipe - no data returned");
         }
 
-        // Update state with saved recipe data
-        setState((prev) => ({
-          ...prev,
-          recipe: savedRecipe as Recipe,
-          hasUnsavedChanges: false,
-          saving: false,
-        }));
+        dispatch({ 
+          type: 'SAVE_RECIPE_SUCCESS', 
+          payload: savedRecipe as Recipe 
+        });
 
         // Update original recipe reference
         originalRecipeRef.current = savedRecipe as Recipe;
@@ -972,90 +645,93 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         return savedRecipe as unknown as Recipe;
       } catch (error) {
         console.error("Error saving recipe:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to save recipe",
-          saving: false,
-        }));
+        dispatch({ 
+          type: 'SAVE_RECIPE_ERROR', 
+          payload: (error as Error).message || "Failed to save recipe" 
+        });
         throw error;
       }
     },
-    [state.recipe, state.metrics, recipeId, navigate] // Keep only dependencies that don't change during operations
+    [state.recipe, state.metrics, state.ingredients, recipeId, navigate]
   );
 
-  // Manually recalculate metrics
+  // Recalculate metrics
   const recalculateMetrics = useCallback(async (): Promise<void> => {
     try {
-      // Use functional setState to access current state and avoid stale closures
-      let currentRecipe: Recipe = state.recipe;
-      let currentIngredients: RecipeIngredient[] = [];
-
-      setState((prev) => {
-        currentRecipe = prev.recipe;
-        currentIngredients = prev.ingredients;
-        return {
-          ...prev,
-          calculatingMetrics: true,
-          error: null,
-        };
-      });
+      dispatch({ type: 'CALCULATE_METRICS_START' });
 
       const metrics = await Services.metrics.calculateMetrics(
-        currentRecipe,
-        currentIngredients
-      );
-
-      setState((prev) => ({
-        ...prev,
-        metrics,
-        calculatingMetrics: false,
-      }));
-    } catch (error) {
-      console.error("Error recalculating metrics:", error);
-      setState((prev) => ({
-        ...prev,
-        error: (error as Error).message || "Failed to recalculate metrics",
-        calculatingMetrics: false,
-      }));
-    }
-  }, [state.recipe]); // Remove state dependencies to prevent stale closures
-
-  // Clear error
-  const clearError = useCallback((): void => {
-    setState((prev) => ({ ...prev, error: null }));
-  }, []);
-
-  // Cancel current operation
-  const cancelOperation = useCallback((): void => {
-    Services.metrics.cancelCalculation("recipe-builder");
-    setState((prev) => ({
-      ...prev,
-      calculatingMetrics: false,
-      addingIngredient: false,
-      updatingIngredient: false,
-      error: null,
-    }));
-  }, []);
-
-  // Check for unsaved changes
-  useEffect(() => {
-    if (originalRecipeRef.current && state.recipe && !state.loading) {
-      const hasChanges = Services.recipe.hasUnsavedChanges(
-        originalRecipeRef.current,
         state.recipe,
         state.ingredients
       );
 
-      if (hasChanges !== state.hasUnsavedChanges) {
-        setState((prev) => ({
-          ...prev,
-          hasUnsavedChanges: hasChanges,
-        }));
-      }
+      dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+    } catch (error) {
+      console.error("Error recalculating metrics:", error);
+      dispatch({ 
+        type: 'CALCULATE_METRICS_ERROR', 
+        payload: "Failed to recalculate metrics" 
+      });
     }
-  }, [state.recipe, state.ingredients, state.hasUnsavedChanges, state.loading]);
+  }, [state.recipe, state.ingredients]);
 
-  // Get recipe analysis
+  // Import ingredients
+  const importIngredients = useCallback(
+    async (ingredientsToImport: RecipeIngredient[]): Promise<void> => {
+      try {
+        dispatch({ type: 'IMPORT_INGREDIENTS_START' });
+
+        // Validate all ingredients
+        for (const ingredient of ingredientsToImport) {
+          const validation = Services.ingredient.validateIngredientData(
+            ingredient.type as IngredientType,
+            ingredient as CreateRecipeIngredientData
+          );
+          if (!validation.isValid) {
+            throw new Error(
+              `Validation failed for ${ingredient.name}: ${validation.errors.join(", ")}`
+            );
+          }
+        }
+
+        // Add to existing ingredients
+        const combinedIngredients = [...state.ingredients, ...ingredientsToImport];
+        const sortedIngredients = Services.ingredient.sortIngredients(combinedIngredients);
+
+        dispatch({ 
+          type: 'IMPORT_INGREDIENTS_SUCCESS', 
+          payload: sortedIngredients 
+        });
+
+        // Recalculate metrics
+        const metrics = await Services.metrics.calculateMetricsDebounced(
+          "recipe-builder",
+          state.recipe,
+          sortedIngredients
+        );
+
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+      } catch (error) {
+        console.error("Error importing ingredients:", error);
+        dispatch({ 
+          type: 'IMPORT_INGREDIENTS_ERROR', 
+          payload: (error as Error).message || "Failed to import ingredients" 
+        });
+      }
+    },
+    [state.recipe, state.ingredients]
+  );
+
+  // Utility actions
+  const clearError = useCallback((): void => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  }, []);
+
+  const cancelOperation = useCallback((): void => {
+    Services.metrics.cancelCalculation("recipe-builder");
+    dispatch({ type: 'CANCEL_OPERATIONS' });
+  }, []);
+
   const getRecipeAnalysis = useCallback((): RecipeAnalysis => {
     return Services.metrics.getRecipeAnalysis(
       state.metrics,
@@ -1065,182 +741,46 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
   const refreshAvailableIngredients = useCallback(async (): Promise<void> => {
     try {
-      const updatedAvailableIngredients =
-        await Services.ingredient.fetchIngredients();
-      setState((prev) => ({
-        ...prev,
-        availableIngredients: updatedAvailableIngredients,
-      }));
+      const updatedAvailableIngredients = await Services.ingredient.fetchIngredients();
+      dispatch({ type: 'REFRESH_AVAILABLE_INGREDIENTS', payload: updatedAvailableIngredients });
     } catch (error) {
       console.error("Error refreshing available ingredients:", error);
     }
   }, []);
 
-  // Import multiple ingredients at once (for BeerXML import)
-  const importIngredients = useCallback(
-    async (ingredientsToImport: RecipeIngredient[]): Promise<void> => {
+  const importRecipeData = useCallback(async (recipeData: Partial<Recipe>): Promise<void> => {
+    dispatch({ type: 'IMPORT_RECIPE_DATA', payload: recipeData });
+
+    // Recalculate metrics if any calculation fields were updated
+    const calculationFields: (keyof Recipe)[] = [
+      "batch_size",
+      "efficiency",
+      "boil_time",
+      "batch_size_unit",
+    ];
+
+    const hasCalculationFieldChanges = calculationFields.some(
+      (field) => recipeData[field] !== undefined
+    );
+
+    if (hasCalculationFieldChanges && state.ingredients && state.ingredients.length > 0) {
       try {
-        setState((prev) => ({
-          ...prev,
-          addingIngredient: true,
-          error: null,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_START' });
 
-        const processedIngredients: RecipeIngredient[] = [];
-
-        // Process each ingredient with complete data including name
-        for (const importIngredient of ingredientsToImport) {
-          // Create ingredient data object with all properties including name
-          const ingredientData: CreateRecipeIngredientData = {
-            ingredient_id: importIngredient.ingredient_id || undefined,
-            name: importIngredient.name, // Include the name!
-            amount: importIngredient.amount,
-            unit: importIngredient.unit,
-            use: importIngredient.use,
-            time: importIngredient.time,
-            alpha_acid: importIngredient.alpha_acid,
-            color: importIngredient.color,
-            potential: importIngredient.potential,
-            grain_type: importIngredient.grain_type,
-            attenuation: importIngredient.attenuation,
-          };
-
-          // Validate ingredient data
-          const validation = Services.ingredient.validateIngredientData(
-            importIngredient.type,
-            ingredientData
-          );
-          if (!validation.isValid) {
-            console.error(
-              `Validation failed for ${importIngredient.name}:`,
-              validation.errors
-            );
-            throw new Error(
-              `${importIngredient.name}: ${validation.errors.join(", ")}`
-            );
-          }
-
-          // Create new recipe ingredient using the service
-          const newIngredient = Services.ingredient.createRecipeIngredient(
-            importIngredient.type,
-            ingredientData,
-            state.availableIngredients
-          );
-
-          processedIngredients.push(newIngredient);
-        }
-
-        // Sort all ingredients together
-        const sortedIngredients =
-          Services.ingredient.sortIngredients(processedIngredients);
-
-        // Update state with all ingredients at once
-        setState((prev) => ({
-          ...prev,
-          ingredients: sortedIngredients,
-          hasUnsavedChanges: true,
-          addingIngredient: false,
-          calculatingMetrics: true,
-        }));
-
-        // Recalculate metrics with all ingredients
+        const updatedRecipe = { ...state.recipe, ...recipeData };
         const metrics = await Services.metrics.calculateMetricsDebounced(
-          "recipe-builder-import",
-          state.recipe,
-          sortedIngredients
+          "recipe-builder",
+          updatedRecipe,
+          state.ingredients
         );
 
-        setState((prev) => ({
-          ...prev,
-          metrics,
-          calculatingMetrics: false,
-        }));
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
       } catch (error) {
-        console.error("Error importing ingredients:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to import ingredients",
-          addingIngredient: false,
-          calculatingMetrics: false,
-        }));
-        throw error;
+        console.error("Error recalculating metrics:", error);
+        dispatch({ type: 'CALCULATE_METRICS_ERROR', payload: "Failed to recalculate metrics" });
       }
-    },
-    [state.recipe, state.availableIngredients]
-  );
-
-  // Import recipe data all at once (for BeerXML import)
-  const importRecipeData = useCallback(
-    async (recipeData: Partial<Recipe>): Promise<void> => {
-      try {
-        // Clean up the imported data before applying
-
-        const cleanedRecipeData = { ...recipeData };
-
-        // Round batch size to reasonable precision (2 decimal places)
-        if (
-          cleanedRecipeData.batch_size &&
-          typeof cleanedRecipeData.batch_size === "number"
-        ) {
-          cleanedRecipeData.batch_size =
-            Math.round(cleanedRecipeData.batch_size * 100) / 100;
-        }
-
-        // Update the recipe state with all imported data at once
-        const updatedRecipe = { ...state.recipe, ...cleanedRecipeData };
-
-        setState((prev) => ({
-          ...prev,
-          recipe: updatedRecipe,
-          hasUnsavedChanges: true,
-        }));
-
-        // Recalculate metrics if any calculation fields were updated
-        const calculationFields: (keyof Recipe)[] = [
-          "batch_size",
-          "efficiency",
-          "boil_time",
-          "batch_size_unit",
-        ];
-
-        const hasCalculationFieldChanges = calculationFields.some(
-          (field) => recipeData[field] !== undefined
-        );
-
-        if (hasCalculationFieldChanges && state.ingredients.length > 0) {
-          try {
-            setState((prev) => ({ ...prev, calculatingMetrics: true }));
-
-            const metrics = await Services.metrics.calculateMetricsDebounced(
-              "recipe-builder",
-              updatedRecipe,
-              state.ingredients
-            );
-
-            setState((prev) => ({
-              ...prev,
-              metrics,
-              calculatingMetrics: false,
-            }));
-          } catch (error) {
-            console.error("Error recalculating metrics:", error);
-            setState((prev) => ({
-              ...prev,
-              calculatingMetrics: false,
-              error: "Failed to recalculate metrics",
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error importing recipe data:", error);
-        setState((prev) => ({
-          ...prev,
-          error: (error as Error).message || "Failed to import recipe data",
-        }));
-      }
-    },
-    [state.recipe, state.ingredients]
-  );
+    }
+  }, [state.recipe, state.ingredients]);
 
   const updateRecipeStyle = useCallback(
     async (styleName: string): Promise<void> => {
@@ -1252,7 +792,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           const analysis = await Services.beerStyle.getRecipeStyleAnalysis(
             state.recipe.recipe_id
           );
-          setStyleAnalysis(analysis);
+          dispatch({ type: 'UPDATE_STYLE_ANALYSIS', payload: analysis });
         } catch (error) {
           console.error("Error updating style analysis:", error);
         }
@@ -1272,12 +812,27 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         Services.beerStyle.findMatchingStyles(state.metrics).catch(() => []),
       ]);
 
-      setStyleAnalysis(analysis);
-      setStyleSuggestions(suggestions.slice(0, 5));
+      dispatch({ type: 'UPDATE_STYLE_ANALYSIS', payload: analysis });
+      dispatch({ type: 'UPDATE_STYLE_SUGGESTIONS', payload: suggestions.slice(0, 5) });
     } catch (error) {
       console.error("Error refreshing style analysis:", error);
     }
   }, [state.recipe.recipe_id, state.metrics]);
+
+  // Check for unsaved changes
+  useEffect(() => {
+    if (originalRecipeRef.current && state.recipe && !state.loading) {
+      const hasChanges = Services.recipe.hasUnsavedChanges(
+        originalRecipeRef.current,
+        state.recipe,
+        state.ingredients
+      );
+
+      if (hasChanges !== state.hasUnsavedChanges) {
+        dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
+      }
+    }
+  }, [state.recipe, state.ingredients, state.hasUnsavedChanges, state.loading]);
 
   // Return interface
   return {
@@ -1316,14 +871,14 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     importRecipeData,
 
     // Beer style analysis
-    styleAnalysis,
-    styleSuggestions,
+    styleAnalysis: state.styleAnalysis,
+    styleSuggestions: state.styleSuggestions,
     updateRecipeStyle,
     refreshStyleAnalysis,
 
     // Computed properties
     isEditing: Boolean(recipeId),
-    canSave: !state.saving && !state.loading && state.ingredients.length > 0,
+    canSave: !state.saving && !state.loading && state.ingredients && state.ingredients.length > 0,
     recipeDisplayName: Services.recipe.getRecipeDisplayName(state.recipe),
   };
 }
