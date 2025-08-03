@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useReducer, useRef } from "react";
 import { Services } from "../../services";
 import IngredientMatchingReview from "./IngredientMatchingReview";
 import { Recipe, Ingredient } from "../../types";
@@ -6,9 +6,11 @@ import {
   BeerXMLImportData,
   BeerXMLMetadata,
   BeerXMLExportResult,
-  BeerXMLImportState,
-  BeerXMLExportState
 } from "../../types/beerxml";
+import {
+  beerXMLReducer,
+  createInitialBeerXMLState,
+} from "../../reducers";
 import "../../styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
@@ -19,10 +21,6 @@ interface BeerXMLImportExportProps {
   mode?: "import" | "export" | "both";
 }
 
-// Use the comprehensive state interfaces from beerxml.ts
-type ImportState = BeerXMLImportState;
-type ExportState = BeerXMLExportState;
-
 const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   recipe,
   ingredients,
@@ -32,26 +30,14 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Import state
-  const [importState, setImportState] = useState<ImportState>({
-    isImporting: false,
-    uploadedFile: null,
-    parsedRecipes: [],
-    selectedRecipe: null,
-    matchingResults: [],
-    showMatchingReview: false,
-    importProgress: 0,
-    error: null,
-    warnings: [],
-  });
+  // Initialize reducer
+  const [state, dispatch] = useReducer(
+    beerXMLReducer,
+    createInitialBeerXMLState()
+  );
 
-  // Export state
-  const [exportState, setExportState] = useState<ExportState>({
-    isExporting: false,
-    exportProgress: 0,
-    error: null,
-    lastExportResult: null,
-  });
+  // Destructure state for cleaner access
+  const { import: importState, export: exportState } = state;
 
   /**
    * Handle file selection for import
@@ -65,18 +51,11 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     // Validate file using service
     const validation = Services.BeerXML.service.validateFile(file);
     if (!validation.valid) {
-      setImportState((prev) => ({
-        ...prev,
-        error: validation.errors.join("; "),
-      }));
+      dispatch({ type: 'IMPORT_ERROR', payload: validation.errors.join("; ") });
       return;
     }
 
-    setImportState((prev) => ({
-      ...prev,
-      uploadedFile: file,
-      error: null,
-    }));
+    dispatch({ type: 'SET_UPLOADED_FILE', payload: file });
   };
 
   /**
@@ -85,11 +64,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   const processBeerXMLFile = async (): Promise<void> => {
     if (!importState.uploadedFile) return;
 
-    setImportState((prev) => ({
-      ...prev,
-      isImporting: true,
-      error: null,
-    }));
+    dispatch({ type: 'IMPORT_START' });
 
     try {
       // Read file content
@@ -101,19 +76,19 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       const parsedRecipes: any[] = await Services.BeerXML.service.parseBeerXML(
         fileContent
       );
-      setImportState((prev) => ({
-        ...prev,
-        parsedRecipes,
-        selectedRecipe: parsedRecipes[0] || null,
-        isImporting: false,
-      }));
+      
+      dispatch({ 
+        type: 'IMPORT_SUCCESS', 
+        payload: { recipes: parsedRecipes, warnings: [] } 
+      });
+      
+      dispatch({ 
+        type: 'SELECT_RECIPE', 
+        payload: parsedRecipes[0] || null 
+      });
     } catch (error: any) {
       console.error("Error processing BeerXML file:", error);
-      setImportState((prev) => ({
-        ...prev,
-        error: error.message,
-        isImporting: false,
-      }));
+      dispatch({ type: 'IMPORT_ERROR', payload: error.message });
     }
   };
 
@@ -123,30 +98,19 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   const startIngredientMatching = async (): Promise<void> => {
     if (!importState.selectedRecipe) return;
 
-    setImportState((prev) => ({
-      ...prev,
-      isImporting: true,
-      error: null,
-    }));
+    dispatch({ type: 'IMPORT_START' });
 
     try {
       const matchingResults: any[] = await Services.BeerXML.service.matchIngredients(
         (importState.selectedRecipe as any)?.ingredients || []
       );
 
-      setImportState((prev) => ({
-        ...prev,
-        matchingResults,
-        showMatchingReview: true,
-        isImporting: false,
-      }));
+      dispatch({ type: 'SET_MATCHING_RESULTS', payload: matchingResults });
+      dispatch({ type: 'SHOW_MATCHING_REVIEW', payload: true });
+      dispatch({ type: 'IMPORT_SUCCESS', payload: { recipes: importState.parsedRecipes, warnings: [] } });
     } catch (error: any) {
       console.error("Error matching ingredients:", error);
-      setImportState((prev) => ({
-        ...prev,
-        error: error.message,
-        isImporting: false,
-      }));
+      dispatch({ type: 'IMPORT_ERROR', payload: error.message });
     }
   };
 
@@ -169,17 +133,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       });
 
       // Reset import state
-      setImportState({
-        isImporting: false,
-        uploadedFile: null,
-        parsedRecipes: [],
-        selectedRecipe: null,
-        matchingResults: [],
-        showMatchingReview: false,
-        importProgress: 0,
-        error: null,
-        warnings: [],
-      });
+      dispatch({ type: 'RESET_IMPORT_STATE' });
 
       // Clear file input
       if (fileInputRef.current) {
@@ -187,12 +141,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       }
     } catch (error: any) {
       console.error("Error completing import:", error);
-      setImportState((prev) => ({
-        ...prev,
-        error: error.message,
-        showMatchingReview: false, // Return to main view to show error
-        isImporting: false,
-      }));
+      dispatch({ type: 'IMPORT_ERROR', payload: error.message });
+      dispatch({ type: 'SHOW_MATCHING_REVIEW', payload: false });
     }
   };
 
@@ -202,11 +152,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   const exportToBeerXML = async (): Promise<void> => {
     if (!recipe || !ingredients || !onExport) return;
 
-    setExportState((prev) => ({
-      ...prev,
-      isExporting: true,
-      error: null,
-    }));
+    dispatch({ type: 'EXPORT_START' });
 
     try {
       const result = await Services.BeerXML.service.exportRecipe(recipe.id);
@@ -221,17 +167,13 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         onExport({ success: true, filename: result.filename });
       }
 
-      setExportState((prev) => ({
-        ...prev,
-        isExporting: false,
-      }));
+      dispatch({ 
+        type: 'EXPORT_SUCCESS', 
+        payload: { success: true, filename: result.filename } 
+      });
     } catch (error: any) {
       console.error("Error exporting to BeerXML:", error);
-      setExportState((prev) => ({
-        ...prev,
-        error: error.message,
-        isExporting: false,
-      }));
+      dispatch({ type: 'EXPORT_ERROR', payload: error.message });
     }
   };
 
@@ -239,17 +181,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
    * Reset import state
    */
   const resetImport = (): void => {
-    setImportState({
-      isImporting: false,
-      uploadedFile: null,
-      parsedRecipes: [],
-      selectedRecipe: null,
-      matchingResults: [],
-      showMatchingReview: false,
-      importProgress: 0,
-      error: null,
-      warnings: [],
-    });
+    dispatch({ type: 'RESET_IMPORT_STATE' });
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -263,7 +195,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         matchingResults={importState.matchingResults}
         onComplete={completeImport}
         onCancel={() =>
-          setImportState((prev) => ({ ...prev, showMatchingReview: false }))
+          dispatch({ type: 'SHOW_MATCHING_REVIEW', payload: false })
         }
       />
     );
@@ -355,11 +287,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                       importState.selectedRecipe || importState.parsedRecipes[0]
                     )}
                     onChange={(e) =>
-                      setImportState((prev) => ({
-                        ...prev,
-                        selectedRecipe:
-                          importState.parsedRecipes[parseInt(e.target.value)],
-                      }))
+                      dispatch({
+                        type: 'SELECT_RECIPE',
+                        payload: importState.parsedRecipes[parseInt(e.target.value)],
+                      })
                     }
                     className="form-select"
                   >

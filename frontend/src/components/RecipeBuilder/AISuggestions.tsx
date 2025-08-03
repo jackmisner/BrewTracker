@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useReducer, useCallback } from "react";
 import {
   Recipe,
   RecipeIngredient,
@@ -8,49 +8,15 @@ import {
 import { useUnits } from "../../contexts/UnitContext";
 import { formatIngredientAmount, formatIbu } from "../../utils/formatUtils";
 import { Services } from "../../services";
+import {
+  aiSuggestionsReducer,
+  createInitialAISuggestionsState,
+  type Suggestion,
+  type IngredientChange,
+  type OptimizationResult,
+} from "../../reducers";
 
-interface Suggestion {
-  id: string;
-  type: string;
-  title: string;
-  description: string;
-  confidence: "high" | "medium" | "low";
-  changes: IngredientChange[];
-  priority?: number;
-  styleImpact?: string;
-  impactType?: "critical" | "important" | "nice-to-have";
-}
-
-interface IngredientChange {
-  ingredientId: string;
-  ingredientName: string;
-  field: "amount" | "time" | "use" | "ingredient_id";
-  currentValue: any;
-  suggestedValue: any;
-  reason: string;
-  // CRITICAL FIX: Add unit field to preserve backend unit suggestions
-  unit?: string; // Unit from backend suggestion (g/oz for base units)
-  // For adding new ingredients
-  isNewIngredient?: boolean;
-  newIngredientData?: CreateRecipeIngredientData;
-  // For consolidated changes (multiple field changes for same ingredient)
-  changes?: Array<{
-    field: string;
-    original_value: any;
-    optimized_value: any;
-    unit?: string;
-    change_reason: string;
-  }>;
-}
-
-interface OptimizationResult {
-  performed: boolean;
-  originalMetrics: any;
-  optimizedMetrics: any;
-  optimizedRecipe: any;
-  recipeChanges: any[];
-  iterationsCompleted: number;
-}
+// Interfaces now imported from reducer
 
 interface AISuggestionsProps {
   recipe: Recipe;
@@ -201,15 +167,21 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   replaceIngredients,
   disabled = false,
 }) => {
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [analyzing, setAnalyzing] = useState<boolean>(false);
-  const [, setAppliedSuggestions] = useState<Set<string>>(new Set());
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
-  // Style guide is now automatically extracted from recipe.style
-  const [hasAnalyzed, setHasAnalyzed] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [optimizationResult, setOptimizationResult] =
-    useState<OptimizationResult | null>(null);
+  // Initialize reducer
+  const [state, dispatch] = useReducer(
+    aiSuggestionsReducer,
+    createInitialAISuggestionsState()
+  );
+
+  // Destructure state for cleaner access
+  const {
+    suggestions,
+    analyzing,
+    isExpanded,
+    hasAnalyzed,
+    error,
+    optimizationResult,
+  } = state;
 
   // Unit context for user preferences
   const { unitSystem, loading: unitsLoading } = useUnits();
@@ -306,8 +278,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const generateSuggestions = useCallback(async (): Promise<void> => {
     if (!ingredients.length || !metrics || unitsLoading || disabled) return;
 
-    setAnalyzing(true);
-    setError(null);
+    dispatch({ type: 'START_ANALYSIS' });
 
     try {
       // Look up style ID from recipe style name for proper style compliance analysis
@@ -393,39 +364,46 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       // Check if internal optimization was performed
       if (response.optimization_performed && response.optimized_recipe) {
         // Show optimization results instead of individual suggestions
-        setOptimizationResult({
-          performed: true,
-          originalMetrics: response.original_metrics,
-          optimizedMetrics: response.optimized_metrics,
-          optimizedRecipe: response.optimized_recipe,
-          recipeChanges: response.recipe_changes || [],
-          iterationsCompleted: response.iterations_completed || 0,
+        dispatch({
+          type: 'ANALYSIS_SUCCESS',
+          payload: {
+            suggestions: [],
+            optimizationResult: {
+              performed: true,
+              originalMetrics: response.original_metrics,
+              optimizedMetrics: response.optimized_metrics,
+              optimizedRecipe: response.optimized_recipe,
+              recipeChanges: response.recipe_changes || [],
+              iterationsCompleted: response.iterations_completed || 0,
+            },
+          },
         });
-        setSuggestions([]);
       } else {
         // Fallback to traditional suggestions format
         const convertedSuggestions = convertBackendSuggestions(
           response.suggestions || []
         );
 
-        setSuggestions(convertedSuggestions);
-        setOptimizationResult(null);
+        dispatch({
+          type: 'ANALYSIS_SUCCESS',
+          payload: {
+            suggestions: convertedSuggestions,
+          },
+        });
       }
 
-      setHasAnalyzed(true);
+      dispatch({ type: 'ANALYSIS_COMPLETE' });
     } catch (error) {
       console.error(
         "❌ AI: Error generating suggestions:",
         error instanceof Error ? error.message : "Unknown error"
       );
-      setError(
-        error instanceof Error
+      dispatch({
+        type: 'ANALYSIS_ERROR',
+        payload: error instanceof Error
           ? error.message
-          : "Failed to generate suggestions"
-      );
-      setSuggestions([]);
-    } finally {
-      setAnalyzing(false);
+          : "Failed to generate suggestions",
+      });
     }
   }, [
     recipe,
@@ -623,26 +601,25 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      // Mark suggestion as applied
-      setAppliedSuggestions((prev) => new Set(prev).add(suggestion.id));
-
-      // Remove from current suggestions
-      setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+      // Mark suggestion as applied and remove from current suggestions
+      dispatch({ type: 'ADD_APPLIED_SUGGESTION', payload: suggestion.id });
+      dispatch({ type: 'SET_SUGGESTIONS', payload: suggestions.filter((s) => s.id !== suggestion.id) });
     } catch (error) {
       console.error(
         "❌ APPLY: Error applying suggestion:",
         error instanceof Error ? error.message : "Unknown error"
       );
-      setError(
-        error instanceof Error ? error.message : "Failed to apply suggestion"
-      );
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : "Failed to apply suggestion",
+      });
     }
   };
 
   // Dismiss a suggestion
   const dismissSuggestion = (suggestionId: string): void => {
-    setAppliedSuggestions((prev) => new Set(prev).add(suggestionId));
-    setSuggestions((prev) => prev.filter((s) => s.id !== suggestionId));
+    dispatch({ type: 'ADD_APPLIED_SUGGESTION', payload: suggestionId });
+    dispatch({ type: 'SET_SUGGESTIONS', payload: suggestions.filter((s) => s.id !== suggestionId) });
   };
 
   // Handle analyze button click
@@ -732,35 +709,32 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       // Clear the optimization result and show success message
-      setOptimizationResult(null);
-      setHasAnalyzed(false);
+      dispatch({ type: 'CLEAR_OPTIMIZATION_RESULT' });
+      dispatch({ type: 'RESET_ANALYSIS_STATE' });
     } catch (error) {
       console.error(
         "❌ APPLY: Error applying optimized recipe:",
         error instanceof Error ? error.message : "Unknown error"
       );
-      setError(
-        error instanceof Error
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error
           ? error.message
-          : "Failed to apply optimized recipe"
-      );
+          : "Failed to apply optimized recipe",
+      });
     }
   };
 
   // Clear suggestions
   const clearSuggestions = (): void => {
-    setSuggestions([]);
-    setAppliedSuggestions(new Set());
-    setOptimizationResult(null);
-    setHasAnalyzed(false);
-    setError(null);
+    dispatch({ type: 'RESET_ANALYSIS_STATE' });
   };
 
   return (
     <div className="ai-suggestions-container">
       <div className="ai-suggestions-header">
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => dispatch({ type: 'TOGGLE_EXPANDED' })}
           className="ai-suggestions-toggle"
         >
           {isExpanded ? "▼" : "▶"} AI Recipe Analysis
@@ -984,7 +958,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   Apply Optimized Recipe
                 </button>
                 <button
-                  onClick={() => setOptimizationResult(null)}
+                  onClick={() => dispatch({ type: 'CLEAR_OPTIMIZATION_RESULT' })}
                   className="btn-secondary"
                 >
                   Keep Original Recipe
