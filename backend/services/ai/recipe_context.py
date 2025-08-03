@@ -378,7 +378,11 @@ class RecipeContext:
         consistency and prevent infinite normalization loops.
         """
         ingredients = self.recipe.get("ingredients", [])
-        for ingredient in ingredients:
+        # Only check normalizable ingredients (grain and hop) to match strategy behavior
+        normalizable_ingredients = [
+            ing for ing in ingredients if ing.get("type") in ["grain", "hop"]
+        ]
+        for ingredient in normalizable_ingredients:
             current_amount = ingredient.get("amount", 0)
             unit = ingredient.get("unit", "lb")
             ingredient_type = ingredient.get("type", "grain")
