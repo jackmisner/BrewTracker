@@ -13,6 +13,7 @@ import { User } from "./types";
 // Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
 import RecipeBuilder from "./pages/RecipeBuilder";
 import ViewRecipe from "./pages/ViewRecipe";
@@ -145,6 +146,10 @@ const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "verify-email",
+        element: <VerifyEmail />,
       },
       {
         path: "about",

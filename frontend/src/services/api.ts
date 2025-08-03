@@ -15,6 +15,10 @@ import {
   ProfileResponse,
   GoogleAuthRequest,
   GoogleAuthResponse,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
+  ResendVerificationResponse,
+  VerificationStatusResponse,
 
   // User types
   ChangePasswordRequest,
@@ -163,6 +167,21 @@ const ApiService = {
       data: ValidateUsernameRequest
     ): Promise<AxiosResponse<ValidateUsernameResponse>> =>
       api.post("/auth/validate-username", data),
+
+    // Email verification endpoints
+    sendVerification: (): Promise<AxiosResponse<ResendVerificationResponse>> =>
+      api.post("/auth/send-verification"),
+
+    verifyEmail: (
+      data: VerifyEmailRequest
+    ): Promise<AxiosResponse<VerifyEmailResponse>> =>
+      api.post("/auth/verify-email", data),
+
+    resendVerification: (): Promise<AxiosResponse<ResendVerificationResponse>> =>
+      api.post("/auth/resend-verification"),
+
+    getVerificationStatus: (): Promise<AxiosResponse<VerificationStatusResponse>> =>
+      api.get("/auth/verification-status"),
   },
 
   // User settings endpoints
