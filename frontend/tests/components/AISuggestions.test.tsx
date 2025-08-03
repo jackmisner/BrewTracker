@@ -136,7 +136,7 @@ describe('AISuggestions Component', () => {
   const mockOnRemoveIngredient = jest.fn();
   const mockOnUpdateRecipe = jest.fn();
   const mockOnBulkUpdateRecipe = jest.fn();
-  const mockImportIngredients = jest.fn();
+  const mockReplaceIngredients = jest.fn();
 
   // Helper to render with UnitProvider
   const renderWithUnitProvider = (ui: React.ReactElement) => {
@@ -240,7 +240,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
   });
@@ -256,7 +256,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -277,7 +277,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -301,7 +301,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -325,7 +325,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -344,7 +344,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -363,7 +363,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
         disabled={true}
       />
     );
@@ -401,7 +401,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -424,7 +424,7 @@ describe('AISuggestions Component', () => {
         onRemoveIngredient={mockOnRemoveIngredient}
         onUpdateRecipe={mockOnUpdateRecipe}
         onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-        importIngredients={mockImportIngredients}
+        replaceIngredients={mockReplaceIngredients}
       />
     );
 
@@ -455,7 +455,7 @@ describe('AISuggestions Component', () => {
           onRemoveIngredient={mockOnRemoveIngredient}
           onUpdateRecipe={mockOnUpdateRecipe}
           onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-          importIngredients={mockImportIngredients}
+          replaceIngredients={mockReplaceIngredients}
           {...props}
         />
       );
@@ -630,7 +630,7 @@ describe('AISuggestions Component', () => {
           onRemoveIngredient={mockOnRemoveIngredient}
           onUpdateRecipe={mockOnUpdateRecipe}
           onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-          importIngredients={mockImportIngredients}
+          replaceIngredients={mockReplaceIngredients}
         />
       );
     };
@@ -817,7 +817,7 @@ describe('AISuggestions Component', () => {
           onRemoveIngredient={mockOnRemoveIngredient}
           onUpdateRecipe={mockOnUpdateRecipe}
           onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-          importIngredients={mockImportIngredients}
+          replaceIngredients={mockReplaceIngredients}
         />
       );
     };
@@ -873,7 +873,7 @@ describe('AISuggestions Component', () => {
       const applyButton = screen.getByText('Apply Optimized Recipe');
       await userEvent.click(applyButton);
 
-      expect(mockImportIngredients).toHaveBeenCalledWith(
+      expect(mockReplaceIngredients).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             name: 'Pale Malt 2-Row',
@@ -902,7 +902,7 @@ describe('AISuggestions Component', () => {
     });
 
     it('handles optimization application errors', async () => {
-      mockImportIngredients.mockRejectedValue(new Error('Import failed'));
+      mockReplaceIngredients.mockRejectedValue(new Error('Replace failed'));
       renderComponentWithOptimization();
 
       const analyzeButton = screen.getByRole('button', { name: /analyze recipe/i });
@@ -916,7 +916,7 @@ describe('AISuggestions Component', () => {
       await userEvent.click(applyButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Error: Import failed')).toBeInTheDocument();
+        expect(screen.getByText('Error: Replace failed')).toBeInTheDocument();
       });
     });
   });
@@ -933,7 +933,7 @@ describe('AISuggestions Component', () => {
           onRemoveIngredient={mockOnRemoveIngredient}
           onUpdateRecipe={mockOnUpdateRecipe}
           onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-          importIngredients={mockImportIngredients}
+          replaceIngredients={mockReplaceIngredients}
           {...props}
         />
       );
@@ -1123,7 +1123,7 @@ describe('AISuggestions Component', () => {
           onRemoveIngredient={mockOnRemoveIngredient}
           onUpdateRecipe={mockOnUpdateRecipe}
           onBulkUpdateRecipe={mockOnBulkUpdateRecipe}
-          importIngredients={mockImportIngredients}
+          replaceIngredients={mockReplaceIngredients}
         />
       );
     };

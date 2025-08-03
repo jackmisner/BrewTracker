@@ -65,6 +65,7 @@ interface UseRecipeBuilderReturn {
   saveRecipe: (event?: React.FormEvent) => Promise<Recipe>;
   recalculateMetrics: () => Promise<void>;
   importIngredients: (ingredientsToImport: RecipeIngredient[]) => Promise<void>;
+  replaceIngredients: (ingredientsToReplace: RecipeIngredient[]) => Promise<void>;
 
   // Utility actions
   clearError: () => void;
@@ -722,6 +723,52 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     [state.recipe, state.ingredients]
   );
 
+  // Replace ingredients (for AI optimization - replaces entire ingredient list)
+  const replaceIngredients = useCallback(
+    async (ingredientsToReplace: RecipeIngredient[]): Promise<void> => {
+      try {
+        dispatch({ type: 'REPLACE_INGREDIENTS_START' });
+
+        // Validate all ingredients
+        for (const ingredient of ingredientsToReplace) {
+          const validation = Services.ingredient.validateIngredientData(
+            ingredient.type as IngredientType,
+            ingredient as CreateRecipeIngredientData
+          );
+          if (!validation.isValid) {
+            throw new Error(
+              `Validation failed for ${ingredient.name}: ${validation.errors.join(", ")}`
+            );
+          }
+        }
+
+        // Replace entire ingredient list (not append like importIngredients)
+        const sortedIngredients = Services.ingredient.sortIngredients(ingredientsToReplace);
+
+        dispatch({ 
+          type: 'REPLACE_INGREDIENTS_SUCCESS', 
+          payload: sortedIngredients 
+        });
+
+        // Recalculate metrics
+        const metrics = await Services.metrics.calculateMetricsDebounced(
+          "recipe-builder",
+          state.recipe,
+          sortedIngredients
+        );
+
+        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+      } catch (error) {
+        console.error("Error replacing ingredients:", error);
+        dispatch({ 
+          type: 'REPLACE_INGREDIENTS_ERROR', 
+          payload: (error as Error).message || "Failed to replace ingredients" 
+        });
+      }
+    },
+    [state.recipe]
+  );
+
   // Utility actions
   const clearError = useCallback((): void => {
     dispatch({ type: 'CLEAR_ERROR' });
@@ -862,6 +909,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     saveRecipe,
     recalculateMetrics,
     importIngredients,
+    replaceIngredients,
 
     // Utility actions
     clearError,

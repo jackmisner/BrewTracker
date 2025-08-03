@@ -59,6 +59,9 @@ export type RecipeBuilderAction =
   | { type: 'IMPORT_INGREDIENTS_START' }
   | { type: 'IMPORT_INGREDIENTS_SUCCESS'; payload: RecipeIngredient[] }
   | { type: 'IMPORT_INGREDIENTS_ERROR'; payload: string }
+  | { type: 'REPLACE_INGREDIENTS_START' }
+  | { type: 'REPLACE_INGREDIENTS_SUCCESS'; payload: RecipeIngredient[] }
+  | { type: 'REPLACE_INGREDIENTS_ERROR'; payload: string }
 
   // Metrics calculation actions
   | { type: 'CALCULATE_METRICS_START' }
@@ -287,6 +290,30 @@ export const recipeBuilderReducer = (
         ...state,
         error: action.payload,
         addingIngredient: false,
+        calculatingMetrics: false,
+      };
+
+    case 'REPLACE_INGREDIENTS_START':
+      return {
+        ...state,
+        updatingIngredient: true,
+        error: null,
+      };
+
+    case 'REPLACE_INGREDIENTS_SUCCESS':
+      return {
+        ...state,
+        ingredients: action.payload,
+        hasUnsavedChanges: true,
+        updatingIngredient: false,
+        calculatingMetrics: true,
+      };
+
+    case 'REPLACE_INGREDIENTS_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        updatingIngredient: false,
         calculatingMetrics: false,
       };
 

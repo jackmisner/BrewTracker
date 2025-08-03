@@ -72,7 +72,7 @@ interface AISuggestionsProps {
   onBulkUpdateRecipe?: (
     updates: Array<{ field: keyof Recipe; value: any }>
   ) => Promise<void>;
-  importIngredients: (ingredientsToImport: RecipeIngredient[]) => Promise<void>;
+  replaceIngredients: (ingredientsToReplace: RecipeIngredient[]) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -198,7 +198,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   onRemoveIngredient: _onRemoveIngredient,
   onUpdateRecipe,
   onBulkUpdateRecipe: _onBulkUpdateRecipe,
-  importIngredients,
+  replaceIngredients,
   disabled = false,
 }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -722,9 +722,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         Array.isArray(optimizedRecipe.ingredients)
       ) {
         try {
-          // Use importIngredients to replace the entire ingredient list
+          // Use replaceIngredients to replace the entire ingredient list
           // This function handles all the complex ingredient management automatically
-          await importIngredients(optimizedRecipe.ingredients);
+          await replaceIngredients(optimizedRecipe.ingredients);
         } catch (error) {
           console.error("❌ APPLY: Failed to replace ingredients:", error);
           throw error;
