@@ -29,7 +29,8 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
   message: string;
-  user: User;
+  user?: User;
+  verification_email_sent?: boolean;
 }
 
 export interface ValidateUsernameRequest {
@@ -54,6 +55,27 @@ export interface GoogleAuthResponse {
   access_token: string;
   user: User;
   message: string;
+}
+
+// Email verification API types
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  access_token?: string;  // Optional for auto-login
+  user?: any;            // Optional user data for auto-login
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+}
+
+export interface VerificationStatusResponse {
+  email_verified: boolean;
+  email: string;
+  verification_sent_at?: string;
 }
 
 // User API types

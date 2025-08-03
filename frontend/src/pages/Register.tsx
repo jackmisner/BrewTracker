@@ -43,6 +43,8 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
     isValid: null,
     suggestions: []
   });
+  const [registrationSuccess, setRegistrationSuccess] = useState<boolean>(false);
+  const [verificationEmailSent, setVerificationEmailSent] = useState<boolean>(false);
 
   // Debounced username validation
   const validateUsernameAsync = useCallback(
@@ -224,20 +226,16 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
 
     try {
       // Send registration data to API
-      await ApiService.auth.register({
+      const registerResponse = await ApiService.auth.register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
 
-      // After successful registration, log the user in
-      const loginResponse = await ApiService.auth.login({
-        username: formData.username,
-        password: formData.password,
-      });
-
-      // Update app state with user info and token
-      onLogin(loginResponse.data.user, loginResponse.data.access_token);
+      // Registration successful - show verification message instead of auto-login
+      setRegistrationSuccess(true);
+      setVerificationEmailSent(registerResponse.data.verification_email_sent || false);
+      
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
@@ -307,14 +305,55 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
         {/* Form Section */}
         <div className="auth-form-section">
           <div data-testid="auth-container" className="auth-container">
-            <h2 data-testid="auth-title" className="auth-title">
-              Create Account
-            </h2>
-            <p data-testid="auth-subtitle" className="auth-subtitle">
-              Join the brewing community
-            </p>
+            {registrationSuccess ? (
+              // Success message
+              <div className="registration-success">
+                <div className="auth-icon success">
+                  ✅
+                </div>
+                <h2 className="auth-title">Account Created Successfully!</h2>
+                {verificationEmailSent ? (
+                  <>
+                    <p className="auth-subtitle">
+                      We've sent a verification email to <strong>{formData.email}</strong>
+                    </p>
+                    <div className="verification-instructions">
+                      <p>Please check your email and click the verification link to activate your account.</p>
+                      <p className="verification-note">
+                        <strong>Important:</strong> You'll need to verify your email before you can access all features.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="auth-subtitle">
+                    Your account has been created, but we couldn't send the verification email. 
+                    Please contact support if you need assistance.
+                  </p>
+                )}
+                
+                <div className="auth-actions">
+                  <a href="/login" className="auth-button primary">
+                    Continue to Login
+                  </a>
+                  <button 
+                    onClick={() => setRegistrationSuccess(false)} 
+                    className="auth-button secondary"
+                  >
+                    Back to Registration
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Registration form
+              <>
+                <h2 data-testid="auth-title" className="auth-title">
+                  Create Account
+                </h2>
+                <p data-testid="auth-subtitle" className="auth-subtitle">
+                  Join the brewing community
+                </p>
 
-            {error && <div className="auth-error">{error}</div>}
+                {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-form-group">
@@ -464,12 +503,14 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
           disabled={loading}
         />
 
-            <div className="auth-nav">
-              <p className="auth-nav-text">Already have an account?</p>
-              <a href="/login" className="auth-nav-link">
-                Sign in here
-              </a>
-            </div>
+                <div className="auth-nav">
+                  <p className="auth-nav-text">Already have an account?</p>
+                  <a href="/login" className="auth-nav-link">
+                    Sign in here
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

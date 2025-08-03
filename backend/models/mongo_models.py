@@ -91,6 +91,11 @@ class User(Document):
     is_active = BooleanField(default=True)
     email_verified = BooleanField(default=False)
 
+    # Email verification fields
+    email_verification_token = StringField()
+    email_verification_expires = DateTimeField()
+    email_verification_sent_at = DateTimeField()
+
     meta = {"collection": "users", "indexes": ["username", "email", "google_id"]}
 
     def set_password(self, password):
