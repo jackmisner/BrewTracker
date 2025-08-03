@@ -7,11 +7,9 @@
   margin: 0;
   padding: 2rem 1rem;
   background-color: transparent;
-  height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Prevent entire container from scrolling */
 }
 
 .ingredient-manager-header {
@@ -37,8 +35,6 @@
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   flex: 1;
-  min-height: 0; /* Allow flex to shrink */
-  overflow: hidden; /* Prevent grid from expanding */
 }
 
 /* ==========================================================================
@@ -64,9 +60,7 @@
 .ingredients-list-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden; /* Prevent card from expanding */
+  height: fit-content;
 }
 
 .card-title {
@@ -362,8 +356,8 @@
 
 .ingredients-list {
   flex: 1;
-  min-height: 0; /* Allow flex to shrink to 0 */
-  max-height: calc(100vh - 300px); /* Constrain to viewport minus headers/padding */
+  min-height: 400px; /* Ensure decent minimum height */
+  max-height: 80vh; /* Still limit max height for very tall screens */
   overflow-y: auto;
   overflow-x: hidden;
 }
