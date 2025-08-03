@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
 from models.mongo_models import User, UserSettings
+from services.email_service import EmailService
 from services.google_oauth_service import GoogleOAuthService
 from services.username_validation_service import UsernameValidationService
 
@@ -71,7 +72,21 @@ def register():
     user.set_password(password)
     user.save()
 
-    return jsonify({"message": "User created successfully"}), 201
+    # Send verification email
+    verification_sent = EmailService.send_verification_email(user)
+
+    response_message = "User created successfully"
+    if verification_sent:
+        response_message += ". Please check your email to verify your account."
+    else:
+        response_message += ". Warning: Verification email could not be sent."
+
+    return (
+        jsonify(
+            {"message": response_message, "verification_email_sent": verification_sent}
+        ),
+        201,
+    )
 
 
 @auth_bp.route("/validate-username", methods=["POST"])
@@ -332,6 +347,129 @@ def unlink_google_account():
     return (
         jsonify(
             {"message": "Google account unlinked successfully", "user": user.to_dict()}
+        ),
+        200,
+    )
+
+
+@auth_bp.route("/send-verification", methods=["POST"])
+@jwt_required()
+def send_verification_email():
+    """Send email verification to current user"""
+    user_id = get_jwt_identity()
+    user = User.objects(id=user_id).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.email_verified:
+        return jsonify({"message": "Email is already verified"}), 200
+
+    # Check rate limiting
+    can_send, error_message = EmailService.can_resend_verification(user)
+    if not can_send:
+        return jsonify({"error": error_message}), 429
+
+    # Send verification email
+    success = EmailService.send_verification_email(user)
+
+    if success:
+        return jsonify({"message": "Verification email sent successfully"}), 200
+    else:
+        return jsonify({"error": "Failed to send verification email"}), 500
+
+
+@auth_bp.route("/verify-email", methods=["POST"])
+def verify_email():
+    """Verify email using token"""
+    try:
+        data = request.get_json()
+        token = data.get("token")
+
+        if not token:
+            return jsonify({"error": "Verification token is required"}), 400
+
+        # Verify the token
+        result = EmailService.verify_email_token(token)
+
+        if result["success"]:
+            # Auto-login: create JWT token for the verified user
+            if "user" in result:
+                verified_user = result["user"]
+
+                # Create access token for auto-login
+                expires = timedelta(days=1)
+                access_token = create_access_token(
+                    identity=str(verified_user.id), expires_delta=expires
+                )
+
+                return (
+                    jsonify(
+                        {
+                            "message": result["message"],
+                            "access_token": access_token,
+                            "user": verified_user.to_dict(),
+                        }
+                    ),
+                    200,
+                )
+            else:
+                return jsonify({"message": result["message"]}), 200
+        else:
+            return jsonify({"error": result["error"]}), 400
+
+    except Exception as e:
+        return jsonify({"error": "Internal server error during verification"}), 500
+
+
+@auth_bp.route("/resend-verification", methods=["POST"])
+@jwt_required()
+def resend_verification():
+    """Resend verification email (with rate limiting)"""
+    user_id = get_jwt_identity()
+    user = User.objects(id=user_id).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.email_verified:
+        return jsonify({"message": "Email is already verified"}), 200
+
+    # Check rate limiting
+    can_send, error_message = EmailService.can_resend_verification(user)
+    if not can_send:
+        return jsonify({"error": error_message}), 429
+
+    # Send verification email
+    success = EmailService.send_verification_email(user)
+
+    if success:
+        return jsonify({"message": "Verification email sent successfully"}), 200
+    else:
+        return jsonify({"error": "Failed to send verification email"}), 500
+
+
+@auth_bp.route("/verification-status", methods=["GET"])
+@jwt_required()
+def get_verification_status():
+    """Get current user's email verification status"""
+    user_id = get_jwt_identity()
+    user = User.objects(id=user_id).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return (
+        jsonify(
+            {
+                "email_verified": user.email_verified,
+                "email": user.email,
+                "verification_sent_at": (
+                    user.email_verification_sent_at.isoformat()
+                    if user.email_verification_sent_at
+                    else None
+                ),
+            }
         ),
         200,
     )

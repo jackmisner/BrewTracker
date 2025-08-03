@@ -11,6 +11,7 @@
 import React from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import EmailVerificationBanner from "../EmailVerificationBanner";
 import { User } from "../../types";
 
 interface LayoutProps {
@@ -23,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header user={user} onLogout={onLogout} />
+      {user && <EmailVerificationBanner user={user} />}
       <main className="flex-grow container mx-auto p-4">{children}</main>
       <Footer />
     </div>

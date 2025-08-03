@@ -104,18 +104,15 @@ describe("Register Page", () => {
     ).toBeInTheDocument();
   });
 
-  test("successfully submits the form with valid data and logs in afterwards", async () => {
+  test("successfully submits the form with valid data and shows verification message", async () => {
     // Mock successful API responses
     (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
     (ApiService.auth.register as jest.Mock).mockResolvedValue({
-      data: { message: "User created successfully" }
-    });
-    (ApiService.auth.login as jest.Mock).mockResolvedValue({
       data: { 
-        access_token: "test-token",
-        user: { id: "1", username: "exampleuser", email: "example@example.com" }
+        message: "User created successfully. Please check your email to verify your account.",
+        verification_email_sent: true
       }
     });
 
@@ -149,12 +146,18 @@ describe("Register Page", () => {
       });
     });
 
+    // Should show success message instead of logging in
     await waitFor(() => {
-      expect(ApiService.auth.login).toHaveBeenCalledWith({
-        username: "exampleuser",
-        password: "password123",
-      });
+      expect(screen.getByText("Account Created Successfully!")).toBeInTheDocument();
     });
+
+    await waitFor(() => {
+      expect(screen.getByText(/We've sent a verification email to/)).toBeInTheDocument();
+    });
+
+    // Should NOT call login
+    expect(ApiService.auth.login).not.toHaveBeenCalled();
+    expect(mockOnLogin).not.toHaveBeenCalled();
   });
 
   test("handles registration form submission via enter key", async () => {
@@ -165,12 +168,9 @@ describe("Register Page", () => {
       data: { valid: true, suggestions: [] }
     });
     (ApiService.auth.register as jest.Mock).mockResolvedValue({
-      data: { message: "User created successfully" }
-    });
-    (ApiService.auth.login as jest.Mock).mockResolvedValue({
       data: { 
-        access_token: "test-token",
-        user: { id: "1", username: "exampleuser", email: "example@example.com" }
+        message: "User created successfully. Please check your email to verify your account.",
+        verification_email_sent: true
       }
     });
 
@@ -203,12 +203,14 @@ describe("Register Page", () => {
       });
     });
 
+    // Should show success message instead of logging in
     await waitFor(() => {
-      expect(ApiService.auth.login).toHaveBeenCalledWith({
-        username: "exampleuser",
-        password: "password123",
-      });
+      expect(screen.getByText("Account Created Successfully!")).toBeInTheDocument();
     });
+
+    // Should NOT call login
+    expect(ApiService.auth.login).not.toHaveBeenCalled();
+    expect(mockOnLogin).not.toHaveBeenCalled();
   });
 
   test("validates username length and shows/hides error", async () => {
@@ -496,19 +498,12 @@ describe("Register Page", () => {
     // Mock a slow API response for registration
     (ApiService.auth.register as jest.Mock).mockImplementation(
       () =>
-        new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
-    );
-    (ApiService.auth.login as jest.Mock).mockImplementation(
-      () =>
-        new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                data: { user: { id: "1", username: "exampleuser", email: "example@example.com" }, access_token: "token" },
-              }),
-            100
-          )
-        )
+        new Promise((resolve) => setTimeout(() => resolve({ 
+          data: {
+            message: "User created successfully. Please check your email to verify your account.",
+            verification_email_sent: true
+          }
+        }), 100))
     );
 
     render(<Register onLogin={mockOnLogin} />);
@@ -540,9 +535,13 @@ describe("Register Page", () => {
     expect(submitButton).toHaveClass("loading");
     expect(submitButton).toHaveTextContent("");
 
-    // Wait for loading to complete
+    // Wait for loading to complete and success message to appear
     await waitFor(() => {
-      expect(mockOnLogin).toHaveBeenCalled();
+      expect(screen.getByText("Account Created Successfully!")).toBeInTheDocument();
     });
+
+    // Should NOT call login
+    expect(ApiService.auth.login).not.toHaveBeenCalled();
+    expect(mockOnLogin).not.toHaveBeenCalled();
   });
 });
