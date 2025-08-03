@@ -223,7 +223,11 @@ class EmailService:
         # Find user with this token
         user = User.objects(email_verification_token=token).first()
         if not user:
-            return {"success": False, "error": "Invalid verification token"}
+            return {"success": False, "error": "Invalid or expired verification token"}
+
+        # Check if user is already verified (handles double-execution gracefully)
+        if user.email_verified:
+            return {"success": True, "message": "Email already verified", "user": user}
 
         # Check if token is expired
         if not user.email_verification_expires:
