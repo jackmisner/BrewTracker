@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useReducer, useEffect, useCallback } from "react";
 import { useNavigate, useBlocker } from "react-router";
 import { useUnits } from "../contexts/UnitContext";
 import { Services } from "../services";
 import { UserSettings as UserSettingsType } from "../types";
+import {
+  userSettingsReducer,
+  createInitialUserSettingsState,
+  type TabId,
+} from "../reducers";
 import "../styles/UserSettings.css";
-
-type TabId = "account" | "preferences" | "privacy" | "security";
 
 interface Tab {
   id: TabId;
@@ -13,117 +16,43 @@ interface Tab {
   icon: string;
 }
 
-// Use the FullUserSettings type from the service
-type FullUserSettings = Awaited<
-  ReturnType<typeof Services.userSettings.getUserSettings>
->;
-
 interface SettingsUpdateData extends Partial<UserSettingsType> {}
-
-interface ProfileForm {
-  username: string;
-  email: string;
-}
-
-interface PasswordForm {
-  current_password: string;
-  new_password: string;
-  confirm_password: string;
-}
-
-interface DeleteForm {
-  password: string;
-  confirmation: string;
-  preserve_public_recipes: boolean;
-}
-
-interface PreferencesForm {
-  default_batch_size: number;
-  preferred_units: "imperial" | "metric";
-  timezone: string;
-  email_notifications: boolean;
-  brew_reminders: boolean;
-}
-
-interface PrivacyForm {
-  contribute_anonymous_data: boolean;
-  share_yeast_performance: boolean;
-  share_recipe_metrics: boolean;
-  public_recipes_default: boolean;
-}
 
 const UserSettings: React.FC = () => {
   const navigate = useNavigate();
   const { updateUnitSystem } = useUnits();
 
-  const [activeTab, setActiveTab] = useState<TabId>("account");
-  const [settings, setSettings] = useState<FullUserSettings | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  // Initialize reducer
+  const [state, dispatch] = useReducer(
+    userSettingsReducer,
+    createInitialUserSettingsState()
+  );
 
-  // Form states
-  const [profileForm, setProfileForm] = useState<ProfileForm>({
-    username: "",
-    email: "",
-  });
-
-  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
-    current_password: "",
-    new_password: "",
-    confirm_password: "",
-  });
-
-  const [deleteForm, setDeleteForm] = useState<DeleteForm>({
-    password: "",
-    confirmation: "",
-    preserve_public_recipes: true, // Default to preserving public recipes
-  });
-
-  const [preferencesForm, setPreferencesForm] = useState<PreferencesForm>({
-    default_batch_size: 5.0,
-    preferred_units: "imperial" as const,
-    timezone: "UTC",
-    email_notifications: true,
-    brew_reminders: true,
-  });
-
-  const [privacyForm, setPrivacyForm] = useState<PrivacyForm>({
-    contribute_anonymous_data: false,
-    share_yeast_performance: false,
-    share_recipe_metrics: false,
-    public_recipes_default: false,
-  });
-
-  // Track original form values for comparison
-  const [originalProfileForm, setOriginalProfileForm] = useState<ProfileForm>({
-    username: "",
-    email: "",
-  });
-  const [originalPreferencesForm, setOriginalPreferencesForm] =
-    useState<PreferencesForm>({
-      default_batch_size: 5.0,
-      preferred_units: "imperial" as const,
-      timezone: "UTC",
-      email_notifications: true,
-      brew_reminders: true,
-    });
-  const [originalPrivacyForm, setOriginalPrivacyForm] = useState<PrivacyForm>({
-    contribute_anonymous_data: false,
-    share_yeast_performance: false,
-    share_recipe_metrics: false,
-    public_recipes_default: false,
-  });
+  // Destructure state for cleaner access
+  const {
+    settings,
+    activeTab,
+    loading,
+    saving,
+    error,
+    successMessage,
+    hasUnsavedChanges,
+    profileForm,
+    passwordForm,
+    deleteForm,
+    preferencesForm,
+    privacyForm,
+    originalProfileForm,
+    originalPreferencesForm,
+    originalPrivacyForm,
+  } = state;
 
   // Load user settings on mount
   useEffect(() => {
     const loadSettings = async (): Promise<void> => {
       try {
-        setLoading(true);
+        dispatch({ type: 'INITIALIZE_START' });
         const userSettings = await Services.userSettings.getUserSettings();
-        setSettings(userSettings);
 
         // Populate forms
         const profileData = {
@@ -151,19 +80,18 @@ const UserSettings: React.FC = () => {
             userSettings.settings.public_recipes_default || false,
         };
 
-        setProfileForm(profileData);
-        setPreferencesForm(preferencesData);
-        setPrivacyForm(privacyData);
-
-        // Store original values for comparison
-        setOriginalProfileForm(profileData);
-        setOriginalPreferencesForm(preferencesData);
-        setOriginalPrivacyForm(privacyData);
+        dispatch({
+          type: 'INITIALIZE_SUCCESS',
+          payload: {
+            settings: userSettings,
+            profileForm: profileData,
+            preferencesForm: preferencesData,
+            privacyForm: privacyData,
+          },
+        });
       } catch (err: any) {
         console.error("Error loading settings:", err);
-        setError("Failed to load user settings");
-      } finally {
-        setLoading(false);
+        dispatch({ type: 'INITIALIZE_ERROR', payload: "Failed to load user settings" });
       }
     };
 
@@ -181,7 +109,7 @@ const UserSettings: React.FC = () => {
       JSON.stringify(privacyForm) !== JSON.stringify(originalPrivacyForm);
 
     const hasChanges = profileChanged || preferencesChanged || privacyChanged;
-    setHasUnsavedChanges(hasChanges);
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
     return hasChanges;
   }, [
     profileForm,
@@ -200,7 +128,7 @@ const UserSettings: React.FC = () => {
   // Clear messages after a delay
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      const timer = setTimeout(() => dispatch({ type: 'CLEAR_SUCCESS_MESSAGE' }), 3000);
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -211,16 +139,14 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      setSaving(true);
-      setError("");
+      dispatch({ type: 'SAVE_START' });
 
       await Services.userSettings.updateProfile(profileForm);
-      setOriginalProfileForm({ ...profileForm }); // Update original to match saved state
-      setSuccessMessage("Profile updated successfully");
+      // Update original to match saved state
+      dispatch({ type: 'UPDATE_ORIGINAL_PROFILE_FORM', payload: profileForm });
+      dispatch({ type: 'SAVE_SUCCESS', payload: "Profile updated successfully" });
     } catch (err: any) {
-      setError(err.message || "Failed to update profile");
-    } finally {
-      setSaving(false);
+      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update profile" });
     }
   };
 
@@ -229,20 +155,13 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      setSaving(true);
-      setError("");
+      dispatch({ type: 'SAVE_START' });
 
       await Services.userSettings.changePassword(passwordForm);
-      setSuccessMessage("Password changed successfully");
-      setPasswordForm({
-        current_password: "",
-        new_password: "",
-        confirm_password: "",
-      });
+      dispatch({ type: 'SAVE_SUCCESS', payload: "Password changed successfully" });
+      dispatch({ type: 'RESET_PASSWORD_FORM' });
     } catch (err: any) {
-      setError(err.message || "Failed to change password");
-    } finally {
-      setSaving(false);
+      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to change password" });
     }
   };
 
@@ -251,8 +170,7 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      setSaving(true);
-      setError("");
+      dispatch({ type: 'SAVE_START' });
 
       // Update preferences using the settings service
       await Services.userSettings.updateSettings(
@@ -264,12 +182,10 @@ const UserSettings: React.FC = () => {
         preferencesForm.preferred_units as "imperial" | "metric"
       );
 
-      setOriginalPreferencesForm({ ...preferencesForm }); // Update original to match saved state
-      setSuccessMessage("Preferences updated successfully");
+      dispatch({ type: 'UPDATE_ORIGINAL_PREFERENCES_FORM', payload: preferencesForm });
+      dispatch({ type: 'SAVE_SUCCESS', payload: "Preferences updated successfully" });
     } catch (err: any) {
-      setError(err.message || "Failed to update preferences");
-    } finally {
-      setSaving(false);
+      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update preferences" });
     }
   };
 
@@ -278,16 +194,13 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      setSaving(true);
-      setError("");
+      dispatch({ type: 'SAVE_START' });
 
       await Services.userSettings.updateSettings(privacyForm);
-      setOriginalPrivacyForm({ ...privacyForm }); // Update original to match saved state
-      setSuccessMessage("Privacy settings updated successfully");
+      dispatch({ type: 'UPDATE_ORIGINAL_PRIVACY_FORM', payload: privacyForm });
+      dispatch({ type: 'SAVE_SUCCESS', payload: "Privacy settings updated successfully" });
     } catch (err: any) {
-      setError(err.message || "Failed to update privacy settings");
-    } finally {
-      setSaving(false);
+      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update privacy settings" });
     }
   };
 
@@ -304,8 +217,7 @@ const UserSettings: React.FC = () => {
     }
 
     try {
-      setSaving(true);
-      setError("");
+      dispatch({ type: 'SAVE_START' });
 
       await Services.userSettings.deleteAccount(deleteForm);
       // Logout and redirect
@@ -313,8 +225,7 @@ const UserSettings: React.FC = () => {
       window.dispatchEvent(new Event("authChange"));
       navigate("/login");
     } catch (err: any) {
-      setError(err.message || "Failed to delete account");
-      setSaving(false);
+      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to delete account" });
     }
   };
 
@@ -324,11 +235,14 @@ const UserSettings: React.FC = () => {
   ): void => {
     const defaultBatchSize = newUnitSystem === "metric" ? 19 : 5;
 
-    setPreferencesForm((prev) => ({
-      ...prev,
-      preferred_units: newUnitSystem,
-      default_batch_size: defaultBatchSize,
-    }));
+    dispatch({
+      type: 'UPDATE_PREFERENCES_FIELD',
+      payload: { field: 'preferred_units', value: newUnitSystem }
+    });
+    dispatch({
+      type: 'UPDATE_PREFERENCES_FIELD',
+      payload: { field: 'default_batch_size', value: defaultBatchSize }
+    });
   };
 
   // Block navigation when there are unsaved changes
@@ -385,7 +299,7 @@ const UserSettings: React.FC = () => {
               <button
                 className="btn btn-danger"
                 onClick={() => {
-                  setHasUnsavedChanges(false);
+                  dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
                   blocker.proceed?.();
                 }}
               >
@@ -409,7 +323,7 @@ const UserSettings: React.FC = () => {
             <div className="error-content">
               <span className="error-icon">⚠️</span>
               <span className="error-message">{error}</span>
-              <button onClick={() => setError("")} className="error-dismiss">
+              <button onClick={() => dispatch({ type: 'CLEAR_ERROR' })} className="error-dismiss">
                 ×
               </button>
             </div>
@@ -422,7 +336,7 @@ const UserSettings: React.FC = () => {
               <span className="success-icon">✅</span>
               <span className="success-message">{successMessage}</span>
               <button
-                onClick={() => setSuccessMessage("")}
+                onClick={() => dispatch({ type: 'CLEAR_SUCCESS_MESSAGE' })}
                 className="success-dismiss"
               >
                 ×
@@ -437,7 +351,7 @@ const UserSettings: React.FC = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: tab.id })}
                 className={`settings-tab ${
                   activeTab === tab.id ? "active" : ""
                 }`}
@@ -463,9 +377,9 @@ const UserSettings: React.FC = () => {
                       id="username"
                       value={profileForm.username}
                       onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          username: e.target.value,
+                        dispatch({
+                          type: 'UPDATE_PROFILE_FIELD',
+                          payload: { field: 'username', value: e.target.value }
                         })
                       }
                       className="form-control"
@@ -483,9 +397,9 @@ const UserSettings: React.FC = () => {
                       id="email"
                       value={profileForm.email}
                       onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          email: e.target.value,
+                        dispatch({
+                          type: 'UPDATE_PROFILE_FIELD',
+                          payload: { field: 'email', value: e.target.value }
                         })
                       }
                       className="form-control"
@@ -610,9 +524,9 @@ const UserSettings: React.FC = () => {
                       max="100"
                       value={preferencesForm.default_batch_size}
                       onChange={(e) =>
-                        setPreferencesForm({
-                          ...preferencesForm,
-                          default_batch_size: parseFloat(e.target.value),
+                        dispatch({
+                          type: 'UPDATE_PREFERENCES_FIELD',
+                          payload: { field: 'default_batch_size', value: parseFloat(e.target.value) }
                         })
                       }
                       className="form-control"
@@ -633,9 +547,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={preferencesForm.email_notifications}
                           onChange={(e) =>
-                            setPreferencesForm({
-                              ...preferencesForm,
-                              email_notifications: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PREFERENCES_FIELD',
+                              payload: { field: 'email_notifications', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -647,9 +561,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={preferencesForm.brew_reminders}
                           onChange={(e) =>
-                            setPreferencesForm({
-                              ...preferencesForm,
-                              brew_reminders: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PREFERENCES_FIELD',
+                              payload: { field: 'brew_reminders', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -689,9 +603,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={privacyForm.contribute_anonymous_data}
                           onChange={(e) =>
-                            setPrivacyForm({
-                              ...privacyForm,
-                              contribute_anonymous_data: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PRIVACY_FIELD',
+                              payload: { field: 'contribute_anonymous_data', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -713,9 +627,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={privacyForm.share_yeast_performance}
                           onChange={(e) =>
-                            setPrivacyForm({
-                              ...privacyForm,
-                              share_yeast_performance: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PRIVACY_FIELD',
+                              payload: { field: 'share_yeast_performance', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -736,9 +650,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={privacyForm.share_recipe_metrics}
                           onChange={(e) =>
-                            setPrivacyForm({
-                              ...privacyForm,
-                              share_recipe_metrics: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PRIVACY_FIELD',
+                              payload: { field: 'share_recipe_metrics', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -764,9 +678,9 @@ const UserSettings: React.FC = () => {
                           type="checkbox"
                           checked={privacyForm.public_recipes_default}
                           onChange={(e) =>
-                            setPrivacyForm({
-                              ...privacyForm,
-                              public_recipes_default: e.target.checked,
+                            dispatch({
+                              type: 'UPDATE_PRIVACY_FIELD',
+                              payload: { field: 'public_recipes_default', value: e.target.checked }
                             })
                           }
                           disabled={saving}
@@ -818,9 +732,9 @@ const UserSettings: React.FC = () => {
                         id="current_password"
                         value={passwordForm.current_password}
                         onChange={(e) =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            current_password: e.target.value,
+                          dispatch({
+                            type: 'UPDATE_PASSWORD_FIELD',
+                            payload: { field: 'current_password', value: e.target.value }
                           })
                         }
                         className="form-control"
@@ -838,9 +752,9 @@ const UserSettings: React.FC = () => {
                         id="new_password"
                         value={passwordForm.new_password}
                         onChange={(e) =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            new_password: e.target.value,
+                          dispatch({
+                            type: 'UPDATE_PASSWORD_FIELD',
+                            payload: { field: 'new_password', value: e.target.value }
                           })
                         }
                         className="form-control"
@@ -859,9 +773,9 @@ const UserSettings: React.FC = () => {
                         id="confirm_password"
                         value={passwordForm.confirm_password}
                         onChange={(e) =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            confirm_password: e.target.value,
+                          dispatch({
+                            type: 'UPDATE_PASSWORD_FIELD',
+                            payload: { field: 'confirm_password', value: e.target.value }
                           })
                         }
                         className="form-control"
@@ -908,9 +822,9 @@ const UserSettings: React.FC = () => {
                             name="preserve_public_recipes"
                             checked={deleteForm.preserve_public_recipes}
                             onChange={() =>
-                              setDeleteForm({
-                                ...deleteForm,
-                                preserve_public_recipes: true,
+                              dispatch({
+                                type: 'UPDATE_DELETE_FIELD',
+                                payload: { field: 'preserve_public_recipes', value: true }
                               })
                             }
                             disabled={saving}
@@ -925,9 +839,9 @@ const UserSettings: React.FC = () => {
                             name="preserve_public_recipes"
                             checked={!deleteForm.preserve_public_recipes}
                             onChange={() =>
-                              setDeleteForm({
-                                ...deleteForm,
-                                preserve_public_recipes: false,
+                              dispatch({
+                                type: 'UPDATE_DELETE_FIELD',
+                                payload: { field: 'preserve_public_recipes', value: false }
                               })
                             }
                             disabled={saving}
@@ -952,9 +866,9 @@ const UserSettings: React.FC = () => {
                         id="delete_password"
                         value={deleteForm.password}
                         onChange={(e) =>
-                          setDeleteForm({
-                            ...deleteForm,
-                            password: e.target.value,
+                          dispatch({
+                            type: 'UPDATE_DELETE_FIELD',
+                            payload: { field: 'password', value: e.target.value }
                           })
                         }
                         className="form-control"
@@ -975,9 +889,9 @@ const UserSettings: React.FC = () => {
                         id="delete_confirmation"
                         value={deleteForm.confirmation}
                         onChange={(e) =>
-                          setDeleteForm({
-                            ...deleteForm,
-                            confirmation: e.target.value,
+                          dispatch({
+                            type: 'UPDATE_DELETE_FIELD',
+                            payload: { field: 'confirmation', value: e.target.value }
                           })
                         }
                         className="form-control"

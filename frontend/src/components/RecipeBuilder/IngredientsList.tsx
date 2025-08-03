@@ -563,9 +563,9 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </h4>
               <div className="ingredient-cards">
-                {items.map((ingredient) => (
+                {items.map((ingredient, index) => (
                   <div
-                    key={`${ingredient.type}-${ingredient.id}`}
+                    key={`${ingredient.type}-${ingredient.id || `temp-${index}`}-${ingredient.name?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}
                     className={`ingredient-card ${getRowClass(ingredient)}`}
                   >
                     <div className="ingredient-card-header">
@@ -766,10 +766,10 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
             </tr>
           </thead>
           <tbody>
-            {sortedIngredients.map((ingredient) => (
+            {sortedIngredients.map((ingredient, index) => (
               <tr
-                key={`${ingredient.type}-${ingredient.id}`}
-                id={`ingredient-row-${ingredient.id}`}
+                key={`${ingredient.type}-${ingredient.id || `temp-${index}`}-${ingredient.name?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}
+                id={`ingredient-row-${ingredient.id || `temp-${index}`}`}
                 className={getRowClass(ingredient)}
               >
                 {isEditing && (

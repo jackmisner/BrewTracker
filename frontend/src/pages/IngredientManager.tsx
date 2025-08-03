@@ -1,103 +1,42 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useReducer, useEffect, useMemo, useCallback } from "react";
 import Fuse from "fuse.js";
 import ApiService from "../services/api";
 import { ingredientServiceInstance } from "../services";
 import { useUnits } from "../contexts/UnitContext";
 import { convertUnit } from "../utils/formatUtils";
 import { Ingredient, IngredientType } from "../types";
+import {
+  ingredientManagerReducer,
+  createInitialIngredientManagerState,
+  type GroupedIngredients,
+  type IngredientWithSearch,
+} from "../reducers";
 import "../styles/IngredientManager.css";
 
-interface IngredientFormData {
-  name: string;
-  type: IngredientType;
-  description: string;
-  // Grain-specific fields
-  grain_type: string;
-  potential: string;
-  color: string;
-  // Hop-specific fields
-  alpha_acid: string;
-  // Yeast-specific fields
-  yeast_type: string;
-  attenuation: string;
-  manufacturer: string;
-  code: string;
-  alcohol_tolerance: string;
-  min_temperature: string;
-  max_temperature: string;
-}
-
-interface IngredientWithSearch extends Ingredient {
-  searchScore?: number;
-  searchMatches?: any[];
-}
-
-interface GroupedIngredients {
-  grain: IngredientWithSearch[];
-  hop: IngredientWithSearch[];
-  yeast: IngredientWithSearch[];
-  other: IngredientWithSearch[];
-}
+// Interfaces now imported from reducer
 
 const IngredientManager: React.FC = () => {
   const { unitSystem } = useUnits();
   
-  // Form state
-  const [formData, setFormData] = useState<IngredientFormData>({
-    name: "",
-    type: "grain",
-    description: "",
-    // Grain-specific fields
-    grain_type: "",
-    potential: "",
-    color: "",
-    // Hop-specific fields
-    alpha_acid: "",
-    // Yeast-specific fields
-    yeast_type: "",
-    attenuation: "",
-    manufacturer: "",
-    code: "",
-    alcohol_tolerance: "",
-    min_temperature: "",
-    max_temperature: "",
-  });
-
-  // UI state
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
-  const [existingIngredients, setExistingIngredients] = useState<Ingredient[]>(
-    []
+  // Initialize reducer
+  const [state, dispatch] = useReducer(
+    ingredientManagerReducer,
+    createInitialIngredientManagerState()
   );
-  const [groupedIngredients, setGroupedIngredients] =
-    useState<GroupedIngredients>({
-      grain: [],
-      hop: [],
-      yeast: [],
-      other: [],
-    });
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filteredResults, setFilteredResults] = useState<GroupedIngredients>({
-    grain: [],
-    hop: [],
-    yeast: [],
-    other: [],
-  });
-  const [expandedSections, setExpandedSections] = useState<{
-    [key: string]: boolean;
-  }>({
-    grain: false,
-    hop: false,
-    yeast: false,
-    other: false,
-  });
-  const [defaultExpandedState] = useState<{ [key: string]: boolean }>({
-    grain: false,
-    hop: false,
-    yeast: false,
-    other: false,
-  });
+
+  // Destructure state for cleaner access
+  const {
+    formData,
+    loading,
+    error,
+    success,
+    existingIngredients,
+    groupedIngredients,
+    searchQuery,
+    filteredResults,
+    expandedSections,
+    defaultExpandedState,
+  } = state;
 
   // Custom sorting function for ingredients with special handling for caramel malts and candi syrups
   const sortIngredients = useCallback((ingredients: IngredientWithSearch[]): IngredientWithSearch[] => {
@@ -192,7 +131,7 @@ const IngredientManager: React.FC = () => {
           ? response.data
           : (response.data as any).ingredients || [];
 
-        setExistingIngredients(ingredients);
+        dispatch({ type: 'SET_EXISTING_INGREDIENTS', payload: ingredients });
 
         // Use the IngredientService to group ingredients by type
         const grouped = ingredientServiceInstance.groupIngredientsByType(
@@ -204,13 +143,13 @@ const IngredientManager: React.FC = () => {
           grouped[type as keyof GroupedIngredients] = sortIngredients(grouped[type as keyof GroupedIngredients]);
         });
         
-        setGroupedIngredients(grouped);
+        dispatch({ type: 'SET_GROUPED_INGREDIENTS', payload: grouped });
 
         // Initialize filtered results with all sorted grouped ingredients
-        setFilteredResults(grouped);
+        dispatch({ type: 'SET_FILTERED_RESULTS', payload: grouped });
       } catch (err: any) {
         console.error("Error loading ingredients:", err);
-        setError("Failed to load existing ingredients");
+        dispatch({ type: 'SET_ERROR', payload: "Failed to load existing ingredients" });
       }
     };
     loadIngredients();
@@ -226,26 +165,38 @@ const IngredientManager: React.FC = () => {
         sortedGroupedIngredients[type as keyof GroupedIngredients] = sortIngredients(sortedGroupedIngredients[type as keyof GroupedIngredients]);
       });
       
-      setFilteredResults(sortedGroupedIngredients);
-      setExpandedSections(defaultExpandedState);
+      dispatch({ 
+        type: 'SEARCH_COMPLETE', 
+        payload: { 
+          results: sortedGroupedIngredients, 
+          expandSections: false 
+        } 
+      });
+      dispatch({ type: 'SET_EXPANDED_SECTIONS', payload: defaultExpandedState });
       return;
     }
 
     // When searching, expand all sections to show results
-    setExpandedSections({
-      grain: true,
-      hop: true,
-      yeast: true,
-      other: true,
+    dispatch({ 
+      type: 'SET_EXPANDED_SECTIONS', 
+      payload: {
+        grain: true,
+        hop: true,
+        yeast: true,
+        other: true,
+      }
     });
 
     if (!fuse) {
       // Fuse not ready yet
-      setFilteredResults({
-        grain: [],
-        hop: [],
-        yeast: [],
-        other: [],
+      dispatch({ 
+        type: 'SET_FILTERED_RESULTS', 
+        payload: {
+          grain: [],
+          hop: [],
+          yeast: [],
+          other: [],
+        }
       });
       return;
     }
@@ -279,7 +230,7 @@ const IngredientManager: React.FC = () => {
       groupedResults[type as keyof GroupedIngredients] = sortIngredients(groupedResults[type as keyof GroupedIngredients]);
     });
 
-    setFilteredResults(groupedResults);
+    dispatch({ type: 'SET_FILTERED_RESULTS', payload: groupedResults });
   }, [searchQuery, fuse, groupedIngredients, defaultExpandedState, sortIngredients]);
 
   // Handle form field changes
@@ -289,35 +240,16 @@ const IngredientManager: React.FC = () => {
     >
   ): void => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear messages when user starts typing
-    if (error) setError("");
-    if (success) setSuccess("");
+    dispatch({
+      type: 'UPDATE_FORM_FIELD',
+      payload: { field: name as keyof typeof formData, value }
+    });
   };
 
   // Handle ingredient type change
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     const newType = e.target.value as IngredientType;
-    setFormData((prev) => ({
-      ...prev,
-      type: newType,
-      // Clear type-specific fields when switching types
-      grain_type: "",
-      potential: "",
-      color: "",
-      alpha_acid: "",
-      yeast_type: "",
-      attenuation: "",
-      manufacturer: "",
-      code: "",
-      alcohol_tolerance: "",
-      min_temperature: "",
-      max_temperature: "",
-    }));
+    dispatch({ type: 'UPDATE_FORM_TYPE', payload: newType });
   };
 
   // Validate form
@@ -408,13 +340,11 @@ const IngredientManager: React.FC = () => {
   const handleSubmit = async (): Promise<void> => {
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      setError(validationErrors.join(". "));
+      dispatch({ type: 'SUBMIT_ERROR', payload: validationErrors.join(". ") });
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    dispatch({ type: 'SUBMIT_START' });
 
     try {
       // Prepare data for submission (remove empty fields)
@@ -453,15 +383,13 @@ const IngredientManager: React.FC = () => {
 
       await ApiService.ingredients.create(submissionData as any);
 
-      setSuccess(`${formData.name} has been added successfully!`);
+      const successMessage = `${formData.name} has been added successfully!`;
 
       // Refresh the ingredients list
       const updatedResponse = await ApiService.ingredients.getAll();
       const ingredients = Array.isArray(updatedResponse.data)
         ? updatedResponse.data
         : (updatedResponse.data as any).ingredients || [];
-
-      setExistingIngredients(ingredients);
 
       // Re-group ingredients using the service
       const grouped = ingredientServiceInstance.groupIngredientsByType(
@@ -473,72 +401,38 @@ const IngredientManager: React.FC = () => {
         grouped[type as keyof GroupedIngredients] = sortIngredients(grouped[type as keyof GroupedIngredients]);
       });
       
-      setGroupedIngredients(grouped);
-      setFilteredResults(grouped);
-
-      // Reset form
-      setFormData({
-        name: "",
-        type: "grain",
-        description: "",
-        grain_type: "",
-        potential: "",
-        color: "",
-        alpha_acid: "",
-        yeast_type: "",
-        attenuation: "",
-        manufacturer: "",
-        code: "",
-        alcohol_tolerance: "",
-        min_temperature: "",
-        max_temperature: "",
+      dispatch({ 
+        type: 'SUBMIT_SUCCESS', 
+        payload: { 
+          message: successMessage, 
+          ingredients, 
+          grouped 
+        } 
       });
     } catch (err: any) {
       console.error("Error creating ingredient:", err);
-      setError(
-        err.response?.data?.error ||
+      dispatch({ 
+        type: 'SUBMIT_ERROR', 
+        payload: err.response?.data?.error ||
           err.message ||
           "Failed to create ingredient. Please try again."
-      );
-    } finally {
-      setLoading(false);
+      });
     }
   };
 
   // Reset form
   const handleReset = (): void => {
-    setFormData({
-      name: "",
-      type: "grain",
-      description: "",
-      grain_type: "",
-      potential: "",
-      color: "",
-      alpha_acid: "",
-      yeast_type: "",
-      attenuation: "",
-      manufacturer: "",
-      code: "",
-      alcohol_tolerance: "",
-      min_temperature: "",
-      max_temperature: "",
-    });
-    setError("");
-    setSuccess("");
+    dispatch({ type: 'RESET_FORM' });
   };
 
   // Clear search
   const handleClearSearch = (): void => {
-    setSearchQuery("");
-    // The useEffect will handle resetting expanded state when searchQuery becomes empty
+    dispatch({ type: 'CLEAR_SEARCH' });
   };
 
   // Toggle section expansion
   const toggleSection = (sectionType: string): void => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [sectionType]: !prev[sectionType],
-    }));
+    dispatch({ type: 'TOGGLE_SECTION', payload: sectionType });
   };
 
   // Highlight search matches in text
@@ -907,7 +801,7 @@ const IngredientManager: React.FC = () => {
                 type="text"
                 placeholder="Search ingredients by name, description, manufacturer, type..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value })}
                 className="form-input search-input"
               />
               {searchQuery && (
