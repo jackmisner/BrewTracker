@@ -38,7 +38,7 @@ import ViewBrewSession from "./components/BrewSessions/ViewBrewSession";
 import EditBrewSession from "./components/BrewSessions/EditBrewSession";
 
 // Authentication context
-const AuthContext = React.createContext<{
+export const AuthContext = React.createContext<{
   user: User | null;
   handleLogin: (userData: User, token: string) => void;
   handleLogout: () => void;

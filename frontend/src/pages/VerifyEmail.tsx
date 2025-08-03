@@ -1,14 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router';
 import ApiService from '../services/api';
+import { AuthContext } from '../App';
 import '../styles/Auth.css';
-
-// Import AuthContext - we need to get it from App.tsx
-const AuthContext = React.createContext<{
-  user: any;
-  handleLogin: (userData: any, token: string) => void;
-  handleLogout: () => void;
-}>({ user: null, handleLogin: () => {}, handleLogout: () => {} });
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -17,20 +11,11 @@ const VerifyEmail: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState<string>('');
   const [isResending, setIsResending] = useState(false);
+  const verificationAttempted = useRef(false);
 
   const token = searchParams.get('token');
 
-  useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('No verification token provided');
-      return;
-    }
-
-    verifyEmail(token);
-  }, [token]);
-
-  const verifyEmail = async (verificationToken: string) => {
+  const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
       const response = await ApiService.auth.verifyEmail({ token: verificationToken });
       
@@ -44,7 +29,7 @@ const VerifyEmail: React.FC = () => {
         
         // Redirect to dashboard after auto-login
         setTimeout(() => {
-          navigate('/dashboard', { 
+          navigate('/', { 
             state: { message: 'Email verified! Welcome to BrewTracker!' }
           });
         }, 2000);
@@ -66,7 +51,23 @@ const VerifyEmail: React.FC = () => {
         setMessage('Failed to verify email. Please try again.');
       }
     }
-  };
+  }, [handleLogin, navigate]);
+
+  useEffect(() => {
+    if (!token) {
+      setStatus('error');
+      setMessage('No verification token provided');
+      return;
+    }
+
+    // Prevent double execution (React StrictMode, etc.)
+    if (verificationAttempted.current) {
+      return;
+    }
+    verificationAttempted.current = true;
+
+    verifyEmail(token);
+  }, [token, verifyEmail]);
 
   const handleResendVerification = async () => {
     setIsResending(true);
@@ -113,7 +114,7 @@ const VerifyEmail: React.FC = () => {
               Logging you in and redirecting to dashboard...
             </p>
             <div className="auth-actions">
-              <Link to="/dashboard" className="auth-button primary">
+              <Link to="/" className="auth-button primary">
                 Continue to Dashboard
               </Link>
             </div>

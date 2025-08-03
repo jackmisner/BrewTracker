@@ -79,6 +79,22 @@ class TestEmailService(unittest.TestCase):
             self.assertTrue(mock_user.email_verified)
             mock_user.save.assert_called_once()
 
+    def test_verify_email_token_already_verified(self):
+        """Test verification of already verified user"""
+        test_token = "valid_token_123"
+        mock_user = MagicMock()
+        mock_user.email_verified = True  # Already verified
+
+        with patch("services.email_service.User.objects") as mock_objects:
+            mock_objects.return_value.first.return_value = mock_user
+
+            result = EmailService.verify_email_token(test_token)
+
+            self.assertTrue(result["success"])
+            self.assertEqual(result["message"], "Email already verified")
+            # Should not call save since user is already verified
+            mock_user.save.assert_not_called()
+
     def test_verify_email_token_invalid(self):
         """Test invalid token verification"""
         with patch("services.email_service.User.objects") as mock_objects:
@@ -87,12 +103,13 @@ class TestEmailService(unittest.TestCase):
             result = EmailService.verify_email_token("invalid_token")
 
             self.assertFalse(result["success"])
-            self.assertEqual(result["error"], "Invalid verification token")
+            self.assertEqual(result["error"], "Invalid or expired verification token")
 
     def test_verify_email_token_expired(self):
         """Test expired token verification"""
         test_token = "expired_token_123"
         mock_user = MagicMock()
+        mock_user.email_verified = False
         mock_user.email_verification_expires = datetime.now(UTC) - timedelta(hours=1)
 
         with patch("services.email_service.User.objects") as mock_objects:
