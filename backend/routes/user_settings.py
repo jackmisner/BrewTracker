@@ -10,6 +10,39 @@ from services.user_deletion_service import UserDeletionService
 user_settings_bp = Blueprint("user_settings", __name__)
 
 
+def validate_password(password):
+    """
+    Validate password strength according to security requirements:
+    - At least 8 characters
+    - At least one lowercase letter
+    - At least one uppercase letter
+    - At least one number
+    - At least one special character from ~!@#$%^&*()_-+={}|\:;"'<,>.?/
+    """
+    if not password:
+        return False, "Password is required"
+
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter"
+
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter"
+
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number"
+
+    if not re.search(r'[~!@#$%^&*()_\-+={}|\\:;"\'<,>.?/]', password):
+        return (
+            False,
+            "Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)",
+        )
+
+    return True, "Password is valid"
+
+
 @user_settings_bp.route("/settings", methods=["GET"])
 @jwt_required()
 def get_user_settings():
@@ -131,9 +164,10 @@ def change_password():
     if not user.check_password(current_password):
         return jsonify({"error": "Current password is incorrect"}), 400
 
-    # Validate new password
-    if len(new_password) < 6:
-        return jsonify({"error": "New password must be at least 6 characters"}), 400
+    # Validate new password strength
+    is_valid_password, password_error = validate_password(new_password)
+    if not is_valid_password:
+        return jsonify({"error": password_error}), 400
 
     try:
         user.set_password(new_password)

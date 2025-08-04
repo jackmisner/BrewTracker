@@ -673,15 +673,15 @@ describe("UserSettings", () => {
         "Confirm New Password"
       );
 
-      fireEvent.change(currentPasswordInput, { target: { value: "oldpass" } });
-      fireEvent.change(newPasswordInput, { target: { value: "newpass123" } });
+      fireEvent.change(currentPasswordInput, { target: { value: "OldPass123!" } });
+      fireEvent.change(newPasswordInput, { target: { value: "NewPass123!" } });
       fireEvent.change(confirmPasswordInput, {
-        target: { value: "newpass123" },
+        target: { value: "NewPass123!" },
       });
 
-      expect((currentPasswordInput as HTMLInputElement).value).toBe("oldpass");
-      expect((newPasswordInput as HTMLInputElement).value).toBe("newpass123");
-      expect((confirmPasswordInput as HTMLInputElement).value).toBe("newpass123");
+      expect((currentPasswordInput as HTMLInputElement).value).toBe("OldPass123!");
+      expect((newPasswordInput as HTMLInputElement).value).toBe("NewPass123!");
+      expect((confirmPasswordInput as HTMLInputElement).value).toBe("NewPass123!");
     });
 
     it("submits password change successfully", async () => {
@@ -691,10 +691,10 @@ describe("UserSettings", () => {
         "Confirm New Password"
       );
 
-      fireEvent.change(currentPasswordInput, { target: { value: "oldpass" } });
-      fireEvent.change(newPasswordInput, { target: { value: "newpass123" } });
+      fireEvent.change(currentPasswordInput, { target: { value: "OldPass123!" } });
+      fireEvent.change(newPasswordInput, { target: { value: "NewPass123!" } });
       fireEvent.change(confirmPasswordInput, {
-        target: { value: "newpass123" },
+        target: { value: "NewPass123!" },
       });
 
       const changeButton = screen.getByRole("button", {
@@ -704,9 +704,9 @@ describe("UserSettings", () => {
 
       await waitFor(() => {
         expect(UserSettingsService.changePassword).toHaveBeenCalledWith({
-          current_password: "oldpass",
-          new_password: "newpass123",
-          confirm_password: "newpass123",
+          current_password: "OldPass123!",
+          new_password: "NewPass123!",
+          confirm_password: "NewPass123!",
         });
       });
 
@@ -956,7 +956,7 @@ describe("UserSettings", () => {
       fireEvent.click(securityTab);
 
       const newPasswordInput = screen.getByLabelText("New Password");
-      expect(newPasswordInput).toHaveAttribute("minLength", "6");
+      expect(newPasswordInput).toHaveAttribute("minLength", "8");
     });
 
     it("handles batch size input constraints", async () => {

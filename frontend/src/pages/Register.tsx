@@ -129,11 +129,21 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
         }
         break;
       case "password":
-        if (value.length < 6) {
-          errors.password = "Password must be at least 6 characters";
-        } else {
-          delete errors.password;
+        // Clear any existing password error
+        delete errors.password;
+        
+        if (value.length < 8) {
+          errors.password = "Password must be at least 8 characters long";
+        } else if (!/[a-z]/.test(value)) {
+          errors.password = "Password must contain at least one lowercase letter";
+        } else if (!/[A-Z]/.test(value)) {
+          errors.password = "Password must contain at least one uppercase letter";
+        } else if (!/\d/.test(value)) {
+          errors.password = "Password must contain at least one number";
+        } else if (!/[~!@#$%^&*()_\-+={}|\\:;"'<,>.?/]/.test(value)) {
+          errors.password = "Password must contain at least one special character";
         }
+        // If password is valid, check confirm password
         // Re-validate confirm password if it exists
         if (formData.confirmPassword && value !== formData.confirmPassword) {
           errors.confirmPassword = "Passwords do not match";
@@ -439,21 +449,34 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
               className={getInputClassName("password")}
               placeholder="Create a password"
               required
-              minLength={6}
+              minLength={8}
             />
             {fieldErrors.password && (
               <div className="auth-field-error">{fieldErrors.password}</div>
             )}
 
-            {/* Password requirements */}
-            {formData.password && !fieldErrors.password && (
+            {/* Password requirements with real-time validation */}
+            {formData.password && (
               <div className="auth-requirements">
                 <div className="auth-requirements-title">
                   Password Requirements:
                 </div>
                 <ul className="auth-requirements-list">
-                  <li>At least 6 characters long</li>
-                  <li>Contains letters and numbers (recommended)</li>
+                  <li className={formData.password.length >= 8 ? 'requirement-met' : 'requirement-unmet'}>
+                    ✓ At least 8 characters long
+                  </li>
+                  <li className={/[a-z]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                    ✓ Contains at least one lowercase letter
+                  </li>
+                  <li className={/[A-Z]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                    ✓ Contains at least one uppercase letter
+                  </li>
+                  <li className={/\d/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                    ✓ Contains at least one number
+                  </li>
+                  <li className={/[~!@#$%^&*()_\-+={}|\\:;"'<,>.?/]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                    ✓ Contains at least one special character (~!@#$%^&*()_-+={'{'}{'}'}{']'}|\\:;"'&lt;,&gt;.?/)
+                  </li>
                 </ul>
               </div>
             )}

@@ -21,7 +21,7 @@ class TestBeerStylesRoutes:
         """Set up test data for each test"""
         # Create test user
         self.test_user = User(username="testuser", email="test@example.com")
-        self.test_user.set_password("testpass123")
+        self.test_user.set_password("TestPass123!123")
         self.test_user.save()
 
         # Create test beer styles
@@ -128,7 +128,8 @@ class TestBeerStylesRoutes:
     def auth_headers(self, client):
         """Get authentication headers for protected routes"""
         response = client.post(
-            "/api/auth/login", json={"username": "testuser", "password": "testpass123"}
+            "/api/auth/login",
+            json={"username": "testuser", "password": "TestPass123!123"},
         )
         token = response.get_json()["access_token"]
         return {"Authorization": f"Bearer {token}"}
@@ -340,12 +341,13 @@ class TestBeerStylesRoutes:
         """Test getting style suggestions for another user's private recipe"""
         # Create another user
         other_user = User(username="otheruser", email="other@example.com")
-        other_user.set_password("password123")
+        other_user.set_password("TestPass123!")
         other_user.save()
 
         # Login as other user
         response = client.post(
-            "/api/auth/login", json={"username": "otheruser", "password": "password123"}
+            "/api/auth/login",
+            json={"username": "otheruser", "password": "TestPass123!"},
         )
         token = response.get_json()["access_token"]
         other_auth_headers = {"Authorization": f"Bearer {token}"}
@@ -365,12 +367,13 @@ class TestBeerStylesRoutes:
         """Test that other users can access suggestions for public recipes"""
         # Create another user
         other_user = User(username="otheruser", email="other@example.com")
-        other_user.set_password("password123")
+        other_user.set_password("TestPass123!")
         other_user.save()
 
         # Login as other user
         response = client.post(
-            "/api/auth/login", json={"username": "otheruser", "password": "password123"}
+            "/api/auth/login",
+            json={"username": "otheruser", "password": "TestPass123!"},
         )
         token = response.get_json()["access_token"]
         other_auth_headers = {"Authorization": f"Bearer {token}"}
@@ -431,12 +434,13 @@ class TestBeerStylesRoutes:
         """Test getting style analysis for another user's private recipe"""
         # Create another user
         other_user = User(username="otheruser", email="other@example.com")
-        other_user.set_password("password123")
+        other_user.set_password("TestPass123!")
         other_user.save()
 
         # Login as other user
         response = client.post(
-            "/api/auth/login", json={"username": "otheruser", "password": "password123"}
+            "/api/auth/login",
+            json={"username": "otheruser", "password": "TestPass123!"},
         )
         token = response.get_json()["access_token"]
         other_auth_headers = {"Authorization": f"Bearer {token}"}

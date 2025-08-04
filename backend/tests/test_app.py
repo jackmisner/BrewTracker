@@ -105,7 +105,7 @@ class TestBlueprintRegistration:
                 json={
                     "username": "test",
                     "email": "test@test.com",
-                    "password": "test123",
+                    "password": "Test123!",
                 },
             )
             # Should not be 404 (which would indicate blueprint not registered)
@@ -416,7 +416,7 @@ class TestAppIntegration:
                 json={
                     "username": "validuser",
                     "email": "validuser@test.com",
-                    "password": "test123",
+                    "password": "Test123!",
                 },
                 content_type="application/json",
             )

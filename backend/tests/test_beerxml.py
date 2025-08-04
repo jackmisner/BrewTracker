@@ -17,14 +17,14 @@ class TestBeerXMLEndpoints:
             json={
                 "username": "beerxmluser",
                 "email": "beerxml@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Login to get token
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "beerxmluser", "password": "password123"},
+            json={"username": "beerxmluser", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="beerxmluser").first()
@@ -268,11 +268,11 @@ class TestBeerXMLEndpoints:
             json={
                 "username": "user2",
                 "email": "user2@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
         login_response = client.post(
-            "/api/auth/login", json={"username": "user2", "password": "password123"}
+            "/api/auth/login", json={"username": "user2", "password": "TestPass123!"}
         )
         user2_token = login_response.json["access_token"]
         user2_headers = {"Authorization": f"Bearer {user2_token}"}
@@ -302,11 +302,11 @@ class TestBeerXMLEndpoints:
             json={
                 "username": "user2",
                 "email": "user2@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
         login_response = client.post(
-            "/api/auth/login", json={"username": "user2", "password": "password123"}
+            "/api/auth/login", json={"username": "user2", "password": "TestPass123!"}
         )
         user2_token = login_response.json["access_token"]
         user2_headers = {"Authorization": f"Bearer {user2_token}"}

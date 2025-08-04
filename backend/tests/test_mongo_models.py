@@ -83,7 +83,7 @@ class TestUser:
     def test_user_creation(self):
         """Test creating a user with required fields"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         assert user.username == "testuser"
@@ -96,19 +96,19 @@ class TestUser:
     def test_user_password_hashing(self):
         """Test password hashing and checking"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
 
         # Password should be hashed
-        assert user.password_hash != "password123"
+        assert user.password_hash != "TestPass123!"
 
         # Check password should work
-        assert user.check_password("password123") is True
-        assert user.check_password("wrongpassword") is False
+        assert user.check_password("TestPass123!") is True
+        assert user.check_password("WrongPass123!") is False
 
     def test_user_default_settings(self):
         """Test user gets default settings"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         # Settings should be created with defaults
@@ -119,7 +119,7 @@ class TestUser:
     def test_user_update_settings(self):
         """Test updating user settings"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         settings_data = {
@@ -137,7 +137,7 @@ class TestUser:
     def test_user_update_settings_no_existing(self):
         """Test updating settings when user has no existing settings"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.settings = None
         user.save()
 
@@ -150,7 +150,7 @@ class TestUser:
     def test_user_get_preferred_units(self):
         """Test getting user's preferred units"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         # Default should be imperial
@@ -163,7 +163,7 @@ class TestUser:
     def test_user_get_preferred_units_no_settings(self):
         """Test getting preferred units when user has no settings"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.settings = None
 
         # Should return default
@@ -172,7 +172,7 @@ class TestUser:
     def test_user_get_unit_preferences(self):
         """Test getting detailed unit preferences"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         prefs = user.get_unit_preferences()
@@ -185,7 +185,7 @@ class TestUser:
     def test_user_convert_recipe_to_preferred_units(self):
         """Test converting recipe data to user's preferred units"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.settings = UserSettings(preferred_units="metric")
         user.save()
 
@@ -213,7 +213,7 @@ class TestUser:
     def test_user_to_dict(self):
         """Test converting user to dictionary"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         user_dict = user.to_dict()
@@ -230,7 +230,7 @@ class TestUser:
     def test_user_to_dict_dates(self):
         """Test user to_dict with various date formats"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.created_at = datetime.now(UTC)
         user.last_login = datetime.now(UTC)
         user.save()
@@ -708,7 +708,7 @@ class TestModelRelationships:
         """Test user to recipe relationship"""
         # Create user
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         # Create recipe for user
@@ -747,7 +747,7 @@ class TestModelRelationships:
         """Test recipe to brew session relationship"""
         # Create user and recipe
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         recipe = Recipe(user_id=user.id, name="Session Recipe", batch_size=5.0)
@@ -768,7 +768,7 @@ class TestModelRelationships:
         """Test complex recipe with multiple ingredients and full data"""
         # Create user
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
 
         # Create ingredients

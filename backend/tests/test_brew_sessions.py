@@ -18,14 +18,14 @@ class TestBrewSessionEndpoints:
             json={
                 "username": "testbrewer",
                 "email": "brewer@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Login to get token
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "testbrewer", "password": "password123"},
+            json={"username": "testbrewer", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="testbrewer").first()
@@ -220,7 +220,7 @@ class TestBrewSessionEndpoints:
             json={
                 "username": "user1",
                 "email": "user1@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -228,16 +228,16 @@ class TestBrewSessionEndpoints:
             json={
                 "username": "user2",
                 "email": "user2@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens for both users
         user1_token = client.post(
-            "/api/auth/login", json={"username": "user1", "password": "pass123"}
+            "/api/auth/login", json={"username": "user1", "password": "Pass123!"}
         ).json["access_token"]
         user2_token = client.post(
-            "/api/auth/login", json={"username": "user2", "password": "pass123"}
+            "/api/auth/login", json={"username": "user2", "password": "Pass123!"}
         ).json["access_token"]
 
         user1_headers = {"Authorization": f"Bearer {user1_token}"}
@@ -284,13 +284,13 @@ class TestFermentationTracking:
             json={
                 "username": "fermenter",
                 "email": "fermenter@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "fermenter", "password": "password123"},
+            json={"username": "fermenter", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="fermenter").first()
@@ -552,13 +552,13 @@ class TestGravityStabilizationAnalysis:
             json={
                 "username": "stabilizer",
                 "email": "stabilizer@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "stabilizer", "password": "password123"},
+            json={"username": "stabilizer", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="stabilizer").first()

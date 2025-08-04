@@ -270,9 +270,9 @@ describe("UserSettingsService", () => {
 
   describe("changePassword", () => {
     const passwordData = {
-      current_password: "oldpass",
-      new_password: "newpass123",
-      confirm_password: "newpass123",
+      current_password: "OldPass123!",
+      new_password: "NewPass123!",
+      confirm_password: "NewPass123!",
     };
 
     it("changes password successfully", async () => {
@@ -308,7 +308,7 @@ describe("UserSettingsService", () => {
 
   describe("deleteAccount", () => {
     const confirmationData = {
-      password: "password123",
+      password: "TestPass123!",
       confirmation: "DELETE",
     };
 
@@ -509,9 +509,9 @@ describe("UserSettingsService", () => {
   describe("validatePasswordChange", () => {
     it("validates valid password change data", () => {
       const validData = {
-        current_password: "oldpass",
-        new_password: "newpass123",
-        confirm_password: "newpass123",
+        current_password: "OldPass123!",
+        new_password: "NewPass123!",
+        confirm_password: "NewPass123!",
       };
 
       const result = UserSettingsService.validatePasswordChange(validData);
@@ -523,8 +523,8 @@ describe("UserSettingsService", () => {
     it("rejects missing current password", () => {
       const invalidData = {
         current_password: "",
-        new_password: "newpass123",
-        confirm_password: "newpass123",
+        new_password: "NewPass123!",
+        confirm_password: "NewPass123!",
       };
 
       const result = UserSettingsService.validatePasswordChange(invalidData);
@@ -535,7 +535,7 @@ describe("UserSettingsService", () => {
 
     it("rejects missing new password", () => {
       const invalidData = {
-        current_password: "oldpass",
+        current_password: "OldPass123!",
         new_password: "",
         confirm_password: "",
       };
@@ -548,7 +548,7 @@ describe("UserSettingsService", () => {
 
     it("rejects new password too short", () => {
       const invalidData = {
-        current_password: "oldpass",
+        current_password: "OldPass123!",
         new_password: "123",
         confirm_password: "123",
       };
@@ -557,14 +557,14 @@ describe("UserSettingsService", () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
-        "New password must be at least 6 characters"
+        "Password must be at least 8 characters long"
       );
     });
 
     it("rejects mismatched passwords", () => {
       const invalidData = {
-        current_password: "oldpass",
-        new_password: "newpass123",
+        current_password: "OldPass123!",
+        new_password: "NewPass123!",
         confirm_password: "different",
       };
 
@@ -591,7 +591,7 @@ describe("UserSettingsService", () => {
   describe("validateAccountDeletion", () => {
     it("validates valid deletion data", () => {
       const validData = {
-        password: "password123",
+        password: "TestPass123!",
         confirmation: "DELETE",
       };
 
@@ -615,7 +615,7 @@ describe("UserSettingsService", () => {
 
     it("rejects incorrect confirmation", () => {
       const invalidData = {
-        password: "password123",
+        password: "TestPass123!",
         confirmation: "WRONG",
       };
 
@@ -629,7 +629,7 @@ describe("UserSettingsService", () => {
 
     it("is case sensitive for confirmation", () => {
       const invalidData = {
-        password: "password123",
+        password: "TestPass123!",
         confirmation: "delete",
       };
 

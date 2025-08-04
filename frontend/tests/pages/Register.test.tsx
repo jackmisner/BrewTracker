@@ -49,13 +49,13 @@ describe("Register Page", () => {
 
     await user.type(usernameInput, "exampleuser");
     await user.type(emailInput, "example@example.com");
-    await user.type(passwordInput, "testpassword");
-    await user.type(confirmPasswordInput, "testpassword");
+    await user.type(passwordInput, "TestPass123!");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     expect((usernameInput as HTMLInputElement).value).toBe("exampleuser");
     expect((emailInput as HTMLInputElement).value).toBe("example@example.com");
-    expect((passwordInput as HTMLInputElement).value).toBe("testpassword");
-    expect((confirmPasswordInput as HTMLInputElement).value).toBe("testpassword");
+    expect((passwordInput as HTMLInputElement).value).toBe("TestPass123!");
+    expect((confirmPasswordInput as HTMLInputElement).value).toBe("TestPass123!");
   });
 
   test("All fields are required", async () => {
@@ -126,8 +126,8 @@ describe("Register Page", () => {
 
     await userEvent.type(usernameInput, "exampleuser");
     await userEvent.type(emailInput, "example@example.com");
-    await userEvent.type(passwordInput, "password123");
-    await userEvent.type(confirmPasswordInput, "password123");
+    await userEvent.type(passwordInput, "TestPass123!");
+    await userEvent.type(confirmPasswordInput, "TestPass123!");
     
     // Wait for username validation to complete (500ms debounce)
     await waitFor(() => {
@@ -142,7 +142,7 @@ describe("Register Page", () => {
       expect(ApiService.auth.register).toHaveBeenCalledWith({
         username: "exampleuser",
         email: "example@example.com",
-        password: "password123",
+        password: "TestPass123!",
       });
     });
 
@@ -183,8 +183,8 @@ describe("Register Page", () => {
 
     await userEvent.type(usernameInput, "exampleuser");
     await userEvent.type(emailInput, "example@example.com");
-    await userEvent.type(passwordInput, "password123");
-    await userEvent.type(confirmPasswordInput, "password123");
+    await userEvent.type(passwordInput, "TestPass123!");
+    await userEvent.type(confirmPasswordInput, "TestPass123!");
     
     // Wait for username validation to complete (500ms debounce)
     await waitFor(() => {
@@ -199,7 +199,7 @@ describe("Register Page", () => {
       expect(ApiService.auth.register).toHaveBeenCalledWith({
         username: "exampleuser",
         email: "example@example.com",
-        password: "password123",
+        password: "TestPass123!",
       });
     });
 
@@ -276,15 +276,15 @@ describe("Register Page", () => {
     const passwordInput = screen.getByLabelText("Password");
 
     // Test password too short
-    await user.type(passwordInput, "12345");
+    await user.type(passwordInput, "1234567");
     expect(
-      screen.getByText("Password must be at least 6 characters")
+      screen.getByText("Password must be at least 8 characters long")
     ).toBeInTheDocument();
 
-    // Test password becomes valid
-    await user.type(passwordInput, "6");
+    // Test password becomes valid length (but may have other validation errors)
+    await user.type(passwordInput, "8");
     expect(
-      screen.queryByText("Password must be at least 6 characters")
+      screen.queryByText("Password must be at least 8 characters long")
     ).not.toBeInTheDocument();
   });
 
@@ -296,7 +296,7 @@ describe("Register Page", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm Password");
 
     // Set initial password
-    await user.type(passwordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
 
     // Test mismatched confirm password
     await user.type(confirmPasswordInput, "different");
@@ -304,7 +304,7 @@ describe("Register Page", () => {
 
     // Test confirm password becomes matching - deletion of confirmPassword error
     await user.clear(confirmPasswordInput);
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(confirmPasswordInput, "TestPass123!");
     expect(
       screen.queryByText("Passwords do not match")
     ).not.toBeInTheDocument();
@@ -319,15 +319,15 @@ describe("Register Page", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm Password");
 
     // Set confirm password first
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     // Set different password (should trigger mismatch error)
-    await user.type(passwordInput, "different123");
+    await user.type(passwordInput, "Different456!");
     expect(screen.getByText("Passwords do not match")).toBeInTheDocument();
 
     // Change password to match (should remove error)
     await user.clear(passwordInput);
-    await user.type(passwordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
     expect(
       screen.queryByText("Passwords do not match")
     ).not.toBeInTheDocument();
@@ -348,12 +348,12 @@ describe("Register Page", () => {
     // Fill form with valid data but mismatched passwords
     await user.type(usernameInput, "exampleuser");
     await user.type(emailInput, "example@example.com");
-    await user.type(passwordInput, "password123");
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     // Clear confirm password and add different password after validation passes
     await user.clear(confirmPasswordInput);
-    await user.type(confirmPasswordInput, "differentpassword");
+    await user.type(confirmPasswordInput, "DifferentPass789!");
 
     // Submit form
     fireEvent.click(submitButton);
@@ -373,14 +373,12 @@ describe("Register Page", () => {
     const passwordInput = screen.getByLabelText("Password");
 
     // Type valid password
-    await user.type(passwordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
 
     // Should show password requirements
     expect(screen.getByText("Password Requirements:")).toBeInTheDocument();
-    expect(screen.getByText("At least 6 characters long")).toBeInTheDocument();
-    expect(
-      screen.getByText("Contains letters and numbers (recommended)")
-    ).toBeInTheDocument();
+    expect(screen.getByText("✓ At least 8 characters long")).toBeInTheDocument();
+    expect(screen.getByText("✓ Contains at least one lowercase letter")).toBeInTheDocument();
   });
 
   test("handles API registration error", async () => {
@@ -408,8 +406,8 @@ describe("Register Page", () => {
 
     await user.type(usernameInput, "exampleuser");
     await user.type(emailInput, "example@example.com");
-    await user.type(passwordInput, "password123");
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     // Wait for username validation to complete (500ms debounce)
     await waitFor(() => {
@@ -450,8 +448,8 @@ describe("Register Page", () => {
 
     await user.type(usernameInput, "exampleuser");
     await user.type(emailInput, "example@example.com");
-    await user.type(passwordInput, "password123");
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     // Wait for username validation to complete (500ms debounce)
     await waitFor(() => {
@@ -518,8 +516,8 @@ describe("Register Page", () => {
 
     await user.type(usernameInput, "exampleuser");
     await user.type(emailInput, "example@example.com");
-    await user.type(passwordInput, "password123");
-    await user.type(confirmPasswordInput, "password123");
+    await user.type(passwordInput, "TestPass123!");
+    await user.type(confirmPasswordInput, "TestPass123!");
 
     // Wait for username validation to complete (500ms debounce)
     await waitFor(() => {
