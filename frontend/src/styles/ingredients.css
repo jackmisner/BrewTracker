@@ -103,10 +103,9 @@
 }
 
 .ingredient-inputs--hop {
-  grid-template-columns: var(--amount-container-width) minmax(
-      200px,
-      1fr
-    ) 100px 225px var(--button-width);
+  grid-template-columns:
+    var(--amount-container-width) minmax(200px, 1fr)
+    100px 225px var(--button-width);
 }
 
 .ingredient-inputs--yeast {
@@ -114,10 +113,9 @@
 }
 
 .ingredient-inputs--adjunct {
-  grid-template-columns: var(--amount-container-width) minmax(
-      200px,
-      1fr
-    ) 120px 120px var(--button-width);
+  grid-template-columns:
+    var(--amount-container-width) minmax(200px, 1fr)
+    120px 120px var(--button-width);
 }
 
 .ingredient-inputs--adjunct .ingredient-selector {
