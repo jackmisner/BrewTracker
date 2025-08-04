@@ -177,11 +177,13 @@ const ApiService = {
     ): Promise<AxiosResponse<VerifyEmailResponse>> =>
       api.post("/auth/verify-email", data),
 
-    resendVerification: (): Promise<AxiosResponse<ResendVerificationResponse>> =>
-      api.post("/auth/resend-verification"),
+    resendVerification: (): Promise<
+      AxiosResponse<ResendVerificationResponse>
+    > => api.post("/auth/resend-verification"),
 
-    getVerificationStatus: (): Promise<AxiosResponse<VerificationStatusResponse>> =>
-      api.get("/auth/verification-status"),
+    getVerificationStatus: (): Promise<
+      AxiosResponse<VerificationStatusResponse>
+    > => api.get("/auth/verification-status"),
   },
 
   // User settings endpoints
@@ -413,7 +415,7 @@ const ApiService = {
       sessionId: ID
     ): Promise<AxiosResponse<GravityStabilizationAnalysisResponse>> =>
       api.get(`/brew-sessions/${sessionId}/fermentation/analyze-completion`),
-    
+
     // Dry hop addition endpoints
     getDryHopAdditions: (
       sessionId: ID
@@ -429,7 +431,10 @@ const ApiService = {
       additionIndex: number,
       updateData: UpdateDryHopAdditionRequest
     ): Promise<AxiosResponse<{ message: string; addition: any }>> =>
-      api.put(`/brew-sessions/${sessionId}/dry-hops/${additionIndex}`, updateData),
+      api.put(
+        `/brew-sessions/${sessionId}/dry-hops/${additionIndex}`,
+        updateData
+      ),
     deleteDryHopAddition: (
       sessionId: ID,
       additionIndex: number
@@ -483,7 +488,6 @@ const ApiService = {
   ai: {
     analyzeRecipe: (requestData: any): Promise<AxiosResponse<any>> =>
       api.post("/ai/analyze-recipe", requestData),
-
 
     checkHealth: (): Promise<AxiosResponse<any>> => api.get("/ai/health"),
   },

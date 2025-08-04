@@ -32,58 +32,66 @@ export interface BrewSessionState {
   // Data state
   session: BrewSession | null;
   recipe: Recipe | null;
-  
+
   // Form state - union type to support both create and edit forms
   formData: CreateBrewSessionFormData | EditBrewSessionFormData;
-  
+
   // Loading states
   loading: boolean;
   submitting: boolean; // For create/update operations
-  creating: boolean;   // Alias for submitting in create mode
-  
+  creating: boolean; // Alias for submitting in create mode
+
   // Error state
   error: string;
-  
+
   // Operation mode to differentiate behavior
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
 }
 
 // Action types for all brew session operations
 export type BrewSessionAction =
   // Mode setting
-  | { type: 'SET_MODE'; payload: 'create' | 'edit' }
-  
+  | { type: "SET_MODE"; payload: "create" | "edit" }
+
   // Loading actions
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_SUBMITTING'; payload: boolean }
-  | { type: 'SET_CREATING'; payload: boolean }
-  
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_SUBMITTING"; payload: boolean }
+  | { type: "SET_CREATING"; payload: boolean }
+
   // Data actions
-  | { type: 'SET_SESSION'; payload: BrewSession | null }
-  | { type: 'SET_RECIPE'; payload: Recipe | null }
-  
+  | { type: "SET_SESSION"; payload: BrewSession | null }
+  | { type: "SET_RECIPE"; payload: Recipe | null }
+
   // Form actions
-  | { type: 'SET_FORM_DATA'; payload: CreateBrewSessionFormData | EditBrewSessionFormData }
-  | { type: 'UPDATE_FORM_FIELD'; payload: { field: string; value: string } }
-  | { type: 'RESET_FORM' }
-  
+  | {
+      type: "SET_FORM_DATA";
+      payload: CreateBrewSessionFormData | EditBrewSessionFormData;
+    }
+  | { type: "UPDATE_FORM_FIELD"; payload: { field: string; value: string } }
+  | { type: "RESET_FORM" }
+
   // Error actions
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'CLEAR_ERROR' }
-  
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "CLEAR_ERROR" }
+
   // Combined actions
-  | { type: 'FETCH_START' }
-  | { type: 'FETCH_SUCCESS'; payload: { session?: BrewSession; recipe?: Recipe } }
-  | { type: 'FETCH_ERROR'; payload: string }
-  | { type: 'SUBMIT_START' }
-  | { type: 'SUBMIT_SUCCESS' }
-  | { type: 'SUBMIT_ERROR'; payload: string }
-  
+  | { type: "FETCH_START" }
+  | {
+      type: "FETCH_SUCCESS";
+      payload: { session?: BrewSession; recipe?: Recipe };
+    }
+  | { type: "FETCH_ERROR"; payload: string }
+  | { type: "SUBMIT_START" }
+  | { type: "SUBMIT_SUCCESS" }
+  | { type: "SUBMIT_ERROR"; payload: string }
+
   // Reset actions
-  | { type: 'RESET_STATE' };
+  | { type: "RESET_STATE" };
 
 // Initial state factory functions
-export const createInitialCreateFormData = (recipeId?: string | null): CreateBrewSessionFormData => ({
+export const createInitialCreateFormData = (
+  recipeId?: string | null
+): CreateBrewSessionFormData => ({
   recipe_id: recipeId || null,
   name: "",
   brew_date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
@@ -108,26 +116,27 @@ export const createInitialEditFormData = (): EditBrewSessionFormData => ({
 });
 
 export const createInitialBrewSessionState = (
-  mode: 'create' | 'edit' = 'create',
+  mode: "create" | "edit" = "create",
   recipeId?: string | null
 ): BrewSessionState => ({
   // Data state
   session: null,
   recipe: null,
-  
+
   // Form state
-  formData: mode === 'create' 
-    ? createInitialCreateFormData(recipeId)
-    : createInitialEditFormData(),
-  
+  formData:
+    mode === "create"
+      ? createInitialCreateFormData(recipeId)
+      : createInitialEditFormData(),
+
   // Loading states
   loading: true,
   submitting: false,
   creating: false,
-  
+
   // Error state
   error: "",
-  
+
   // Operation mode
   mode,
 });
@@ -139,30 +148,31 @@ export const brewSessionReducer = (
 ): BrewSessionState => {
   switch (action.type) {
     // Mode setting
-    case 'SET_MODE':
+    case "SET_MODE":
       return {
         ...state,
         mode: action.payload,
-        formData: action.payload === 'create' 
-          ? createInitialCreateFormData()
-          : createInitialEditFormData(),
+        formData:
+          action.payload === "create"
+            ? createInitialCreateFormData()
+            : createInitialEditFormData(),
       };
 
     // Loading actions
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return {
         ...state,
         loading: action.payload,
       };
 
-    case 'SET_SUBMITTING':
+    case "SET_SUBMITTING":
       return {
         ...state,
         submitting: action.payload,
         creating: action.payload, // Sync creating with submitting
       };
 
-    case 'SET_CREATING':
+    case "SET_CREATING":
       return {
         ...state,
         creating: action.payload,
@@ -170,26 +180,26 @@ export const brewSessionReducer = (
       };
 
     // Data actions
-    case 'SET_SESSION':
+    case "SET_SESSION":
       return {
         ...state,
         session: action.payload,
       };
 
-    case 'SET_RECIPE':
+    case "SET_RECIPE":
       return {
         ...state,
         recipe: action.payload,
       };
 
     // Form actions
-    case 'SET_FORM_DATA':
+    case "SET_FORM_DATA":
       return {
         ...state,
         formData: action.payload,
       };
 
-    case 'UPDATE_FORM_FIELD':
+    case "UPDATE_FORM_FIELD":
       return {
         ...state,
         formData: {
@@ -198,36 +208,37 @@ export const brewSessionReducer = (
         },
       };
 
-    case 'RESET_FORM':
+    case "RESET_FORM":
       return {
         ...state,
-        formData: state.mode === 'create' 
-          ? createInitialCreateFormData()
-          : createInitialEditFormData(),
+        formData:
+          state.mode === "create"
+            ? createInitialCreateFormData()
+            : createInitialEditFormData(),
       };
 
     // Error actions
-    case 'SET_ERROR':
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
       };
 
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: "",
       };
 
     // Combined actions
-    case 'FETCH_START':
+    case "FETCH_START":
       return {
         ...state,
         loading: true,
         error: "",
       };
 
-    case 'FETCH_SUCCESS':
+    case "FETCH_SUCCESS":
       return {
         ...state,
         loading: false,
@@ -235,14 +246,14 @@ export const brewSessionReducer = (
         recipe: action.payload.recipe || state.recipe,
       };
 
-    case 'FETCH_ERROR':
+    case "FETCH_ERROR":
       return {
         ...state,
         loading: false,
         error: action.payload,
       };
 
-    case 'SUBMIT_START':
+    case "SUBMIT_START":
       return {
         ...state,
         submitting: true,
@@ -250,14 +261,14 @@ export const brewSessionReducer = (
         error: "",
       };
 
-    case 'SUBMIT_SUCCESS':
+    case "SUBMIT_SUCCESS":
       return {
         ...state,
         submitting: false,
         creating: false,
       };
 
-    case 'SUBMIT_ERROR':
+    case "SUBMIT_ERROR":
       return {
         ...state,
         submitting: false,
@@ -266,7 +277,7 @@ export const brewSessionReducer = (
       };
 
     // Reset actions
-    case 'RESET_STATE':
+    case "RESET_STATE":
       return createInitialBrewSessionState(state.mode);
 
     default:

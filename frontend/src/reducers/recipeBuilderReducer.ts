@@ -36,60 +36,91 @@ export interface RecipeBuilderState {
 // Action types for all recipe builder operations
 export type RecipeBuilderAction =
   // Initialization actions
-  | { type: 'INITIALIZE_START'; payload: { unitSystem: string } }
-  | { type: 'INITIALIZE_SUCCESS'; payload: { recipe: Recipe; ingredients: RecipeIngredient[]; availableIngredients: IngredientsByType; metrics: RecipeMetrics } }
-  | { type: 'INITIALIZE_ERROR'; payload: string }
+  | { type: "INITIALIZE_START"; payload: { unitSystem: string } }
+  | {
+      type: "INITIALIZE_SUCCESS";
+      payload: {
+        recipe: Recipe;
+        ingredients: RecipeIngredient[];
+        availableIngredients: IngredientsByType;
+        metrics: RecipeMetrics;
+      };
+    }
+  | { type: "INITIALIZE_ERROR"; payload: string }
 
   // Recipe update actions
-  | { type: 'UPDATE_RECIPE_FIELD'; payload: { field: keyof Recipe; value: any } }
-  | { type: 'BULK_UPDATE_RECIPE'; payload: Array<{ field: keyof Recipe; value: any }> }
+  | {
+      type: "UPDATE_RECIPE_FIELD";
+      payload: { field: keyof Recipe; value: any };
+    }
+  | {
+      type: "BULK_UPDATE_RECIPE";
+      payload: Array<{ field: keyof Recipe; value: any }>;
+    }
 
   // Ingredient actions
-  | { type: 'ADD_INGREDIENT_START' }
-  | { type: 'ADD_INGREDIENT_SUCCESS'; payload: { ingredient: RecipeIngredient; sortedIngredients: RecipeIngredient[] } }
-  | { type: 'ADD_INGREDIENT_ERROR'; payload: string }
-  | { type: 'UPDATE_INGREDIENT_START' }
-  | { type: 'UPDATE_INGREDIENT_SUCCESS'; payload: { ingredient: RecipeIngredient; sortedIngredients: RecipeIngredient[] } }
-  | { type: 'UPDATE_INGREDIENT_ERROR'; payload: string }
-  | { type: 'BULK_UPDATE_INGREDIENTS_START' }
-  | { type: 'BULK_UPDATE_INGREDIENTS_SUCCESS'; payload: RecipeIngredient[] }
-  | { type: 'BULK_UPDATE_INGREDIENTS_ERROR'; payload: string }
-  | { type: 'REMOVE_INGREDIENT_SUCCESS'; payload: RecipeIngredient[] }
-  | { type: 'REMOVE_INGREDIENT_ERROR'; payload: string }
-  | { type: 'IMPORT_INGREDIENTS_START' }
-  | { type: 'IMPORT_INGREDIENTS_SUCCESS'; payload: RecipeIngredient[] }
-  | { type: 'IMPORT_INGREDIENTS_ERROR'; payload: string }
-  | { type: 'REPLACE_INGREDIENTS_START' }
-  | { type: 'REPLACE_INGREDIENTS_SUCCESS'; payload: RecipeIngredient[] }
-  | { type: 'REPLACE_INGREDIENTS_ERROR'; payload: string }
+  | { type: "ADD_INGREDIENT_START" }
+  | {
+      type: "ADD_INGREDIENT_SUCCESS";
+      payload: {
+        ingredient: RecipeIngredient;
+        sortedIngredients: RecipeIngredient[];
+      };
+    }
+  | { type: "ADD_INGREDIENT_ERROR"; payload: string }
+  | { type: "UPDATE_INGREDIENT_START" }
+  | {
+      type: "UPDATE_INGREDIENT_SUCCESS";
+      payload: {
+        ingredient: RecipeIngredient;
+        sortedIngredients: RecipeIngredient[];
+      };
+    }
+  | { type: "UPDATE_INGREDIENT_ERROR"; payload: string }
+  | { type: "BULK_UPDATE_INGREDIENTS_START" }
+  | { type: "BULK_UPDATE_INGREDIENTS_SUCCESS"; payload: RecipeIngredient[] }
+  | { type: "BULK_UPDATE_INGREDIENTS_ERROR"; payload: string }
+  | { type: "REMOVE_INGREDIENT_SUCCESS"; payload: RecipeIngredient[] }
+  | { type: "REMOVE_INGREDIENT_ERROR"; payload: string }
+  | { type: "IMPORT_INGREDIENTS_START" }
+  | { type: "IMPORT_INGREDIENTS_SUCCESS"; payload: RecipeIngredient[] }
+  | { type: "IMPORT_INGREDIENTS_ERROR"; payload: string }
+  | { type: "REPLACE_INGREDIENTS_START" }
+  | { type: "REPLACE_INGREDIENTS_SUCCESS"; payload: RecipeIngredient[] }
+  | { type: "REPLACE_INGREDIENTS_ERROR"; payload: string }
 
   // Metrics calculation actions
-  | { type: 'CALCULATE_METRICS_START' }
-  | { type: 'CALCULATE_METRICS_SUCCESS'; payload: RecipeMetrics }
-  | { type: 'CALCULATE_METRICS_ERROR'; payload: string }
+  | { type: "CALCULATE_METRICS_START" }
+  | { type: "CALCULATE_METRICS_SUCCESS"; payload: RecipeMetrics }
+  | { type: "CALCULATE_METRICS_ERROR"; payload: string }
 
   // Recipe scaling actions
-  | { type: 'SCALE_RECIPE_SUCCESS'; payload: { recipe: Recipe; ingredients: RecipeIngredient[] } }
-  | { type: 'SCALE_RECIPE_ERROR'; payload: string }
+  | {
+      type: "SCALE_RECIPE_SUCCESS";
+      payload: { recipe: Recipe; ingredients: RecipeIngredient[] };
+    }
+  | { type: "SCALE_RECIPE_ERROR"; payload: string }
 
   // Save actions
-  | { type: 'SAVE_RECIPE_START' }
-  | { type: 'SAVE_RECIPE_SUCCESS'; payload: Recipe }
-  | { type: 'SAVE_RECIPE_ERROR'; payload: string }
+  | { type: "SAVE_RECIPE_START" }
+  | { type: "SAVE_RECIPE_SUCCESS"; payload: Recipe }
+  | { type: "SAVE_RECIPE_ERROR"; payload: string }
 
   // Style analysis actions
-  | { type: 'UPDATE_STYLE_ANALYSIS'; payload: StyleAnalysis | null }
-  | { type: 'UPDATE_STYLE_SUGGESTIONS'; payload: StyleSuggestion[] }
+  | { type: "UPDATE_STYLE_ANALYSIS"; payload: StyleAnalysis | null }
+  | { type: "UPDATE_STYLE_SUGGESTIONS"; payload: StyleSuggestion[] }
 
   // Utility actions
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'CANCEL_OPERATIONS' }
-  | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
-  | { type: 'REFRESH_AVAILABLE_INGREDIENTS'; payload: IngredientsByType }
-  | { type: 'IMPORT_RECIPE_DATA'; payload: Partial<Recipe> }
+  | { type: "CLEAR_ERROR" }
+  | { type: "CANCEL_OPERATIONS" }
+  | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
+  | { type: "REFRESH_AVAILABLE_INGREDIENTS"; payload: IngredientsByType }
+  | { type: "IMPORT_RECIPE_DATA"; payload: Partial<Recipe> };
 
 // Initial state factory function
-export const createInitialState = (unitSystem: 'metric' | 'imperial'): RecipeBuilderState => ({
+export const createInitialState = (
+  unitSystem: "metric" | "imperial"
+): RecipeBuilderState => ({
   // Core data
   recipe: {
     id: "",
@@ -146,14 +177,14 @@ export const recipeBuilderReducer = (
   action: RecipeBuilderAction
 ): RecipeBuilderState => {
   switch (action.type) {
-    case 'INITIALIZE_START':
+    case "INITIALIZE_START":
       return {
         ...state,
         loading: true,
         error: null,
       };
 
-    case 'INITIALIZE_SUCCESS':
+    case "INITIALIZE_SUCCESS":
       return {
         ...state,
         ...action.payload,
@@ -161,14 +192,14 @@ export const recipeBuilderReducer = (
         hasUnsavedChanges: false,
       };
 
-    case 'INITIALIZE_ERROR':
+    case "INITIALIZE_ERROR":
       return {
         ...state,
         error: action.payload,
         loading: false,
       };
 
-    case 'UPDATE_RECIPE_FIELD':
+    case "UPDATE_RECIPE_FIELD":
       return {
         ...state,
         recipe: {
@@ -178,7 +209,7 @@ export const recipeBuilderReducer = (
         hasUnsavedChanges: true,
       };
 
-    case 'BULK_UPDATE_RECIPE':
+    case "BULK_UPDATE_RECIPE":
       let updatedRecipe = { ...state.recipe };
       for (const update of action.payload) {
         updatedRecipe = { ...updatedRecipe, [update.field]: update.value };
@@ -189,14 +220,14 @@ export const recipeBuilderReducer = (
         hasUnsavedChanges: true,
       };
 
-    case 'ADD_INGREDIENT_START':
+    case "ADD_INGREDIENT_START":
       return {
         ...state,
         addingIngredient: true,
         error: null,
       };
 
-    case 'ADD_INGREDIENT_SUCCESS':
+    case "ADD_INGREDIENT_SUCCESS":
       return {
         ...state,
         ingredients: action.payload.sortedIngredients,
@@ -205,7 +236,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'ADD_INGREDIENT_ERROR':
+    case "ADD_INGREDIENT_ERROR":
       return {
         ...state,
         error: action.payload,
@@ -213,14 +244,14 @@ export const recipeBuilderReducer = (
         calculatingMetrics: false,
       };
 
-    case 'UPDATE_INGREDIENT_START':
+    case "UPDATE_INGREDIENT_START":
       return {
         ...state,
         updatingIngredient: true,
         error: null,
       };
 
-    case 'UPDATE_INGREDIENT_SUCCESS':
+    case "UPDATE_INGREDIENT_SUCCESS":
       return {
         ...state,
         ingredients: action.payload.sortedIngredients,
@@ -229,7 +260,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'UPDATE_INGREDIENT_ERROR':
+    case "UPDATE_INGREDIENT_ERROR":
       return {
         ...state,
         error: action.payload,
@@ -237,14 +268,14 @@ export const recipeBuilderReducer = (
         calculatingMetrics: false,
       };
 
-    case 'BULK_UPDATE_INGREDIENTS_START':
+    case "BULK_UPDATE_INGREDIENTS_START":
       return {
         ...state,
         updatingIngredient: true,
         error: null,
       };
 
-    case 'BULK_UPDATE_INGREDIENTS_SUCCESS':
+    case "BULK_UPDATE_INGREDIENTS_SUCCESS":
       return {
         ...state,
         ingredients: action.payload,
@@ -253,7 +284,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'BULK_UPDATE_INGREDIENTS_ERROR':
+    case "BULK_UPDATE_INGREDIENTS_ERROR":
       return {
         ...state,
         error: action.payload,
@@ -261,7 +292,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: false,
       };
 
-    case 'REMOVE_INGREDIENT_SUCCESS':
+    case "REMOVE_INGREDIENT_SUCCESS":
       return {
         ...state,
         ingredients: action.payload,
@@ -269,14 +300,14 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'IMPORT_INGREDIENTS_START':
+    case "IMPORT_INGREDIENTS_START":
       return {
         ...state,
         addingIngredient: true,
         error: null,
       };
 
-    case 'IMPORT_INGREDIENTS_SUCCESS':
+    case "IMPORT_INGREDIENTS_SUCCESS":
       return {
         ...state,
         ingredients: action.payload,
@@ -285,7 +316,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'IMPORT_INGREDIENTS_ERROR':
+    case "IMPORT_INGREDIENTS_ERROR":
       return {
         ...state,
         error: action.payload,
@@ -293,14 +324,14 @@ export const recipeBuilderReducer = (
         calculatingMetrics: false,
       };
 
-    case 'REPLACE_INGREDIENTS_START':
+    case "REPLACE_INGREDIENTS_START":
       return {
         ...state,
         updatingIngredient: true,
         error: null,
       };
 
-    case 'REPLACE_INGREDIENTS_SUCCESS':
+    case "REPLACE_INGREDIENTS_SUCCESS":
       return {
         ...state,
         ingredients: action.payload,
@@ -309,7 +340,7 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'REPLACE_INGREDIENTS_ERROR':
+    case "REPLACE_INGREDIENTS_ERROR":
       return {
         ...state,
         error: action.payload,
@@ -317,41 +348,41 @@ export const recipeBuilderReducer = (
         calculatingMetrics: false,
       };
 
-    case 'REMOVE_INGREDIENT_ERROR':
+    case "REMOVE_INGREDIENT_ERROR":
       return {
         ...state,
         error: action.payload,
         calculatingMetrics: false,
       };
 
-    case 'SCALE_RECIPE_ERROR':
+    case "SCALE_RECIPE_ERROR":
       return {
         ...state,
         error: action.payload,
         calculatingMetrics: false,
       };
 
-    case 'CALCULATE_METRICS_START':
+    case "CALCULATE_METRICS_START":
       return {
         ...state,
         calculatingMetrics: true,
       };
 
-    case 'CALCULATE_METRICS_SUCCESS':
+    case "CALCULATE_METRICS_SUCCESS":
       return {
         ...state,
         metrics: action.payload,
         calculatingMetrics: false,
       };
 
-    case 'CALCULATE_METRICS_ERROR':
+    case "CALCULATE_METRICS_ERROR":
       return {
         ...state,
         calculatingMetrics: false,
         error: action.payload,
       };
 
-    case 'SCALE_RECIPE_SUCCESS':
+    case "SCALE_RECIPE_SUCCESS":
       return {
         ...state,
         recipe: action.payload.recipe,
@@ -360,14 +391,14 @@ export const recipeBuilderReducer = (
         calculatingMetrics: true,
       };
 
-    case 'SAVE_RECIPE_START':
+    case "SAVE_RECIPE_START":
       return {
         ...state,
         saving: true,
         error: null,
       };
 
-    case 'SAVE_RECIPE_SUCCESS':
+    case "SAVE_RECIPE_SUCCESS":
       return {
         ...state,
         recipe: action.payload,
@@ -375,32 +406,32 @@ export const recipeBuilderReducer = (
         saving: false,
       };
 
-    case 'SAVE_RECIPE_ERROR':
+    case "SAVE_RECIPE_ERROR":
       return {
         ...state,
         error: action.payload,
         saving: false,
       };
 
-    case 'UPDATE_STYLE_ANALYSIS':
+    case "UPDATE_STYLE_ANALYSIS":
       return {
         ...state,
         styleAnalysis: action.payload,
       };
 
-    case 'UPDATE_STYLE_SUGGESTIONS':
+    case "UPDATE_STYLE_SUGGESTIONS":
       return {
         ...state,
         styleSuggestions: action.payload,
       };
 
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: null,
       };
 
-    case 'CANCEL_OPERATIONS':
+    case "CANCEL_OPERATIONS":
       return {
         ...state,
         calculatingMetrics: false,
@@ -409,19 +440,19 @@ export const recipeBuilderReducer = (
         error: null,
       };
 
-    case 'SET_UNSAVED_CHANGES':
+    case "SET_UNSAVED_CHANGES":
       return {
         ...state,
         hasUnsavedChanges: action.payload,
       };
 
-    case 'REFRESH_AVAILABLE_INGREDIENTS':
+    case "REFRESH_AVAILABLE_INGREDIENTS":
       return {
         ...state,
         availableIngredients: action.payload,
       };
 
-    case 'IMPORT_RECIPE_DATA':
+    case "IMPORT_RECIPE_DATA":
       const cleanedRecipeData = { ...action.payload };
 
       // Round batch size to reasonable precision (2 decimal places)

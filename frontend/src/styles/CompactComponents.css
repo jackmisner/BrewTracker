@@ -380,37 +380,37 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
   }
-  
+
   .compact-recipe-header-container .recipe-card-actions {
     gap: 0.25rem;
     flex-wrap: wrap;
   }
-  
+
   .compact-recipe-header-container .recipe-card-button {
     font-size: 0.75rem;
     padding: 0.4rem 0.7rem;
   }
-  
+
   .compact-recipe-header-delete-button {
     bottom: 0.75rem;
     right: 0.75rem;
     font-size: 0.675rem;
     padding: 0.3rem 0.6rem;
   }
-  
+
   .ingredient-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .compact-recipe-info-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .ingredient-card-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .ingredient-card-amount {
     margin-left: 0;
     margin-top: 0.5rem;
@@ -423,22 +423,21 @@
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .compact-recipe-info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .ingredient-card-info {
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .compact-recipe-header-container .recipe-card-button {
     font-size: 0.675rem;
     padding: 0.3rem 0.6rem;
   }
-  
-  
+
   .compact-recipe-header-delete-button {
     bottom: 0.5rem;
     right: 0.5rem;

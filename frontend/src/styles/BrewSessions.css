@@ -204,11 +204,11 @@
   .brew-sessions-table td:nth-child(4) {
     display: none;
   }
-  
+
   .session-actions-cell {
     text-align: right;
   }
-  
+
   .session-action-link {
     margin-left: 0.5rem;
   }
@@ -927,7 +927,7 @@
 }
 
 .fermentation-timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0.75rem;
   top: 0;
@@ -1073,16 +1073,17 @@
 
 /* Connecting line between timeline events */
 .timeline-track::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 8px; /* Half the marker height */
   left: 8px; /* Half the marker width */
   right: 8px;
   height: 2px;
-  background: linear-gradient(to right, 
-    transparent 0%, 
-    #d1d5db 10%, 
-    #d1d5db 90%, 
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    #d1d5db 10%,
+    #d1d5db 90%,
     transparent 100%
   );
   z-index: 1;
@@ -1095,11 +1096,11 @@
     align-items: center;
     gap: 1rem;
   }
-  
+
   .timeline-track::before {
     display: none;
   }
-  
+
   .timeline-event {
     min-width: auto;
     width: 100%;

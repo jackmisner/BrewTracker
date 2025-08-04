@@ -475,11 +475,11 @@
   .upload-dropzone {
     border-width: 3px;
   }
-  
+
   .btn {
     border-width: 2px;
   }
-  
+
   .ingredient-type-badge {
     border: 1px solid currentColor;
   }
@@ -508,7 +508,7 @@
 }
 
 .recipe-selection.loading::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;

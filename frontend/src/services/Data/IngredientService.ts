@@ -83,16 +83,16 @@ class IngredientService {
         return aNum - bNum;
       } else if (aCaramelMatch && !bCaramelMatch) {
         // Only a is caramel - check if b starts with caramel/crystal
-        if (bName.startsWith('caramel') || bName.startsWith('crystal')) {
+        if (bName.startsWith("caramel") || bName.startsWith("crystal")) {
           return -1; // a (with number) comes before b (without number)
         }
-        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+        return aName.localeCompare(bName, undefined, { sensitivity: "base" });
       } else if (!aCaramelMatch && bCaramelMatch) {
         // Only b is caramel - check if a starts with caramel/crystal
-        if (aName.startsWith('caramel') || aName.startsWith('crystal')) {
+        if (aName.startsWith("caramel") || aName.startsWith("crystal")) {
           return 1; // b (with number) comes before a (without number)
         }
-        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+        return aName.localeCompare(bName, undefined, { sensitivity: "base" });
       }
 
       // Check for candi syrups (e.g., "D-45", "D-180")
@@ -107,20 +107,20 @@ class IngredientService {
         return aNum - bNum;
       } else if (aCandiMatch && !bCandiMatch) {
         // Only a is candi syrup - check if b starts with 'candi' or 'd-'
-        if (bName.includes('candi') || bName.startsWith('d-')) {
+        if (bName.includes("candi") || bName.startsWith("d-")) {
           return -1; // a (with number) comes before b (without number)
         }
-        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+        return aName.localeCompare(bName, undefined, { sensitivity: "base" });
       } else if (!aCandiMatch && bCandiMatch) {
         // Only b is candi syrup - check if a starts with 'candi' or 'd-'
-        if (aName.includes('candi') || aName.startsWith('d-')) {
+        if (aName.includes("candi") || aName.startsWith("d-")) {
           return 1; // b (with number) comes before a (without number)
         }
-        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+        return aName.localeCompare(bName, undefined, { sensitivity: "base" });
       }
 
       // Default alphabetical sorting
-      return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      return aName.localeCompare(bName, undefined, { sensitivity: "base" });
     });
   }
 
@@ -152,7 +152,9 @@ class IngredientService {
 
     // Sort each type with custom sorting logic
     Object.keys(grouped).forEach((type) => {
-      grouped[type as keyof IngredientsByType] = this.sortIngredientsCustom(grouped[type as keyof IngredientsByType]);
+      grouped[type as keyof IngredientsByType] = this.sortIngredientsCustom(
+        grouped[type as keyof IngredientsByType]
+      );
     });
 
     return grouped;

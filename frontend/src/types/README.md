@@ -5,7 +5,9 @@ This directory contains comprehensive TypeScript type definitions for the BrewTr
 ## Type Definition Files
 
 ### `common.ts`
+
 Core utility types used across the application:
+
 - `ID` - String-based identifier type
 - `BaseEntity` - Base interface with common entity fields
 - `ApiResponse<T>` - Generic API response wrapper
@@ -14,7 +16,9 @@ Core utility types used across the application:
 - `AsyncState<T>` - State container for async operations
 
 ### `recipe.ts`
+
 Recipe and ingredient-related types:
+
 - `Recipe` - Main recipe interface with all properties
 - `RecipeIngredient` - Ingredient within a recipe
 - `Ingredient` - Base ingredient from ingredients collection
@@ -23,21 +27,27 @@ Recipe and ingredient-related types:
 - Various enums: `IngredientType`, `GrainType`, `HopUse`, etc.
 
 ### `api.ts`
+
 API request/response type definitions:
+
 - Authentication: `LoginRequest`, `RegisterRequest`, etc.
 - Recipe operations: `CreateRecipeRequest`, `UpdateRecipeRequest`, etc.
 - All API endpoints with proper request/response typing
 - Generic API configuration and error types
 
 ### `beer-styles.ts`
+
 Beer style guide and analysis types:
+
 - `BeerStyleGuide` - BJCP style guide information
 - `StyleRange` - Min/max ranges for style specifications
 - `StyleAnalysis` - Recipe-to-style comparison results
 - `StyleSuggestion` - Style matching recommendations
 
 ### `metrics.ts`
+
 Brewing calculation and analysis types:
+
 - `BrewingMetrics` - Core brewing calculations
 - `ExtendedMetrics` - Additional calculated values
 - `RecipeAnalysis` - Complete recipe breakdown
@@ -45,7 +55,9 @@ Brewing calculation and analysis types:
 - Calculation parameters and validation types
 
 ### `units.ts`
+
 Unit system and conversion types:
+
 - `UnitSystem` - Imperial vs Metric
 - Unit type definitions: `WeightUnit`, `VolumeUnit`, etc.
 - `UnitConversion` - Conversion result interface
@@ -53,7 +65,9 @@ Unit system and conversion types:
 - Measurement and formatting types
 
 ### `user.ts`
+
 User account and authentication types:
+
 - `User` - User account information
 - `UserSettings` - User preferences and settings
 - `AuthState` - Authentication state management
@@ -61,7 +75,9 @@ User account and authentication types:
 - JWT and session management types
 
 ### `brew-session.ts`
+
 Brew session tracking types:
+
 - `BrewSession` - Brewing session with measurements
 - `FermentationEntry` - Individual fermentation data points
 - `BrewSessionStatus` - Session state enum
@@ -71,44 +87,53 @@ Brew session tracking types:
 ## Usage Examples
 
 ### Basic Recipe Type Usage
+
 ```typescript
-import { Recipe, RecipeMetrics, IngredientType } from '@/types';
+import { Recipe, RecipeMetrics, IngredientType } from "@/types";
 
 const recipe: Recipe = {
-  id: 'recipe-001',
-  recipe_id: 'recipe-001',
-  name: 'American IPA',
+  id: "recipe-001",
+  recipe_id: "recipe-001",
+  name: "American IPA",
   batch_size: 5,
-  batch_size_unit: 'gal',
+  batch_size_unit: "gal",
   is_public: true,
   ingredients: [
     {
-      ingredient_id: 'grain-001',
-      name: 'Pale Malt',
-      type: 'grain' as IngredientType,
+      ingredient_id: "grain-001",
+      name: "Pale Malt",
+      type: "grain" as IngredientType,
       amount: 10,
-      unit: 'lb'
-    }
-  ]
+      unit: "lb",
+    },
+  ],
 };
 ```
 
 ### API Call Typing
-```typescript
-import { ApiService } from '@/services';
-import { RecipeResponse, CreateRecipeRequest } from '@/types';
 
-const createRecipe = async (recipeData: CreateRecipeRequest): Promise<Recipe> => {
+```typescript
+import { ApiService } from "@/services";
+import { RecipeResponse, CreateRecipeRequest } from "@/types";
+
+const createRecipe = async (
+  recipeData: CreateRecipeRequest
+): Promise<Recipe> => {
   const response: RecipeResponse = await ApiService.recipes.create(recipeData);
   return response.data;
 };
 ```
 
 ### Unit Context Usage
-```typescript
-import { UnitSystem, UnitConversion } from '@/types';
 
-const convertWeight = (value: number, fromUnit: string, toUnit: string): UnitConversion => {
+```typescript
+import { UnitSystem, UnitConversion } from "@/types";
+
+const convertWeight = (
+  value: number,
+  fromUnit: string,
+  toUnit: string
+): UnitConversion => {
   // Implementation with proper typing
   return { value: convertedValue, unit: toUnit };
 };

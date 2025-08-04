@@ -10,7 +10,8 @@
   border-radius: 6px;
   background-color: #ffffff;
   color: #3c4043;
-  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   font-size: 14px;
   font-weight: 500;
   display: flex;
@@ -82,8 +83,12 @@
 }
 
 @keyframes google-signin-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive adjustments */
@@ -92,16 +97,16 @@
     height: 40px;
     font-size: 13px;
   }
-  
+
   .google-signin-button-content {
     gap: 8px;
   }
-  
+
   .google-icon {
     width: 18px;
     height: 18px;
   }
-  
+
   .google-signin-spinner {
     width: 18px;
     height: 18px;
@@ -115,23 +120,23 @@
     border-color: #5f6368;
     color: #e8eaed;
   }
-  
+
   .google-signin-button:hover {
     background-color: #3c4043;
     border-color: #6e7175;
   }
-  
+
   .google-signin-button:active {
     background-color: #454649;
     border-color: #80868b;
   }
-  
+
   .google-signin-button:disabled {
     background-color: #202124;
     border-color: #3c4043;
     color: #5f6368;
   }
-  
+
   .google-signin-spinner {
     border-color: #3c4043;
     border-top-color: #4285f4;
@@ -176,7 +181,7 @@
   .auth-divider {
     color: #9aa0a6;
   }
-  
+
   .auth-divider::before,
   .auth-divider::after {
     background-color: #5f6368;

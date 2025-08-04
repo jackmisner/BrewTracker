@@ -70,51 +70,69 @@ export interface UserSettingsState {
 // Action types for all user settings operations
 export type UserSettingsAction =
   // Initialization actions
-  | { type: 'INITIALIZE_START' }
-  | { type: 'INITIALIZE_SUCCESS'; payload: { 
-      settings: FullUserSettings; 
-      profileForm: ProfileForm; 
-      preferencesForm: PreferencesForm; 
-      privacyForm: PrivacyForm;
-    } }
-  | { type: 'INITIALIZE_ERROR'; payload: string }
+  | { type: "INITIALIZE_START" }
+  | {
+      type: "INITIALIZE_SUCCESS";
+      payload: {
+        settings: FullUserSettings;
+        profileForm: ProfileForm;
+        preferencesForm: PreferencesForm;
+        privacyForm: PrivacyForm;
+      };
+    }
+  | { type: "INITIALIZE_ERROR"; payload: string }
 
   // Tab navigation
-  | { type: 'SET_ACTIVE_TAB'; payload: TabId }
+  | { type: "SET_ACTIVE_TAB"; payload: TabId }
 
   // Form update actions
-  | { type: 'UPDATE_PROFILE_FIELD'; payload: { field: keyof ProfileForm; value: any } }
-  | { type: 'UPDATE_PASSWORD_FIELD'; payload: { field: keyof PasswordForm; value: any } }
-  | { type: 'UPDATE_DELETE_FIELD'; payload: { field: keyof DeleteForm; value: any } }
-  | { type: 'UPDATE_PREFERENCES_FIELD'; payload: { field: keyof PreferencesForm; value: any } }
-  | { type: 'UPDATE_PRIVACY_FIELD'; payload: { field: keyof PrivacyForm; value: any } }
+  | {
+      type: "UPDATE_PROFILE_FIELD";
+      payload: { field: keyof ProfileForm; value: any };
+    }
+  | {
+      type: "UPDATE_PASSWORD_FIELD";
+      payload: { field: keyof PasswordForm; value: any };
+    }
+  | {
+      type: "UPDATE_DELETE_FIELD";
+      payload: { field: keyof DeleteForm; value: any };
+    }
+  | {
+      type: "UPDATE_PREFERENCES_FIELD";
+      payload: { field: keyof PreferencesForm; value: any };
+    }
+  | {
+      type: "UPDATE_PRIVACY_FIELD";
+      payload: { field: keyof PrivacyForm; value: any };
+    }
 
   // Bulk form updates
-  | { type: 'SET_PROFILE_FORM'; payload: ProfileForm }
-  | { type: 'SET_PREFERENCES_FORM'; payload: PreferencesForm }
-  | { type: 'SET_PRIVACY_FORM'; payload: PrivacyForm }
+  | { type: "SET_PROFILE_FORM"; payload: ProfileForm }
+  | { type: "SET_PREFERENCES_FORM"; payload: PreferencesForm }
+  | { type: "SET_PRIVACY_FORM"; payload: PrivacyForm }
 
   // Update original forms (for save success)
-  | { type: 'UPDATE_ORIGINAL_PROFILE_FORM'; payload: ProfileForm }
-  | { type: 'UPDATE_ORIGINAL_PREFERENCES_FORM'; payload: PreferencesForm }
-  | { type: 'UPDATE_ORIGINAL_PRIVACY_FORM'; payload: PrivacyForm }
+  | { type: "UPDATE_ORIGINAL_PROFILE_FORM"; payload: ProfileForm }
+  | { type: "UPDATE_ORIGINAL_PREFERENCES_FORM"; payload: PreferencesForm }
+  | { type: "UPDATE_ORIGINAL_PRIVACY_FORM"; payload: PrivacyForm }
 
   // Reset actions
-  | { type: 'RESET_PASSWORD_FORM' }
-  | { type: 'RESET_DELETE_FORM' }
+  | { type: "RESET_PASSWORD_FORM" }
+  | { type: "RESET_DELETE_FORM" }
 
   // Save operations
-  | { type: 'SAVE_START' }
-  | { type: 'SAVE_SUCCESS'; payload: string }
-  | { type: 'SAVE_ERROR'; payload: string }
+  | { type: "SAVE_START" }
+  | { type: "SAVE_SUCCESS"; payload: string }
+  | { type: "SAVE_ERROR"; payload: string }
 
   // Utility actions
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'SET_SUCCESS_MESSAGE'; payload: string }
-  | { type: 'CLEAR_SUCCESS_MESSAGE' }
-  | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
-  | { type: 'CLEAR_MESSAGES' };
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "CLEAR_ERROR" }
+  | { type: "SET_SUCCESS_MESSAGE"; payload: string }
+  | { type: "CLEAR_SUCCESS_MESSAGE" }
+  | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
+  | { type: "CLEAR_MESSAGES" };
 
 // Initial state factory function
 export const createInitialUserSettingsState = (): UserSettingsState => ({
@@ -184,14 +202,14 @@ export const userSettingsReducer = (
   action: UserSettingsAction
 ): UserSettingsState => {
   switch (action.type) {
-    case 'INITIALIZE_START':
+    case "INITIALIZE_START":
       return {
         ...state,
         loading: true,
         error: "",
       };
 
-    case 'INITIALIZE_SUCCESS':
+    case "INITIALIZE_SUCCESS":
       return {
         ...state,
         settings: action.payload.settings,
@@ -206,20 +224,20 @@ export const userSettingsReducer = (
         hasUnsavedChanges: false,
       };
 
-    case 'INITIALIZE_ERROR':
+    case "INITIALIZE_ERROR":
       return {
         ...state,
         error: action.payload,
         loading: false,
       };
 
-    case 'SET_ACTIVE_TAB':
+    case "SET_ACTIVE_TAB":
       return {
         ...state,
         activeTab: action.payload,
       };
 
-    case 'UPDATE_PROFILE_FIELD':
+    case "UPDATE_PROFILE_FIELD":
       return {
         ...state,
         profileForm: {
@@ -229,7 +247,7 @@ export const userSettingsReducer = (
         hasUnsavedChanges: true,
       };
 
-    case 'UPDATE_PASSWORD_FIELD':
+    case "UPDATE_PASSWORD_FIELD":
       return {
         ...state,
         passwordForm: {
@@ -238,7 +256,7 @@ export const userSettingsReducer = (
         },
       };
 
-    case 'UPDATE_DELETE_FIELD':
+    case "UPDATE_DELETE_FIELD":
       return {
         ...state,
         deleteForm: {
@@ -247,7 +265,7 @@ export const userSettingsReducer = (
         },
       };
 
-    case 'UPDATE_PREFERENCES_FIELD':
+    case "UPDATE_PREFERENCES_FIELD":
       return {
         ...state,
         preferencesForm: {
@@ -257,7 +275,7 @@ export const userSettingsReducer = (
         hasUnsavedChanges: true,
       };
 
-    case 'UPDATE_PRIVACY_FIELD':
+    case "UPDATE_PRIVACY_FIELD":
       return {
         ...state,
         privacyForm: {
@@ -267,46 +285,46 @@ export const userSettingsReducer = (
         hasUnsavedChanges: true,
       };
 
-    case 'SET_PROFILE_FORM':
+    case "SET_PROFILE_FORM":
       return {
         ...state,
         profileForm: action.payload,
         hasUnsavedChanges: true,
       };
 
-    case 'SET_PREFERENCES_FORM':
+    case "SET_PREFERENCES_FORM":
       return {
         ...state,
         preferencesForm: action.payload,
         hasUnsavedChanges: true,
       };
 
-    case 'SET_PRIVACY_FORM':
+    case "SET_PRIVACY_FORM":
       return {
         ...state,
         privacyForm: action.payload,
         hasUnsavedChanges: true,
       };
 
-    case 'UPDATE_ORIGINAL_PROFILE_FORM':
+    case "UPDATE_ORIGINAL_PROFILE_FORM":
       return {
         ...state,
         originalProfileForm: action.payload,
       };
 
-    case 'UPDATE_ORIGINAL_PREFERENCES_FORM':
+    case "UPDATE_ORIGINAL_PREFERENCES_FORM":
       return {
         ...state,
         originalPreferencesForm: action.payload,
       };
 
-    case 'UPDATE_ORIGINAL_PRIVACY_FORM':
+    case "UPDATE_ORIGINAL_PRIVACY_FORM":
       return {
         ...state,
         originalPrivacyForm: action.payload,
       };
 
-    case 'RESET_PASSWORD_FORM':
+    case "RESET_PASSWORD_FORM":
       return {
         ...state,
         passwordForm: {
@@ -316,7 +334,7 @@ export const userSettingsReducer = (
         },
       };
 
-    case 'RESET_DELETE_FORM':
+    case "RESET_DELETE_FORM":
       return {
         ...state,
         deleteForm: {
@@ -326,7 +344,7 @@ export const userSettingsReducer = (
         },
       };
 
-    case 'SAVE_START':
+    case "SAVE_START":
       return {
         ...state,
         saving: true,
@@ -334,7 +352,7 @@ export const userSettingsReducer = (
         successMessage: "",
       };
 
-    case 'SAVE_SUCCESS':
+    case "SAVE_SUCCESS":
       return {
         ...state,
         saving: false,
@@ -342,44 +360,44 @@ export const userSettingsReducer = (
         hasUnsavedChanges: false,
       };
 
-    case 'SAVE_ERROR':
+    case "SAVE_ERROR":
       return {
         ...state,
         saving: false,
         error: action.payload,
       };
 
-    case 'SET_ERROR':
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
       };
 
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: "",
       };
 
-    case 'SET_SUCCESS_MESSAGE':
+    case "SET_SUCCESS_MESSAGE":
       return {
         ...state,
         successMessage: action.payload,
       };
 
-    case 'CLEAR_SUCCESS_MESSAGE':
+    case "CLEAR_SUCCESS_MESSAGE":
       return {
         ...state,
         successMessage: "",
       };
 
-    case 'SET_UNSAVED_CHANGES':
+    case "SET_UNSAVED_CHANGES":
       return {
         ...state,
         hasUnsavedChanges: action.payload,
       };
 
-    case 'CLEAR_MESSAGES':
+    case "CLEAR_MESSAGES":
       return {
         ...state,
         error: "",

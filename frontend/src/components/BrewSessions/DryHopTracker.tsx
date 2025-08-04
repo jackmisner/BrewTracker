@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Services } from "../../services";
-import { DryHopAddition, ID, BrewSession, Recipe, RecipeIngredient } from "../../types";
+import {
+  DryHopAddition,
+  ID,
+  BrewSession,
+  Recipe,
+  RecipeIngredient,
+} from "../../types";
 import "../../styles/BrewSessions.css";
 
 interface DryHopTrackerProps {
   sessionId: ID;
   recipeData?: Partial<Recipe>;
-  onSessionUpdate?: (updateData: Partial<BrewSession> & { needsRefresh?: boolean }) => void;
+  onSessionUpdate?: (
+    updateData: Partial<BrewSession> & { needsRefresh?: boolean }
+  ) => void;
 }
 
 interface RecipeDryHop {
@@ -18,7 +26,11 @@ interface RecipeDryHop {
   actualDaysInFermenter?: number | null;
 }
 
-const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, onSessionUpdate }) => {
+const DryHopTracker: React.FC<DryHopTrackerProps> = ({
+  sessionId,
+  recipeData,
+  onSessionUpdate,
+}) => {
   const [sessionDryHops, setSessionDryHops] = useState<DryHopAddition[]>([]);
   const [recipeDryHops, setRecipeDryHops] = useState<RecipeDryHop[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -33,31 +45,36 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
     }
 
     // Find all dry hop ingredients from recipe
-    const dryHopIngredients = recipeData.ingredients.filter(
-      ingredient => {
-        // Handle both "dry_hop" and "dry-hop" formats for robustness
-        return ingredient.use === "dry_hop" || ingredient.use === "dry-hop";
-      }
-    );
+    const dryHopIngredients = recipeData.ingredients.filter((ingredient) => {
+      // Handle both "dry_hop" and "dry-hop" formats for robustness
+      return ingredient.use === "dry_hop" || ingredient.use === "dry-hop";
+    });
 
     // Create RecipeDryHop objects with tracking information
-    const processedDryHops: RecipeDryHop[] = dryHopIngredients.map(ingredient => {
-      // Find matching session dry hop addition if it exists
-      const matchingSessionHop = sessionDryHops.find(
-        sessionHop => sessionHop.hop_name.toLowerCase() === ingredient.name.toLowerCase()
-      );
+    const processedDryHops: RecipeDryHop[] = dryHopIngredients.map(
+      (ingredient) => {
+        // Find matching session dry hop addition if it exists
+        const matchingSessionHop = sessionDryHops.find(
+          (sessionHop) =>
+            sessionHop.hop_name.toLowerCase() === ingredient.name.toLowerCase()
+        );
 
-      const plannedDays = ingredient.time ? Math.round(ingredient.time / (24 * 60)) : undefined;
-      
-      return {
-        ingredient,
-        plannedDays, // Convert minutes to days
-        addedToFermenter: !!matchingSessionHop,
-        additionDate: matchingSessionHop?.addition_date,
-        removalDate: matchingSessionHop?.removal_date,
-        actualDaysInFermenter: matchingSessionHop ? calculateDaysInFermenter(matchingSessionHop) : undefined
-      };
-    });
+        const plannedDays = ingredient.time
+          ? Math.round(ingredient.time / (24 * 60))
+          : undefined;
+
+        return {
+          ingredient,
+          plannedDays, // Convert minutes to days
+          addedToFermenter: !!matchingSessionHop,
+          additionDate: matchingSessionHop?.addition_date,
+          removalDate: matchingSessionHop?.removal_date,
+          actualDaysInFermenter: matchingSessionHop
+            ? calculateDaysInFermenter(matchingSessionHop)
+            : undefined,
+        };
+      }
+    );
 
     setRecipeDryHops(processedDryHops);
   }, [recipeData?.ingredients, sessionDryHops]);
@@ -67,7 +84,7 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
     try {
       setLoading(true);
       setError("");
-      
+
       const response = await Services.brewSession.getDryHopAdditions(sessionId);
       setSessionDryHops(response.data.dry_hop_additions || []);
     } catch (err: any) {
@@ -89,7 +106,9 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
   }, [recipeData, sessionDryHops, processRecipeDryHops]);
 
   // Handle adding a dry hop to fermenter
-  const handleAddToFermenter = async (recipeDryHop: RecipeDryHop): Promise<void> => {
+  const handleAddToFermenter = async (
+    recipeDryHop: RecipeDryHop
+  ): Promise<void> => {
     try {
       setSubmitting(true);
       setError("");
@@ -101,35 +120,40 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
         amount_unit: recipeDryHop.ingredient.unit,
         duration_days: recipeDryHop.plannedDays,
         notes: `Added from recipe: ${recipeDryHop.ingredient.name}`,
-        phase: "fermentation"
+        phase: "fermentation",
       };
 
       await Services.brewSession.addDryHopAddition(sessionId, submissionData);
       await fetchSessionDryHops(); // Refresh session data
-      
+
       // Notify parent component to refresh session data
       if (onSessionUpdate) {
         // Signal that session data needs to be refetched
         onSessionUpdate({ needsRefresh: true });
       }
-      
     } catch (err: any) {
       console.error("Error adding dry hop to fermenter:", err);
-      setError(err.response?.data?.error || "Failed to add dry hop to fermenter");
+      setError(
+        err.response?.data?.error || "Failed to add dry hop to fermenter"
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   // Handle removing a dry hop from fermenter
-  const handleRemoveFromFermenter = async (recipeDryHop: RecipeDryHop): Promise<void> => {
+  const handleRemoveFromFermenter = async (
+    recipeDryHop: RecipeDryHop
+  ): Promise<void> => {
     try {
       setSubmitting(true);
       setError("");
 
       // Find the matching session dry hop to get its index
       const matchingSessionHopIndex = sessionDryHops.findIndex(
-        sessionHop => sessionHop.hop_name.toLowerCase() === recipeDryHop.ingredient.name.toLowerCase()
+        (sessionHop) =>
+          sessionHop.hop_name.toLowerCase() ===
+          recipeDryHop.ingredient.name.toLowerCase()
       );
 
       if (matchingSessionHopIndex === -1) {
@@ -138,18 +162,21 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
       }
 
       const now = new Date().toISOString();
-      await Services.brewSession.updateDryHopAddition(sessionId, matchingSessionHopIndex, {
-        removal_date: now
-      });
-      
+      await Services.brewSession.updateDryHopAddition(
+        sessionId,
+        matchingSessionHopIndex,
+        {
+          removal_date: now,
+        }
+      );
+
       await fetchSessionDryHops(); // Refresh session data
-      
+
       // Notify parent component to refresh session data
       if (onSessionUpdate) {
         // Signal that session data needs to be refetched
         onSessionUpdate({ needsRefresh: true });
       }
-      
     } catch (err: any) {
       console.error("Error removing dry hop from fermenter:", err);
       setError("Failed to remove dry hop from fermenter");
@@ -158,25 +185,32 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
     }
   };
 
-
   // Format date for display
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    
+
     // Check if this is a date-only string (YYYY-MM-DD format)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       // For date-only strings, just show the date
       return date.toLocaleDateString();
     } else {
       // For full timestamps, show both date and time
-      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
     }
   };
 
   // Calculate days in fermenter
-  const calculateDaysInFermenter = (addition: DryHopAddition): number | null => {
+  const calculateDaysInFermenter = (
+    addition: DryHopAddition
+  ): number | null => {
     const addDate = new Date(addition.addition_date);
-    const endDate = addition.removal_date ? new Date(addition.removal_date) : new Date();
+    const endDate = addition.removal_date
+      ? new Date(addition.removal_date)
+      : new Date();
     const diffTime = endDate.getTime() - addDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays >= 0 ? diffDays : null;
@@ -219,10 +253,12 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
             </thead>
             <tbody>
               {recipeDryHops.map((recipeDryHop, index) => {
-                const isInFermenter = recipeDryHop.addedToFermenter && !recipeDryHop.removalDate;
-                const isRemoved = recipeDryHop.addedToFermenter && !!recipeDryHop.removalDate;
+                const isInFermenter =
+                  recipeDryHop.addedToFermenter && !recipeDryHop.removalDate;
+                const isRemoved =
+                  recipeDryHop.addedToFermenter && !!recipeDryHop.removalDate;
                 const notAdded = !recipeDryHop.addedToFermenter;
-                
+
                 let statusClass = "";
                 let statusText = "";
                 if (notAdded) {
@@ -245,10 +281,13 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                       </div>
                     </td>
                     <td>
-                      {recipeDryHop.ingredient.amount} {recipeDryHop.ingredient.unit}
+                      {recipeDryHop.ingredient.amount}{" "}
+                      {recipeDryHop.ingredient.unit}
                     </td>
                     <td>
-                      {recipeDryHop.plannedDays ? `${recipeDryHop.plannedDays} days` : "Not specified"}
+                      {recipeDryHop.plannedDays
+                        ? `${recipeDryHop.plannedDays} days`
+                        : "Not specified"}
                     </td>
                     <td>
                       <span className={`status-badge ${statusClass}`}>
@@ -266,11 +305,19 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                               Removed: {formatDate(recipeDryHop.removalDate)}
                             </div>
                           )}
-                          {recipeDryHop.actualDaysInFermenter !== null && recipeDryHop.actualDaysInFermenter !== undefined && (
-                            <div style={{ fontSize: "0.8em", fontWeight: "bold" }}>
-                              Actual: {recipeDryHop.actualDaysInFermenter} days
-                            </div>
-                          )}
+                          {recipeDryHop.actualDaysInFermenter !== null &&
+                            recipeDryHop.actualDaysInFermenter !==
+                              undefined && (
+                              <div
+                                style={{
+                                  fontSize: "0.8em",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                Actual: {recipeDryHop.actualDaysInFermenter}{" "}
+                                days
+                              </div>
+                            )}
                         </div>
                       )}
                       {!recipeDryHop.additionDate && (
@@ -291,7 +338,9 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
                       {isInFermenter && (
                         <button
                           className="btn btn-sm btn-warning"
-                          onClick={() => handleRemoveFromFermenter(recipeDryHop)}
+                          onClick={() =>
+                            handleRemoveFromFermenter(recipeDryHop)
+                          }
                           disabled={submitting}
                         >
                           {submitting ? "Removing..." : "Remove from Fermenter"}
@@ -313,11 +362,11 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({ sessionId, recipeData, on
         <div className="empty-state">
           <p>🍺 No dry hops found in this recipe.</p>
           <p style={{ fontSize: "0.9em", color: "#666" }}>
-            Add dry hops to your recipe (with "Dry Hop" timing) to track them here.
+            Add dry hops to your recipe (with "Dry Hop" timing) to track them
+            here.
           </p>
         </div>
       )}
-
     </div>
   );
 };

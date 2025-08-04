@@ -51,7 +51,7 @@ const UserSettings: React.FC = () => {
   useEffect(() => {
     const loadSettings = async (): Promise<void> => {
       try {
-        dispatch({ type: 'INITIALIZE_START' });
+        dispatch({ type: "INITIALIZE_START" });
         const userSettings = await Services.userSettings.getUserSettings();
 
         // Populate forms
@@ -81,7 +81,7 @@ const UserSettings: React.FC = () => {
         };
 
         dispatch({
-          type: 'INITIALIZE_SUCCESS',
+          type: "INITIALIZE_SUCCESS",
           payload: {
             settings: userSettings,
             profileForm: profileData,
@@ -91,7 +91,10 @@ const UserSettings: React.FC = () => {
         });
       } catch (err: any) {
         console.error("Error loading settings:", err);
-        dispatch({ type: 'INITIALIZE_ERROR', payload: "Failed to load user settings" });
+        dispatch({
+          type: "INITIALIZE_ERROR",
+          payload: "Failed to load user settings",
+        });
       }
     };
 
@@ -109,7 +112,7 @@ const UserSettings: React.FC = () => {
       JSON.stringify(privacyForm) !== JSON.stringify(originalPrivacyForm);
 
     const hasChanges = profileChanged || preferencesChanged || privacyChanged;
-    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
+    dispatch({ type: "SET_UNSAVED_CHANGES", payload: hasChanges });
     return hasChanges;
   }, [
     profileForm,
@@ -128,7 +131,10 @@ const UserSettings: React.FC = () => {
   // Clear messages after a delay
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => dispatch({ type: 'CLEAR_SUCCESS_MESSAGE' }), 3000);
+      const timer = setTimeout(
+        () => dispatch({ type: "CLEAR_SUCCESS_MESSAGE" }),
+        3000
+      );
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -139,14 +145,20 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      dispatch({ type: 'SAVE_START' });
+      dispatch({ type: "SAVE_START" });
 
       await Services.userSettings.updateProfile(profileForm);
       // Update original to match saved state
-      dispatch({ type: 'UPDATE_ORIGINAL_PROFILE_FORM', payload: profileForm });
-      dispatch({ type: 'SAVE_SUCCESS', payload: "Profile updated successfully" });
+      dispatch({ type: "UPDATE_ORIGINAL_PROFILE_FORM", payload: profileForm });
+      dispatch({
+        type: "SAVE_SUCCESS",
+        payload: "Profile updated successfully",
+      });
     } catch (err: any) {
-      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update profile" });
+      dispatch({
+        type: "SAVE_ERROR",
+        payload: err.message || "Failed to update profile",
+      });
     }
   };
 
@@ -155,13 +167,19 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      dispatch({ type: 'SAVE_START' });
+      dispatch({ type: "SAVE_START" });
 
       await Services.userSettings.changePassword(passwordForm);
-      dispatch({ type: 'SAVE_SUCCESS', payload: "Password changed successfully" });
-      dispatch({ type: 'RESET_PASSWORD_FORM' });
+      dispatch({
+        type: "SAVE_SUCCESS",
+        payload: "Password changed successfully",
+      });
+      dispatch({ type: "RESET_PASSWORD_FORM" });
     } catch (err: any) {
-      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to change password" });
+      dispatch({
+        type: "SAVE_ERROR",
+        payload: err.message || "Failed to change password",
+      });
     }
   };
 
@@ -170,7 +188,7 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      dispatch({ type: 'SAVE_START' });
+      dispatch({ type: "SAVE_START" });
 
       // Update preferences using the settings service
       await Services.userSettings.updateSettings(
@@ -182,10 +200,19 @@ const UserSettings: React.FC = () => {
         preferencesForm.preferred_units as "imperial" | "metric"
       );
 
-      dispatch({ type: 'UPDATE_ORIGINAL_PREFERENCES_FORM', payload: preferencesForm });
-      dispatch({ type: 'SAVE_SUCCESS', payload: "Preferences updated successfully" });
+      dispatch({
+        type: "UPDATE_ORIGINAL_PREFERENCES_FORM",
+        payload: preferencesForm,
+      });
+      dispatch({
+        type: "SAVE_SUCCESS",
+        payload: "Preferences updated successfully",
+      });
     } catch (err: any) {
-      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update preferences" });
+      dispatch({
+        type: "SAVE_ERROR",
+        payload: err.message || "Failed to update preferences",
+      });
     }
   };
 
@@ -194,13 +221,19 @@ const UserSettings: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     try {
-      dispatch({ type: 'SAVE_START' });
+      dispatch({ type: "SAVE_START" });
 
       await Services.userSettings.updateSettings(privacyForm);
-      dispatch({ type: 'UPDATE_ORIGINAL_PRIVACY_FORM', payload: privacyForm });
-      dispatch({ type: 'SAVE_SUCCESS', payload: "Privacy settings updated successfully" });
+      dispatch({ type: "UPDATE_ORIGINAL_PRIVACY_FORM", payload: privacyForm });
+      dispatch({
+        type: "SAVE_SUCCESS",
+        payload: "Privacy settings updated successfully",
+      });
     } catch (err: any) {
-      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to update privacy settings" });
+      dispatch({
+        type: "SAVE_ERROR",
+        payload: err.message || "Failed to update privacy settings",
+      });
     }
   };
 
@@ -217,7 +250,7 @@ const UserSettings: React.FC = () => {
     }
 
     try {
-      dispatch({ type: 'SAVE_START' });
+      dispatch({ type: "SAVE_START" });
 
       await Services.userSettings.deleteAccount(deleteForm);
       // Logout and redirect
@@ -225,7 +258,10 @@ const UserSettings: React.FC = () => {
       window.dispatchEvent(new Event("authChange"));
       navigate("/login");
     } catch (err: any) {
-      dispatch({ type: 'SAVE_ERROR', payload: err.message || "Failed to delete account" });
+      dispatch({
+        type: "SAVE_ERROR",
+        payload: err.message || "Failed to delete account",
+      });
     }
   };
 
@@ -236,12 +272,12 @@ const UserSettings: React.FC = () => {
     const defaultBatchSize = newUnitSystem === "metric" ? 19 : 5;
 
     dispatch({
-      type: 'UPDATE_PREFERENCES_FIELD',
-      payload: { field: 'preferred_units', value: newUnitSystem }
+      type: "UPDATE_PREFERENCES_FIELD",
+      payload: { field: "preferred_units", value: newUnitSystem },
     });
     dispatch({
-      type: 'UPDATE_PREFERENCES_FIELD',
-      payload: { field: 'default_batch_size', value: defaultBatchSize }
+      type: "UPDATE_PREFERENCES_FIELD",
+      payload: { field: "default_batch_size", value: defaultBatchSize },
     });
   };
 
@@ -299,7 +335,7 @@ const UserSettings: React.FC = () => {
               <button
                 className="btn btn-danger"
                 onClick={() => {
-                  dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
+                  dispatch({ type: "SET_UNSAVED_CHANGES", payload: false });
                   blocker.proceed?.();
                 }}
               >
@@ -323,7 +359,10 @@ const UserSettings: React.FC = () => {
             <div className="error-content">
               <span className="error-icon">⚠️</span>
               <span className="error-message">{error}</span>
-              <button onClick={() => dispatch({ type: 'CLEAR_ERROR' })} className="error-dismiss">
+              <button
+                onClick={() => dispatch({ type: "CLEAR_ERROR" })}
+                className="error-dismiss"
+              >
                 ×
               </button>
             </div>
@@ -336,7 +375,7 @@ const UserSettings: React.FC = () => {
               <span className="success-icon">✅</span>
               <span className="success-message">{successMessage}</span>
               <button
-                onClick={() => dispatch({ type: 'CLEAR_SUCCESS_MESSAGE' })}
+                onClick={() => dispatch({ type: "CLEAR_SUCCESS_MESSAGE" })}
                 className="success-dismiss"
               >
                 ×
@@ -351,7 +390,9 @@ const UserSettings: React.FC = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: tab.id })}
+                onClick={() =>
+                  dispatch({ type: "SET_ACTIVE_TAB", payload: tab.id })
+                }
                 className={`settings-tab ${
                   activeTab === tab.id ? "active" : ""
                 }`}
@@ -378,8 +419,8 @@ const UserSettings: React.FC = () => {
                       value={profileForm.username}
                       onChange={(e) =>
                         dispatch({
-                          type: 'UPDATE_PROFILE_FIELD',
-                          payload: { field: 'username', value: e.target.value }
+                          type: "UPDATE_PROFILE_FIELD",
+                          payload: { field: "username", value: e.target.value },
                         })
                       }
                       className="form-control"
@@ -398,8 +439,8 @@ const UserSettings: React.FC = () => {
                       value={profileForm.email}
                       onChange={(e) =>
                         dispatch({
-                          type: 'UPDATE_PROFILE_FIELD',
-                          payload: { field: 'email', value: e.target.value }
+                          type: "UPDATE_PROFILE_FIELD",
+                          payload: { field: "email", value: e.target.value },
                         })
                       }
                       className="form-control"
@@ -525,8 +566,11 @@ const UserSettings: React.FC = () => {
                       value={preferencesForm.default_batch_size}
                       onChange={(e) =>
                         dispatch({
-                          type: 'UPDATE_PREFERENCES_FIELD',
-                          payload: { field: 'default_batch_size', value: parseFloat(e.target.value) }
+                          type: "UPDATE_PREFERENCES_FIELD",
+                          payload: {
+                            field: "default_batch_size",
+                            value: parseFloat(e.target.value),
+                          },
                         })
                       }
                       className="form-control"
@@ -548,8 +592,11 @@ const UserSettings: React.FC = () => {
                           checked={preferencesForm.email_notifications}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PREFERENCES_FIELD',
-                              payload: { field: 'email_notifications', value: e.target.checked }
+                              type: "UPDATE_PREFERENCES_FIELD",
+                              payload: {
+                                field: "email_notifications",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -562,8 +609,11 @@ const UserSettings: React.FC = () => {
                           checked={preferencesForm.brew_reminders}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PREFERENCES_FIELD',
-                              payload: { field: 'brew_reminders', value: e.target.checked }
+                              type: "UPDATE_PREFERENCES_FIELD",
+                              payload: {
+                                field: "brew_reminders",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -604,8 +654,11 @@ const UserSettings: React.FC = () => {
                           checked={privacyForm.contribute_anonymous_data}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PRIVACY_FIELD',
-                              payload: { field: 'contribute_anonymous_data', value: e.target.checked }
+                              type: "UPDATE_PRIVACY_FIELD",
+                              payload: {
+                                field: "contribute_anonymous_data",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -628,8 +681,11 @@ const UserSettings: React.FC = () => {
                           checked={privacyForm.share_yeast_performance}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PRIVACY_FIELD',
-                              payload: { field: 'share_yeast_performance', value: e.target.checked }
+                              type: "UPDATE_PRIVACY_FIELD",
+                              payload: {
+                                field: "share_yeast_performance",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -651,8 +707,11 @@ const UserSettings: React.FC = () => {
                           checked={privacyForm.share_recipe_metrics}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PRIVACY_FIELD',
-                              payload: { field: 'share_recipe_metrics', value: e.target.checked }
+                              type: "UPDATE_PRIVACY_FIELD",
+                              payload: {
+                                field: "share_recipe_metrics",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -679,8 +738,11 @@ const UserSettings: React.FC = () => {
                           checked={privacyForm.public_recipes_default}
                           onChange={(e) =>
                             dispatch({
-                              type: 'UPDATE_PRIVACY_FIELD',
-                              payload: { field: 'public_recipes_default', value: e.target.checked }
+                              type: "UPDATE_PRIVACY_FIELD",
+                              payload: {
+                                field: "public_recipes_default",
+                                value: e.target.checked,
+                              },
                             })
                           }
                           disabled={saving}
@@ -733,8 +795,11 @@ const UserSettings: React.FC = () => {
                         value={passwordForm.current_password}
                         onChange={(e) =>
                           dispatch({
-                            type: 'UPDATE_PASSWORD_FIELD',
-                            payload: { field: 'current_password', value: e.target.value }
+                            type: "UPDATE_PASSWORD_FIELD",
+                            payload: {
+                              field: "current_password",
+                              value: e.target.value,
+                            },
                           })
                         }
                         className="form-control"
@@ -753,8 +818,11 @@ const UserSettings: React.FC = () => {
                         value={passwordForm.new_password}
                         onChange={(e) =>
                           dispatch({
-                            type: 'UPDATE_PASSWORD_FIELD',
-                            payload: { field: 'new_password', value: e.target.value }
+                            type: "UPDATE_PASSWORD_FIELD",
+                            payload: {
+                              field: "new_password",
+                              value: e.target.value,
+                            },
                           })
                         }
                         className="form-control"
@@ -774,8 +842,11 @@ const UserSettings: React.FC = () => {
                         value={passwordForm.confirm_password}
                         onChange={(e) =>
                           dispatch({
-                            type: 'UPDATE_PASSWORD_FIELD',
-                            payload: { field: 'confirm_password', value: e.target.value }
+                            type: "UPDATE_PASSWORD_FIELD",
+                            payload: {
+                              field: "confirm_password",
+                              value: e.target.value,
+                            },
                           })
                         }
                         className="form-control"
@@ -802,7 +873,8 @@ const UserSettings: React.FC = () => {
                   <div className="danger-warning">
                     <p>
                       <strong>Warning:</strong> Account deletion is permanent
-                      and cannot be undone. Your personal data, private recipes, and brew sessions will be permanently deleted.
+                      and cannot be undone. Your personal data, private recipes,
+                      and brew sessions will be permanently deleted.
                     </p>
                   </div>
 
@@ -823,14 +895,19 @@ const UserSettings: React.FC = () => {
                             checked={deleteForm.preserve_public_recipes}
                             onChange={() =>
                               dispatch({
-                                type: 'UPDATE_DELETE_FIELD',
-                                payload: { field: 'preserve_public_recipes', value: true }
+                                type: "UPDATE_DELETE_FIELD",
+                                payload: {
+                                  field: "preserve_public_recipes",
+                                  value: true,
+                                },
                               })
                             }
                             disabled={saving}
                           />
                           <span className="radio-label">
-                            <strong>Keep for community</strong> - Transfer public recipes to "Anonymous User" so others can still access them
+                            <strong>Keep for community</strong> - Transfer
+                            public recipes to "Anonymous User" so others can
+                            still access them
                           </span>
                         </label>
                         <label className="radio-option">
@@ -840,14 +917,18 @@ const UserSettings: React.FC = () => {
                             checked={!deleteForm.preserve_public_recipes}
                             onChange={() =>
                               dispatch({
-                                type: 'UPDATE_DELETE_FIELD',
-                                payload: { field: 'preserve_public_recipes', value: false }
+                                type: "UPDATE_DELETE_FIELD",
+                                payload: {
+                                  field: "preserve_public_recipes",
+                                  value: false,
+                                },
                               })
                             }
                             disabled={saving}
                           />
                           <span className="radio-label">
-                            <strong>Delete everything</strong> - Permanently delete all recipes including public ones
+                            <strong>Delete everything</strong> - Permanently
+                            delete all recipes including public ones
                           </span>
                         </label>
                       </div>
@@ -867,8 +948,11 @@ const UserSettings: React.FC = () => {
                         value={deleteForm.password}
                         onChange={(e) =>
                           dispatch({
-                            type: 'UPDATE_DELETE_FIELD',
-                            payload: { field: 'password', value: e.target.value }
+                            type: "UPDATE_DELETE_FIELD",
+                            payload: {
+                              field: "password",
+                              value: e.target.value,
+                            },
                           })
                         }
                         className="form-control"
@@ -890,8 +974,11 @@ const UserSettings: React.FC = () => {
                         value={deleteForm.confirmation}
                         onChange={(e) =>
                           dispatch({
-                            type: 'UPDATE_DELETE_FIELD',
-                            payload: { field: 'confirmation', value: e.target.value }
+                            type: "UPDATE_DELETE_FIELD",
+                            payload: {
+                              field: "confirmation",
+                              value: e.target.value,
+                            },
                           })
                         }
                         className="form-control"

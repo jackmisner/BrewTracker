@@ -39,7 +39,6 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
 }) => {
   const { unitSystem, getPreferredUnit } = useUnits();
 
-
   const [fermentableForm, setFermentableForm] = useState<FermentableFormData>({
     ingredient_id: "",
     color: "",

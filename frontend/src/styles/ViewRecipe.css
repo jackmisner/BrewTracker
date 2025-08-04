@@ -85,7 +85,8 @@
   color: #1f2937; /* gray-800 */
 }
 
-.recipe-description, .recipe-notes {
+.recipe-description,
+.recipe-notes {
   font-size: 1rem;
   line-height: 1.6;
   color: #4b5563; /* gray-700 */
@@ -124,10 +125,7 @@
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: 
-    background-color 0.2s,
-    border-color 0.2s,
-    transform 0.1s;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
   text-align: center;
   border: 1px solid transparent;
   display: flex;
@@ -190,12 +188,12 @@
   .recipe-view-actions {
     gap: 0.5rem;
   }
-  
+
   .recipe-action-button {
     font-size: 0.75rem;
     padding: 0.4rem 0.8rem;
   }
-  
+
   .recipe-action-button.brew-button {
     margin-left: 0;
   }
@@ -207,7 +205,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .view-recipe-container {
     padding: 1rem;
   }
@@ -217,11 +215,11 @@
   .view-recipe-container {
     padding: 0.75rem;
   }
-  
+
   .view-recipe-content {
     gap: 1rem;
   }
-  
+
   .view-recipe-top-section {
     gap: 0.75rem;
   }

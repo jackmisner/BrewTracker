@@ -3,9 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { Services } from "../../services";
 import { invalidateBrewSessionCaches } from "../../services/CacheManager";
 import { useUnits } from "../../contexts/UnitContext";
-import {
-  UpdateBrewSessionFormData,
-} from "../../types";
+import { UpdateBrewSessionFormData } from "../../types";
 // BrewSession and BrewSessionStatus types used in state interface
 import {
   brewSessionReducer,
@@ -24,7 +22,7 @@ const EditBrewSession: React.FC = () => {
   // Initialize reducer
   const [state, dispatch] = useReducer(
     brewSessionReducer,
-    createInitialBrewSessionState('edit')
+    createInitialBrewSessionState("edit")
   );
 
   // Destructure state for cleaner access
@@ -33,17 +31,17 @@ const EditBrewSession: React.FC = () => {
   useEffect(() => {
     const fetchSession = async (): Promise<void> => {
       if (!sessionId) {
-        dispatch({ type: 'FETCH_ERROR', payload: 'Session ID is required' });
+        dispatch({ type: "FETCH_ERROR", payload: "Session ID is required" });
         return;
       }
 
       try {
-        dispatch({ type: 'FETCH_START' });
+        dispatch({ type: "FETCH_START" });
 
         const sessionData = await Services.brewSession.fetchBrewSession(
           sessionId
         );
-        dispatch({ type: 'FETCH_SUCCESS', payload: { session: sessionData } });
+        dispatch({ type: "FETCH_SUCCESS", payload: { session: sessionData } });
 
         // Helper function to safely format date or return empty string for form display
         const formatDateForForm = (dateString?: string): string => {
@@ -53,7 +51,7 @@ const EditBrewSession: React.FC = () => {
         };
 
         dispatch({
-          type: 'SET_FORM_DATA',
+          type: "SET_FORM_DATA",
           payload: {
             name: sessionData.name || "",
             status: sessionData.status || "planned",
@@ -77,7 +75,7 @@ const EditBrewSession: React.FC = () => {
       } catch (err: any) {
         console.error("Error fetching brew session:", err);
         dispatch({
-          type: 'FETCH_ERROR',
+          type: "FETCH_ERROR",
           payload: err.message || "Failed to load brew session data",
         });
 
@@ -101,7 +99,7 @@ const EditBrewSession: React.FC = () => {
   ): void => {
     const { name, value } = e.target;
     dispatch({
-      type: 'UPDATE_FORM_FIELD',
+      type: "UPDATE_FORM_FIELD",
       payload: { field: name, value },
     });
   };
@@ -112,12 +110,12 @@ const EditBrewSession: React.FC = () => {
     e.preventDefault();
 
     if (!sessionId) {
-      dispatch({ type: 'SET_ERROR', payload: 'Session ID is required' });
+      dispatch({ type: "SET_ERROR", payload: "Session ID is required" });
       return;
     }
 
     try {
-      dispatch({ type: 'SUBMIT_START' });
+      dispatch({ type: "SUBMIT_START" });
 
       // Prepare data for submission - convert to proper types and filter out empty values
       const editFormData = formData as EditBrewSessionFormData;
@@ -172,7 +170,7 @@ const EditBrewSession: React.FC = () => {
         sessionId,
         data
       );
-      dispatch({ type: 'SET_SESSION', payload: updatedSession });
+      dispatch({ type: "SET_SESSION", payload: updatedSession });
 
       // Invalidate caches to update all related components
       invalidateBrewSessionCaches.onUpdated({
@@ -185,8 +183,9 @@ const EditBrewSession: React.FC = () => {
     } catch (err: any) {
       console.error("Error updating brew session:", err);
       dispatch({
-        type: 'SUBMIT_ERROR',
-        payload: err.message ||
+        type: "SUBMIT_ERROR",
+        payload:
+          err.message ||
           `Failed to update brew session: ${
             err.response?.data?.error || "Unknown error"
           }`,
@@ -223,7 +222,7 @@ const EditBrewSession: React.FC = () => {
         <div className="error-message" style={{ marginBottom: "1rem" }}>
           {error}
           <button
-            onClick={() => dispatch({ type: 'CLEAR_ERROR' })}
+            onClick={() => dispatch({ type: "CLEAR_ERROR" })}
             style={{
               background: "none",
               border: "none",
@@ -377,7 +376,9 @@ const EditBrewSession: React.FC = () => {
                   step="0.1"
                   id="actual_efficiency"
                   name="actual_efficiency"
-                  value={(formData as EditBrewSessionFormData).actual_efficiency}
+                  value={
+                    (formData as EditBrewSessionFormData).actual_efficiency
+                  }
                   onChange={handleChange}
                   className="brew-session-form-control"
                   disabled={submitting}
@@ -397,7 +398,10 @@ const EditBrewSession: React.FC = () => {
                   type="date"
                   id="fermentation_start_date"
                   name="fermentation_start_date"
-                  value={(formData as EditBrewSessionFormData).fermentation_start_date}
+                  value={
+                    (formData as EditBrewSessionFormData)
+                      .fermentation_start_date
+                  }
                   onChange={handleChange}
                   className="brew-session-form-control"
                   disabled={submitting}
@@ -414,7 +418,9 @@ const EditBrewSession: React.FC = () => {
                   type="date"
                   id="fermentation_end_date"
                   name="fermentation_end_date"
-                  value={(formData as EditBrewSessionFormData).fermentation_end_date}
+                  value={
+                    (formData as EditBrewSessionFormData).fermentation_end_date
+                  }
                   onChange={handleChange}
                   className="brew-session-form-control"
                   disabled={submitting}

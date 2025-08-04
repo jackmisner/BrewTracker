@@ -38,7 +38,9 @@ interface AISuggestionsProps {
   onBulkUpdateRecipe?: (
     updates: Array<{ field: keyof Recipe; value: any }>
   ) => Promise<void>;
-  replaceIngredients: (ingredientsToReplace: RecipeIngredient[]) => Promise<void>;
+  replaceIngredients: (
+    ingredientsToReplace: RecipeIngredient[]
+  ) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -278,7 +280,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   const generateSuggestions = useCallback(async (): Promise<void> => {
     if (!ingredients.length || !metrics || unitsLoading || disabled) return;
 
-    dispatch({ type: 'START_ANALYSIS' });
+    dispatch({ type: "START_ANALYSIS" });
 
     try {
       // Look up style ID from recipe style name for proper style compliance analysis
@@ -365,7 +367,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       if (response.optimization_performed && response.optimized_recipe) {
         // Show optimization results instead of individual suggestions
         dispatch({
-          type: 'ANALYSIS_SUCCESS',
+          type: "ANALYSIS_SUCCESS",
           payload: {
             suggestions: [],
             optimizationResult: {
@@ -385,24 +387,25 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         );
 
         dispatch({
-          type: 'ANALYSIS_SUCCESS',
+          type: "ANALYSIS_SUCCESS",
           payload: {
             suggestions: convertedSuggestions,
           },
         });
       }
 
-      dispatch({ type: 'ANALYSIS_COMPLETE' });
+      dispatch({ type: "ANALYSIS_COMPLETE" });
     } catch (error) {
       console.error(
         "❌ AI: Error generating suggestions:",
         error instanceof Error ? error.message : "Unknown error"
       );
       dispatch({
-        type: 'ANALYSIS_ERROR',
-        payload: error instanceof Error
-          ? error.message
-          : "Failed to generate suggestions",
+        type: "ANALYSIS_ERROR",
+        payload:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate suggestions",
       });
     }
   }, [
@@ -602,24 +605,31 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       // Mark suggestion as applied and remove from current suggestions
-      dispatch({ type: 'ADD_APPLIED_SUGGESTION', payload: suggestion.id });
-      dispatch({ type: 'SET_SUGGESTIONS', payload: suggestions.filter((s) => s.id !== suggestion.id) });
+      dispatch({ type: "ADD_APPLIED_SUGGESTION", payload: suggestion.id });
+      dispatch({
+        type: "SET_SUGGESTIONS",
+        payload: suggestions.filter((s) => s.id !== suggestion.id),
+      });
     } catch (error) {
       console.error(
         "❌ APPLY: Error applying suggestion:",
         error instanceof Error ? error.message : "Unknown error"
       );
       dispatch({
-        type: 'SET_ERROR',
-        payload: error instanceof Error ? error.message : "Failed to apply suggestion",
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to apply suggestion",
       });
     }
   };
 
   // Dismiss a suggestion
   const dismissSuggestion = (suggestionId: string): void => {
-    dispatch({ type: 'ADD_APPLIED_SUGGESTION', payload: suggestionId });
-    dispatch({ type: 'SET_SUGGESTIONS', payload: suggestions.filter((s) => s.id !== suggestionId) });
+    dispatch({ type: "ADD_APPLIED_SUGGESTION", payload: suggestionId });
+    dispatch({
+      type: "SET_SUGGESTIONS",
+      payload: suggestions.filter((s) => s.id !== suggestionId),
+    });
   };
 
   // Handle analyze button click
@@ -709,32 +719,33 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       // Clear the optimization result and show success message
-      dispatch({ type: 'CLEAR_OPTIMIZATION_RESULT' });
-      dispatch({ type: 'RESET_ANALYSIS_STATE' });
+      dispatch({ type: "CLEAR_OPTIMIZATION_RESULT" });
+      dispatch({ type: "RESET_ANALYSIS_STATE" });
     } catch (error) {
       console.error(
         "❌ APPLY: Error applying optimized recipe:",
         error instanceof Error ? error.message : "Unknown error"
       );
       dispatch({
-        type: 'SET_ERROR',
-        payload: error instanceof Error
-          ? error.message
-          : "Failed to apply optimized recipe",
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error
+            ? error.message
+            : "Failed to apply optimized recipe",
       });
     }
   };
 
   // Clear suggestions
   const clearSuggestions = (): void => {
-    dispatch({ type: 'RESET_ANALYSIS_STATE' });
+    dispatch({ type: "RESET_ANALYSIS_STATE" });
   };
 
   return (
     <div className="ai-suggestions-container">
       <div className="ai-suggestions-header">
         <button
-          onClick={() => dispatch({ type: 'TOGGLE_EXPANDED' })}
+          onClick={() => dispatch({ type: "TOGGLE_EXPANDED" })}
           className="ai-suggestions-toggle"
         >
           {isExpanded ? "▼" : "▶"} AI Recipe Analysis
@@ -958,7 +969,9 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                   Apply Optimized Recipe
                 </button>
                 <button
-                  onClick={() => dispatch({ type: 'CLEAR_OPTIMIZATION_RESULT' })}
+                  onClick={() =>
+                    dispatch({ type: "CLEAR_OPTIMIZATION_RESULT" })
+                  }
                   className="btn-secondary"
                 >
                   Keep Original Recipe

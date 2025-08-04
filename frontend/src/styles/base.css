@@ -71,13 +71,13 @@
     margin: 1.5rem 0;
     padding: 0.5rem;
   }
-  
+
   .about-photo {
     max-width: 100%;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   }
-  
+
   .photo-caption {
     font-size: 0.9rem;
     padding: 0 1rem;
@@ -131,14 +131,30 @@
    ========================================================================== */
 
 /* Margin utilities */
-.mb-1 { margin-bottom: var(--spacing-xs); }
-.mb-2 { margin-bottom: var(--spacing-sm); }
-.mb-3 { margin-bottom: var(--spacing-md); }
-.mb-4 { margin-bottom: var(--spacing-lg); }
-.mb-6 { margin-bottom: var(--spacing-xl); }
-.mt-2 { margin-top: var(--spacing-sm); }
-.mt-4 { margin-top: var(--spacing-lg); }
-.mt-6 { margin-top: var(--spacing-xl); }
+.mb-1 {
+  margin-bottom: var(--spacing-xs);
+}
+.mb-2 {
+  margin-bottom: var(--spacing-sm);
+}
+.mb-3 {
+  margin-bottom: var(--spacing-md);
+}
+.mb-4 {
+  margin-bottom: var(--spacing-lg);
+}
+.mb-6 {
+  margin-bottom: var(--spacing-xl);
+}
+.mt-2 {
+  margin-top: var(--spacing-sm);
+}
+.mt-4 {
+  margin-top: var(--spacing-lg);
+}
+.mt-6 {
+  margin-top: var(--spacing-xl);
+}
 
 /* ==========================================================================
    Error and Status States
@@ -205,67 +221,147 @@
    ========================================================================== */
 
 /* Very Light - Pale Straw */
-.srm-1 { background-color: #f8f6e8; }
-.srm-2 { background-color: #f5f2d4; }
+.srm-1 {
+  background-color: #f8f6e8;
+}
+.srm-2 {
+  background-color: #f5f2d4;
+}
 
 /* Light - Straw to Pale Gold */
-.srm-3 { background-color: #f2edc0; }
-.srm-4 { background-color: #ede8ac; }
+.srm-3 {
+  background-color: #f2edc0;
+}
+.srm-4 {
+  background-color: #ede8ac;
+}
 
 /* Gold */
-.srm-5 { background-color: #e8e298; }
-.srm-6 { background-color: #e3dd84; }
+.srm-5 {
+  background-color: #e8e298;
+}
+.srm-6 {
+  background-color: #e3dd84;
+}
 
 /* Deep Gold to Light Amber */
-.srm-7 { background-color: #ded870; }
-.srm-8 { background-color: #d9d35c; }
+.srm-7 {
+  background-color: #ded870;
+}
+.srm-8 {
+  background-color: #d9d35c;
+}
 
 /* Amber */
-.srm-9 { background-color: #d4ce48; }
-.srm-10 { background-color: #cfc934; }
+.srm-9 {
+  background-color: #d4ce48;
+}
+.srm-10 {
+  background-color: #cfc934;
+}
 
 /* Deep Amber to Light Copper */
-.srm-11 { background-color: #c4b82e; }
-.srm-12 { background-color: #b8a728; }
+.srm-11 {
+  background-color: #c4b82e;
+}
+.srm-12 {
+  background-color: #b8a728;
+}
 
 /* Copper */
-.srm-13 { background-color: #ac9622; }
-.srm-14 { background-color: #a0851c; }
+.srm-13 {
+  background-color: #ac9622;
+}
+.srm-14 {
+  background-color: #a0851c;
+}
 
 /* Deep Copper to Light Brown */
-.srm-15 { background-color: #947416; }
-.srm-16 { background-color: #886310; }
+.srm-15 {
+  background-color: #947416;
+}
+.srm-16 {
+  background-color: #886310;
+}
 
 /* Light to Medium Brown */
-.srm-17 { background-color: #7c520a; }
-.srm-18 { background-color: #704108; }
-.srm-19 { background-color: #643006; }
-.srm-20 { background-color: #581f04; }
+.srm-17 {
+  background-color: #7c520a;
+}
+.srm-18 {
+  background-color: #704108;
+}
+.srm-19 {
+  background-color: #643006;
+}
+.srm-20 {
+  background-color: #581f04;
+}
 
 /* Dark Brown */
-.srm-21 { background-color: #4c1e04; }
-.srm-22 { background-color: #451b03; }
-.srm-23 { background-color: #3e1803; }
-.srm-24 { background-color: #371503; }
-.srm-25 { background-color: #301202; }
+.srm-21 {
+  background-color: #4c1e04;
+}
+.srm-22 {
+  background-color: #451b03;
+}
+.srm-23 {
+  background-color: #3e1803;
+}
+.srm-24 {
+  background-color: #371503;
+}
+.srm-25 {
+  background-color: #301202;
+}
 
 /* Very Dark Brown */
-.srm-26 { background-color: #290f02; }
-.srm-27 { background-color: #220c02; }
-.srm-28 { background-color: #1b0901; }
-.srm-29 { background-color: #140601; }
-.srm-30 { background-color: #0d0301; }
+.srm-26 {
+  background-color: #290f02;
+}
+.srm-27 {
+  background-color: #220c02;
+}
+.srm-28 {
+  background-color: #1b0901;
+}
+.srm-29 {
+  background-color: #140601;
+}
+.srm-30 {
+  background-color: #0d0301;
+}
 
 /* Nearly Black */
-.srm-31 { background-color: #0b0201; }
-.srm-32 { background-color: #090201; }
-.srm-33 { background-color: #070101; }
-.srm-34 { background-color: #050101; }
-.srm-35 { background-color: #030000; }
+.srm-31 {
+  background-color: #0b0201;
+}
+.srm-32 {
+  background-color: #090201;
+}
+.srm-33 {
+  background-color: #070101;
+}
+.srm-34 {
+  background-color: #050101;
+}
+.srm-35 {
+  background-color: #030000;
+}
 
 /* Black */
-.srm-36 { background-color: #020000; }
-.srm-37 { background-color: #010000; }
-.srm-38 { background-color: #000000; }
-.srm-39 { background-color: #000000; }
-.srm-40 { background-color: #000000; }
+.srm-36 {
+  background-color: #020000;
+}
+.srm-37 {
+  background-color: #010000;
+}
+.srm-38 {
+  background-color: #000000;
+}
+.srm-39 {
+  background-color: #000000;
+}
+.srm-40 {
+  background-color: #000000;
+}

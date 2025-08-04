@@ -44,10 +44,12 @@ const ReportBug: React.FC = () => {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -56,11 +58,12 @@ const ReportBug: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // Create GitHub issue URL with pre-filled data
       const issueTitle = encodeURIComponent(`Bug Report: ${formData.title}`);
-      const issueBody = encodeURIComponent(`
+      const issueBody = encodeURIComponent(
+        `
 ## Bug Description
 ${formData.description}
 
@@ -79,15 +82,16 @@ ${formData.actualBehavior}
 
 ## Additional Information
 Reported via BrewTracker Bug Report Form
-      `.trim());
+      `.trim()
+      );
 
       const githubUrl = `https://github.com/jackmisner/BrewTracker/issues/new?title=${issueTitle}&body=${issueBody}&labels=bug,${formData.severity}-priority`;
-      
+
       // Open GitHub issue creation page
-      window.open(githubUrl, '_blank');
-      
+      window.open(githubUrl, "_blank");
+
       setSubmitMessage("Redirecting to GitHub to create your bug report...");
-      
+
       // Reset form after a delay
       setTimeout(() => {
         setFormData({
@@ -101,7 +105,6 @@ Reported via BrewTracker Bug Report Form
         });
         setSubmitMessage("");
       }, 3000);
-      
     } catch (error) {
       setSubmitMessage("Error creating bug report. Please try again.");
     } finally {
@@ -117,17 +120,23 @@ Reported via BrewTracker Bug Report Form
           Help us improve BrewTracker by reporting any issues you encounter.
         </p>
       </div>
-      
+
       <div className="content-container">
         <div className="card">
           <div className="card-title">Bug Report Form</div>
-          
+
           {submitMessage && (
-            <div className={`alert ${submitMessage.includes('Error') ? 'alert-error' : 'alert-success'}`}>
+            <div
+              className={`alert ${
+                submitMessage.includes("Error")
+                  ? "alert-error"
+                  : "alert-success"
+              }`}
+            >
               {submitMessage}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="bug-report-form">
             <div className="form-group">
               <label htmlFor="title" className="form-label">
@@ -255,11 +264,12 @@ Reported via BrewTracker Bug Report Form
               </button>
             </div>
           </form>
-          
+
           <div className="form-note">
             <p>
-              <strong>Note:</strong> This form will redirect you to GitHub to create 
-              an issue. You'll need a GitHub account to submit the report.
+              <strong>Note:</strong> This form will redirect you to GitHub to
+              create an issue. You'll need a GitHub account to submit the
+              report.
             </p>
           </div>
         </div>

@@ -120,7 +120,6 @@ export interface AIIngredientChange {
   };
 }
 
-
 /**
  * AI Service for backend communication
  */
@@ -145,7 +144,6 @@ export class AIService {
       throw new Error(`AI analysis failed: ${errorMessage}`);
     }
   }
-
 
   /**
    * Check AI service health

@@ -106,13 +106,14 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     }
 
     let editValue = currentValue?.toString() || "";
-    
+
     // Special handling for time field on dry-hop ingredients
     if (field === "time" && ingredient.use === "dry-hop" && currentValue) {
       // Convert stored minutes back to days for dry-hop editing
       const minutes = parseInt(currentValue.toString());
-      if (!isNaN(minutes) && minutes >= 1440) { // If >= 1 day in minutes
-        const days = Math.round(minutes / 1440 * 10) / 10; // Round to 1 decimal
+      if (!isNaN(minutes) && minutes >= 1440) {
+        // If >= 1 day in minutes
+        const days = Math.round((minutes / 1440) * 10) / 10; // Round to 1 decimal
         editValue = days.toString();
       }
     }
@@ -227,7 +228,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
         if (isNaN(time) || time < 0) {
           return { isValid: false, error: "Time must be 0 or greater" };
         }
-        
+
         // Handle dry-hop validation and conversion
         if (ingredient.use === "dry-hop") {
           // Validate as days
@@ -397,11 +398,11 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     const inputType = ["amount", "time", "alpha_acid", "color"].includes(field)
       ? "number"
       : "text";
-    
+
     // Determine step and placeholder based on field and ingredient type
     let step = "1";
     let placeholder = "";
-    
+
     if (field === "amount") {
       step = "0.1";
     } else if (field === "alpha_acid") {
@@ -429,10 +430,13 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           min="0"
           placeholder={placeholder}
           className="edit-cell-input"
-          title={field === "time" && ingredient.use === "dry-hop" ? "Enter time in days" : undefined}
+          title={
+            field === "time" && ingredient.use === "dry-hop"
+              ? "Enter time in days"
+              : undefined
+          }
         />
         {validationError && <div className="edit-error">{validationError}</div>}
-
       </div>
     );
   };
@@ -565,7 +569,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
               <div className="ingredient-cards">
                 {items.map((ingredient, index) => (
                   <div
-                    key={`${ingredient.type}-${ingredient.id || `temp-${index}`}-${ingredient.name?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}
+                    key={`${ingredient.type}-${
+                      ingredient.id || `temp-${index}`
+                    }-${
+                      ingredient.name?.replace(/\s+/g, "-").toLowerCase() ||
+                      "unknown"
+                    }`}
                     className={`ingredient-card ${getRowClass(ingredient)}`}
                   >
                     <div className="ingredient-card-header">
@@ -669,10 +678,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
         {/* Grain Weight Total Display for Compact View */}
         {(() => {
           const grainTotal = calculateGrainTotal();
-          const hasGrains = ingredients.some(ingredient => ingredient.type === 'grain');
-          
+          const hasGrains = ingredients.some(
+            (ingredient) => ingredient.type === "grain"
+          );
+
           if (!hasGrains) return null;
-          
+
           return (
             <div className="grain-total-section">
               <div className="grain-total-display">
@@ -690,48 +701,53 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
 
   // Calculate total grain weight
   const calculateGrainTotal = (): { weight: number; unit: string } => {
-    const grainIngredients = ingredients.filter(ingredient => ingredient.type === 'grain');
-    
+    const grainIngredients = ingredients.filter(
+      (ingredient) => ingredient.type === "grain"
+    );
+
     if (grainIngredients.length === 0) {
-      return { weight: 0, unit: 'kg' }; // Default unit
+      return { weight: 0, unit: "kg" }; // Default unit
     }
-    
+
     // Convert all grain weights to kg for calculation
     let totalWeightKg = 0;
-    
-    grainIngredients.forEach(grain => {
-      const amount = parseFloat(grain.amount?.toString() || '0');
+
+    grainIngredients.forEach((grain) => {
+      const amount = parseFloat(grain.amount?.toString() || "0");
       if (isNaN(amount)) return;
-      
+
       const unit = grain.unit?.toLowerCase();
       let weightInKg = 0;
-      
-      if (unit === 'kg') {
+
+      if (unit === "kg") {
         weightInKg = amount;
-      } else if (unit === 'g') {
+      } else if (unit === "g") {
         weightInKg = amount / 1000;
-      } else if (unit === 'lb') {
+      } else if (unit === "lb") {
         weightInKg = amount * 0.453592;
-      } else if (unit === 'oz') {
+      } else if (unit === "oz") {
         weightInKg = amount * 0.0283495;
       } else {
         // Default to kg if unit is unknown
         weightInKg = amount;
       }
-      
+
       totalWeightKg += weightInKg;
     });
-    
+
     // Return in appropriate unit based on the first grain's unit or user preference
     const firstGrainUnit = grainIngredients[0]?.unit?.toLowerCase();
-    
-    if (firstGrainUnit === 'g' || (firstGrainUnit === 'kg' && totalWeightKg < 1)) {
-      return { weight: Math.round(totalWeightKg * 1000 * 10) / 10, unit: 'g' };
-    } else if (firstGrainUnit === 'lb' || firstGrainUnit === 'oz') {
+
+    if (
+      firstGrainUnit === "g" ||
+      (firstGrainUnit === "kg" && totalWeightKg < 1)
+    ) {
+      return { weight: Math.round(totalWeightKg * 1000 * 10) / 10, unit: "g" };
+    } else if (firstGrainUnit === "lb" || firstGrainUnit === "oz") {
       const totalWeightLb = totalWeightKg / 0.453592;
-      return { weight: Math.round(totalWeightLb * 10) / 10, unit: 'lb' };
+      return { weight: Math.round(totalWeightLb * 10) / 10, unit: "lb" };
     } else {
-      return { weight: Math.round(totalWeightKg * 10) / 10, unit: 'kg' };
+      return { weight: Math.round(totalWeightKg * 10) / 10, unit: "kg" };
     }
   };
 
@@ -768,7 +784,10 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           <tbody>
             {sortedIngredients.map((ingredient, index) => (
               <tr
-                key={`${ingredient.type}-${ingredient.id || `temp-${index}`}-${ingredient.name?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}`}
+                key={`${ingredient.type}-${ingredient.id || `temp-${index}`}-${
+                  ingredient.name?.replace(/\s+/g, "-").toLowerCase() ||
+                  "unknown"
+                }`}
                 id={`ingredient-row-${ingredient.id || `temp-${index}`}`}
                 className={getRowClass(ingredient)}
               >
@@ -946,10 +965,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
       {/* Grain Weight Total Display */}
       {(() => {
         const grainTotal = calculateGrainTotal();
-        const hasGrains = ingredients.some(ingredient => ingredient.type === 'grain');
-        
+        const hasGrains = ingredients.some(
+          (ingredient) => ingredient.type === "grain"
+        );
+
         if (!hasGrains) return null;
-        
+
         return (
           <div className="grain-total-section">
             <div className="grain-total-display">

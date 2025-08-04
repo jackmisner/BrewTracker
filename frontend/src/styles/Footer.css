@@ -106,16 +106,16 @@
     gap: 1.5rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .footer-container {
     padding: 1.5rem 1rem 1rem;
   }
-  
+
   .footer-column-title {
     font-size: 1rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .footer-links li {
     margin-bottom: 0.5rem;
   }
@@ -125,16 +125,16 @@
   .footer-container {
     padding: 1rem 0.75rem 0.75rem;
   }
-  
+
   .footer-content {
     gap: 1rem;
     margin-bottom: 1rem;
   }
-  
+
   .footer-link {
     font-size: 0.8rem;
   }
-  
+
   .footer-copyright {
     font-size: 0.8rem;
   }
@@ -146,12 +146,12 @@
     background-color: #1f2937;
     border-top-color: var(--color-amber-500);
   }
-  
+
   .footer-column-title {
     color: var(--color-amber-200);
     border-bottom-color: var(--color-amber-500);
   }
-  
+
   .footer-bottom {
     border-top-color: var(--color-amber-500);
   }

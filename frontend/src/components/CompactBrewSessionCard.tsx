@@ -13,7 +13,6 @@ const CompactBrewSessionCard: React.FC<CompactBrewSessionCardProps> = ({
   onView,
   onEdit,
 }) => {
-
   const formatDate = (dateString: string | Date): string => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -41,13 +40,18 @@ const CompactBrewSessionCard: React.FC<CompactBrewSessionCardProps> = ({
     <div className="compact-session-card">
       <div className="compact-session-header">
         <div className="compact-session-info">
-          <h3 className="compact-session-name">{getSessionDisplayName(session)}</h3>
+          <h3 className="compact-session-name">
+            {getSessionDisplayName(session)}
+          </h3>
           <p className="compact-session-meta">
-            {formatDate(session.brew_date)} • {getProgressDescription(session.status || "")}
+            {formatDate(session.brew_date)} •{" "}
+            {getProgressDescription(session.status || "")}
           </p>
         </div>
         <span
-          className={`compact-session-status-badge ${session.status || "unknown"}`}
+          className={`compact-session-status-badge ${
+            session.status || "unknown"
+          }`}
         >
           {(session.status || "unknown").replace("-", " ")}
         </span>

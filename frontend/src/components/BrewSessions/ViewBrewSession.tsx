@@ -552,20 +552,23 @@ const ViewBrewSession: React.FC = () => {
               fermentation_end_date: session.fermentation_end_date,
               packaging_date: session.packaging_date,
             }}
-            onUpdateSession={async (updatedData: Partial<BrewSession> & { needsRefresh?: boolean }) => {
+            onUpdateSession={async (
+              updatedData: Partial<BrewSession> & { needsRefresh?: boolean }
+            ) => {
               // If needsRefresh is true, refetch the entire session
               if (updatedData.needsRefresh) {
                 try {
-                  const freshSessionData = await Services.brewSession.fetchBrewSession(sessionId);
+                  const freshSessionData =
+                    await Services.brewSession.fetchBrewSession(sessionId);
                   setSession(freshSessionData);
-                  
+
                   // Invalidate caches
                   invalidateBrewSessionCaches.onUpdated({
                     session_id: sessionId,
                     recipe_id: freshSessionData.recipe_id,
                   });
                 } catch (error) {
-                  console.error('Error refreshing session data:', error);
+                  console.error("Error refreshing session data:", error);
                 }
               } else {
                 // Normal update path

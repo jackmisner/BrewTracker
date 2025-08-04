@@ -18,10 +18,7 @@ import {
   RecipeAnalysis,
 } from "../types";
 import { convertUnit } from "../utils/formatUtils";
-import {
-  recipeBuilderReducer,
-  createInitialState,
-} from "../reducers";
+import { recipeBuilderReducer, createInitialState } from "../reducers";
 
 // Return interface for the hook (same API as before)
 interface UseRecipeBuilderReturn {
@@ -65,7 +62,9 @@ interface UseRecipeBuilderReturn {
   saveRecipe: (event?: React.FormEvent) => Promise<Recipe>;
   recalculateMetrics: () => Promise<void>;
   importIngredients: (ingredientsToImport: RecipeIngredient[]) => Promise<void>;
-  replaceIngredients: (ingredientsToReplace: RecipeIngredient[]) => Promise<void>;
+  replaceIngredients: (
+    ingredientsToReplace: RecipeIngredient[]
+  ) => Promise<void>;
 
   // Utility actions
   clearError: () => void;
@@ -111,10 +110,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           return;
         }
 
-        dispatch({ type: 'INITIALIZE_START', payload: { unitSystem } });
+        dispatch({ type: "INITIALIZE_START", payload: { unitSystem } });
 
         // Load available ingredients first
-        const availableIngredients = await Services.ingredient.fetchIngredients();
+        const availableIngredients =
+          await Services.ingredient.fetchIngredients();
 
         if (!effectMounted) {
           return;
@@ -127,7 +127,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           name: "",
           style: "",
           batch_size: unitSystem === "metric" ? 19 : 5,
-          batch_size_unit: (unitSystem === "metric" ? "l" : "gal") as BatchSizeUnit,
+          batch_size_unit: (unitSystem === "metric"
+            ? "l"
+            : "gal") as BatchSizeUnit,
           description: "",
           boil_time: 60,
           efficiency: 75,
@@ -159,7 +161,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           recipe = recipeData as Recipe;
           // Ensure batch_size_unit is set for existing recipes
           if (!recipe.batch_size_unit) {
-            recipe.batch_size_unit = (recipe.batch_size > 10 ? "l" : "gal") as BatchSizeUnit;
+            recipe.batch_size_unit = (
+              recipe.batch_size > 10 ? "l" : "gal"
+            ) as BatchSizeUnit;
           }
 
           // Convert mash temperature to user's preferred units if needed
@@ -168,11 +172,22 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
             if (recipe.mash_temp_unit !== userPreferredUnit) {
               if (userPreferredUnit === "C" && recipe.mash_temp_unit === "F") {
-                const converted = convertUnit(recipe.mash_temperature, "f", "c");
+                const converted = convertUnit(
+                  recipe.mash_temperature,
+                  "f",
+                  "c"
+                );
                 recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "C";
-              } else if (userPreferredUnit === "F" && recipe.mash_temp_unit === "C") {
-                const converted = convertUnit(recipe.mash_temperature, "c", "f");
+              } else if (
+                userPreferredUnit === "F" &&
+                recipe.mash_temp_unit === "C"
+              ) {
+                const converted = convertUnit(
+                  recipe.mash_temperature,
+                  "c",
+                  "f"
+                );
                 recipe.mash_temperature = Math.round(converted.value * 10) / 10;
                 recipe.mash_temp_unit = "F";
               }
@@ -185,7 +200,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         // Calculate initial metrics
         if (
           recipeId &&
-          (recipe.estimated_og || recipe.estimated_fg || recipe.estimated_abv || recipe.estimated_ibu || recipe.estimated_srm)
+          (recipe.estimated_og ||
+            recipe.estimated_fg ||
+            recipe.estimated_abv ||
+            recipe.estimated_ibu ||
+            recipe.estimated_srm)
         ) {
           metrics = {
             og: recipe.estimated_og || 1.0,
@@ -204,9 +223,15 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           };
         } else {
           try {
-            const metricsPromise = Services.metrics.calculateMetrics(recipe, ingredients);
+            const metricsPromise = Services.metrics.calculateMetrics(
+              recipe,
+              ingredients
+            );
             const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error("Metrics calculation timeout")), 10000)
+              setTimeout(
+                () => reject(new Error("Metrics calculation timeout")),
+                10000
+              )
             );
             metrics = await Promise.race([metricsPromise, timeoutPromise]);
           } catch (metricsError) {
@@ -225,7 +250,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }
 
         dispatch({
-          type: 'INITIALIZE_SUCCESS',
+          type: "INITIALIZE_SUCCESS",
           payload: {
             recipe,
             ingredients: Services.ingredient.sortIngredients(ingredients),
@@ -237,8 +262,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         console.error("Error initializing recipe builder:", error);
         if (effectMounted) {
           dispatch({
-            type: 'INITIALIZE_ERROR',
-            payload: (error as Error).message || "Failed to initialize recipe builder",
+            type: "INITIALIZE_ERROR",
+            payload:
+              (error as Error).message || "Failed to initialize recipe builder",
           });
         }
       }
@@ -255,7 +281,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   // Update recipe field
   const updateRecipe = useCallback(
     async (field: keyof Recipe, value: any): Promise<void> => {
-      dispatch({ type: 'UPDATE_RECIPE_FIELD', payload: { field, value } });
+      dispatch({ type: "UPDATE_RECIPE_FIELD", payload: { field, value } });
 
       // Recalculate metrics if field affects calculations
       const calculationFields: (keyof Recipe)[] = [
@@ -268,7 +294,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       ];
       if (calculationFields.includes(field)) {
         try {
-          dispatch({ type: 'CALCULATE_METRICS_START' });
+          dispatch({ type: "CALCULATE_METRICS_START" });
 
           const updatedRecipe = { ...state.recipe, [field]: value };
           const metrics = await Services.metrics.calculateMetricsDebounced(
@@ -277,12 +303,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             state.ingredients
           );
 
-          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+          dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
         } catch (error) {
           console.error("Error recalculating metrics:", error);
-          dispatch({ 
-            type: 'CALCULATE_METRICS_ERROR', 
-            payload: "Failed to recalculate metrics" 
+          dispatch({
+            type: "CALCULATE_METRICS_ERROR",
+            payload: "Failed to recalculate metrics",
           });
         }
       }
@@ -296,8 +322,8 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       updates: Array<{ field: keyof Recipe; value: any }>
     ): Promise<void> => {
       try {
-        dispatch({ type: 'CALCULATE_METRICS_START' });
-        dispatch({ type: 'BULK_UPDATE_RECIPE', payload: updates });
+        dispatch({ type: "CALCULATE_METRICS_START" });
+        dispatch({ type: "BULK_UPDATE_RECIPE", payload: updates });
 
         // Check if any field affects calculations
         const calculationFields: (keyof Recipe)[] = [
@@ -326,15 +352,18 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             state.ingredients
           );
 
-          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+          dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
         } else {
-          dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: state.metrics });
+          dispatch({
+            type: "CALCULATE_METRICS_SUCCESS",
+            payload: state.metrics,
+          });
         }
       } catch (error) {
         console.error("Error bulk updating recipe:", error);
-        dispatch({ 
-          type: 'CALCULATE_METRICS_ERROR', 
-          payload: "Failed to update recipe" 
+        dispatch({
+          type: "CALCULATE_METRICS_ERROR",
+          payload: "Failed to update recipe",
         });
       }
     },
@@ -348,7 +377,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       ingredientData: CreateRecipeIngredientData
     ): Promise<void> => {
       try {
-        dispatch({ type: 'ADD_INGREDIENT_START' });
+        dispatch({ type: "ADD_INGREDIENT_START" });
 
         // Validate ingredient data
         const validation = Services.ingredient.validateIngredientData(
@@ -367,11 +396,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         );
 
         const updatedIngredients = [...state.ingredients, newIngredient];
-        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(updatedIngredients);
 
-        dispatch({ 
-          type: 'ADD_INGREDIENT_SUCCESS', 
-          payload: { ingredient: newIngredient, sortedIngredients } 
+        dispatch({
+          type: "ADD_INGREDIENT_SUCCESS",
+          payload: { ingredient: newIngredient, sortedIngredients },
         });
 
         // Recalculate metrics
@@ -381,12 +411,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error adding ingredient:", error);
-        dispatch({ 
-          type: 'ADD_INGREDIENT_ERROR', 
-          payload: (error as Error).message || "Failed to add ingredient" 
+        dispatch({
+          type: "ADD_INGREDIENT_ERROR",
+          payload: (error as Error).message || "Failed to add ingredient",
         });
       }
     },
@@ -400,7 +430,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       updatedIngredientData: Partial<RecipeIngredient>
     ): Promise<void> => {
       try {
-        dispatch({ type: 'UPDATE_INGREDIENT_START' });
+        dispatch({ type: "UPDATE_INGREDIENT_START" });
 
         // Find the ingredient to update
         const existingIngredient = state.ingredients.find(
@@ -417,20 +447,26 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         );
         if (!validation.isValid) {
           throw new Error(
-            `Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`
+            `Validation failed for ${
+              existingIngredient.name
+            }: ${validation.errors.join(", ")}`
           );
         }
 
         // Update the ingredient
-        const updatedIngredient = { ...existingIngredient, ...updatedIngredientData };
+        const updatedIngredient = {
+          ...existingIngredient,
+          ...updatedIngredientData,
+        };
         const updatedIngredients = state.ingredients.map((ing) =>
           ing.id === ingredientId ? updatedIngredient : ing
         );
-        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(updatedIngredients);
 
-        dispatch({ 
-          type: 'UPDATE_INGREDIENT_SUCCESS', 
-          payload: { ingredient: updatedIngredient, sortedIngredients } 
+        dispatch({
+          type: "UPDATE_INGREDIENT_SUCCESS",
+          payload: { ingredient: updatedIngredient, sortedIngredients },
         });
 
         // Recalculate metrics
@@ -440,12 +476,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error updating ingredient:", error);
-        dispatch({ 
-          type: 'UPDATE_INGREDIENT_ERROR', 
-          payload: (error as Error).message || "Failed to update ingredient" 
+        dispatch({
+          type: "UPDATE_INGREDIENT_ERROR",
+          payload: (error as Error).message || "Failed to update ingredient",
         });
         throw error;
       }
@@ -463,7 +499,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       }>
     ): Promise<void> => {
       try {
-        dispatch({ type: 'UPDATE_INGREDIENT_START' });
+        dispatch({ type: "UPDATE_INGREDIENT_START" });
 
         let updatedIngredients = [...state.ingredients];
 
@@ -486,23 +522,28 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               );
               if (!validation.isValid) {
                 throw new Error(
-                  `Validation failed for ${existingIngredient.name}: ${validation.errors.join(", ")}`
+                  `Validation failed for ${
+                    existingIngredient.name
+                  }: ${validation.errors.join(", ")}`
                 );
               }
 
               // Update the ingredient in the array
               updatedIngredients = updatedIngredients.map((ing) =>
-                ing.id === update.ingredientId ? { ...ing, ...update.updatedData } : ing
+                ing.id === update.ingredientId
+                  ? { ...ing, ...update.updatedData }
+                  : ing
               );
             }
           }
         }
 
-        const sortedIngredients = Services.ingredient.sortIngredients(updatedIngredients);
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(updatedIngredients);
 
-        dispatch({ 
-          type: 'BULK_UPDATE_INGREDIENTS_SUCCESS', 
-          payload: sortedIngredients 
+        dispatch({
+          type: "BULK_UPDATE_INGREDIENTS_SUCCESS",
+          payload: sortedIngredients,
         });
 
         // Recalculate metrics
@@ -512,12 +553,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error bulk updating ingredients:", error);
-        dispatch({ 
-          type: 'UPDATE_INGREDIENT_ERROR', 
-          payload: (error as Error).message || "Failed to update ingredients" 
+        dispatch({
+          type: "UPDATE_INGREDIENT_ERROR",
+          payload: (error as Error).message || "Failed to update ingredients",
         });
         throw error;
       }
@@ -537,9 +578,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           (ing) => ing.id !== ingredientId
         );
 
-        dispatch({ 
-          type: 'REMOVE_INGREDIENT_SUCCESS', 
-          payload: updatedIngredients 
+        dispatch({
+          type: "REMOVE_INGREDIENT_SUCCESS",
+          payload: updatedIngredients,
         });
 
         // Recalculate metrics
@@ -549,12 +590,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           updatedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error removing ingredient:", error);
-        dispatch({ 
-          type: 'REMOVE_INGREDIENT_ERROR', 
-          payload: (error as Error).message || "Failed to remove ingredient" 
+        dispatch({
+          type: "REMOVE_INGREDIENT_ERROR",
+          payload: (error as Error).message || "Failed to remove ingredient",
         });
       }
     },
@@ -585,9 +626,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           scalingFactor
         );
 
-        dispatch({ 
-          type: 'SCALE_RECIPE_SUCCESS', 
-          payload: { recipe: scaledRecipe, ingredients: scaledIngredients } 
+        dispatch({
+          type: "SCALE_RECIPE_SUCCESS",
+          payload: { recipe: scaledRecipe, ingredients: scaledIngredients },
         });
 
         // Recalculate metrics
@@ -597,12 +638,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           scaledIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error scaling recipe:", error);
-        dispatch({ 
-          type: 'SCALE_RECIPE_ERROR', 
-          payload: (error as Error).message || "Failed to scale recipe" 
+        dispatch({
+          type: "SCALE_RECIPE_ERROR",
+          payload: (error as Error).message || "Failed to scale recipe",
         });
       }
     },
@@ -617,7 +658,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       }
 
       try {
-        dispatch({ type: 'SAVE_RECIPE_START' });
+        dispatch({ type: "SAVE_RECIPE_START" });
 
         const savedRecipe = await Services.recipe.saveRecipe(
           recipeId || null,
@@ -630,9 +671,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           throw new Error("Failed to save recipe - no data returned");
         }
 
-        dispatch({ 
-          type: 'SAVE_RECIPE_SUCCESS', 
-          payload: savedRecipe as Recipe 
+        dispatch({
+          type: "SAVE_RECIPE_SUCCESS",
+          payload: savedRecipe as Recipe,
         });
 
         // Update original recipe reference
@@ -646,9 +687,9 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         return savedRecipe as unknown as Recipe;
       } catch (error) {
         console.error("Error saving recipe:", error);
-        dispatch({ 
-          type: 'SAVE_RECIPE_ERROR', 
-          payload: (error as Error).message || "Failed to save recipe" 
+        dispatch({
+          type: "SAVE_RECIPE_ERROR",
+          payload: (error as Error).message || "Failed to save recipe",
         });
         throw error;
       }
@@ -659,19 +700,19 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   // Recalculate metrics
   const recalculateMetrics = useCallback(async (): Promise<void> => {
     try {
-      dispatch({ type: 'CALCULATE_METRICS_START' });
+      dispatch({ type: "CALCULATE_METRICS_START" });
 
       const metrics = await Services.metrics.calculateMetrics(
         state.recipe,
         state.ingredients
       );
 
-      dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+      dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
     } catch (error) {
       console.error("Error recalculating metrics:", error);
-      dispatch({ 
-        type: 'CALCULATE_METRICS_ERROR', 
-        payload: "Failed to recalculate metrics" 
+      dispatch({
+        type: "CALCULATE_METRICS_ERROR",
+        payload: "Failed to recalculate metrics",
       });
     }
   }, [state.recipe, state.ingredients]);
@@ -680,7 +721,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   const importIngredients = useCallback(
     async (ingredientsToImport: RecipeIngredient[]): Promise<void> => {
       try {
-        dispatch({ type: 'IMPORT_INGREDIENTS_START' });
+        dispatch({ type: "IMPORT_INGREDIENTS_START" });
 
         // Validate all ingredients
         for (const ingredient of ingredientsToImport) {
@@ -690,18 +731,24 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           );
           if (!validation.isValid) {
             throw new Error(
-              `Validation failed for ${ingredient.name}: ${validation.errors.join(", ")}`
+              `Validation failed for ${
+                ingredient.name
+              }: ${validation.errors.join(", ")}`
             );
           }
         }
 
         // Add to existing ingredients
-        const combinedIngredients = [...state.ingredients, ...ingredientsToImport];
-        const sortedIngredients = Services.ingredient.sortIngredients(combinedIngredients);
+        const combinedIngredients = [
+          ...state.ingredients,
+          ...ingredientsToImport,
+        ];
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(combinedIngredients);
 
-        dispatch({ 
-          type: 'IMPORT_INGREDIENTS_SUCCESS', 
-          payload: sortedIngredients 
+        dispatch({
+          type: "IMPORT_INGREDIENTS_SUCCESS",
+          payload: sortedIngredients,
         });
 
         // Recalculate metrics
@@ -711,12 +758,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error importing ingredients:", error);
-        dispatch({ 
-          type: 'IMPORT_INGREDIENTS_ERROR', 
-          payload: (error as Error).message || "Failed to import ingredients" 
+        dispatch({
+          type: "IMPORT_INGREDIENTS_ERROR",
+          payload: (error as Error).message || "Failed to import ingredients",
         });
       }
     },
@@ -727,7 +774,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   const replaceIngredients = useCallback(
     async (ingredientsToReplace: RecipeIngredient[]): Promise<void> => {
       try {
-        dispatch({ type: 'REPLACE_INGREDIENTS_START' });
+        dispatch({ type: "REPLACE_INGREDIENTS_START" });
 
         // Validate all ingredients
         for (const ingredient of ingredientsToReplace) {
@@ -737,17 +784,20 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           );
           if (!validation.isValid) {
             throw new Error(
-              `Validation failed for ${ingredient.name}: ${validation.errors.join(", ")}`
+              `Validation failed for ${
+                ingredient.name
+              }: ${validation.errors.join(", ")}`
             );
           }
         }
 
         // Replace entire ingredient list (not append like importIngredients)
-        const sortedIngredients = Services.ingredient.sortIngredients(ingredientsToReplace);
+        const sortedIngredients =
+          Services.ingredient.sortIngredients(ingredientsToReplace);
 
-        dispatch({ 
-          type: 'REPLACE_INGREDIENTS_SUCCESS', 
-          payload: sortedIngredients 
+        dispatch({
+          type: "REPLACE_INGREDIENTS_SUCCESS",
+          payload: sortedIngredients,
         });
 
         // Recalculate metrics
@@ -757,12 +807,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           sortedIngredients
         );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
+        dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
       } catch (error) {
         console.error("Error replacing ingredients:", error);
-        dispatch({ 
-          type: 'REPLACE_INGREDIENTS_ERROR', 
-          payload: (error as Error).message || "Failed to replace ingredients" 
+        dispatch({
+          type: "REPLACE_INGREDIENTS_ERROR",
+          payload: (error as Error).message || "Failed to replace ingredients",
         });
       }
     },
@@ -771,12 +821,12 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
   // Utility actions
   const clearError = useCallback((): void => {
-    dispatch({ type: 'CLEAR_ERROR' });
+    dispatch({ type: "CLEAR_ERROR" });
   }, []);
 
   const cancelOperation = useCallback((): void => {
     Services.metrics.cancelCalculation("recipe-builder");
-    dispatch({ type: 'CANCEL_OPERATIONS' });
+    dispatch({ type: "CANCEL_OPERATIONS" });
   }, []);
 
   const getRecipeAnalysis = useCallback((): RecipeAnalysis => {
@@ -788,46 +838,60 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
   const refreshAvailableIngredients = useCallback(async (): Promise<void> => {
     try {
-      const updatedAvailableIngredients = await Services.ingredient.fetchIngredients();
-      dispatch({ type: 'REFRESH_AVAILABLE_INGREDIENTS', payload: updatedAvailableIngredients });
+      const updatedAvailableIngredients =
+        await Services.ingredient.fetchIngredients();
+      dispatch({
+        type: "REFRESH_AVAILABLE_INGREDIENTS",
+        payload: updatedAvailableIngredients,
+      });
     } catch (error) {
       console.error("Error refreshing available ingredients:", error);
     }
   }, []);
 
-  const importRecipeData = useCallback(async (recipeData: Partial<Recipe>): Promise<void> => {
-    dispatch({ type: 'IMPORT_RECIPE_DATA', payload: recipeData });
+  const importRecipeData = useCallback(
+    async (recipeData: Partial<Recipe>): Promise<void> => {
+      dispatch({ type: "IMPORT_RECIPE_DATA", payload: recipeData });
 
-    // Recalculate metrics if any calculation fields were updated
-    const calculationFields: (keyof Recipe)[] = [
-      "batch_size",
-      "efficiency",
-      "boil_time",
-      "batch_size_unit",
-    ];
+      // Recalculate metrics if any calculation fields were updated
+      const calculationFields: (keyof Recipe)[] = [
+        "batch_size",
+        "efficiency",
+        "boil_time",
+        "batch_size_unit",
+      ];
 
-    const hasCalculationFieldChanges = calculationFields.some(
-      (field) => recipeData[field] !== undefined
-    );
+      const hasCalculationFieldChanges = calculationFields.some(
+        (field) => recipeData[field] !== undefined
+      );
 
-    if (hasCalculationFieldChanges && state.ingredients && state.ingredients.length > 0) {
-      try {
-        dispatch({ type: 'CALCULATE_METRICS_START' });
+      if (
+        hasCalculationFieldChanges &&
+        state.ingredients &&
+        state.ingredients.length > 0
+      ) {
+        try {
+          dispatch({ type: "CALCULATE_METRICS_START" });
 
-        const updatedRecipe = { ...state.recipe, ...recipeData };
-        const metrics = await Services.metrics.calculateMetricsDebounced(
-          "recipe-builder",
-          updatedRecipe,
-          state.ingredients
-        );
+          const updatedRecipe = { ...state.recipe, ...recipeData };
+          const metrics = await Services.metrics.calculateMetricsDebounced(
+            "recipe-builder",
+            updatedRecipe,
+            state.ingredients
+          );
 
-        dispatch({ type: 'CALCULATE_METRICS_SUCCESS', payload: metrics });
-      } catch (error) {
-        console.error("Error recalculating metrics:", error);
-        dispatch({ type: 'CALCULATE_METRICS_ERROR', payload: "Failed to recalculate metrics" });
+          dispatch({ type: "CALCULATE_METRICS_SUCCESS", payload: metrics });
+        } catch (error) {
+          console.error("Error recalculating metrics:", error);
+          dispatch({
+            type: "CALCULATE_METRICS_ERROR",
+            payload: "Failed to recalculate metrics",
+          });
+        }
       }
-    }
-  }, [state.recipe, state.ingredients]);
+    },
+    [state.recipe, state.ingredients]
+  );
 
   const updateRecipeStyle = useCallback(
     async (styleName: string): Promise<void> => {
@@ -839,7 +903,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           const analysis = await Services.beerStyle.getRecipeStyleAnalysis(
             state.recipe.recipe_id
           );
-          dispatch({ type: 'UPDATE_STYLE_ANALYSIS', payload: analysis });
+          dispatch({ type: "UPDATE_STYLE_ANALYSIS", payload: analysis });
         } catch (error) {
           console.error("Error updating style analysis:", error);
         }
@@ -859,8 +923,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         Services.beerStyle.findMatchingStyles(state.metrics).catch(() => []),
       ]);
 
-      dispatch({ type: 'UPDATE_STYLE_ANALYSIS', payload: analysis });
-      dispatch({ type: 'UPDATE_STYLE_SUGGESTIONS', payload: suggestions.slice(0, 5) });
+      dispatch({ type: "UPDATE_STYLE_ANALYSIS", payload: analysis });
+      dispatch({
+        type: "UPDATE_STYLE_SUGGESTIONS",
+        payload: suggestions.slice(0, 5),
+      });
     } catch (error) {
       console.error("Error refreshing style analysis:", error);
     }
@@ -876,7 +943,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       );
 
       if (hasChanges !== state.hasUnsavedChanges) {
-        dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
+        dispatch({ type: "SET_UNSAVED_CHANGES", payload: hasChanges });
       }
     }
   }, [state.recipe, state.ingredients, state.hasUnsavedChanges, state.loading]);
@@ -926,7 +993,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
     // Computed properties
     isEditing: Boolean(recipeId),
-    canSave: !state.saving && !state.loading && state.ingredients && state.ingredients.length > 0,
+    canSave:
+      !state.saving &&
+      !state.loading &&
+      state.ingredients &&
+      state.ingredients.length > 0,
     recipeDisplayName: Services.recipe.getRecipeDisplayName(state.recipe),
   };
 }
