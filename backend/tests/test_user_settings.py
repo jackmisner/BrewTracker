@@ -17,14 +17,14 @@ class TestUserSettingsEndpoints:
             json={
                 "username": "settingsuser",
                 "email": "settings@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Login to get token
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "settingsuser", "password": "password123"},
+            json={"username": "settingsuser", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="settingsuser").first()
@@ -171,7 +171,7 @@ class TestUserSettingsEndpoints:
             json={
                 "username": "otheruser",
                 "email": "other@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
@@ -193,7 +193,7 @@ class TestUserSettingsEndpoints:
             json={
                 "username": "otherusername",
                 "email": "other2@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
@@ -216,8 +216,8 @@ class TestUserSettingsEndpoints:
         user, headers = authenticated_user
 
         password_data = {
-            "current_password": "password123",
-            "new_password": "newpassword456",
+            "current_password": "TestPass123!",
+            "new_password": "NewPass123!word456",
         }
 
         response = client.post(
@@ -230,7 +230,7 @@ class TestUserSettingsEndpoints:
         # Verify the password was actually changed by trying to login
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "settingsuser", "password": "newpassword456"},
+            json={"username": "settingsuser", "password": "NewPass123!word456"},
         )
         assert login_response.status_code == 200
 
@@ -239,8 +239,8 @@ class TestUserSettingsEndpoints:
         user, headers = authenticated_user
 
         password_data = {
-            "current_password": "wrongpassword",
-            "new_password": "newpassword456",
+            "current_password": "WrongPass123!",
+            "new_password": "NewPass123!word456",
         }
 
         response = client.post(
@@ -255,7 +255,7 @@ class TestUserSettingsEndpoints:
         user, headers = authenticated_user
 
         password_data = {
-            "current_password": "password123",
+            "current_password": "TestPass123!",
             "new_password": "123",  # Too short
         }
 
@@ -264,14 +264,14 @@ class TestUserSettingsEndpoints:
         )
 
         assert response.status_code == 400
-        assert "New password must be at least 6 characters" in response.json["error"]
+        assert "Password must be at least 8 characters long" in response.json["error"]
 
     def test_change_password_missing_fields(self, client, authenticated_user):
         """Test changing password with missing fields"""
         user, headers = authenticated_user
 
         # Missing new password
-        password_data = {"current_password": "password123"}
+        password_data = {"current_password": "TestPass123!"}
         response = client.post(
             "/api/user/change-password", json=password_data, headers=headers
         )
@@ -281,7 +281,7 @@ class TestUserSettingsEndpoints:
         )
 
         # Missing current password
-        password_data = {"new_password": "newpassword"}
+        password_data = {"new_password": "NewPass123!word"}
         response = client.post(
             "/api/user/change-password", json=password_data, headers=headers
         )
@@ -293,8 +293,8 @@ class TestUserSettingsEndpoints:
     def test_change_password_unauthorized(self, client):
         """Test changing password without authentication"""
         password_data = {
-            "current_password": "password123",
-            "new_password": "newpassword456",
+            "current_password": "TestPass123!",
+            "new_password": "NewPass123!word456",
         }
         response = client.post("/api/user/change-password", json=password_data)
         assert response.status_code == 401
@@ -316,7 +316,7 @@ class TestUserSettingsEndpoints:
         seed_system_users(mongo_uri, str(json_file_path))
 
         delete_data = {
-            "password": "password123",
+            "password": "TestPass123!",
             "confirmation": "DELETE",
         }
 
@@ -343,7 +343,7 @@ class TestUserSettingsEndpoints:
         user, headers = authenticated_user
 
         delete_data = {
-            "password": "wrongpassword",
+            "password": "WrongPass123!",
             "confirmation": "DELETE",
         }
 
@@ -359,7 +359,7 @@ class TestUserSettingsEndpoints:
         user, headers = authenticated_user
 
         delete_data = {
-            "password": "password123",
+            "password": "TestPass123!",
             "confirmation": "WRONG",
         }
 
@@ -386,7 +386,7 @@ class TestUserSettingsEndpoints:
     def test_delete_account_unauthorized(self, client):
         """Test deleting account without authentication"""
         delete_data = {
-            "password": "password123",
+            "password": "TestPass123!",
             "confirmation": "DELETE",
         }
         response = client.post("/api/user/delete-account", json=delete_data)

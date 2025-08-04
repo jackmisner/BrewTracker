@@ -483,6 +483,25 @@
   font-weight: bold;
 }
 
+/* Password requirement validation states */
+.auth-requirements-list li.requirement-met {
+  color: #059669; /* emerald-600 */
+}
+
+.auth-requirements-list li.requirement-met::before {
+  content: "✓";
+  color: #10b981; /* emerald-500 */
+}
+
+.auth-requirements-list li.requirement-unmet {
+  color: #d97706; /* amber-600 */
+}
+
+.auth-requirements-list li.requirement-unmet::before {
+  content: "○";
+  color: #f59e0b; /* amber-500 */
+}
+
 /* Form validation states */
 .auth-input.valid {
   border-color: #10b981; /* emerald-500 */

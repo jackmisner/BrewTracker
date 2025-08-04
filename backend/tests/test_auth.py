@@ -11,7 +11,7 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser",
                 "email": "test@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
         assert response.status_code == 201
@@ -30,7 +30,7 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser",
                 "email": "test1@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
@@ -40,7 +40,7 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser",
                 "email": "test2@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
         assert response.status_code == 400
@@ -54,7 +54,7 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser1",
                 "email": "test@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
@@ -64,7 +64,7 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser2",
                 "email": "test@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
         assert response.status_code == 400
@@ -78,13 +78,13 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser",
                 "email": "test@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Try logging in
         response = client.post(
-            "/api/auth/login", json={"username": "testuser", "password": "password123"}
+            "/api/auth/login", json={"username": "testuser", "password": "TestPass123!"}
         )
         assert response.status_code == 200
         assert "access_token" in response.json
@@ -95,7 +95,7 @@ class TestAuthenticationEndpoints:
         """Test login with invalid credentials"""
         response = client.post(
             "/api/auth/login",
-            json={"username": "nonexistent", "password": "wrongpassword"},
+            json={"username": "nonexistent", "password": "WrongPass123!"},
         )
         assert response.status_code == 401
         assert "Invalid credentials" in response.json["error"]
@@ -113,12 +113,12 @@ class TestAuthenticationEndpoints:
             json={
                 "username": "testuser",
                 "email": "test@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         login_response = client.post(
-            "/api/auth/login", json={"username": "testuser", "password": "password123"}
+            "/api/auth/login", json={"username": "testuser", "password": "TestPass123!"}
         )
         token = login_response.json["access_token"]
 
