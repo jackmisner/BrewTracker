@@ -156,7 +156,10 @@
   font-weight: 500;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    transform 0.1s;
   text-align: center;
   border: 1px solid #ef4444;
   background-color: white;

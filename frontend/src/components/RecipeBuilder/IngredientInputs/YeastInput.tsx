@@ -86,14 +86,14 @@ const YeastInput: React.FC<YeastInputProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ): void => {
     const { name, value } = e.target;
-    setYeastForm((prev) => ({
+    setYeastForm(prev => ({
       ...prev,
       [name]: value,
     }));
 
     // Clear related errors when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [name]: null,
       }));
@@ -114,7 +114,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
 
   const handleYeastSelect = (selectedYeast: Ingredient | null): void => {
     if (selectedYeast) {
-      setYeastForm((prev) => ({
+      setYeastForm(prev => ({
         ...prev,
         ingredient_id: selectedYeast.ingredient_id,
         amount: prev.amount || getDefaultAmount(), // Set default amount if empty
@@ -123,14 +123,14 @@ const YeastInput: React.FC<YeastInputProps> = ({
 
       // Clear ingredient selection error
       if (errors.ingredient_id) {
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
           ingredient_id: null,
         }));
       }
     } else {
       // Clear selection
-      setYeastForm((prev) => ({
+      setYeastForm(prev => ({
         ...prev,
         ingredient_id: "",
         amount: "", // Clear amount when no ingredient selected
@@ -204,7 +204,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
       });
 
       setErrors({});
-      setResetTrigger((prev) => prev + 1);
+      setResetTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Failed to add yeast:", error);
       setErrors({ submit: "Failed to add yeast. Please try again." });
@@ -318,7 +318,7 @@ const YeastInput: React.FC<YeastInputProps> = ({
               disabled={disabled}
               data-testid="yeast-unit-select"
             >
-              {getAvailableUnits().map((unit) => (
+              {getAvailableUnits().map(unit => (
                 <option
                   key={unit.value}
                   value={unit.value}

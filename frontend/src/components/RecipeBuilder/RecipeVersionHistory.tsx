@@ -96,7 +96,7 @@ const RecipeVersionHistory: React.FC<RecipeVersionHistoryProps> = ({
           <div className="child-versions">
             <h4>Derived Recipes:</h4>
             <ul className="derived-recipes-list">
-              {versionHistory.child_versions.map((v) => (
+              {versionHistory.child_versions.map(v => (
                 <li key={v.recipe_id}>
                   <Link to={`/recipes/${v.recipe_id}`}>
                     {v.name} (v{v.version})

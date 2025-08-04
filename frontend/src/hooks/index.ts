@@ -95,11 +95,11 @@ interface HookWithError {
  * Compose multiple hooks with shared error handling
  */
 export function useComposedHooks(hooks: HookWithError[]) {
-  const errors = hooks.map((hook) => hook.error).filter(Boolean);
-  const loading = hooks.some((hook) => hook.loading);
+  const errors = hooks.map(hook => hook.error).filter(Boolean);
+  const loading = hooks.some(hook => hook.loading);
 
   const clearAllErrors = () => {
-    hooks.forEach((hook) => {
+    hooks.forEach(hook => {
       if (hook.clearError) {
         hook.clearError();
       }

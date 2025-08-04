@@ -201,7 +201,9 @@
   height: 2rem;
   border-radius: 50%;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px var(--color-gray-300), 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px var(--color-gray-300),
+    0 2px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 

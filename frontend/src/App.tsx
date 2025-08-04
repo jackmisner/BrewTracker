@@ -55,7 +55,7 @@ const RootLayout: React.FC = () => {
     if (token) {
       ApiService.auth
         .getProfile()
-        .then((response) => {
+        .then(response => {
           setUser(response.data.user);
         })
         .catch((error: any) => {

@@ -38,9 +38,8 @@ const EditBrewSession: React.FC = () => {
       try {
         dispatch({ type: "FETCH_START" });
 
-        const sessionData = await Services.brewSession.fetchBrewSession(
-          sessionId
-        );
+        const sessionData =
+          await Services.brewSession.fetchBrewSession(sessionId);
         dispatch({ type: "FETCH_SUCCESS", payload: { session: sessionData } });
 
         // Helper function to safely format date or return empty string for form display

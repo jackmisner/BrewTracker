@@ -103,9 +103,9 @@
 }
 
 .ingredient-inputs--hop {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 225px var(
-      --button-width
-    );
+  grid-template-columns:
+    var(--amount-container-width) minmax(200px, 1fr)
+    100px 225px var(--button-width);
 }
 
 .ingredient-inputs--yeast {
@@ -113,9 +113,9 @@
 }
 
 .ingredient-inputs--adjunct {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 120px 120px var(
-      --button-width
-    );
+  grid-template-columns:
+    var(--amount-container-width) minmax(200px, 1fr)
+    120px 120px var(--button-width);
 }
 
 .ingredient-inputs--adjunct .ingredient-selector {
@@ -153,7 +153,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal),
+  transition:
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
@@ -223,7 +224,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal),
+  transition:
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
@@ -274,7 +276,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal),
+  transition:
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
@@ -315,7 +318,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal),
+  transition:
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   flex-shrink: 0;
   height: var(--input-height);
@@ -401,7 +405,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal),
+  transition:
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
@@ -428,7 +433,8 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-normal),
+  transition:
+    background-color var(--transition-normal),
     transform var(--transition-fast);
   display: flex;
   align-items: center;

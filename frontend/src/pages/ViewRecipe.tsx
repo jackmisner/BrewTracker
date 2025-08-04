@@ -269,8 +269,8 @@ const ViewRecipe: React.FC = () => {
                               {brewingStats.consistency.abv < 0.5
                                 ? "High"
                                 : brewingStats.consistency.abv < 1.0
-                                ? "Medium"
-                                : "Low"}
+                                  ? "Medium"
+                                  : "Low"}
                             </span>
                           </div>
                         )}
@@ -280,7 +280,7 @@ const ViewRecipe: React.FC = () => {
 
                   {/* Sessions List */}
                   <div className="brew-sessions-list">
-                    {brewSessions.map((session) => (
+                    {brewSessions.map(session => (
                       <div
                         key={session.session_id}
                         className="brew-session-item"

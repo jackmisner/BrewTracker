@@ -148,7 +148,7 @@ const BrewSessionList: React.FC = () => {
     // Apply status filter first
     if (filterStatus !== "all") {
       sessionsToProcess = sessionsToProcess.filter(
-        (session) => session.status === filterStatus
+        session => session.status === filterStatus
       );
     }
 
@@ -156,9 +156,9 @@ const BrewSessionList: React.FC = () => {
     if (searchTerm && searchTerm.length >= 2 && fuse) {
       const searchResults = fuse.search(searchTerm);
       const searchSessionIds = searchResults.map(
-        (result) => result.item.session_id
+        result => result.item.session_id
       );
-      sessionsToProcess = sessionsToProcess.filter((session) =>
+      sessionsToProcess = sessionsToProcess.filter(session =>
         searchSessionIds.includes(session.session_id)
       );
     }
@@ -197,7 +197,7 @@ const BrewSessionList: React.FC = () => {
                 type="text"
                 placeholder="Search sessions by name, status, notes..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="search-input"
               />
               <div className="search-icon-container">
@@ -247,7 +247,7 @@ const BrewSessionList: React.FC = () => {
             <select
               id="sort-select"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={e => setSortBy(e.target.value)}
               className="sort-select"
             >
               <option value="brew_date_desc">Brew Date (Newest)</option>
@@ -344,7 +344,7 @@ const BrewSessionList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredAndSortedSessions.map((session) => (
+              {filteredAndSortedSessions.map(session => (
                 <tr key={session.session_id}>
                   <td className="session-name-cell">
                     <Link to={`/brew-sessions/${session.session_id}`}>

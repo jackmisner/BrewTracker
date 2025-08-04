@@ -19,7 +19,7 @@ const EmailVerificationBanner: React.FC<EmailVerificationBannerProps> = ({
     // Set up countdown timer if there's a rate limit error
     if (timeRemaining > 0) {
       const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
+        setTimeRemaining(prev => {
           if (prev <= 1) {
             setResendError("");
             return 0;

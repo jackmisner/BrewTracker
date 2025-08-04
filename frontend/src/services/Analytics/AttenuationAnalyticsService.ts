@@ -14,9 +14,8 @@ class AttenuationAnalyticsService {
    */
   async getYeastAnalytics(ingredientId: ID): Promise<AttenuationAnalytics> {
     try {
-      const response = await ApiService.attenuationAnalytics.getYeastAnalytics(
-        ingredientId
-      );
+      const response =
+        await ApiService.attenuationAnalytics.getYeastAnalytics(ingredientId);
       return response.data;
     } catch (error) {
       console.error("Error fetching yeast analytics:", error);
@@ -179,8 +178,8 @@ class AttenuationAnalyticsService {
     }
 
     try {
-      const analyticsPromises = yeastIngredientIds.map((id) =>
-        this.getYeastAnalytics(id).catch((error) => {
+      const analyticsPromises = yeastIngredientIds.map(id =>
+        this.getYeastAnalytics(id).catch(error => {
           console.warn(`Failed to get analytics for yeast ${id}:`, error);
           return null;
         })

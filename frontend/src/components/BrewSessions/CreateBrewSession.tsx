@@ -93,9 +93,8 @@ const CreateBrewSession: React.FC = () => {
       };
 
       // Create the brew session using the service
-      const newSession = await Services.brewSession.createBrewSession(
-        sessionData
-      );
+      const newSession =
+        await Services.brewSession.createBrewSession(sessionData);
 
       // Invalidate caches to update all related components
       invalidateBrewSessionCaches.onCreated({

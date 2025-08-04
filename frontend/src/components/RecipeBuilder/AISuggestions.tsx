@@ -193,7 +193,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     (backendSuggestions: any[]): Suggestion[] => {
       // Filter out optimization_summary suggestions
       const filteredSuggestions = backendSuggestions.filter(
-        (suggestion) => suggestion.type !== "optimization_summary"
+        suggestion => suggestion.type !== "optimization_summary"
       );
 
       return filteredSuggestions.map((suggestion, index) => ({
@@ -340,7 +340,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         estimated_srm: recipe.estimated_srm,
 
         // Ingredients (complete ingredient data)
-        ingredients: ingredients.map((ing) => ({
+        ingredients: ingredients.map(ing => ({
           ingredient_id: ing.ingredient_id,
           name: ing.name,
           type: ing.type,
@@ -470,8 +470,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               (foundIngredient.type === "hop"
                 ? "boil"
                 : foundIngredient.type === "yeast"
-                ? "fermentation"
-                : "mash"),
+                  ? "fermentation"
+                  : "mash"),
             time:
               change.newIngredientData.time ||
               (foundIngredient.type === "hop" ? 60 : undefined),
@@ -493,13 +493,13 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         // Find the existing ingredient by ID first, then by name as fallback
 
         let existingIngredient = ingredients.find(
-          (ing) => ing.id === change.ingredientId
+          ing => ing.id === change.ingredientId
         );
 
         if (!existingIngredient) {
           // Fallback: find by name if ID match fails
           existingIngredient = ingredients.find(
-            (ing) => ing.name === change.ingredientName
+            ing => ing.name === change.ingredientName
           );
         }
 
@@ -508,7 +508,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         // the specific hop addition (since hops can appear multiple times with different use/time)
         if (!existingIngredient && change.ingredientName) {
           const hopCandidates = ingredients.filter(
-            (ing) => ing.name === change.ingredientName && ing.type === "hop"
+            ing => ing.name === change.ingredientName && ing.type === "hop"
           );
 
           // Try to match by current value if it's provided
@@ -516,12 +516,12 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
             if (change.field === "amount") {
               // Match by current amount
               existingIngredient = hopCandidates.find(
-                (hop) => hop.amount === change.currentValue
+                hop => hop.amount === change.currentValue
               );
             } else if (change.field === "time") {
               // Match by current time
               existingIngredient = hopCandidates.find(
-                (hop) => hop.time === change.currentValue
+                hop => hop.time === change.currentValue
               );
             }
           }
@@ -608,7 +608,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       dispatch({ type: "ADD_APPLIED_SUGGESTION", payload: suggestion.id });
       dispatch({
         type: "SET_SUGGESTIONS",
-        payload: suggestions.filter((s) => s.id !== suggestion.id),
+        payload: suggestions.filter(s => s.id !== suggestion.id),
       });
     } catch (error) {
       console.error(
@@ -628,7 +628,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
     dispatch({ type: "ADD_APPLIED_SUGGESTION", payload: suggestionId });
     dispatch({
       type: "SET_SUGGESTIONS",
-      payload: suggestions.filter((s) => s.id !== suggestionId),
+      payload: suggestions.filter(s => s.id !== suggestionId),
     });
   };
 
@@ -667,7 +667,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
       };
 
       // Remove undefined values to avoid overwriting with undefined
-      Object.keys(recipeParameters).forEach((key) => {
+      Object.keys(recipeParameters).forEach(key => {
         if (recipeParameters[key as keyof Recipe] === undefined) {
           delete recipeParameters[key as keyof Recipe];
         }
@@ -799,7 +799,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               <div className="metrics-improvement">
                 <h5>Metrics Improvement</h5>
                 <div className="metrics-grid">
-                  {["OG", "FG", "ABV", "IBU", "SRM"].map((metric) => {
+                  {["OG", "FG", "ABV", "IBU", "SRM"].map(metric => {
                     const originalValue =
                       optimizationResult.originalMetrics?.[metric];
                     const optimizedValue =
@@ -895,8 +895,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                                               unitSystem
                                             )
                                           : fieldChange.field === "time"
-                                          ? `${fieldChange.optimized_value} min`
-                                          : fieldChange.optimized_value}
+                                            ? `${fieldChange.optimized_value} min`
+                                            : fieldChange.optimized_value}
                                       </span>
                                     </div>
                                   )
@@ -994,7 +994,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
           {suggestions.length > 0 && (
             <div className="suggestions-list">
               <h4>Suggestions ({suggestions.length})</h4>
-              {suggestions.map((suggestion) => (
+              {suggestions.map(suggestion => (
                 <div key={suggestion.id} className="individual-suggestion">
                   <div className="individual-suggestion-header">
                     <h5>{suggestion.title}</h5>
@@ -1014,7 +1014,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
                       // Determine ingredient type from the current ingredients list
                       const ingredient = ingredients.find(
-                        (ing) =>
+                        ing =>
                           ing.name === change.ingredientName ||
                           ing.id === change.ingredientId
                       );
@@ -1072,8 +1072,8 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
                                           unitSystem
                                         )
                                       : fieldChange.field === "time"
-                                      ? `${fieldChange.optimized_value} min`
-                                      : fieldChange.optimized_value}
+                                        ? `${fieldChange.optimized_value} min`
+                                        : fieldChange.optimized_value}
                                   </span>
                                 </div>
                               ))}

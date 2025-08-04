@@ -66,7 +66,7 @@ class CacheManager {
    */
   emit(event: CacheEventType, data?: any): void {
     if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event)!.forEach((callback) => {
+      this.eventListeners.get(event)!.forEach(callback => {
         try {
           callback(data);
         } catch (error) {

@@ -135,7 +135,7 @@ class IngredientService {
       other: [], // Changed from 'adjunct' to 'other'
     };
 
-    ingredients.forEach((ingredient) => {
+    ingredients.forEach(ingredient => {
       //  Map old 'adjunct' type to 'other' for backward compatibility
       const ingredientType: IngredientType =
         (ingredient.type as any) === "adjunct" ? "other" : ingredient.type;
@@ -151,7 +151,7 @@ class IngredientService {
     });
 
     // Sort each type with custom sorting logic
-    Object.keys(grouped).forEach((type) => {
+    Object.keys(grouped).forEach(type => {
       grouped[type as keyof IngredientsByType] = this.sortIngredientsCustom(
         grouped[type as keyof IngredientsByType]
       );
@@ -249,7 +249,7 @@ class IngredientService {
     ingredients: RecipeIngredient[],
     scalingFactor: number
   ): RecipeIngredient[] {
-    return ingredients.map((ingredient) => ({
+    return ingredients.map(ingredient => ({
       ...ingredient,
       amount: parseFloat(
         (parseFloat(ingredient.amount.toString()) * scalingFactor).toFixed(2)
@@ -377,7 +377,7 @@ class IngredientService {
       return [];
     }
 
-    return ingredients.map((ing) => ({
+    return ingredients.map(ing => ({
       ingredient_id: ing.ingredient_id,
       name: ing.name || "",
       type: ing.type || "",
@@ -402,7 +402,7 @@ class IngredientService {
     if (!ingredientId) return "Unknown";
 
     const ingredient = availableIngredients[type]?.find(
-      (i) => String(i.ingredient_id) === String(ingredientId)
+      i => String(i.ingredient_id) === String(ingredientId)
     );
     return ingredient ? ingredient.name : "Unknown";
   }
@@ -415,7 +415,7 @@ class IngredientService {
     if (!ingredientId) return {};
 
     const ingredient = availableIngredients[type]?.find(
-      (i) => String(i.ingredient_id) === String(ingredientId)
+      i => String(i.ingredient_id) === String(ingredientId)
     );
 
     if (!ingredient) return {};

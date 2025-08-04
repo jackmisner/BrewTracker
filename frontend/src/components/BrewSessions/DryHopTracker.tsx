@@ -45,17 +45,17 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({
     }
 
     // Find all dry hop ingredients from recipe
-    const dryHopIngredients = recipeData.ingredients.filter((ingredient) => {
+    const dryHopIngredients = recipeData.ingredients.filter(ingredient => {
       // Handle both "dry_hop" and "dry-hop" formats for robustness
       return ingredient.use === "dry_hop" || ingredient.use === "dry-hop";
     });
 
     // Create RecipeDryHop objects with tracking information
     const processedDryHops: RecipeDryHop[] = dryHopIngredients.map(
-      (ingredient) => {
+      ingredient => {
         // Find matching session dry hop addition if it exists
         const matchingSessionHop = sessionDryHops.find(
-          (sessionHop) =>
+          sessionHop =>
             sessionHop.hop_name.toLowerCase() === ingredient.name.toLowerCase()
         );
 
@@ -151,7 +151,7 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({
 
       // Find the matching session dry hop to get its index
       const matchingSessionHopIndex = sessionDryHops.findIndex(
-        (sessionHop) =>
+        sessionHop =>
           sessionHop.hop_name.toLowerCase() ===
           recipeDryHop.ingredient.name.toLowerCase()
       );

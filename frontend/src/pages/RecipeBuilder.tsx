@@ -79,7 +79,7 @@ function RecipeBuilder(): React.ReactElement {
    * Handle BeerXML import - UPDATED to handle cache invalidation and avoid race conditions
    */
   const handleBeerXMLImport = async (importData: any): Promise<void> => {
-    setBeerXMLState((prev) => ({ ...prev, importing: true }));
+    setBeerXMLState(prev => ({ ...prev, importing: true }));
 
     try {
       // Handle created ingredients first - refresh available ingredients cache
@@ -104,7 +104,7 @@ function RecipeBuilder(): React.ReactElement {
         // Add ALL ingredients at once instead of one by one to avoid race conditions
         await importIngredients(importData.ingredients);
 
-        setBeerXMLState((prev) => ({
+        setBeerXMLState(prev => ({
           ...prev,
           importing: false,
           showImportExport: false,
@@ -113,7 +113,7 @@ function RecipeBuilder(): React.ReactElement {
 
         // Show success message
         setTimeout(() => {
-          setBeerXMLState((prev) => ({ ...prev, importSuccess: false }));
+          setBeerXMLState(prev => ({ ...prev, importSuccess: false }));
         }, 3000);
       } else {
         // For existing recipes, navigate to new recipe with imported data
@@ -126,7 +126,7 @@ function RecipeBuilder(): React.ReactElement {
       }
     } catch (error) {
       console.error("Error importing BeerXML:", error);
-      setBeerXMLState((prev) => ({ ...prev, importing: false }));
+      setBeerXMLState(prev => ({ ...prev, importing: false }));
       // Error handling is done by the component
     }
   };
@@ -140,7 +140,7 @@ function RecipeBuilder(): React.ReactElement {
       return;
     }
 
-    setBeerXMLState((prev) => ({ ...prev, exporting: true }));
+    setBeerXMLState(prev => ({ ...prev, exporting: true }));
 
     try {
       if (!recipe.recipe_id) {
@@ -162,7 +162,7 @@ function RecipeBuilder(): React.ReactElement {
         exportResult.filename
       );
 
-      setBeerXMLState((prev) => ({
+      setBeerXMLState(prev => ({
         ...prev,
         exporting: false,
         exportSuccess: true,
@@ -170,11 +170,11 @@ function RecipeBuilder(): React.ReactElement {
 
       // Show success message
       setTimeout(() => {
-        setBeerXMLState((prev) => ({ ...prev, exportSuccess: false }));
+        setBeerXMLState(prev => ({ ...prev, exportSuccess: false }));
       }, 3000);
     } catch (error) {
       console.error("Error exporting BeerXML:", error);
-      setBeerXMLState((prev) => ({ ...prev, exporting: false }));
+      setBeerXMLState(prev => ({ ...prev, exporting: false }));
       alert(`Failed to export recipe: ${(error as Error).message}`);
     }
   };
@@ -255,7 +255,7 @@ function RecipeBuilder(): React.ReactElement {
             "button",
             {
               onClick: () =>
-                setBeerXMLState((prev) => ({
+                setBeerXMLState(prev => ({
                   ...prev,
                   showImportExport: !prev.showImportExport,
                 })),
@@ -386,7 +386,7 @@ function RecipeBuilder(): React.ReactElement {
             "button",
             {
               onClick: () =>
-                setBeerXMLState((prev) => ({
+                setBeerXMLState(prev => ({
                   ...prev,
                   showImportExport: false,
                 })),
@@ -499,7 +499,7 @@ function RecipeBuilder(): React.ReactElement {
                     !canSave ? "btn-disabled" : ""
                   }`,
                   disabled: !canSave || saving,
-                  onClick: (e) => {
+                  onClick: e => {
                     e.preventDefault();
                     saveRecipe();
                   },

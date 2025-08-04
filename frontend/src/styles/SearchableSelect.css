@@ -18,7 +18,9 @@
   border-radius: 0.25rem;
   font-size: 1rem;
   background-color: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .searchable-select-input:focus {
@@ -50,7 +52,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .searchable-select-clear:hover {
@@ -82,7 +86,8 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-top: none;
   border-radius: 0 0 0.25rem 0.25rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   max-height: 300px;
   overflow-y: auto;

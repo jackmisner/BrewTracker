@@ -70,9 +70,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       );
 
       // Parse BeerXML using backend
-      const parsedRecipes: any[] = await Services.BeerXML.service.parseBeerXML(
-        fileContent
-      );
+      const parsedRecipes: any[] =
+        await Services.BeerXML.service.parseBeerXML(fileContent);
 
       dispatch({
         type: "IMPORT_SUCCESS",
@@ -299,7 +298,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                     value={importState.parsedRecipes.indexOf(
                       importState.selectedRecipe || importState.parsedRecipes[0]
                     )}
-                    onChange={(e) =>
+                    onChange={e =>
                       dispatch({
                         type: "SELECT_RECIPE",
                         payload:
@@ -362,7 +361,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   <div className="ingredient-summary">
                     <h6>Ingredients</h6>
                     <div className="ingredient-types">
-                      {["grain", "hop", "yeast", "other"].map((type) => {
+                      {["grain", "hop", "yeast", "other"].map(type => {
                         const count =
                           (
                             importState.selectedRecipe as any

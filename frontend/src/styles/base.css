@@ -42,7 +42,9 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   margin: 0 auto 1rem;
   display: block;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .about-photo:hover {

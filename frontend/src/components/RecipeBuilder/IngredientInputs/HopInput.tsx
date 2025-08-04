@@ -115,7 +115,7 @@ const HopInput: React.FC<HopInputProps> = ({
 
     // Clear related errors when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [name]: null,
       }));
@@ -156,7 +156,7 @@ const HopInput: React.FC<HopInputProps> = ({
 
   const handleHopSelect = (selectedHop: Ingredient | null): void => {
     if (selectedHop) {
-      setHopForm((prev) => ({
+      setHopForm(prev => ({
         ...prev,
         ingredient_id: selectedHop.ingredient_id,
         alpha_acid: selectedHop.alpha_acid?.toString() || "",
@@ -167,14 +167,14 @@ const HopInput: React.FC<HopInputProps> = ({
 
       // Clear ingredient selection error
       if (errors.ingredient_id) {
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
           ingredient_id: null,
         }));
       }
     } else {
       // Clear selection
-      setHopForm((prev) => ({
+      setHopForm(prev => ({
         ...prev,
         ingredient_id: "",
         alpha_acid: "",
@@ -284,7 +284,7 @@ const HopInput: React.FC<HopInputProps> = ({
       });
 
       setErrors({});
-      setResetTrigger((prev) => prev + 1);
+      setResetTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Failed to add hop:", error);
       setErrors({ submit: "Failed to add hop. Please try again." });
@@ -366,7 +366,7 @@ const HopInput: React.FC<HopInputProps> = ({
               disabled={disabled}
               data-testid="hop-unit-select"
             >
-              {getAvailableUnits().map((unit) => (
+              {getAvailableUnits().map(unit => (
                 <option
                   key={unit.value}
                   value={unit.value}

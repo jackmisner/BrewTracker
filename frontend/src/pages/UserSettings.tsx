@@ -387,7 +387,7 @@ const UserSettings: React.FC = () => {
         <div className="settings-layout">
           {/* Tab Navigation */}
           <div className="settings-tabs">
-            {tabs.map((tab) => (
+            {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() =>
@@ -417,7 +417,7 @@ const UserSettings: React.FC = () => {
                       type="text"
                       id="username"
                       value={profileForm.username}
-                      onChange={(e) =>
+                      onChange={e =>
                         dispatch({
                           type: "UPDATE_PROFILE_FIELD",
                           payload: { field: "username", value: e.target.value },
@@ -437,7 +437,7 @@ const UserSettings: React.FC = () => {
                       type="email"
                       id="email"
                       value={profileForm.email}
-                      onChange={(e) =>
+                      onChange={e =>
                         dispatch({
                           type: "UPDATE_PROFILE_FIELD",
                           payload: { field: "email", value: e.target.value },
@@ -564,7 +564,7 @@ const UserSettings: React.FC = () => {
                       min="0.5"
                       max="100"
                       value={preferencesForm.default_batch_size}
-                      onChange={(e) =>
+                      onChange={e =>
                         dispatch({
                           type: "UPDATE_PREFERENCES_FIELD",
                           payload: {
@@ -590,7 +590,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={preferencesForm.email_notifications}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PREFERENCES_FIELD",
                               payload: {
@@ -607,7 +607,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={preferencesForm.brew_reminders}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PREFERENCES_FIELD",
                               payload: {
@@ -652,7 +652,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={privacyForm.contribute_anonymous_data}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PRIVACY_FIELD",
                               payload: {
@@ -679,7 +679,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={privacyForm.share_yeast_performance}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PRIVACY_FIELD",
                               payload: {
@@ -705,7 +705,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={privacyForm.share_recipe_metrics}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PRIVACY_FIELD",
                               payload: {
@@ -736,7 +736,7 @@ const UserSettings: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={privacyForm.public_recipes_default}
-                          onChange={(e) =>
+                          onChange={e =>
                             dispatch({
                               type: "UPDATE_PRIVACY_FIELD",
                               payload: {
@@ -793,7 +793,7 @@ const UserSettings: React.FC = () => {
                         type="password"
                         id="current_password"
                         value={passwordForm.current_password}
-                        onChange={(e) =>
+                        onChange={e =>
                           dispatch({
                             type: "UPDATE_PASSWORD_FIELD",
                             payload: {
@@ -816,7 +816,7 @@ const UserSettings: React.FC = () => {
                         type="password"
                         id="new_password"
                         value={passwordForm.new_password}
-                        onChange={(e) =>
+                        onChange={e =>
                           dispatch({
                             type: "UPDATE_PASSWORD_FIELD",
                             payload: {
@@ -840,7 +840,7 @@ const UserSettings: React.FC = () => {
                         type="password"
                         id="confirm_password"
                         value={passwordForm.confirm_password}
-                        onChange={(e) =>
+                        onChange={e =>
                           dispatch({
                             type: "UPDATE_PASSWORD_FIELD",
                             payload: {
@@ -946,7 +946,7 @@ const UserSettings: React.FC = () => {
                         type="password"
                         id="delete_password"
                         value={deleteForm.password}
-                        onChange={(e) =>
+                        onChange={e =>
                           dispatch({
                             type: "UPDATE_DELETE_FIELD",
                             payload: {
@@ -972,7 +972,7 @@ const UserSettings: React.FC = () => {
                         type="text"
                         id="delete_confirmation"
                         value={deleteForm.confirmation}
-                        onChange={(e) =>
+                        onChange={e =>
                           dispatch({
                             type: "UPDATE_DELETE_FIELD",
                             payload: {

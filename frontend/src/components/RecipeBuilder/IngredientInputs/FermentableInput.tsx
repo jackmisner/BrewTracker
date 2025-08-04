@@ -82,14 +82,14 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ): void => {
     const { name, value } = e.target;
-    setFermentableForm((prev) => ({
+    setFermentableForm(prev => ({
       ...prev,
       [name]: value,
     }));
 
     // Clear related errors when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [name]: null,
       }));
@@ -100,7 +100,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     selectedFermentable: Ingredient | null
   ): void => {
     if (selectedFermentable) {
-      setFermentableForm((prev) => ({
+      setFermentableForm(prev => ({
         ...prev,
         ingredient_id: selectedFermentable.ingredient_id,
         color: selectedFermentable.color?.toString() || "",
@@ -111,14 +111,14 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
 
       // Clear ingredient selection error
       if (errors.ingredient_id) {
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
           ingredient_id: null,
         }));
       }
     } else {
       // Clear selection
-      setFermentableForm((prev) => ({
+      setFermentableForm(prev => ({
         ...prev,
         ingredient_id: "",
         color: "",
@@ -200,7 +200,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
       });
 
       setErrors({});
-      setResetTrigger((prev) => prev + 1);
+      setResetTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Failed to add fermentable:", error);
       setErrors({ submit: "Failed to add fermentable. Please try again." });
@@ -279,7 +279,7 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
               disabled={disabled}
               data-testid="fermentable-unit-select"
             >
-              {getAvailableUnits().map((unit) => (
+              {getAvailableUnits().map(unit => (
                 <option
                   key={unit.value}
                   value={unit.value}

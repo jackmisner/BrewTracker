@@ -172,7 +172,7 @@ const CompactRecipeHeader: React.FC<CompactRecipeHeaderProps> = ({
                   <div className="recipe-derived-versions">
                     <span className="version-label">Derived recipes:</span>
                     <div className="derived-recipes">
-                      {versionHistory.child_versions.slice(0, 3).map((v) => (
+                      {versionHistory.child_versions.slice(0, 3).map(v => (
                         <Link
                           key={v.recipe_id}
                           to={`/recipes/${v.recipe_id}`}

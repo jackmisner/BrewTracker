@@ -137,8 +137,8 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
             ? "Cloning..."
             : "Cloning Recipe..."
           : compact
-          ? "Clone"
-          : "Clone Recipe"}
+            ? "Clone"
+            : "Clone Recipe"}
       </button>
 
       {!isPublicRecipe && !compact && (

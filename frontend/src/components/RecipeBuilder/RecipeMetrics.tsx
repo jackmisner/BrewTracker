@@ -308,7 +308,7 @@ const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
                   min={scaleInputProps.min}
                   max={scaleInputProps.max}
                   value={scaleVolume}
-                  onChange={(e) => setScaleVolume(e.target.value)}
+                  onChange={e => setScaleVolume(e.target.value)}
                   className="scaling-input"
                   disabled={calculating}
                 />

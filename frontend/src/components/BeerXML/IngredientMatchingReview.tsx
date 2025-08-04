@@ -48,7 +48,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
 
   useEffect(() => {
     // Initialize decisions array and calculate summary
-    const decisions: Decision[] = matchingResults.map((result) => ({
+    const decisions: Decision[] = matchingResults.map(result => ({
       imported: result.imported,
       action:
         result.best_match || result.bestMatch ? "use_existing" : "create_new",
@@ -58,10 +58,10 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
       confidence: result.confidence,
     }));
 
-    setReviewState((prev) => ({ ...prev, decisions }));
+    setReviewState(prev => ({ ...prev, decisions }));
 
     // Convert backend format to frontend format for summary calculation
-    const normalizedResults = matchingResults.map((result) => ({
+    const normalizedResults = matchingResults.map(result => ({
       ...result,
       bestMatch: result.best_match || result.bestMatch, // Normalize to frontend expected field
       requiresNewIngredient:
@@ -85,7 +85,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
     selectedMatch: Ingredient | null = null,
     newIngredientData: IngredientFormData | null = null
   ): void => {
-    setReviewState((prev) => ({
+    setReviewState(prev => ({
       ...prev,
       decisions: prev.decisions.map((decision, index) =>
         index === prev.currentIndex
@@ -105,7 +105,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
    * Navigate to next ingredient
    */
   const goToNext = (): void => {
-    setReviewState((prev) => ({
+    setReviewState(prev => ({
       ...prev,
       currentIndex: Math.min(prev.currentIndex + 1, matchingResults.length - 1),
     }));
@@ -115,7 +115,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
    * Navigate to previous ingredient
    */
   const goToPrevious = (): void => {
-    setReviewState((prev) => ({
+    setReviewState(prev => ({
       ...prev,
       currentIndex: Math.max(prev.currentIndex - 1, 0),
     }));
@@ -125,7 +125,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
    * Complete the review process
    */
   const completeReview = async (): Promise<void> => {
-    setReviewState((prev) => ({
+    setReviewState(prev => ({
       ...prev,
       isCreatingIngredients: true,
       error: null,
@@ -204,7 +204,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
       });
     } catch (error: any) {
       console.error("Error completing review:", error);
-      setReviewState((prev) => ({
+      setReviewState(prev => ({
         ...prev,
         error: error.message,
         isCreatingIngredients: false,
@@ -233,7 +233,7 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
    * Skip to ingredient by index
    */
   const goToIngredient = (index: number): void => {
-    setReviewState((prev) => ({ ...prev, currentIndex: index }));
+    setReviewState(prev => ({ ...prev, currentIndex: index }));
   };
 
   /**

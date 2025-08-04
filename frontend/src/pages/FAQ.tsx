@@ -152,7 +152,7 @@ const FAQ: React.FC = () => {
   const filteredFAQ =
     activeCategory === "all"
       ? faqData
-      : faqData.filter((item) => item.category === activeCategory);
+      : faqData.filter(item => item.category === activeCategory);
 
   const toggleItem = (id: string) => {
     const newOpenItems = new Set(openItems);
@@ -177,7 +177,7 @@ const FAQ: React.FC = () => {
         {/* Category Filter */}
         <div className="card">
           <div className="faq-categories">
-            {categories.map((category) => (
+            {categories.map(category => (
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
@@ -193,7 +193,7 @@ const FAQ: React.FC = () => {
 
         {/* FAQ Items */}
         <div className="faq-list">
-          {filteredFAQ.map((item) => (
+          {filteredFAQ.map(item => (
             <div key={item.id} className="faq-item">
               <button
                 className="faq-question"

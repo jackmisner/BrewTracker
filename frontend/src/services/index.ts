@@ -127,7 +127,7 @@ export const ServiceUtils = {
       attenuationAnalyticsServiceInstance,
     ];
 
-    services.forEach((service) => {
+    services.forEach(service => {
       if (service && typeof service.clearCache === "function") {
         try {
           service.clearCache();
@@ -250,7 +250,7 @@ export const ServiceUtils = {
       IngredientMatchingService,
       UserSettingsService,
     ].filter(
-      (service) => service && typeof service.clearCache === "function"
+      service => service && typeof service.clearCache === "function"
     ).length;
 
     return {

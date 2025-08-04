@@ -76,9 +76,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       dispatch({ type: "LOAD_START" });
 
       // Fetch fermentation data entries
-      const fermentationData = await Services.brewSession.getFermentationData(
-        sessionId
-      );
+      const fermentationData =
+        await Services.brewSession.getFermentationData(sessionId);
 
       // Fetch fermentation statistics
       let statsData = null;
@@ -228,7 +227,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       // Get the latest gravity reading for final gravity
       const latestGravityEntry = [...state.fermentationData]
         .reverse()
-        .find((entry) => entry.gravity);
+        .find(entry => entry.gravity);
 
       if (!latestGravityEntry?.gravity) {
         dispatch({
@@ -419,7 +418,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           <textarea
             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={state.editing.value}
-            onChange={(e) =>
+            onChange={e =>
               dispatch({ type: "UPDATE_EDIT_VALUE", payload: e.target.value })
             }
             onBlur={handleBlur}
@@ -468,7 +467,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           ref={inputRef as React.RefObject<HTMLInputElement>}
           type={inputType}
           value={state.editing.value}
-          onChange={(e) =>
+          onChange={e =>
             dispatch({ type: "UPDATE_EDIT_VALUE", payload: e.target.value })
           }
           onBlur={handleBlur}
@@ -490,7 +489,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       return [];
     }
 
-    return state.fermentationData.map((entry) => ({
+    return state.fermentationData.map(entry => ({
       date: entry.entry_date,
       displayDate: new Date(entry.entry_date).toLocaleDateString(),
       gravity: entry.gravity || null,
@@ -507,7 +506,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
     if (!actualOG && chartData && chartData.length > 0) {
       const gravityValues = chartData
-        .map((entry) => entry.gravity)
+        .map(entry => entry.gravity)
         .filter((gravity): gravity is number => gravity !== null);
 
       if (gravityValues.length > 0) {
@@ -536,7 +535,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       };
     }
 
-    const validEntries = chartData.filter((entry) => entry.gravity !== null);
+    const validEntries = chartData.filter(entry => entry.gravity !== null);
     if (validEntries.length < 2) {
       return { dailyRate: null, analysis: "Need at least 2 gravity readings" };
     }
@@ -643,7 +642,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       sessionData?.dry_hop_additions &&
       sessionData.dry_hop_additions.length > 0
     ) {
-      sessionData.dry_hop_additions.forEach((addition) => {
+      sessionData.dry_hop_additions.forEach(addition => {
         markers.push({
           date: addition.addition_date,
           phase: "dry_hop_add",
@@ -696,10 +695,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       return null;
     }
 
-    const firstReading = state.fermentationData.find((entry) => entry.gravity);
+    const firstReading = state.fermentationData.find(entry => entry.gravity);
     const lastReading = [...state.fermentationData]
       .reverse()
-      .find((entry) => entry.gravity);
+      .find(entry => entry.gravity);
 
     if (!firstReading || !lastReading || firstReading === lastReading) {
       return null;
@@ -1234,7 +1233,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                               {(() => {
                                 const addition =
                                   sessionData.dry_hop_additions.find(
-                                    (add) => add.addition_date === marker.date
+                                    add => add.addition_date === marker.date
                                   );
                                 return addition
                                   ? `${addition.amount} ${addition.amount_unit}`

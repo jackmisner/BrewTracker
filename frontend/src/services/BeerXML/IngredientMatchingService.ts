@@ -682,7 +682,7 @@ class IngredientMatchingService {
     const words1 = new Set(name1.split(" "));
     const words2 = new Set(name2.split(" "));
 
-    const intersection = new Set([...words1].filter((x) => words2.has(x)));
+    const intersection = new Set([...words1].filter(x => words2.has(x)));
     const union = new Set([...words1, ...words2]);
 
     return union.size === 0 ? 0 : intersection.size / union.size;
@@ -803,7 +803,7 @@ class IngredientMatchingService {
 
     let totalConfidence = 0;
 
-    matchResults.forEach((result) => {
+    matchResults.forEach(result => {
       const type = result.imported.type;
 
       // Update type counts

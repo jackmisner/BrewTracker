@@ -335,7 +335,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           "mash_temp_unit",
         ];
 
-        const needsRecalculation = updates.some((update) =>
+        const needsRecalculation = updates.some(update =>
           calculationFields.includes(update.field)
         );
 
@@ -434,7 +434,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
         // Find the ingredient to update
         const existingIngredient = state.ingredients.find(
-          (ing) => ing.id === ingredientId
+          ing => ing.id === ingredientId
         );
         if (!existingIngredient) {
           throw new Error("Ingredient not found");
@@ -458,7 +458,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           ...existingIngredient,
           ...updatedIngredientData,
         };
-        const updatedIngredients = state.ingredients.map((ing) =>
+        const updatedIngredients = state.ingredients.map(ing =>
           ing.id === ingredientId ? updatedIngredient : ing
         );
         const sortedIngredients =
@@ -512,7 +512,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
           } else {
             // Update existing ingredient
             const existingIngredient = updatedIngredients.find(
-              (ing) => ing.id === update.ingredientId
+              ing => ing.id === update.ingredientId
             );
             if (existingIngredient) {
               // Validate ingredient data
@@ -529,7 +529,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
               }
 
               // Update the ingredient in the array
-              updatedIngredients = updatedIngredients.map((ing) =>
+              updatedIngredients = updatedIngredients.map(ing =>
                 ing.id === update.ingredientId
                   ? { ...ing, ...update.updatedData }
                   : ing
@@ -575,7 +575,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
         }
 
         const updatedIngredients = state.ingredients.filter(
-          (ing) => ing.id !== ingredientId
+          ing => ing.id !== ingredientId
         );
 
         dispatch({
@@ -862,7 +862,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       ];
 
       const hasCalculationFieldChanges = calculationFields.some(
-        (field) => recipeData[field] !== undefined
+        field => recipeData[field] !== undefined
       );
 
       if (
