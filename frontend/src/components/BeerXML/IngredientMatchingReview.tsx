@@ -4,7 +4,7 @@ import ApiService from "../../services/api";
 import { Ingredient, IngredientFormData } from "../../types";
 import {
   IngredientMatchResult,
-  IngredientMatchingDecision
+  IngredientMatchingDecision,
 } from "../../types/beerxml";
 import "../../styles/IngredientMatchingReview.css";
 
@@ -215,9 +215,13 @@ const IngredientMatchingReview: React.FC<IngredientMatchingReviewProps> = ({
   /**
    * Create new ingredient via API
    */
-  const createNewIngredient = async (ingredientData: IngredientFormData): Promise<Ingredient> => {
+  const createNewIngredient = async (
+    ingredientData: IngredientFormData
+  ): Promise<Ingredient> => {
     try {
-      const response = await ApiService.ingredients.create(ingredientData as any);
+      const response = await ApiService.ingredients.create(
+        ingredientData as any
+      );
       return response.data as unknown as Ingredient;
     } catch (error: any) {
       console.error("Error creating ingredient:", error);

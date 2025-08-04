@@ -12,7 +12,7 @@ import {
 export interface BeerXMLState {
   // Import state
   import: BeerXMLImportState;
-  
+
   // Export state
   export: BeerXMLExportState;
 }
@@ -20,27 +20,30 @@ export interface BeerXMLState {
 // Action types for all BeerXML operations
 export type BeerXMLAction =
   // Import actions
-  | { type: 'IMPORT_START' }
-  | { type: 'IMPORT_SUCCESS'; payload: { recipes: ParsedBeerXMLRecipe[]; warnings: string[] } }
-  | { type: 'IMPORT_ERROR'; payload: string }
-  | { type: 'IMPORT_PROGRESS'; payload: number }
-  | { type: 'SET_UPLOADED_FILE'; payload: File | null }
-  | { type: 'SELECT_RECIPE'; payload: ParsedBeerXMLRecipe | null }
-  | { type: 'SET_MATCHING_RESULTS'; payload: IngredientMatchResult[] }
-  | { type: 'SHOW_MATCHING_REVIEW'; payload: boolean }
-  | { type: 'CLEAR_IMPORT_ERROR' }
-  | { type: 'RESET_IMPORT_STATE' }
+  | { type: "IMPORT_START" }
+  | {
+      type: "IMPORT_SUCCESS";
+      payload: { recipes: ParsedBeerXMLRecipe[]; warnings: string[] };
+    }
+  | { type: "IMPORT_ERROR"; payload: string }
+  | { type: "IMPORT_PROGRESS"; payload: number }
+  | { type: "SET_UPLOADED_FILE"; payload: File | null }
+  | { type: "SELECT_RECIPE"; payload: ParsedBeerXMLRecipe | null }
+  | { type: "SET_MATCHING_RESULTS"; payload: IngredientMatchResult[] }
+  | { type: "SHOW_MATCHING_REVIEW"; payload: boolean }
+  | { type: "CLEAR_IMPORT_ERROR" }
+  | { type: "RESET_IMPORT_STATE" }
 
   // Export actions
-  | { type: 'EXPORT_START' }
-  | { type: 'EXPORT_SUCCESS'; payload: BeerXMLExportResult }
-  | { type: 'EXPORT_ERROR'; payload: string }
-  | { type: 'EXPORT_PROGRESS'; payload: number }
-  | { type: 'CLEAR_EXPORT_ERROR' }
-  | { type: 'RESET_EXPORT_STATE' }
+  | { type: "EXPORT_START" }
+  | { type: "EXPORT_SUCCESS"; payload: BeerXMLExportResult }
+  | { type: "EXPORT_ERROR"; payload: string }
+  | { type: "EXPORT_PROGRESS"; payload: number }
+  | { type: "CLEAR_EXPORT_ERROR" }
+  | { type: "RESET_EXPORT_STATE" }
 
   // Combined actions
-  | { type: 'RESET_ALL_STATE' };
+  | { type: "RESET_ALL_STATE" };
 
 // Initial state factory function
 export const createInitialBeerXMLState = (): BeerXMLState => ({
@@ -70,7 +73,7 @@ export const beerXMLReducer = (
 ): BeerXMLState => {
   switch (action.type) {
     // Import actions
-    case 'IMPORT_START':
+    case "IMPORT_START":
       return {
         ...state,
         import: {
@@ -81,7 +84,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'IMPORT_SUCCESS':
+    case "IMPORT_SUCCESS":
       return {
         ...state,
         import: {
@@ -93,7 +96,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'IMPORT_ERROR':
+    case "IMPORT_ERROR":
       return {
         ...state,
         import: {
@@ -104,7 +107,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'IMPORT_PROGRESS':
+    case "IMPORT_PROGRESS":
       return {
         ...state,
         import: {
@@ -113,7 +116,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'SET_UPLOADED_FILE':
+    case "SET_UPLOADED_FILE":
       return {
         ...state,
         import: {
@@ -123,7 +126,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'SELECT_RECIPE':
+    case "SELECT_RECIPE":
       return {
         ...state,
         import: {
@@ -132,7 +135,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'SET_MATCHING_RESULTS':
+    case "SET_MATCHING_RESULTS":
       return {
         ...state,
         import: {
@@ -141,7 +144,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'SHOW_MATCHING_REVIEW':
+    case "SHOW_MATCHING_REVIEW":
       return {
         ...state,
         import: {
@@ -150,7 +153,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'CLEAR_IMPORT_ERROR':
+    case "CLEAR_IMPORT_ERROR":
       return {
         ...state,
         import: {
@@ -159,7 +162,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'RESET_IMPORT_STATE':
+    case "RESET_IMPORT_STATE":
       return {
         ...state,
         import: {
@@ -176,7 +179,7 @@ export const beerXMLReducer = (
       };
 
     // Export actions
-    case 'EXPORT_START':
+    case "EXPORT_START":
       return {
         ...state,
         export: {
@@ -187,7 +190,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'EXPORT_SUCCESS':
+    case "EXPORT_SUCCESS":
       return {
         ...state,
         export: {
@@ -198,7 +201,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'EXPORT_ERROR':
+    case "EXPORT_ERROR":
       return {
         ...state,
         export: {
@@ -209,7 +212,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'EXPORT_PROGRESS':
+    case "EXPORT_PROGRESS":
       return {
         ...state,
         export: {
@@ -218,7 +221,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'CLEAR_EXPORT_ERROR':
+    case "CLEAR_EXPORT_ERROR":
       return {
         ...state,
         export: {
@@ -227,7 +230,7 @@ export const beerXMLReducer = (
         },
       };
 
-    case 'RESET_EXPORT_STATE':
+    case "RESET_EXPORT_STATE":
       return {
         ...state,
         export: {
@@ -239,7 +242,7 @@ export const beerXMLReducer = (
       };
 
     // Combined actions
-    case 'RESET_ALL_STATE':
+    case "RESET_ALL_STATE":
       return createInitialBeerXMLState();
 
     default:

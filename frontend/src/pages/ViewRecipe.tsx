@@ -144,23 +144,25 @@ const ViewRecipe: React.FC = () => {
   // Determine if current user owns this recipe
   // Only show edit/delete if we have both user and recipe data, and they match
   const isRecipeOwner = Boolean(
-    currentUser && 
-    recipe && 
-    currentUser.user_id && 
-    recipe.user_id && 
-    String(currentUser.user_id) === String(recipe.user_id)
+    currentUser &&
+      recipe &&
+      currentUser.user_id &&
+      recipe.user_id &&
+      String(currentUser.user_id) === String(recipe.user_id)
   );
-  
+
   // For public recipes or when we can't determine ownership, treat as public
   const isPublicRecipe = !isRecipeOwner;
 
   return (
     <div className="view-recipe-container">
-      <CompactRecipeHeader 
-        recipe={recipe} 
-        showViewButton={false} 
+      <CompactRecipeHeader
+        recipe={recipe}
+        showViewButton={false}
         isPublicRecipe={isPublicRecipe}
-        originalAuthor={recipe.username || (isPublicRecipe ? "Recipe Author" : "Unknown")}
+        originalAuthor={
+          recipe.username || (isPublicRecipe ? "Recipe Author" : "Unknown")
+        }
       />
 
       <div className="view-recipe-content">
@@ -402,9 +404,9 @@ const ViewRecipe: React.FC = () => {
         </div>
 
         <div className="view-recipe-actions">
-          <RecipeActions 
-            recipe={recipe} 
-            showViewButton={false} 
+          <RecipeActions
+            recipe={recipe}
+            showViewButton={false}
             isPublicRecipe={isPublicRecipe}
             originalAuthor={recipe.username}
           />

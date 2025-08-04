@@ -82,7 +82,8 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-top: none;
   border-radius: 0 0 0.25rem 0.25rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   max-height: 300px;
   overflow-y: auto;
   animation: dropdown-appear 0.15s ease-out;
@@ -228,7 +229,7 @@ mark.search-highlight {
 }
 
 .searchable-select-loading::before {
-  content: '';
+  content: "";
   width: 1rem;
   height: 1rem;
   border: 2px solid #f3f4f6;
@@ -238,8 +239,12 @@ mark.search-highlight {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Better text selection within highlighted matches */
@@ -273,19 +278,19 @@ mark.search-highlight {
   .searchable-select-dropdown {
     max-height: 250px;
   }
-  
+
   .searchable-select-option {
     padding: 0.625rem;
   }
-  
+
   .option-name {
     font-size: 0.875rem;
   }
-  
+
   .option-description {
     font-size: 0.8125rem;
   }
-  
+
   .search-highlight {
     padding: 0.0625rem 0.125rem;
     margin: 0 0.03125rem;
@@ -294,15 +299,15 @@ mark.search-highlight {
 
 /* Animation for highlighting effect */
 @keyframes highlight-pulse {
-  0% { 
+  0% {
     background-color: #fef3c7; /* amber-100 */
     transform: scale(1);
   }
-  50% { 
+  50% {
     background-color: #fcd34d; /* amber-300 */
     transform: scale(1.05);
   }
-  100% { 
+  100% {
     background-color: #fef3c7; /* amber-100 */
     transform: scale(1);
   }
@@ -319,7 +324,7 @@ mark.search-highlight {
     color: #ffffff;
     font-weight: 700;
   }
-  
+
   .searchable-select-option.highlighted {
     background-color: #000000;
     color: #ffffff;
@@ -333,7 +338,7 @@ mark.search-highlight {
   .spin {
     animation: none;
   }
-  
+
   .searchable-select-arrow {
     transition: none;
   }
@@ -486,21 +491,21 @@ mark.search-highlight {
     min-width: 200px; /* Smaller minimum for mobile */
     max-height: 60vh; /* Limit height on mobile */
   }
-  
+
   .searchable-select-option {
     padding: 0.625rem;
   }
-  
+
   .option-name {
     font-size: 0.875rem;
   }
-  
+
   .option-description {
     font-size: 0.8125rem;
     -webkit-line-clamp: 1; /* Only 1 line on mobile */
     line-clamp: 1; /* Standard property for compatibility */
   }
-  
+
   .option-metadata {
     font-size: 0.6875rem;
     padding: 0.0625rem 0.125rem;
@@ -510,7 +515,7 @@ mark.search-highlight {
   .option-manufacturer {
     font-size: 0.6875rem;
   }
-  
+
   .search-highlight {
     padding: 0.0625rem 0.125rem;
     margin: 0 0.03125rem;

@@ -27,7 +27,7 @@ const CreateBrewSession: React.FC = () => {
   // Initialize reducer
   const [state, dispatch] = useReducer(
     brewSessionReducer,
-    createInitialBrewSessionState('create', recipeId)
+    createInitialBrewSessionState("create", recipeId)
   );
 
   // Destructure state for cleaner access
@@ -38,27 +38,30 @@ const CreateBrewSession: React.FC = () => {
     if (recipeId) {
       const fetchRecipeData = async (): Promise<void> => {
         try {
-          dispatch({ type: 'FETCH_START' });
+          dispatch({ type: "FETCH_START" });
           const recipeData = await Services.recipe.fetchRecipe(recipeId);
-          dispatch({ type: 'FETCH_SUCCESS', payload: { recipe: recipeData } });
+          dispatch({ type: "FETCH_SUCCESS", payload: { recipe: recipeData } });
 
           // Pre-populate the session name based on recipe
           dispatch({
-            type: 'UPDATE_FORM_FIELD',
+            type: "UPDATE_FORM_FIELD",
             payload: {
-              field: 'name',
+              field: "name",
               value: `${recipeData.name} - ${new Date().toLocaleDateString()}`,
             },
           });
         } catch (err: any) {
           console.error("Error fetching recipe:", err);
-          dispatch({ type: 'FETCH_ERROR', payload: 'Failed to load recipe details' });
+          dispatch({
+            type: "FETCH_ERROR",
+            payload: "Failed to load recipe details",
+          });
         }
       };
 
       fetchRecipeData();
     } else {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   }, [recipeId]);
 
@@ -69,7 +72,7 @@ const CreateBrewSession: React.FC = () => {
   ): void => {
     const { name, value } = e.target;
     dispatch({
-      type: 'UPDATE_FORM_FIELD',
+      type: "UPDATE_FORM_FIELD",
       payload: { field: name, value },
     });
   };
@@ -80,12 +83,13 @@ const CreateBrewSession: React.FC = () => {
     e.preventDefault();
 
     try {
-      dispatch({ type: 'SUBMIT_START' });
+      dispatch({ type: "SUBMIT_START" });
 
       // Convert form data to session data, ensuring recipe_id is not null
       const sessionData = {
         ...(formData as CreateBrewSessionFormData),
-        recipe_id: (formData as CreateBrewSessionFormData).recipe_id || undefined,
+        recipe_id:
+          (formData as CreateBrewSessionFormData).recipe_id || undefined,
       };
 
       // Create the brew session using the service
@@ -104,8 +108,9 @@ const CreateBrewSession: React.FC = () => {
     } catch (err: any) {
       console.error("Error creating brew session:", err);
       dispatch({
-        type: 'SUBMIT_ERROR',
-        payload: err.message ||
+        type: "SUBMIT_ERROR",
+        payload:
+          err.message ||
           `Failed to create brew session: ${
             err.response?.data?.error || "Unknown error"
           }`,
@@ -114,7 +119,7 @@ const CreateBrewSession: React.FC = () => {
   };
 
   const handleErrorDismiss = (): void => {
-    dispatch({ type: 'CLEAR_ERROR' });
+    dispatch({ type: "CLEAR_ERROR" });
   };
 
   if (loading) {

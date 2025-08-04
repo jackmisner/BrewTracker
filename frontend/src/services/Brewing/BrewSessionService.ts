@@ -1,5 +1,10 @@
 import ApiService from "../api";
-import { BrewSession, ID, GravityStabilizationAnalysis, DryHopAddition } from "../../types";
+import {
+  BrewSession,
+  ID,
+  GravityStabilizationAnalysis,
+  DryHopAddition,
+} from "../../types";
 import { AddDryHopAdditionRequest } from "../../types/api";
 
 // Service-specific interfaces
@@ -336,7 +341,11 @@ class BrewSessionService {
   /**
    * Add fermentation entry
    */
-  async addFermentationEntry(sessionId: ID, entryData: any, unitSystem: string = "imperial"): Promise<any> {
+  async addFermentationEntry(
+    sessionId: ID,
+    entryData: any,
+    unitSystem: string = "imperial"
+  ): Promise<any> {
     try {
       const validation = this.validateFermentationEntry(entryData, unitSystem);
       if (!validation.isValid) {
@@ -589,7 +598,10 @@ class BrewSessionService {
   /**
    * Validate fermentation entry data
    */
-  validateFermentationEntry(entryData: any, unitSystem: string = "imperial"): FermentationEntryValidation {
+  validateFermentationEntry(
+    entryData: any,
+    unitSystem: string = "imperial"
+  ): FermentationEntryValidation {
     const errors: string[] = [];
 
     if (
@@ -633,13 +645,13 @@ class BrewSessionService {
     const formatted: any = {};
 
     // Only include fields that are explicitly provided
-    if (sessionData.hasOwnProperty('name')) {
+    if (sessionData.hasOwnProperty("name")) {
       formatted.name = sessionData.name?.trim() || "";
     }
-    if (sessionData.hasOwnProperty('status')) {
+    if (sessionData.hasOwnProperty("status")) {
       formatted.status = sessionData.status || "planned";
     }
-    if (sessionData.hasOwnProperty('notes')) {
+    if (sessionData.hasOwnProperty("notes")) {
       formatted.notes = sessionData.notes?.trim() || "";
     }
 
@@ -970,7 +982,7 @@ class BrewSessionService {
   }
 
   // Dry Hop Addition Methods
-  
+
   /**
    * Get all dry hop additions for a brew session
    */
@@ -981,24 +993,38 @@ class BrewSessionService {
   /**
    * Add a new dry hop addition to a brew session
    */
-  async addDryHopAddition(sessionId: ID, additionData: AddDryHopAdditionRequest) {
-    const result = await ApiService.brewSessions.addDryHopAddition(sessionId, additionData);
-    
+  async addDryHopAddition(
+    sessionId: ID,
+    additionData: AddDryHopAdditionRequest
+  ) {
+    const result = await ApiService.brewSessions.addDryHopAddition(
+      sessionId,
+      additionData
+    );
+
     // Clear session cache to ensure fresh data
     this.clearSessionCache(sessionId);
-    
+
     return result;
   }
 
   /**
    * Update a dry hop addition (e.g., mark as removed)
    */
-  async updateDryHopAddition(sessionId: ID, additionIndex: number, updateData: Partial<DryHopAddition>) {
-    const result = await ApiService.brewSessions.updateDryHopAddition(sessionId, additionIndex, updateData);
-    
+  async updateDryHopAddition(
+    sessionId: ID,
+    additionIndex: number,
+    updateData: Partial<DryHopAddition>
+  ) {
+    const result = await ApiService.brewSessions.updateDryHopAddition(
+      sessionId,
+      additionIndex,
+      updateData
+    );
+
     // Clear session cache to ensure fresh data
     this.clearSessionCache(sessionId);
-    
+
     return result;
   }
 
@@ -1006,11 +1032,14 @@ class BrewSessionService {
    * Delete a dry hop addition
    */
   async deleteDryHopAddition(sessionId: ID, additionIndex: number) {
-    const result = await ApiService.brewSessions.deleteDryHopAddition(sessionId, additionIndex);
-    
+    const result = await ApiService.brewSessions.deleteDryHopAddition(
+      sessionId,
+      additionIndex
+    );
+
     // Clear session cache to ensure fresh data
     this.clearSessionCache(sessionId);
-    
+
     return result;
   }
 }

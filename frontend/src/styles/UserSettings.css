@@ -80,7 +80,8 @@
 }
 
 /* Success and Error Banners */
-.success-banner, .error-banner {
+.success-banner,
+.error-banner {
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   padding: 1rem;
@@ -96,13 +97,15 @@
   border: 1px solid #ef4444; /* red-500 */
 }
 
-.success-content, .error-content {
+.success-content,
+.error-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.success-icon, .error-icon {
+.success-icon,
+.error-icon {
   margin-right: 0.5rem;
 }
 
@@ -116,7 +119,8 @@
   font-weight: 500;
 }
 
-.success-dismiss, .error-dismiss {
+.success-dismiss,
+.error-dismiss {
   background: none;
   border: none;
   font-size: 1.25rem;
@@ -208,12 +212,12 @@
   .unit-toggle-container {
     grid-template-columns: 1fr;
   }
-  
+
   .unit-toggle-button {
     justify-content: center;
     text-align: center;
   }
-  
+
   .unit-toggle-icon {
     margin-right: 0.5rem;
   }
@@ -483,23 +487,23 @@
   .settings-container {
     padding: 1rem;
   }
-  
+
   .settings-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .settings-tabs {
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 0.5rem;
   }
-  
+
   .settings-tab {
     white-space: nowrap;
     min-width: fit-content;
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }

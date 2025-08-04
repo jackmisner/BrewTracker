@@ -384,7 +384,8 @@
   border: 1px solid #e5e7eb; /* gray-200 */
   border-radius: 0.75rem; /* Matches card border-radius */
   background: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.3s ease;
   border-left: 4px solid #d97706; /* amber-600 accent */
 }
 
@@ -402,7 +403,8 @@
 }
 
 @keyframes highlightPulse {
-  0%, 100% {
+  0%,
+  100% {
     background-color: #fefce8; /* yellow-50 */
     transform: scale(1);
   }
@@ -512,8 +514,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==========================================================================
@@ -671,7 +677,7 @@
   .ingredient-item {
     border-width: 2px;
   }
-  
+
   .type-badge {
     border: 1px solid currentColor;
   }
@@ -694,11 +700,11 @@
   .expand-icon {
     transition: none;
   }
-  
+
   .button-spinner {
     animation: none;
   }
-  
+
   .ingredient-item:hover {
     transform: none;
   }
@@ -733,7 +739,8 @@
 }
 
 .ingredients-list::-webkit-scrollbar-thumb:hover,
-.search-input-enhanced .searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
+.search-input-enhanced
+  .searchable-select-dropdown::-webkit-scrollbar-thumb:hover {
   background: #9ca3af; /* gray-400 */
 }
 
@@ -762,7 +769,7 @@
 }
 
 .search-input-enhanced .searchable-select-loading::before {
-  content: '';
+  content: "";
   width: 1rem;
   height: 1rem;
   border: 2px solid #d97706;
@@ -865,8 +872,12 @@
   color: white;
 }
 
-.search-input-enhanced .searchable-select-option[aria-selected="true"] .option-description,
-.search-input-enhanced .searchable-select-option[aria-selected="true"] .option-manufacturer {
+.search-input-enhanced
+  .searchable-select-option[aria-selected="true"]
+  .option-description,
+.search-input-enhanced
+  .searchable-select-option[aria-selected="true"]
+  .option-manufacturer {
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -1048,8 +1059,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Search highlighting */

@@ -63,95 +63,109 @@ export interface IngredientManagerState {
 // Action types for all ingredient manager operations
 export type IngredientManagerAction =
   // Form actions
-  | { type: 'UPDATE_FORM_FIELD'; payload: { field: keyof IngredientFormData; value: any } }
-  | { type: 'UPDATE_FORM_TYPE'; payload: IngredientType }
-  | { type: 'RESET_FORM' }
-  | { type: 'SET_FORM_DATA'; payload: IngredientFormData }
+  | {
+      type: "UPDATE_FORM_FIELD";
+      payload: { field: keyof IngredientFormData; value: any };
+    }
+  | { type: "UPDATE_FORM_TYPE"; payload: IngredientType }
+  | { type: "RESET_FORM" }
+  | { type: "SET_FORM_DATA"; payload: IngredientFormData }
 
   // UI state actions
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'SET_SUCCESS'; payload: string }
-  | { type: 'CLEAR_SUCCESS' }
-  | { type: 'CLEAR_MESSAGES' }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "CLEAR_ERROR" }
+  | { type: "SET_SUCCESS"; payload: string }
+  | { type: "CLEAR_SUCCESS" }
+  | { type: "CLEAR_MESSAGES" }
 
   // Data actions
-  | { type: 'SET_EXISTING_INGREDIENTS'; payload: Ingredient[] }
-  | { type: 'SET_GROUPED_INGREDIENTS'; payload: GroupedIngredients }
-  | { type: 'SET_SEARCH_QUERY'; payload: string }
-  | { type: 'SET_FILTERED_RESULTS'; payload: GroupedIngredients }
-  | { type: 'TOGGLE_SECTION'; payload: string }
-  | { type: 'SET_EXPANDED_SECTIONS'; payload: ExpandedSections }
+  | { type: "SET_EXISTING_INGREDIENTS"; payload: Ingredient[] }
+  | { type: "SET_GROUPED_INGREDIENTS"; payload: GroupedIngredients }
+  | { type: "SET_SEARCH_QUERY"; payload: string }
+  | { type: "SET_FILTERED_RESULTS"; payload: GroupedIngredients }
+  | { type: "TOGGLE_SECTION"; payload: string }
+  | { type: "SET_EXPANDED_SECTIONS"; payload: ExpandedSections }
 
   // Compound actions for ingredient operations
-  | { type: 'SUBMIT_START' }
-  | { type: 'SUBMIT_SUCCESS'; payload: { message: string; ingredients: Ingredient[]; grouped: GroupedIngredients } }
-  | { type: 'SUBMIT_ERROR'; payload: string }
+  | { type: "SUBMIT_START" }
+  | {
+      type: "SUBMIT_SUCCESS";
+      payload: {
+        message: string;
+        ingredients: Ingredient[];
+        grouped: GroupedIngredients;
+      };
+    }
+  | { type: "SUBMIT_ERROR"; payload: string }
 
   // Search and filtering actions
-  | { type: 'SEARCH_START' }
-  | { type: 'SEARCH_COMPLETE'; payload: { results: GroupedIngredients; expandSections: boolean } }
-  | { type: 'CLEAR_SEARCH' };
+  | { type: "SEARCH_START" }
+  | {
+      type: "SEARCH_COMPLETE";
+      payload: { results: GroupedIngredients; expandSections: boolean };
+    }
+  | { type: "CLEAR_SEARCH" };
 
 // Initial state factory function
-export const createInitialIngredientManagerState = (): IngredientManagerState => ({
-  // Form state
-  formData: {
-    name: "",
-    type: "grain",
-    description: "",
-    // Grain-specific fields
-    grain_type: "",
-    potential: "",
-    color: "",
-    // Hop-specific fields
-    alpha_acid: "",
-    // Yeast-specific fields
-    yeast_type: "",
-    attenuation: "",
-    manufacturer: "",
-    code: "",
-    alcohol_tolerance: "",
-    min_temperature: "",
-    max_temperature: "",
-  },
+export const createInitialIngredientManagerState =
+  (): IngredientManagerState => ({
+    // Form state
+    formData: {
+      name: "",
+      type: "grain",
+      description: "",
+      // Grain-specific fields
+      grain_type: "",
+      potential: "",
+      color: "",
+      // Hop-specific fields
+      alpha_acid: "",
+      // Yeast-specific fields
+      yeast_type: "",
+      attenuation: "",
+      manufacturer: "",
+      code: "",
+      alcohol_tolerance: "",
+      min_temperature: "",
+      max_temperature: "",
+    },
 
-  // UI state
-  loading: false,
-  error: "",
-  success: "",
+    // UI state
+    loading: false,
+    error: "",
+    success: "",
 
-  // Data state
-  existingIngredients: [],
-  groupedIngredients: {
-    grain: [],
-    hop: [],
-    yeast: [],
-    other: [],
-  },
-  searchQuery: "",
-  filteredResults: {
-    grain: [],
-    hop: [],
-    yeast: [],
-    other: [],
-  },
-  expandedSections: {
-    grain: false,
-    hop: false,
-    yeast: false,
-    other: false,
-  },
+    // Data state
+    existingIngredients: [],
+    groupedIngredients: {
+      grain: [],
+      hop: [],
+      yeast: [],
+      other: [],
+    },
+    searchQuery: "",
+    filteredResults: {
+      grain: [],
+      hop: [],
+      yeast: [],
+      other: [],
+    },
+    expandedSections: {
+      grain: false,
+      hop: false,
+      yeast: false,
+      other: false,
+    },
 
-  // Constants
-  defaultExpandedState: {
-    grain: false,
-    hop: false,
-    yeast: false,
-    other: false,
-  },
-});
+    // Constants
+    defaultExpandedState: {
+      grain: false,
+      hop: false,
+      yeast: false,
+      other: false,
+    },
+  });
 
 // Reducer function
 export const ingredientManagerReducer = (
@@ -159,7 +173,7 @@ export const ingredientManagerReducer = (
   action: IngredientManagerAction
 ): IngredientManagerState => {
   switch (action.type) {
-    case 'UPDATE_FORM_FIELD':
+    case "UPDATE_FORM_FIELD":
       return {
         ...state,
         formData: {
@@ -171,7 +185,7 @@ export const ingredientManagerReducer = (
         success: state.success ? "" : state.success,
       };
 
-    case 'UPDATE_FORM_TYPE':
+    case "UPDATE_FORM_TYPE":
       return {
         ...state,
         formData: {
@@ -192,7 +206,7 @@ export const ingredientManagerReducer = (
         },
       };
 
-    case 'RESET_FORM':
+    case "RESET_FORM":
       return {
         ...state,
         formData: {
@@ -215,74 +229,74 @@ export const ingredientManagerReducer = (
         success: "",
       };
 
-    case 'SET_FORM_DATA':
+    case "SET_FORM_DATA":
       return {
         ...state,
         formData: action.payload,
       };
 
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return {
         ...state,
         loading: action.payload,
       };
 
-    case 'SET_ERROR':
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
       };
 
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: "",
       };
 
-    case 'SET_SUCCESS':
+    case "SET_SUCCESS":
       return {
         ...state,
         success: action.payload,
       };
 
-    case 'CLEAR_SUCCESS':
+    case "CLEAR_SUCCESS":
       return {
         ...state,
         success: "",
       };
 
-    case 'CLEAR_MESSAGES':
+    case "CLEAR_MESSAGES":
       return {
         ...state,
         error: "",
         success: "",
       };
 
-    case 'SET_EXISTING_INGREDIENTS':
+    case "SET_EXISTING_INGREDIENTS":
       return {
         ...state,
         existingIngredients: action.payload,
       };
 
-    case 'SET_GROUPED_INGREDIENTS':
+    case "SET_GROUPED_INGREDIENTS":
       return {
         ...state,
         groupedIngredients: action.payload,
       };
 
-    case 'SET_SEARCH_QUERY':
+    case "SET_SEARCH_QUERY":
       return {
         ...state,
         searchQuery: action.payload,
       };
 
-    case 'SET_FILTERED_RESULTS':
+    case "SET_FILTERED_RESULTS":
       return {
         ...state,
         filteredResults: action.payload,
       };
 
-    case 'TOGGLE_SECTION':
+    case "TOGGLE_SECTION":
       return {
         ...state,
         expandedSections: {
@@ -291,13 +305,13 @@ export const ingredientManagerReducer = (
         },
       };
 
-    case 'SET_EXPANDED_SECTIONS':
+    case "SET_EXPANDED_SECTIONS":
       return {
         ...state,
         expandedSections: action.payload,
       };
 
-    case 'SUBMIT_START':
+    case "SUBMIT_START":
       return {
         ...state,
         loading: true,
@@ -305,7 +319,7 @@ export const ingredientManagerReducer = (
         success: "",
       };
 
-    case 'SUBMIT_SUCCESS':
+    case "SUBMIT_SUCCESS":
       return {
         ...state,
         loading: false,
@@ -332,20 +346,20 @@ export const ingredientManagerReducer = (
         },
       };
 
-    case 'SUBMIT_ERROR':
+    case "SUBMIT_ERROR":
       return {
         ...state,
         loading: false,
         error: action.payload,
       };
 
-    case 'SEARCH_START':
+    case "SEARCH_START":
       return {
         ...state,
         // Keep current state, search results will be updated separately
       };
 
-    case 'SEARCH_COMPLETE':
+    case "SEARCH_COMPLETE":
       return {
         ...state,
         filteredResults: action.payload.results,
@@ -359,7 +373,7 @@ export const ingredientManagerReducer = (
           : state.expandedSections,
       };
 
-    case 'CLEAR_SEARCH':
+    case "CLEAR_SEARCH":
       return {
         ...state,
         searchQuery: "",

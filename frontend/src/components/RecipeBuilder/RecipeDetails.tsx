@@ -72,12 +72,17 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
 
   // Use the recipe's stored batch size and unit - don't convert
   // Treat 0 as empty for new recipes
-  const displayBatchSize = recipe.batch_size && recipe.batch_size > 0 ? recipe.batch_size : undefined;
+  const displayBatchSize =
+    recipe.batch_size && recipe.batch_size > 0 ? recipe.batch_size : undefined;
   const batchSizeUnit =
     recipe.batch_size_unit || (unitSystem === "metric" ? "l" : "gal");
 
   // Determine if recipe was created in metric or imperial (use current unit system if no batch size set)
-  const recipeUnitSystem = displayBatchSize ? (batchSizeUnit === "l" ? "metric" : "imperial") : unitSystem;
+  const recipeUnitSystem = displayBatchSize
+    ? batchSizeUnit === "l"
+      ? "metric"
+      : "imperial"
+    : unitSystem;
 
   // Don't set default temperature values for new recipes
   const displayMashTemp = recipe.mash_temperature;
@@ -249,9 +254,12 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
 
           <div className="form-group">
             <label htmlFor="mash_temperature">
-              Mash Temperature 
+              Mash Temperature
               <span className="unit-indicator">
-                ({recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")})
+                (
+                {recipe.mash_temp_unit ||
+                  (recipeUnitSystem === "metric" ? "C" : "F")}
+                )
               </span>
             </label>
             <div className="input-group">
@@ -271,7 +279,10 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               />
               <select
                 name="mash_temp_unit"
-                value={recipe.mash_temp_unit || (recipeUnitSystem === "metric" ? "C" : "F")}
+                value={
+                  recipe.mash_temp_unit ||
+                  (recipeUnitSystem === "metric" ? "C" : "F")
+                }
                 onChange={handleChange}
                 className="input-addon"
                 disabled={saving}
@@ -281,8 +292,11 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               </select>
             </div>
             <small className="form-help-text">
-              Affects wort fermentability: Lower temps ({unitSystem === "metric" ? "64-67°C" : "148-152°F"}) = more fermentable (lower FG), 
-              Higher temps ({unitSystem === "metric" ? "68-70°C" : "154-158°F"}) = less fermentable (higher FG)
+              Affects wort fermentability: Lower temps (
+              {unitSystem === "metric" ? "64-67°C" : "148-152°F"}) = more
+              fermentable (lower FG), Higher temps (
+              {unitSystem === "metric" ? "68-70°C" : "154-158°F"}) = less
+              fermentable (higher FG)
             </small>
           </div>
         </div>

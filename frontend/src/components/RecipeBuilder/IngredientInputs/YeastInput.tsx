@@ -264,8 +264,12 @@ const YeastInput: React.FC<YeastInputProps> = ({
     if (yeastInfo.min_temperature && yeastInfo.max_temperature) {
       // Show temperature in user's preferred units
       if (unitSystem === "metric") {
-        const minC = Math.round(convertUnit(yeastInfo.min_temperature, "f", "c").value);
-        const maxC = Math.round(convertUnit(yeastInfo.max_temperature, "f", "c").value);
+        const minC = Math.round(
+          convertUnit(yeastInfo.min_temperature, "f", "c").value
+        );
+        const maxC = Math.round(
+          convertUnit(yeastInfo.max_temperature, "f", "c").value
+        );
         info.push(`${minC}-${maxC}°C`);
       } else {
         info.push(

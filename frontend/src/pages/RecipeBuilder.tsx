@@ -78,9 +78,7 @@ function RecipeBuilder(): React.ReactElement {
   /**
    * Handle BeerXML import - UPDATED to handle cache invalidation and avoid race conditions
    */
-  const handleBeerXMLImport = async (
-    importData: any
-  ): Promise<void> => {
+  const handleBeerXMLImport = async (importData: any): Promise<void> => {
     setBeerXMLState((prev) => ({ ...prev, importing: true }));
 
     try {

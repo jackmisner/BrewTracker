@@ -6,21 +6,19 @@
    ========================================================================== */
 
 /* Core Design System */
-@import './variables.css';
-@import './base.css';
+@import "./variables.css";
+@import "./base.css";
 
 /* Layout and Structure */
-@import './layout.css';
+@import "./layout.css";
 
 /* Component Styles */
-@import './components.css';
-@import './recipe-metrics.css';
-@import './ingredients.css';
-@import './beer-styles.css';
-@import './StyleRangeIndicator.css';
-@import './AISuggestions.css';
-
+@import "./components.css";
+@import "./recipe-metrics.css";
+@import "./ingredients.css";
+@import "./beer-styles.css";
+@import "./StyleRangeIndicator.css";
+@import "./AISuggestions.css";
 
 /* Utilities and Effects */
-@import './animations.css';
-
+@import "./animations.css";

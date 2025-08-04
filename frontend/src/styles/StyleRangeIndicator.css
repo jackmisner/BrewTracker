@@ -96,7 +96,7 @@
 }
 
 .range-bar-indicator::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -310,30 +310,30 @@
     align-items: flex-start;
     gap: 0.25rem;
   }
-  
+
   .range-values {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .target-range {
     font-size: 0.8rem;
   }
-  
+
   .range-status {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
     text-align: left;
   }
-  
+
   .out-of-bounds-arrow {
     position: static;
     transform: none;
     margin-top: 0.25rem;
     align-self: center;
   }
-  
+
   .style-specs-with-ranges .specs-header,
   .range-header {
     flex-direction: column;
@@ -346,28 +346,28 @@
   .style-range-indicator {
     padding: 0.75rem;
   }
-  
+
   .range-label {
     font-size: 0.8rem;
   }
-  
+
   .current-value {
     font-size: 0.9rem;
   }
-  
+
   .target-range {
     font-size: 0.75rem;
   }
-  
+
   .range-bar-track {
     height: 1.25rem;
   }
-  
+
   .range-bar-indicator {
     width: 0.625rem;
     height: 0.625rem;
   }
-  
+
   .range-status {
     padding: 0.375rem 0.5rem;
     font-size: 0.8rem;
@@ -379,24 +379,24 @@
   .style-range-indicator {
     border-width: 2px;
   }
-  
+
   .range-bar-track {
     border-width: 2px;
   }
-  
+
   .range-bar-indicator {
     border-width: 3px;
     box-shadow: 0 0 0 2px #ffffff;
   }
-  
+
   .range-status {
     border-width: 2px;
   }
-  
+
   .range-status.in-range {
     background-color: #e6ffe6;
   }
-  
+
   .range-status.out-of-range {
     background-color: #ffe6e6;
   }
@@ -409,7 +409,7 @@
   .range-status {
     transition: none;
   }
-  
+
   .style-range-indicator:hover .range-bar-indicator {
     transform: translateY(-50%);
   }
@@ -423,22 +423,22 @@
     break-inside: avoid;
     margin-bottom: 1rem;
   }
-  
+
   .range-bar-track {
     background-color: #f0f0f0;
     border: 1px solid #000;
   }
-  
+
   .range-bar-indicator {
     background-color: #000;
     border-color: #000;
   }
-  
+
   .range-status {
     border: 1px solid #000;
     background-color: #fff;
   }
-  
+
   .color-swatch {
     border: 1px solid #000;
   }
@@ -491,7 +491,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

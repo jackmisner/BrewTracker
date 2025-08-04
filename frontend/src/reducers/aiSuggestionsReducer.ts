@@ -63,31 +63,37 @@ export interface AISuggestionsState {
 // Action types for all AI suggestions operations
 export type AISuggestionsAction =
   // Analysis actions
-  | { type: 'START_ANALYSIS' }
-  | { type: 'ANALYSIS_SUCCESS'; payload: { suggestions: Suggestion[]; optimizationResult?: OptimizationResult } }
-  | { type: 'ANALYSIS_ERROR'; payload: string }
-  | { type: 'ANALYSIS_COMPLETE' }
+  | { type: "START_ANALYSIS" }
+  | {
+      type: "ANALYSIS_SUCCESS";
+      payload: {
+        suggestions: Suggestion[];
+        optimizationResult?: OptimizationResult;
+      };
+    }
+  | { type: "ANALYSIS_ERROR"; payload: string }
+  | { type: "ANALYSIS_COMPLETE" }
 
   // Suggestion management
-  | { type: 'SET_SUGGESTIONS'; payload: Suggestion[] }
-  | { type: 'CLEAR_SUGGESTIONS' }
-  | { type: 'ADD_APPLIED_SUGGESTION'; payload: string }
-  | { type: 'REMOVE_APPLIED_SUGGESTION'; payload: string }
-  | { type: 'RESET_APPLIED_SUGGESTIONS' }
+  | { type: "SET_SUGGESTIONS"; payload: Suggestion[] }
+  | { type: "CLEAR_SUGGESTIONS" }
+  | { type: "ADD_APPLIED_SUGGESTION"; payload: string }
+  | { type: "REMOVE_APPLIED_SUGGESTION"; payload: string }
+  | { type: "RESET_APPLIED_SUGGESTIONS" }
 
   // UI state actions
-  | { type: 'SET_EXPANDED'; payload: boolean }
-  | { type: 'TOGGLE_EXPANDED' }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'CLEAR_ERROR' }
+  | { type: "SET_EXPANDED"; payload: boolean }
+  | { type: "TOGGLE_EXPANDED" }
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "CLEAR_ERROR" }
 
   // Optimization result actions
-  | { type: 'SET_OPTIMIZATION_RESULT'; payload: OptimizationResult | null }
-  | { type: 'CLEAR_OPTIMIZATION_RESULT' }
+  | { type: "SET_OPTIMIZATION_RESULT"; payload: OptimizationResult | null }
+  | { type: "CLEAR_OPTIMIZATION_RESULT" }
 
   // Reset actions
-  | { type: 'RESET_STATE' }
-  | { type: 'RESET_ANALYSIS_STATE' };
+  | { type: "RESET_STATE" }
+  | { type: "RESET_ANALYSIS_STATE" };
 
 // Initial state factory function
 export const createInitialAISuggestionsState = (): AISuggestionsState => ({
@@ -112,7 +118,7 @@ export const aiSuggestionsReducer = (
 ): AISuggestionsState => {
   switch (action.type) {
     // Analysis actions
-    case 'START_ANALYSIS':
+    case "START_ANALYSIS":
       return {
         ...state,
         analyzing: true,
@@ -121,7 +127,7 @@ export const aiSuggestionsReducer = (
         optimizationResult: null,
       };
 
-    case 'ANALYSIS_SUCCESS':
+    case "ANALYSIS_SUCCESS":
       return {
         ...state,
         analyzing: false,
@@ -130,14 +136,14 @@ export const aiSuggestionsReducer = (
         optimizationResult: action.payload.optimizationResult || null,
       };
 
-    case 'ANALYSIS_ERROR':
+    case "ANALYSIS_ERROR":
       return {
         ...state,
         analyzing: false,
         error: action.payload,
       };
 
-    case 'ANALYSIS_COMPLETE':
+    case "ANALYSIS_COMPLETE":
       return {
         ...state,
         analyzing: false,
@@ -145,25 +151,28 @@ export const aiSuggestionsReducer = (
       };
 
     // Suggestion management
-    case 'SET_SUGGESTIONS':
+    case "SET_SUGGESTIONS":
       return {
         ...state,
         suggestions: action.payload,
       };
 
-    case 'CLEAR_SUGGESTIONS':
+    case "CLEAR_SUGGESTIONS":
       return {
         ...state,
         suggestions: [],
       };
 
-    case 'ADD_APPLIED_SUGGESTION':
+    case "ADD_APPLIED_SUGGESTION":
       return {
         ...state,
-        appliedSuggestions: new Set([...state.appliedSuggestions, action.payload]),
+        appliedSuggestions: new Set([
+          ...state.appliedSuggestions,
+          action.payload,
+        ]),
       };
 
-    case 'REMOVE_APPLIED_SUGGESTION':
+    case "REMOVE_APPLIED_SUGGESTION":
       const newAppliedSuggestions = new Set(state.appliedSuggestions);
       newAppliedSuggestions.delete(action.payload);
       return {
@@ -171,55 +180,55 @@ export const aiSuggestionsReducer = (
         appliedSuggestions: newAppliedSuggestions,
       };
 
-    case 'RESET_APPLIED_SUGGESTIONS':
+    case "RESET_APPLIED_SUGGESTIONS":
       return {
         ...state,
         appliedSuggestions: new Set<string>(),
       };
 
     // UI state actions
-    case 'SET_EXPANDED':
+    case "SET_EXPANDED":
       return {
         ...state,
         isExpanded: action.payload,
       };
 
-    case 'TOGGLE_EXPANDED':
+    case "TOGGLE_EXPANDED":
       return {
         ...state,
         isExpanded: !state.isExpanded,
       };
 
-    case 'SET_ERROR':
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
       };
 
-    case 'CLEAR_ERROR':
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: null,
       };
 
     // Optimization result actions
-    case 'SET_OPTIMIZATION_RESULT':
+    case "SET_OPTIMIZATION_RESULT":
       return {
         ...state,
         optimizationResult: action.payload,
       };
 
-    case 'CLEAR_OPTIMIZATION_RESULT':
+    case "CLEAR_OPTIMIZATION_RESULT":
       return {
         ...state,
         optimizationResult: null,
       };
 
     // Reset actions
-    case 'RESET_STATE':
+    case "RESET_STATE":
       return createInitialAISuggestionsState();
 
-    case 'RESET_ANALYSIS_STATE':
+    case "RESET_ANALYSIS_STATE":
       return {
         ...state,
         analyzing: false,

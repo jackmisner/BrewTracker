@@ -145,41 +145,40 @@ const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
   // Mash temperature adjustment helpers
   const getMashTemperatureAdjustment = () => {
     if (!recipe.mash_temperature) return null;
-    
+
     // Convert to common unit (Fahrenheit) for baseline comparison
     let mash_temp_f = recipe.mash_temperature;
     if (recipe.mash_temp_unit === "C") {
-      mash_temp_f = (recipe.mash_temperature * 9/5) + 32;
+      mash_temp_f = (recipe.mash_temperature * 9) / 5 + 32;
     }
-    
+
     const baseline_temp_f = 152.0; // Research-backed baseline
     const temp_tolerance = 0.5;
     const temp_deviation = mash_temp_f - baseline_temp_f;
-    
+
     // Only show adjustment if temperature differs from baseline
     if (Math.abs(temp_deviation) <= temp_tolerance) {
       return null;
     }
-    
+
     return {
       deviation: temp_deviation,
       isHigher: temp_deviation > 0,
       isLower: temp_deviation < 0,
       displayTemp: recipe.mash_temperature,
-      unit: recipe.mash_temp_unit || "F"
+      unit: recipe.mash_temp_unit || "F",
     };
   };
 
   const getTemperatureAdjustmentIcon = (adjustment: any) => {
     if (!adjustment) return null;
-    
+
     if (adjustment.isLower) {
       return "↓"; // Down arrow for lower FG (higher fermentability)
     } else {
       return "↑"; // Up arrow for higher FG (lower fermentability)
     }
   };
-
 
   return (
     <div
@@ -233,9 +232,11 @@ const RecipeMetrics: React.FC<RecipeMetricsProps> = ({
               const tempAdjustment = getMashTemperatureAdjustment();
               if (tempAdjustment) {
                 return (
-                    <span className="temperature-adjustment-indicator">
-                    {getTemperatureAdjustmentIcon(tempAdjustment) === "↑" ? "↓" : "↑"}
-                    </span>
+                  <span className="temperature-adjustment-indicator">
+                    {getTemperatureAdjustmentIcon(tempAdjustment) === "↑"
+                      ? "↓"
+                      : "↑"}
+                  </span>
                 );
               }
               return null;

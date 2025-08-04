@@ -180,13 +180,14 @@
 }
 
 .auth-welcome-section::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="4" height="4"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="4" height="4"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>')
+    repeat;
   opacity: 0.3;
 }
 
@@ -359,7 +360,7 @@
 }
 
 .auth-submit-button.loading::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -373,8 +374,12 @@
 }
 
 @keyframes auth-spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 /* Error messages - matches dashboard error styling */
@@ -615,40 +620,40 @@
     height: calc(100vh - 140px);
     padding: 0.5rem 0;
   }
-  
+
   .auth-split-layout {
     flex-direction: column;
     margin: 0 0.5rem;
     max-height: none;
   }
-  
+
   .auth-welcome-section {
     padding: 1.5rem 1.25rem;
     min-height: 180px;
   }
-  
+
   .auth-welcome-title {
     font-size: 1.5rem;
   }
-  
+
   .auth-welcome-subtitle {
     font-size: 0.95rem;
     margin-bottom: 1rem;
   }
-  
+
   .auth-feature-item {
     margin-bottom: 0.5rem;
     font-size: 0.85rem;
   }
-  
+
   .auth-form-section {
     padding: 1.5rem 1.25rem;
   }
-  
+
   .auth-title {
     font-size: 1.5rem;
   }
-  
+
   .auth-form {
     gap: 1rem;
   }
@@ -658,14 +663,13 @@
   .auth-wrapper {
     height: calc(100vh - 120px);
   }
-  
+
   .auth-welcome-section {
     padding: 1.25rem 1rem;
     min-height: 160px;
   }
-  
+
   .auth-form-section {
     padding: 1.25rem 1rem;
   }
 }
-

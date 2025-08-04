@@ -90,7 +90,6 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-
   const handleNavigateToSession = (sessionId: ID): void => {
     navigate(`/brew-sessions/${sessionId}`);
   };

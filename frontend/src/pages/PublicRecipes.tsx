@@ -322,8 +322,8 @@ const PublicRecipes: React.FC = () => {
                 key={recipe.recipe_id}
                 className="public-recipe-card-wrapper"
               >
-                <CompactRecipeCard 
-                  recipe={recipe} 
+                <CompactRecipeCard
+                  recipe={recipe}
                   showActionsInCard={true}
                   isPublicRecipe={true}
                   originalAuthor={recipe.username || "Unknown"}

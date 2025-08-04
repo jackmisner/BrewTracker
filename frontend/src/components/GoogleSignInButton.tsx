@@ -24,13 +24,16 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
 
-  const handleCredentialResponse = useCallback((response: any) => {
-    if (response.credential) {
-      onSuccess(response.credential);
-    } else {
-      onError("No credential received from Google");
-    }
-  }, [onSuccess, onError]);
+  const handleCredentialResponse = useCallback(
+    (response: any) => {
+      if (response.credential) {
+        onSuccess(response.credential);
+      } else {
+        onError("No credential received from Google");
+      }
+    },
+    [onSuccess, onError]
+  );
 
   useEffect(() => {
     // Load Google Identity Services script
@@ -85,7 +88,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     try {
       // Use the One Tap flow with FedCM enabled
       window.google.accounts.id.prompt();
-      
+
       // Set a timeout to handle cases where prompt doesn't trigger callback
       setTimeout(() => {
         setIsLoading(false);
@@ -109,7 +112,12 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           {isLoading ? (
             <div className="google-signin-spinner"></div>
           ) : (
-            <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <svg
+              className="google-icon"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+            >
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

@@ -73,7 +73,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
   // Fetch fermentation data
   const fetchFermentationData = useCallback(async (): Promise<void> => {
     try {
-      dispatch({ type: 'LOAD_START' });
+      dispatch({ type: "LOAD_START" });
 
       // Fetch fermentation data entries
       const fermentationData = await Services.brewSession.getFermentationData(
@@ -89,24 +89,27 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         // Don't fail the entire load for stats errors
       }
 
-      dispatch({ 
-        type: 'LOAD_SUCCESS', 
-        payload: { data: fermentationData, stats: statsData } 
+      dispatch({
+        type: "LOAD_SUCCESS",
+        payload: { data: fermentationData, stats: statsData },
       });
     } catch (err: any) {
       console.error("Error fetching fermentation data:", err);
 
       // Only set error for critical failures that prevent data loading
       if (err.response?.status === 404) {
-        dispatch({ type: 'LOAD_ERROR', payload: "Brew session not found." });
+        dispatch({ type: "LOAD_ERROR", payload: "Brew session not found." });
       } else if (err.response?.status === 403) {
-        dispatch({ type: 'LOAD_ERROR', payload: "Access denied to fermentation data." });
+        dispatch({
+          type: "LOAD_ERROR",
+          payload: "Access denied to fermentation data.",
+        });
       } else {
         // For other errors, try to continue with empty data but don't block UI
         console.warn("Non-critical error fetching fermentation data:", err);
-        dispatch({ 
-          type: 'LOAD_SUCCESS', 
-          payload: { data: [], stats: null } 
+        dispatch({
+          type: "LOAD_SUCCESS",
+          payload: { data: [], stats: null },
         });
       }
     }
@@ -125,7 +128,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       sessionData.actual_og &&
       sessionData.status === "fermenting"
     ) {
-      dispatch({ type: 'SET_INITIAL_OG', payload: sessionData.actual_og.toString() });
+      dispatch({
+        type: "SET_INITIAL_OG",
+        payload: sessionData.actual_og.toString(),
+      });
     }
   }, [state.fermentationData, sessionData, state.initialOGSet, state.loading]);
 
@@ -133,9 +139,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ): void => {
     const { name, value } = e.target;
-    dispatch({ 
-      type: 'UPDATE_FORM_FIELD', 
-      payload: { field: name as keyof FormData, value } 
+    dispatch({
+      type: "UPDATE_FORM_FIELD",
+      payload: { field: name as keyof FormData, value },
     });
   };
 
@@ -145,11 +151,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     e.preventDefault();
 
     try {
-      dispatch({ type: 'SUBMIT_START' });
+      dispatch({ type: "SUBMIT_START" });
 
       // Format data for submission
       const entry = {
-        gravity: state.formData.gravity ? parseFloat(state.formData.gravity) : undefined,
+        gravity: state.formData.gravity
+          ? parseFloat(state.formData.gravity)
+          : undefined,
         temperature: state.formData.temperature
           ? parseFloat(state.formData.temperature)
           : undefined,
@@ -186,10 +194,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
       // Refresh data
       await fetchFermentationData();
-      dispatch({ type: 'RESET_FORM' });
+      dispatch({ type: "RESET_FORM" });
     } catch (err: any) {
       console.error("Error adding fermentation entry:", err);
-      dispatch({ type: 'SUBMIT_ERROR', payload: "Failed to add fermentation entry" });
+      dispatch({
+        type: "SUBMIT_ERROR",
+        payload: "Failed to add fermentation entry",
+      });
     }
   };
 
@@ -200,7 +211,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         await fetchFermentationData(); // Refresh data
       } catch (err: any) {
         console.error("Error deleting fermentation entry:", err);
-        dispatch({ type: 'DELETE_ENTRY_ERROR', payload: "Failed to delete fermentation entry" });
+        dispatch({
+          type: "DELETE_ENTRY_ERROR",
+          payload: "Failed to delete fermentation entry",
+        });
       }
     }
   };
@@ -217,7 +231,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         .find((entry) => entry.gravity);
 
       if (!latestGravityEntry?.gravity) {
-        dispatch({ type: 'SET_ERROR', payload: "No gravity reading available to set as final gravity" });
+        dispatch({
+          type: "SET_ERROR",
+          payload: "No gravity reading available to set as final gravity",
+        });
         return;
       }
 
@@ -244,7 +261,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       await fetchFermentationData();
     } catch (err: any) {
       console.error("Error updating session to completed:", err);
-      dispatch({ type: 'SET_ERROR', payload: "Failed to mark session as completed" });
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Failed to mark session as completed",
+      });
     }
   };
 
@@ -255,31 +275,31 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     currentValue: any
   ): void => {
     let editValue = currentValue?.toString() || "";
-    
+
     // Special handling for date and time fields
     if (field === "entry_date" && currentValue) {
-      editValue = currentValue.split('T')[0];
+      editValue = currentValue.split("T")[0];
     } else if (field === "entry_time" && currentValue) {
       const date = new Date(currentValue);
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
       editValue = `${hours}:${minutes}`;
     }
-    
-    dispatch({ 
-      type: 'START_EDIT', 
-      payload: { 
-        entryIndex, 
-        field, 
-        value: editValue, 
-        originalValue: editValue 
-      } 
+
+    dispatch({
+      type: "START_EDIT",
+      payload: {
+        entryIndex,
+        field,
+        value: editValue,
+        originalValue: editValue,
+      },
     });
   };
 
   // Cancel editing
   const cancelEdit = (): void => {
-    dispatch({ type: 'CANCEL_EDIT' });
+    dispatch({ type: "CANCEL_EDIT" });
   };
 
   // Save the edited value
@@ -302,7 +322,10 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     // Validate the new value
     const validation = validateField(field, state.editing.value, unitSystem);
     if (!validation.isValid) {
-      dispatch({ type: 'VALIDATE_EDIT', payload: validation.error || "Invalid value" });
+      dispatch({
+        type: "VALIDATE_EDIT",
+        payload: validation.error || "Invalid value",
+      });
       return;
     }
 
@@ -312,15 +335,18 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     // Special handling for date and time fields
     if (field === "entry_date" || field === "entry_time") {
       const currentISOString = entry.entry_date;
-      
+
       if (field === "entry_date") {
-        const timeOnly = currentISOString.split('T')[1];
+        const timeOnly = currentISOString.split("T")[1];
         const newISOString = `${validation.value}T${timeOnly}`;
         updatedEntry.entry_date = newISOString;
       } else if (field === "entry_time") {
-        const [hours, minutes] = validation.value.split(':').map(Number);
-        const dateOnly = currentISOString.split('T')[0];
-        const newISOString = `${dateOnly}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00.000Z`;
+        const [hours, minutes] = validation.value.split(":").map(Number);
+        const dateOnly = currentISOString.split("T")[0];
+        const newISOString = `${dateOnly}T${String(hours).padStart(
+          2,
+          "0"
+        )}:${String(minutes).padStart(2, "0")}:00.000Z`;
         updatedEntry.entry_date = newISOString;
       }
     } else {
@@ -335,9 +361,12 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
         unitSystem
       );
       await fetchFermentationData(); // Refresh data
-      dispatch({ type: 'CANCEL_EDIT' });
+      dispatch({ type: "CANCEL_EDIT" });
     } catch (error) {
-      dispatch({ type: 'SAVE_EDIT_ERROR', payload: "Failed to update fermentation entry" });
+      dispatch({
+        type: "SAVE_EDIT_ERROR",
+        payload: "Failed to update fermentation entry",
+      });
     }
   };
 
@@ -369,8 +398,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     displayValue: React.ReactNode
   ): React.ReactNode => {
     const isEditingThisCell =
-      state.editing.entryIndex === entryIndex &&
-      state.editing.field === field;
+      state.editing.entryIndex === entryIndex && state.editing.field === field;
 
     if (!isEditingThisCell) {
       return (
@@ -391,7 +419,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           <textarea
             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={state.editing.value}
-            onChange={(e) => dispatch({ type: 'UPDATE_EDIT_VALUE', payload: e.target.value })}
+            onChange={(e) =>
+              dispatch({ type: "UPDATE_EDIT_VALUE", payload: e.target.value })
+            }
             onBlur={handleBlur}
             onKeyDown={handleKeyPress}
             className="edit-cell-input edit-cell-textarea"
@@ -408,7 +438,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     let inputType = "text";
     let step = "0.001";
     let placeholder = "";
-    
+
     if (["gravity", "temperature", "ph"].includes(field)) {
       inputType = "number";
     } else if (field === "entry_date") {
@@ -416,7 +446,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     } else if (field === "entry_time") {
       inputType = "time";
     }
-    
+
     if (field === "gravity") {
       step = "0.001";
       placeholder = "e.g. 1.050";
@@ -438,7 +468,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           ref={inputRef as React.RefObject<HTMLInputElement>}
           type={inputType}
           value={state.editing.value}
-          onChange={(e) => dispatch({ type: 'UPDATE_EDIT_VALUE', payload: e.target.value })}
+          onChange={(e) =>
+            dispatch({ type: "UPDATE_EDIT_VALUE", payload: e.target.value })
+          }
           onBlur={handleBlur}
           onKeyDown={handleKeyPress}
           step={inputType === "time" ? "60" : step}
@@ -687,7 +719,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       <div className="fermentation-header">
         <h2 className="fermentation-title">Fermentation Tracking</h2>
         <button
-          onClick={() => dispatch({ type: 'TOGGLE_FORM' })}
+          onClick={() => dispatch({ type: "TOGGLE_FORM" })}
           className="btn btn-primary"
         >
           {state.showForm ? "Cancel" : "Add Entry"}
@@ -860,30 +892,33 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
               {state.stats.ph?.data && state.stats.ph.data.length > 0 && (
                 <div className="fermentation-stat-card">
                   <h3 className="fermentation-stat-title">pH</h3>
-                  {state.stats.ph?.min !== null && state.stats.ph?.min !== undefined && (
-                    <div className="fermentation-stat-row">
-                      <span className="fermentation-stat-label">Min:</span>
-                      <span className="fermentation-stat-value">
-                        {state.stats.ph.min.toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                  {state.stats.ph?.max !== null && state.stats.ph?.max !== undefined && (
-                    <div className="fermentation-stat-row">
-                      <span className="fermentation-stat-label">Max:</span>
-                      <span className="fermentation-stat-value">
-                        {state.stats.ph.max.toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                  {state.stats.ph?.avg !== null && state.stats.ph?.avg !== undefined && (
-                    <div className="fermentation-stat-row">
-                      <span className="fermentation-stat-label">Avg:</span>
-                      <span className="fermentation-stat-value">
-                        {state.stats.ph.avg.toFixed(1)}
-                      </span>
-                    </div>
-                  )}
+                  {state.stats.ph?.min !== null &&
+                    state.stats.ph?.min !== undefined && (
+                      <div className="fermentation-stat-row">
+                        <span className="fermentation-stat-label">Min:</span>
+                        <span className="fermentation-stat-value">
+                          {state.stats.ph.min.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                  {state.stats.ph?.max !== null &&
+                    state.stats.ph?.max !== undefined && (
+                      <div className="fermentation-stat-row">
+                        <span className="fermentation-stat-label">Max:</span>
+                        <span className="fermentation-stat-value">
+                          {state.stats.ph.max.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                  {state.stats.ph?.avg !== null &&
+                    state.stats.ph?.avg !== undefined && (
+                      <div className="fermentation-stat-row">
+                        <span className="fermentation-stat-label">Avg:</span>
+                        <span className="fermentation-stat-value">
+                          {state.stats.ph.avg.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
                 </div>
               )}
 
@@ -977,10 +1012,13 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                         Current Gravity
                       </span>
                       <div className="fermentation-comparison-value">
-                        {state.fermentationData[state.fermentationData.length - 1].gravity
+                        {state.fermentationData[
+                          state.fermentationData.length - 1
+                        ].gravity
                           ? formatGravity(
-                              state.fermentationData[state.fermentationData.length - 1]
-                                .gravity!
+                              state.fermentationData[
+                                state.fermentationData.length - 1
+                              ].gravity!
                             )
                           : "-"}
                       </div>
@@ -1222,8 +1260,9 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
             )}
             <div className="editing-help" style={{ marginBottom: "1rem" }}>
               <small className="help-text">
-                💡 <strong>Click to edit:</strong> Date, Time, Gravity, Temperature, pH, and Notes are editable. 
-                Press Enter to save, Escape to cancel.
+                💡 <strong>Click to edit:</strong> Date, Time, Gravity,
+                Temperature, pH, and Notes are editable. Press Enter to save,
+                Escape to cancel.
               </small>
             </div>
             {state.fermentationData.length === 0 ? (
@@ -1397,7 +1436,7 @@ const styles = `
 `;
 
 // Inject styles
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = styles;
   document.head.appendChild(styleSheet);

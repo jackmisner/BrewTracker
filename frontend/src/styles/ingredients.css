@@ -87,7 +87,9 @@
 
 /* Specific grid layouts for each ingredient type */
 .ingredient-inputs--grain {
-  grid-template-columns: var(--amount-container-width) 1fr 110px var(--button-width);
+  grid-template-columns: var(--amount-container-width) 1fr 110px var(
+      --button-width
+    );
 }
 
 .ingredient-inputs--grain .amount-input {
@@ -101,7 +103,9 @@
 }
 
 .ingredient-inputs--hop {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 225px var(--button-width);
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 100px 225px var(
+      --button-width
+    );
 }
 
 .ingredient-inputs--yeast {
@@ -109,7 +113,9 @@
 }
 
 .ingredient-inputs--adjunct {
-  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 120px 120px var(--button-width);
+  grid-template-columns: var(--amount-container-width) minmax(200px, 1fr) 120px 120px var(
+      --button-width
+    );
 }
 
 .ingredient-inputs--adjunct .ingredient-selector {
@@ -147,7 +153,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
 }
@@ -216,7 +223,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
 }
@@ -266,7 +274,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
 }
@@ -306,7 +315,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
   flex-shrink: 0;
   height: var(--input-height);
   box-sizing: border-box;
@@ -391,7 +401,8 @@
   font-size: 0.875rem;
   line-height: 1.25;
   background-color: white;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
   height: var(--input-height);
   box-sizing: border-box;
 }
@@ -417,7 +428,8 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-normal), transform var(--transition-fast);
+  transition: background-color var(--transition-normal),
+    transform var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,7 +615,7 @@
 }
 
 .edit-error::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -0.25rem;
   left: 0.5rem;
@@ -725,7 +737,7 @@
 }
 
 .ingredients-table.updating::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -737,7 +749,7 @@
 }
 
 .ingredients-table.updating::after {
-  content: 'Updating...';
+  content: "Updating...";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -843,7 +855,7 @@
     padding: 0.2rem 0.4rem;
     min-width: 50px;
   }
-  
+
   .edit-error {
     font-size: 0.7rem;
     position: relative;
@@ -853,17 +865,17 @@
     margin-left: 0;
     display: block;
   }
-  
+
   .edit-error::before {
     display: none;
   }
-  
+
   .ingredient-details-container {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .ingredient-details-container .detail-item {
     flex-direction: column;
     align-items: flex-start;
@@ -910,7 +922,7 @@
   .adjunct-time-input {
     border-width: 2px;
   }
-  
+
   .ingredient-add-button {
     border: 2px solid white;
   }
@@ -919,11 +931,11 @@
     outline: 2px solid var(--color-amber-600);
     background-color: var(--color-amber-200);
   }
-  
+
   .edit-cell-input {
     border-width: 3px;
   }
-  
+
   .edit-error {
     border: 2px solid white;
   }

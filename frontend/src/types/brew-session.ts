@@ -65,7 +65,7 @@ export interface BrewSession extends BaseEntity {
 
   // Fermentation tracking data
   fermentation_data: FermentationEntry[];
-  
+
   // Dry hop additions tracking
   dry_hop_additions: DryHopAddition[];
 

@@ -1,11 +1,11 @@
 /**
  * FeatureRequest component renders a form for users to submit feature requests for the BrewTracker application.
- * 
+ *
  * - Collects details such as feature title, description, use case, proposed solution, alternatives, browser info, priority, and category.
  * - On submission, opens a pre-filled GitHub issue creation page in a new tab with the provided information.
  * - Displays submission status messages and resets the form after submission.
  * - Requires a GitHub account to complete the feature request submission.
- * 
+ *
  * @component
  * @returns {JSX.Element} The rendered feature request form and related UI.
  */
@@ -38,10 +38,12 @@ const FeatureRequest: React.FC = () => {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -50,11 +52,14 @@ const FeatureRequest: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // Create GitHub issue URL with pre-filled data
-      const issueTitle = encodeURIComponent(`Feature Request: ${formData.title}`);
-      const issueBody = encodeURIComponent(`
+      const issueTitle = encodeURIComponent(
+        `Feature Request: ${formData.title}`
+      );
+      const issueBody = encodeURIComponent(
+        `
 ## Feature Description
 ${formData.description}
 
@@ -74,15 +79,18 @@ ${formData.alternatives || "No alternatives considered"}
 
 ## Submission Details
 Requested via BrewTracker Feature Request Form
-      `.trim());
+      `.trim()
+      );
 
       const githubUrl = `https://github.com/jackmisner/BrewTracker/issues/new?title=${issueTitle}&body=${issueBody}&labels=feature-request,${formData.priority}-priority,${formData.category}`;
-      
+
       // Open GitHub issue creation page
-      window.open(githubUrl, '_blank');
-      
-      setSubmitMessage("Redirecting to GitHub to create your feature request...");
-      
+      window.open(githubUrl, "_blank");
+
+      setSubmitMessage(
+        "Redirecting to GitHub to create your feature request..."
+      );
+
       // Reset form after a delay
       setTimeout(() => {
         setFormData({
@@ -97,7 +105,6 @@ Requested via BrewTracker Feature Request Form
         });
         setSubmitMessage("");
       }, 3000);
-      
     } catch (error) {
       setSubmitMessage("Error creating feature request. Please try again.");
     } finally {
@@ -110,20 +117,27 @@ Requested via BrewTracker Feature Request Form
       <div className="page-header">
         <h1 className="page-title">Request a Feature</h1>
         <p className="page-subtitle">
-          Help us improve BrewTracker by suggesting new features and enhancements.
+          Help us improve BrewTracker by suggesting new features and
+          enhancements.
         </p>
       </div>
-      
+
       <div className="content-container">
         <div className="card">
           <div className="card-title">Feature Request Form</div>
-          
+
           {submitMessage && (
-            <div className={`alert ${submitMessage.includes('Error') ? 'alert-error' : 'alert-success'}`}>
+            <div
+              className={`alert ${
+                submitMessage.includes("Error")
+                  ? "alert-error"
+                  : "alert-success"
+              }`}
+            >
               {submitMessage}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="feature-request-form">
             <div className="form-group">
               <label htmlFor="title" className="form-label">
@@ -152,10 +166,16 @@ Requested via BrewTracker Feature Request Form
                 onChange={handleInputChange}
                 className="form-control"
               >
-                <option value="functionality">Functionality - New brewing features</option>
+                <option value="functionality">
+                  Functionality - New brewing features
+                </option>
                 <option value="ui-ux">UI/UX - Interface improvements</option>
-                <option value="performance">Performance - Speed and efficiency</option>
-                <option value="integration">Integration - External tools/formats</option>
+                <option value="performance">
+                  Performance - Speed and efficiency
+                </option>
+                <option value="integration">
+                  Integration - External tools/formats
+                </option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -173,7 +193,9 @@ Requested via BrewTracker Feature Request Form
               >
                 <option value="low">Low - Nice to have</option>
                 <option value="medium">Medium - Would improve workflow</option>
-                <option value="high">High - Important for brewing process</option>
+                <option value="high">
+                  High - Important for brewing process
+                </option>
               </select>
             </div>
 
@@ -254,7 +276,8 @@ Requested via BrewTracker Feature Request Form
                 readOnly
               />
               <small className="form-help">
-                This information helps us understand your environment for feature development.
+                This information helps us understand your environment for
+                feature development.
               </small>
             </div>
 
@@ -264,15 +287,18 @@ Requested via BrewTracker Feature Request Form
                 className="primary-button"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Creating Request..." : "Submit Feature Request"}
+                {isSubmitting
+                  ? "Creating Request..."
+                  : "Submit Feature Request"}
               </button>
             </div>
           </form>
-          
+
           <div className="form-note">
             <p>
-              <strong>Note:</strong> This form will redirect you to GitHub to create 
-              a feature request. You'll need a GitHub account to submit the request.
+              <strong>Note:</strong> This form will redirect you to GitHub to
+              create a feature request. You'll need a GitHub account to submit
+              the request.
             </p>
           </div>
         </div>

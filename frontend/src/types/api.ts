@@ -64,8 +64,8 @@ export interface VerifyEmailRequest {
 
 export interface VerifyEmailResponse {
   message: string;
-  access_token?: string;  // Optional for auto-login
-  user?: any;            // Optional user data for auto-login
+  access_token?: string; // Optional for auto-login
+  user?: any; // Optional user data for auto-login
 }
 
 export interface ResendVerificationResponse {

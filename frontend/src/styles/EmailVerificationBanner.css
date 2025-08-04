@@ -142,19 +142,19 @@
     gap: 12px;
     padding: 16px;
   }
-  
+
   .verification-icon {
     align-self: center;
   }
-  
+
   .verification-text {
     text-align: center;
   }
-  
+
   .verification-actions {
     align-self: center;
   }
-  
+
   .resend-button {
     min-width: 140px;
   }
@@ -166,19 +166,19 @@
     background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
     border-color: #92400e;
   }
-  
+
   .verification-text h4 {
     color: #fbbf24;
   }
-  
+
   .verification-text p {
     color: #fcd34d;
   }
-  
+
   .resend-button {
     background: #92400e;
   }
-  
+
   .resend-button:hover:not(:disabled) {
     background: #78350f;
   }

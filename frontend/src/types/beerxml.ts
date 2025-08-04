@@ -2,7 +2,13 @@
  * TypeScript interfaces for BeerXML import/export functionality
  */
 
-import { Recipe, Ingredient, IngredientFormData, IngredientType, RecipeIngredient } from './recipe';
+import {
+  Recipe,
+  Ingredient,
+  IngredientFormData,
+  IngredientType,
+  RecipeIngredient,
+} from "./recipe";
 
 // Parsed BeerXML Recipe Data
 export interface ParsedBeerXMLRecipe {
@@ -167,7 +173,7 @@ export interface BeerXMLMetadata {
 export interface IngredientMapping {
   originalName: string;
   mappedTo: Ingredient | null;
-  action: 'use_existing' | 'create_new' | 'skip';
+  action: "use_existing" | "create_new" | "skip";
   confidence: number;
   reasons?: string[];
 }

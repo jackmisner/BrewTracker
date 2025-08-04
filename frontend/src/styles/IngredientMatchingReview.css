@@ -598,15 +598,15 @@
   .ingredient-card {
     border-width: 2px;
   }
-  
+
   .match-item {
     border-width: 2px;
   }
-  
+
   .type-badge {
     border: 1px solid currentColor;
   }
-  
+
   .confidence-dot {
     border: 1px solid currentColor;
   }
@@ -636,7 +636,7 @@
 }
 
 .matches-list.loading::after {
-  content: 'Loading matches...';
+  content: "Loading matches...";
   display: block;
   text-align: center;
   padding: 2rem;
@@ -678,7 +678,7 @@
 }
 
 .match-item.processing::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: 1rem;

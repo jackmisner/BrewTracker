@@ -28,7 +28,6 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
   refreshTrigger = null,
   isDashboardVariant = false,
 }) => {
-
   return (
     <div className="compact-recipe-card">
       <div className="compact-recipe-header">
@@ -56,7 +55,11 @@ const CompactRecipeCard: React.FC<CompactRecipeCardProps> = ({
       </div>
 
       {/* Compact Metrics */}
-      <div className={`compact-recipe-metrics ${isDashboardVariant ? 'dashboard-variant' : ''}`}>
+      <div
+        className={`compact-recipe-metrics ${
+          isDashboardVariant ? "dashboard-variant" : ""
+        }`}
+      >
         <div className="compact-metric">
           <div className="compact-metric-value">
             {formatGravity(recipe.estimated_og)}

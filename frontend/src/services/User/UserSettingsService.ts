@@ -202,9 +202,13 @@ class UserSettingsService {
         settingsData.default_batch_size > 100)
     ) {
       // Use unit-aware validation message
-      const unit = settingsData.preferred_units === "metric" ? "liters" : "gallons";
-      const maxValue = settingsData.preferred_units === "metric" ? "378" : "100";
-      errors.push(`Default batch size must be between 0 and ${maxValue} ${unit}`);
+      const unit =
+        settingsData.preferred_units === "metric" ? "liters" : "gallons";
+      const maxValue =
+        settingsData.preferred_units === "metric" ? "378" : "100";
+      errors.push(
+        `Default batch size must be between 0 and ${maxValue} ${unit}`
+      );
     }
 
     if (
@@ -281,7 +285,9 @@ class UserSettingsService {
     }
 
     if (!/[~!@#$%^&*()_\-+={}|\\:;"'<,>.?/]/.test(password)) {
-      errors.push("Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)");
+      errors.push(
+        "Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)"
+      );
     }
 
     return {
@@ -306,7 +312,9 @@ class UserSettingsService {
 
     // Validate new password strength
     if (passwordData.new_password) {
-      const passwordValidation = this.validatePasswordStrength(passwordData.new_password);
+      const passwordValidation = this.validatePasswordStrength(
+        passwordData.new_password
+      );
       if (!passwordValidation.isValid) {
         errors.push(...passwordValidation.errors);
       }

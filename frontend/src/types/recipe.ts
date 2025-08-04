@@ -16,7 +16,13 @@ export type HopUse =
   | "whirlpool"
   | "dry_hop"
   | "hop_back";
-export type YeastType = "lager" | "belgian_ale" | "english_ale" | "american_ale" | "wheat" | "wild";
+export type YeastType =
+  | "lager"
+  | "belgian_ale"
+  | "english_ale"
+  | "american_ale"
+  | "wheat"
+  | "wild";
 export type IngredientUnit =
   | "oz"
   | "lb"
@@ -152,9 +158,9 @@ export interface Recipe extends BaseEntity {
   boil_time?: number; // in minutes
   efficiency?: number; // percentage
   notes?: string;
-  
+
   // Mash temperature fields - affects wort fermentability and FG calculations
-  mash_temperature?: number; // Mash temperature 
+  mash_temperature?: number; // Mash temperature
   mash_temp_unit?: "F" | "C"; // Temperature unit
   mash_time?: number; // Mash duration in minutes (for future use)
 
