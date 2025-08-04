@@ -94,6 +94,15 @@ BrewTracker/
 │   │   ├── hooks/                                        # Custom React hooks for state management and business logic
 │   │   │   ├── index.ts                                  # Central export for all custom hooks
 │   │   │   └── useRecipeBuilder.ts                       # Recipe builder state management and validation logic
+│   │   ├── reducers/                                     # Redux-style reducers for complex state management
+│   │   │   ├── aiSuggestionsReducer.ts                   # AI recipe suggestions state management with optimization tracking
+│   │   │   ├── beerXMLReducer.ts                         # BeerXML import/export workflow state management
+│   │   │   ├── brewSessionReducer.ts                     # Brew session tracking and fermentation state management
+│   │   │   ├── fermentationReducer.ts                    # Detailed fermentation data and progress tracking
+│   │   │   ├── ingredientManagerReducer.ts               # Ingredient database management and search state
+│   │   │   ├── recipeBuilderReducer.ts                   # Complex recipe creation and editing state management
+│   │   │   ├── userSettingsReducer.ts                    # User preferences and account settings state management
+│   │   │   └── index.ts                                  # Central export for all reducers
 │   │   ├── images/                                       # Static image assets (logos, icons, placeholders)
 │   │   ├── pages/
 │   │   │   ├── About.tsx                                 # An "About Me" page so you can learn all about me
