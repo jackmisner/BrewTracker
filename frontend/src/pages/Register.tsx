@@ -61,7 +61,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
         return;
       }
 
-      setUsernameValidation((prev) => ({ ...prev, isValidating: true }));
+      setUsernameValidation(prev => ({ ...prev, isValidating: true }));
 
       try {
         const response = await ApiService.auth.validateUsername({ username });
@@ -74,7 +74,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
         });
 
         // Update field errors based on validation result
-        setFieldErrors((prevErrors) => {
+        setFieldErrors(prevErrors => {
           const errors = { ...prevErrors };
           if (!valid && error) {
             errors.username = error;
@@ -176,7 +176,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
+    setFormData(prevData => ({
       ...prevData,
       [name]: value,
     }));
@@ -219,7 +219,7 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
     setError("");
 
     // Validate all fields
-    Object.keys(formData).forEach((key) => {
+    Object.keys(formData).forEach(key => {
       validateField(
         key as keyof RegisterFormData,
         formData[key as keyof RegisterFormData]
@@ -426,11 +426,11 @@ const Register: React.FC<RegisterProps> = ({ onLogin }) => {
                                   type="button"
                                   className="auth-suggestion-button"
                                   onClick={() => {
-                                    setFormData((prev) => ({
+                                    setFormData(prev => ({
                                       ...prev,
                                       username: suggestion,
                                     }));
-                                    setFieldErrors((prev) => ({
+                                    setFieldErrors(prev => ({
                                       ...prev,
                                       username: undefined,
                                     }));

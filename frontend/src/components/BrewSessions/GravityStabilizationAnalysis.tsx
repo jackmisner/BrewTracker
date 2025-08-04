@@ -22,9 +22,8 @@ const GravityStabilizationAnalysisComponent: React.FC<
       setLoading(true);
       setError("");
 
-      const result = await Services.brewSession.analyzeFermentationCompletion(
-        sessionId
-      );
+      const result =
+        await Services.brewSession.analyzeFermentationCompletion(sessionId);
       setAnalysis(result);
     } catch (err: any) {
       console.error("Error fetching gravity stabilization analysis:", err);

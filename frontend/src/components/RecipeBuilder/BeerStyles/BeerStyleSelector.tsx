@@ -125,7 +125,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
           // Find currently selected style
           if (value) {
             const currentStyle = allStyles.find(
-              (style) =>
+              style =>
                 style.name.toLowerCase() === value.toLowerCase() ||
                 style.display_name.toLowerCase().includes(value.toLowerCase())
             );
@@ -147,9 +147,8 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     const loadSuggestions = async (): Promise<void> => {
       if (showSuggestions && metrics && !selectedStyle) {
         try {
-          const suggestionsResult = await Services.beerStyle.findMatchingStyles(
-            metrics
-          );
+          const suggestionsResult =
+            await Services.beerStyle.findMatchingStyles(metrics);
           setSuggestions(suggestionsResult.slice(0, 5));
         } catch (error: any) {
           console.error("Error loading style suggestions:", error);
@@ -185,11 +184,11 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     const searchTerms = searchTerm
       .toLowerCase()
       .split(/\s+/)
-      .filter((term) => term.length > 0);
+      .filter(term => term.length > 0);
 
     let highlightedText = text;
 
-    searchTerms.forEach((term) => {
+    searchTerms.forEach(term => {
       const regex = new RegExp(
         `(\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
         "gi"
@@ -222,7 +221,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
       onChange("");
     } else {
       const directMatch = styles.find(
-        (style) => style.name.toLowerCase() === newValue.toLowerCase()
+        style => style.name.toLowerCase() === newValue.toLowerCase()
       );
       if (directMatch) {
         setSelectedStyle(directMatch);
@@ -252,14 +251,14 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex((prev) =>
+        setHighlightedIndex(prev =>
           prev < filteredStyles.length - 1 ? prev + 1 : 0
         );
         break;
 
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) =>
+        setHighlightedIndex(prev =>
           prev > 0 ? prev - 1 : filteredStyles.length - 1
         );
         break;
@@ -385,7 +384,7 @@ const BeerStyleSelector: React.FC<BeerStyleSelectorProps> = ({
             {filteredStyles.map((style, index) => (
               <div
                 key={style.style_guide_id || style.style_id}
-                ref={(el) => {
+                ref={el => {
                   optionRefs.current[index] = el;
                 }}
                 className={`style-option ${

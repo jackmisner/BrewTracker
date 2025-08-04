@@ -304,7 +304,9 @@
   font-size: 1rem;
   background-color: white;
   color: #758191;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   box-sizing: border-box; /* Ensure padding doesn't affect total width */
 }
 
@@ -335,7 +337,9 @@
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   margin-top: 0.5rem;
 }
 
@@ -600,7 +604,9 @@
   font-size: 0.75rem;
   color: #374151; /* gray-700 */
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .auth-suggestion-button:hover {

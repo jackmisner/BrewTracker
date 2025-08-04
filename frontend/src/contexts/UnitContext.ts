@@ -387,7 +387,7 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
   ): RecipeIngredient[] => {
     const scalingFactor = toBatchSize / fromBatchSize;
 
-    return ingredients.map((ingredient) => {
+    return ingredients.map(ingredient => {
       let convertedAmount =
         parseFloat(ingredient.amount.toString()) * scalingFactor;
       let convertedUnit: IngredientUnit = ingredient.unit;

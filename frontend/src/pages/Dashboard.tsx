@@ -56,14 +56,14 @@ const Dashboard: React.FC = () => {
         // Calculate dashboard stats
         const totalRecipes = recipesResponse.data.recipes.length;
         const activeFerments = sessionsResponse.data.brew_sessions.filter(
-          (s) => s.status === "fermenting"
+          s => s.status === "fermenting"
         ).length;
         const completedBatches = sessionsResponse.data.brew_sessions.filter(
-          (s) => s.status === "completed"
+          s => s.status === "completed"
         ).length;
 
         const ratedSessions = sessionsResponse.data.brew_sessions.filter(
-          (s) => s.batch_rating && s.batch_rating > 0
+          s => s.batch_rating && s.batch_rating > 0
         );
         const avgRating =
           ratedSessions.length > 0
@@ -170,17 +170,17 @@ const Dashboard: React.FC = () => {
 
           <div className="cards-container">
             {recentRecipes.length > 0 ? (
-              recentRecipes.map((recipe) => (
+              recentRecipes.map(recipe => (
                 <CompactRecipeCard
                   key={recipe.recipe_id}
                   recipe={recipe}
                   showActionsInCard={true}
                   isPublicRecipe={false}
                   isDashboardVariant={true}
-                  onDelete={(recipeId) => {
+                  onDelete={recipeId => {
                     // Handle recipe deletion - refresh the dashboard data
-                    setRecentRecipes((prev) =>
-                      prev.filter((r) => r.recipe_id !== recipeId)
+                    setRecentRecipes(prev =>
+                      prev.filter(r => r.recipe_id !== recipeId)
                     );
                   }}
                   refreshTrigger={() => {
@@ -217,12 +217,12 @@ const Dashboard: React.FC = () => {
 
           <div className="cards-container">
             {recentSessions.length > 0 ? (
-              recentSessions.map((session) => (
+              recentSessions.map(session => (
                 <CompactBrewSessionCard
                   key={session.session_id}
                   session={session}
-                  onView={(sessionId) => handleNavigateToSession(sessionId)}
-                  onEdit={(sessionId) => handleNavigateToEditSession(sessionId)}
+                  onView={sessionId => handleNavigateToSession(sessionId)}
+                  onEdit={sessionId => handleNavigateToEditSession(sessionId)}
                 />
               ))
             ) : (

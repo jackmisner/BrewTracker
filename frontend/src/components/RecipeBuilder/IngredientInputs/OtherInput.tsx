@@ -107,14 +107,14 @@ const OtherInput: React.FC<OtherInputProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ): void => {
     const { name, value } = e.target;
-    setOtherForm((prev) => ({
+    setOtherForm(prev => ({
       ...prev,
       [name]: value,
     }));
 
     // Clear related errors when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [name]: null,
       }));
@@ -140,7 +140,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
 
   const handleOtherSelect = (selectedOther: Ingredient | null): void => {
     if (selectedOther) {
-      setOtherForm((prev) => ({
+      setOtherForm(prev => ({
         ...prev,
         ingredient_id: selectedOther.ingredient_id,
         amount: prev.amount || getDefaultAmount(), // Set default amount if empty
@@ -149,14 +149,14 @@ const OtherInput: React.FC<OtherInputProps> = ({
 
       // Clear ingredient selection error
       if (errors.ingredient_id) {
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
           ingredient_id: null,
         }));
       }
     } else {
       // Clear selection
-      setOtherForm((prev) => ({
+      setOtherForm(prev => ({
         ...prev,
         ingredient_id: "",
         amount: "", // Clear amount when no ingredient selected
@@ -242,7 +242,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
       });
 
       setErrors({});
-      setResetTrigger((prev) => prev + 1);
+      setResetTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Failed to add other ingredient:", error);
       setErrors({ submit: "Failed to add ingredient. Please try again." });
@@ -403,7 +403,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               disabled={disabled}
               data-testid="other-unit-select"
             >
-              {getAvailableUnits().map((unit) => (
+              {getAvailableUnits().map(unit => (
                 <option
                   key={unit.value}
                   value={unit.value}
@@ -442,7 +442,7 @@ const OtherInput: React.FC<OtherInputProps> = ({
               className="adjunct-use-select"
               disabled={disabled}
             >
-              {getUsageOptions().map((option) => (
+              {getUsageOptions().map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

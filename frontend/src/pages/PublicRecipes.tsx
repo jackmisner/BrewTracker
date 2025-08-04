@@ -167,7 +167,7 @@ const PublicRecipes: React.FC = () => {
     // Apply client-side search filter if there's a search term
     if (searchQuery && searchQuery.length >= 2 && fuse) {
       const results = fuse.search(searchQuery);
-      recipesToProcess = results.map((result) => result.item);
+      recipesToProcess = results.map(result => result.item);
     }
 
     // Apply sorting
@@ -190,7 +190,7 @@ const PublicRecipes: React.FC = () => {
                 type="text"
                 placeholder="Search recipes by name, style, description..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="search-input"
               />
               <div className="search-icon-container">
@@ -240,7 +240,7 @@ const PublicRecipes: React.FC = () => {
             <select
               id="sort-select"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={e => setSortBy(e.target.value)}
               className="sort-select"
             >
               <option value="updated_at_desc">Last Updated (Newest)</option>
@@ -267,7 +267,7 @@ const PublicRecipes: React.FC = () => {
             <select
               id="style-filter"
               value={styleFilter}
-              onChange={(e) => setStyleFilter(e.target.value)}
+              onChange={e => setStyleFilter(e.target.value)}
               className="sort-select"
             >
               <option value="">All Styles</option>
@@ -317,7 +317,7 @@ const PublicRecipes: React.FC = () => {
       {!loading && !error && filteredAndSortedRecipes.length > 0 && (
         <>
           <div className="recipes-grid">
-            {filteredAndSortedRecipes.map((recipe) => (
+            {filteredAndSortedRecipes.map(recipe => (
               <div
                 key={recipe.recipe_id}
                 className="public-recipe-card-wrapper"

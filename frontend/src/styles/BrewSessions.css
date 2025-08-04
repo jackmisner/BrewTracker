@@ -36,7 +36,9 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-radius: 0.25rem;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   background-color: white;
 }
 
@@ -267,7 +269,9 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-radius: 0.25rem;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .brew-session-form-control:focus {
@@ -293,7 +297,9 @@
   border-radius: 0.25rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
   text-align: center;
   font-size: 0.875rem;
 }
@@ -388,7 +394,9 @@
   color: #6b7280; /* gray-500 */
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .brew-session-tab:hover {
@@ -535,7 +543,9 @@
   border-radius: 0.25rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
   text-align: center;
   font-size: 0.875rem;
 }
@@ -645,7 +655,9 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-radius: 0.25rem;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .fermentation-input:focus {
@@ -659,7 +671,9 @@
   border: 1px solid #d1d5db; /* gray-300 */
   border-radius: 0.25rem;
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   min-height: 80px;
   resize: vertical;
 }
@@ -683,7 +697,9 @@
   border-radius: 0.25rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .fermentation-submit-button:hover:not(:disabled) {

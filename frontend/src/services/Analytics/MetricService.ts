@@ -109,9 +109,8 @@ class MetricService {
         mash_temp_unit: calculationData.mash_temp_unit,
       };
 
-      const response = await ApiService.recipes.calculateMetricsPreview(
-        requestPayload
-      );
+      const response =
+        await ApiService.recipes.calculateMetricsPreview(requestPayload);
       const metrics = this.processMetricsResponse(
         response.data.data || response.data
       );
@@ -164,7 +163,7 @@ class MetricService {
       return [];
     }
 
-    return ingredients.map((ing) => ({
+    return ingredients.map(ing => ({
       ...ing,
       ingredient_id: ing.ingredient_id,
       name: ing.name || "",

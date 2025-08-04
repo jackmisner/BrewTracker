@@ -104,7 +104,9 @@
   border-radius: 0.375rem; /* Matches UserSettings.css */
   font-size: 1rem;
   background-color: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -287,7 +289,9 @@
   border-radius: 0.375rem;
   font-size: 1rem;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   background-color: white;
 }
 
@@ -384,7 +388,9 @@
   border: 1px solid #e5e7eb; /* gray-200 */
   border-radius: 0.75rem; /* Matches card border-radius */
   background: white;
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background-color 0.3s ease;
   border-left: 4px solid #d97706; /* amber-600 accent */
 }

@@ -102,9 +102,8 @@ class BeerStyleService {
    */
   async getStyleSuggestions(recipeId: ID): Promise<StyleSuggestion[]> {
     try {
-      const response = await ApiService.beerStyles.getStyleSuggestions(
-        recipeId
-      );
+      const response =
+        await ApiService.beerStyles.getStyleSuggestions(recipeId);
       return (response.data as any).suggestions || [];
     } catch (error) {
       console.error("Error getting style suggestions:", error);
@@ -117,9 +116,8 @@ class BeerStyleService {
    */
   async getRecipeStyleAnalysis(recipeId: ID): Promise<StyleAnalysis | null> {
     try {
-      const response = await ApiService.beerStyles.getRecipeStyleAnalysis(
-        recipeId
-      );
+      const response =
+        await ApiService.beerStyles.getRecipeStyleAnalysis(recipeId);
       return (response.data as any).analysis;
     } catch (error) {
       console.error("Error getting style analysis:", error);
@@ -135,9 +133,9 @@ class BeerStyleService {
       const categorizedStyles = await this.fetchBeerStyles();
       const allStyles: EnhancedBeerStyle[] = [];
 
-      Object.values(categorizedStyles).forEach((category) => {
+      Object.values(categorizedStyles).forEach(category => {
         if (category.styles && Array.isArray(category.styles)) {
-          category.styles.forEach((style) => {
+          category.styles.forEach(style => {
             allStyles.push({
               ...style,
               display_name: `${style.style_id} - ${style.name}`,
@@ -192,7 +190,7 @@ class BeerStyleService {
       const allStyles = await this.getAllStylesList();
       const matches: StyleSuggestion[] = [];
 
-      allStyles.forEach((style) => {
+      allStyles.forEach(style => {
         const match = this.calculateStyleMatch(style, metrics);
         if (match.percentage >= 60) {
           matches.push({

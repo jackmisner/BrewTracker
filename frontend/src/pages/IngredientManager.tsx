@@ -143,7 +143,7 @@ const IngredientManager: React.FC = () => {
         ) as GroupedIngredients;
 
         // Sort each type with custom sorting logic
-        Object.keys(grouped).forEach((type) => {
+        Object.keys(grouped).forEach(type => {
           grouped[type as keyof GroupedIngredients] = sortIngredients(
             grouped[type as keyof GroupedIngredients]
           );
@@ -170,7 +170,7 @@ const IngredientManager: React.FC = () => {
       // No search query - show all grouped ingredients and collapse sections
       // Sort each type with custom sorting logic
       const sortedGroupedIngredients = { ...groupedIngredients };
-      Object.keys(sortedGroupedIngredients).forEach((type) => {
+      Object.keys(sortedGroupedIngredients).forEach(type => {
         sortedGroupedIngredients[type as keyof GroupedIngredients] =
           sortIngredients(
             sortedGroupedIngredients[type as keyof GroupedIngredients]
@@ -227,7 +227,7 @@ const IngredientManager: React.FC = () => {
       other: [],
     };
 
-    searchResults.forEach((result) => {
+    searchResults.forEach(result => {
       const ingredient = result.item;
       const type = ingredient.type === "adjunct" ? "other" : ingredient.type;
 
@@ -241,7 +241,7 @@ const IngredientManager: React.FC = () => {
     });
 
     // Sort each type with custom sorting logic
-    Object.keys(groupedResults).forEach((type) => {
+    Object.keys(groupedResults).forEach(type => {
       groupedResults[type as keyof GroupedIngredients] = sortIngredients(
         groupedResults[type as keyof GroupedIngredients]
       );
@@ -420,7 +420,7 @@ const IngredientManager: React.FC = () => {
       ) as GroupedIngredients;
 
       // Sort each type with custom sorting logic
-      Object.keys(grouped).forEach((type) => {
+      Object.keys(grouped).forEach(type => {
         grouped[type as keyof GroupedIngredients] = sortIngredients(
           grouped[type as keyof GroupedIngredients]
         );
@@ -473,11 +473,11 @@ const IngredientManager: React.FC = () => {
     const searchTerms = searchTerm
       .toLowerCase()
       .split(/\s+/)
-      .filter((term) => term.length > 0);
+      .filter(term => term.length > 0);
 
     let highlightedText = text;
 
-    searchTerms.forEach((term) => {
+    searchTerms.forEach(term => {
       const regex = new RegExp(
         `(\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
         "gi"
@@ -835,7 +835,7 @@ const IngredientManager: React.FC = () => {
                 type="text"
                 placeholder="Search ingredients by name, description, manufacturer, type..."
                 value={searchQuery}
-                onChange={(e) =>
+                onChange={e =>
                   dispatch({
                     type: "SET_SEARCH_QUERY",
                     payload: e.target.value,
@@ -863,13 +863,13 @@ const IngredientManager: React.FC = () => {
           {/* Grouped Ingredients Display */}
           <div className="ingredients-list">
             {Object.keys(filteredResults).length === 0 ||
-            Object.values(filteredResults).every((arr) => arr.length === 0) ? (
+            Object.values(filteredResults).every(arr => arr.length === 0) ? (
               <div className="empty-state">
                 {totalCount === 0
                   ? "No ingredients in database yet."
                   : searchQuery
-                  ? `No ingredients match your search for "${searchQuery}".`
-                  : "No ingredients to display."}
+                    ? `No ingredients match your search for "${searchQuery}".`
+                    : "No ingredients to display."}
               </div>
             ) : (
               <div className="ingredient-items">
@@ -881,13 +881,13 @@ const IngredientManager: React.FC = () => {
                       <div
                         className="ingredient-type-header clickable"
                         style={{ borderBottomColor: getTypeColor(type) }}
-                        onClick={(e) => {
+                        onClick={e => {
                           toggleSection(type);
                           e.currentTarget.blur(); // Remove focus after click
                         }}
                         role="button"
                         tabIndex={0}
-                        onKeyPress={(e) => {
+                        onKeyPress={e => {
                           if (e.key === "Enter" || e.key === " ") {
                             toggleSection(type);
                           }
@@ -928,7 +928,7 @@ const IngredientManager: React.FC = () => {
                                       ? `rgba(${getTypeColor(ingredient.type)
                                           .replace("#", "")
                                           .match(/.{2}/g)!
-                                          .map((hex) => parseInt(hex, 16))
+                                          .map(hex => parseInt(hex, 16))
                                           .join(", ")}, 0.05)`
                                       : undefined,
                                 }}

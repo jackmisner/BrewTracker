@@ -174,7 +174,7 @@ class RecipeService {
     }
 
     // Check for yeast
-    const yeasts = ingredients.filter((ing) => ing.type === "yeast");
+    const yeasts = ingredients.filter(ing => ing.type === "yeast");
     if (yeasts.length === 0) {
       errors.push("Yeast is required for fermentation");
     }
@@ -234,7 +234,7 @@ class RecipeService {
 
     // Format ingredients
     if (ingredients && ingredients.length > 0) {
-      formattedRecipe.ingredients = ingredients.map((ing) => ({
+      formattedRecipe.ingredients = ingredients.map(ing => ({
         ingredient_id: ing.ingredient_id,
         name: ing.name,
         type: ing.type,
@@ -305,12 +305,12 @@ class RecipeService {
             (ingredient._id
               ? String(ingredient._id)
               : ingredient.ingredient_id
-              ? `${ingredient.type || "ing"}-${String(
-                  ingredient.ingredient_id
-                )}`
-              : `existing-${Date.now()}-${Math.random()
-                  .toString(36)
-                  .substr(2, 9)}`),
+                ? `${ingredient.type || "ing"}-${String(
+                    ingredient.ingredient_id
+                  )}`
+                : `existing-${Date.now()}-${Math.random()
+                    .toString(36)
+                    .substr(2, 9)}`),
         })
       );
     }
@@ -382,10 +382,10 @@ class RecipeService {
 
     // Deep compare ingredients (if same number of ingredients, check IDs)
     const originalIngredientIds = originalRecipe.ingredients
-      .map((ing) => ing.ingredient_id)
+      .map(ing => ing.ingredient_id)
       .sort();
     const currentIngredientIds = currentIngredients
-      .map((ing) => ing.ingredient_id)
+      .map(ing => ing.ingredient_id)
       .sort();
 
     return (

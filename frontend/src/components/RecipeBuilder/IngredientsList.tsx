@@ -100,7 +100,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     if (!isEditing || !ingredientId) return; // Only allow editing when in edit mode and ID exists
 
     // Find the ingredient to check if field is editable
-    const ingredient = ingredients.find((ing) => ing.id === ingredientId);
+    const ingredient = ingredients.find(ing => ing.id === ingredientId);
     if (!ingredient || !isFieldEditable(ingredient.type, field)) {
       return; // Don't start editing if field isn't editable for this ingredient type
     }
@@ -135,7 +135,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     const { ingredientId, field } = editingCell;
     if (!ingredientId || !field) return;
 
-    const ingredient = ingredients.find((ing) => ing.id === ingredientId);
+    const ingredient = ingredients.find(ing => ing.id === ingredientId);
 
     if (!ingredient) {
       cancelEdit();
@@ -376,12 +376,12 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           <select
             ref={inputRef as React.RefObject<HTMLSelectElement>}
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={e => setEditValue(e.target.value)}
             onBlur={saveEdit}
             onKeyDown={handleKeyPress}
             className="edit-cell-input"
           >
-            {options.map((option) => (
+            {options.map(option => (
               <option key={option} value={option}>
                 {option.charAt(0).toUpperCase() +
                   option.slice(1).replace("-", " ")}
@@ -423,7 +423,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
           ref={inputRef as React.RefObject<HTMLInputElement>}
           type={inputType}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={e => setEditValue(e.target.value)}
           onBlur={saveEdit}
           onKeyDown={handleKeyPress}
           step={step}
@@ -545,14 +545,17 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
 
   // Group ingredients by type for compact display
   const groupedIngredients: { [key: string]: RecipeIngredient[] } =
-    sortedIngredients.reduce((acc, ingredient) => {
-      const type = ingredient.type || "other";
-      if (!acc[type]) {
-        acc[type] = [];
-      }
-      acc[type].push(ingredient);
-      return acc;
-    }, {} as { [key: string]: RecipeIngredient[] });
+    sortedIngredients.reduce(
+      (acc, ingredient) => {
+        const type = ingredient.type || "other";
+        if (!acc[type]) {
+          acc[type] = [];
+        }
+        acc[type].push(ingredient);
+        return acc;
+      },
+      {} as { [key: string]: RecipeIngredient[] }
+    );
 
   // Render ingredients in compact card format
   const renderCompactIngredients = () => {
@@ -679,7 +682,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
         {(() => {
           const grainTotal = calculateGrainTotal();
           const hasGrains = ingredients.some(
-            (ingredient) => ingredient.type === "grain"
+            ingredient => ingredient.type === "grain"
           );
 
           if (!hasGrains) return null;
@@ -702,7 +705,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
   // Calculate total grain weight
   const calculateGrainTotal = (): { weight: number; unit: string } => {
     const grainIngredients = ingredients.filter(
-      (ingredient) => ingredient.type === "grain"
+      ingredient => ingredient.type === "grain"
     );
 
     if (grainIngredients.length === 0) {
@@ -712,7 +715,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
     // Convert all grain weights to kg for calculation
     let totalWeightKg = 0;
 
-    grainIngredients.forEach((grain) => {
+    grainIngredients.forEach(grain => {
       const amount = parseFloat(grain.amount?.toString() || "0");
       if (isNaN(amount)) return;
 
@@ -966,7 +969,7 @@ const IngredientsList: React.FC<IngredientsListProps> = ({
       {(() => {
         const grainTotal = calculateGrainTotal();
         const hasGrains = ingredients.some(
-          (ingredient) => ingredient.type === "grain"
+          ingredient => ingredient.type === "grain"
         );
 
         if (!hasGrains) return null;

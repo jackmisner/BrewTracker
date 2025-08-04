@@ -266,12 +266,12 @@ class BrewSessionService {
 
       return {
         total: sessions.length,
-        active: sessions.filter((s) =>
+        active: sessions.filter(s =>
           ["planned", "in-progress", "fermenting", "conditioning"].includes(
             s.status || ""
           )
         ).length,
-        completed: sessions.filter((s) => s.status === "completed").length,
+        completed: sessions.filter(s => s.status === "completed").length,
         mostRecent: sessions.length > 0 ? sessions[0] : null,
         mostRelevant: this.findMostRelevantSession(sessions),
         averageRating: this.calculateAverageRating(sessions),
@@ -291,7 +291,7 @@ class BrewSessionService {
     try {
       const sessions = await this.getBrewSessionsForRecipe(recipeId);
       const completedSessions = sessions.filter(
-        (s) =>
+        s =>
           s.status === "completed" && s.actual_og && s.actual_fg && s.actual_abv
       );
 
@@ -324,9 +324,8 @@ class BrewSessionService {
    */
   async getFermentationData(sessionId: ID): Promise<any[]> {
     try {
-      const response = await ApiService.brewSessions.getFermentationData(
-        sessionId
-      );
+      const response =
+        await ApiService.brewSessions.getFermentationData(sessionId);
       // Backend returns fermentation data as a direct array, not wrapped in ApiResponse
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
@@ -421,9 +420,8 @@ class BrewSessionService {
    */
   async getFermentationStats(sessionId: ID): Promise<any | null> {
     try {
-      const response = await ApiService.brewSessions.getFermentationStats(
-        sessionId
-      );
+      const response =
+        await ApiService.brewSessions.getFermentationStats(sessionId);
       // Backend returns fermentation stats as a direct object, not wrapped in ApiResponse
       return response.data;
     } catch (error) {
@@ -458,7 +456,7 @@ class BrewSessionService {
     if (!Array.isArray(sessions)) return [];
 
     return sessions
-      .map((session) => this.processBrewSessionData(session))
+      .map(session => this.processBrewSessionData(session))
       .sort((a, b) => {
         // Sort by brew date, most recent first
         if (!a.brew_date && !b.brew_date) return 0;
@@ -506,9 +504,7 @@ class BrewSessionService {
     if (!sessions || sessions.length === 0) return null;
 
     // Priority: active sessions first
-    const activeSessions = sessions.filter((s) =>
-      this.isSessionActive(s.status)
-    );
+    const activeSessions = sessions.filter(s => this.isSessionActive(s.status));
 
     if (activeSessions.length > 0) {
       return activeSessions[0]; // Most recent active session
@@ -736,8 +732,8 @@ class BrewSessionService {
     field: keyof BrewSession
   ): number | null {
     const validValues = sessions
-      .map((s) => s[field] as number)
-      .filter((val) => val !== null && val !== undefined && !isNaN(val));
+      .map(s => s[field] as number)
+      .filter(val => val !== null && val !== undefined && !isNaN(val));
 
     if (validValues.length === 0) return null;
 
@@ -749,8 +745,8 @@ class BrewSessionService {
    */
   calculateAverageRating(sessions: BrewSession[]): number | null {
     const ratings = sessions
-      .map((s) => s.batch_rating)
-      .filter((rating) => rating && rating > 0);
+      .map(s => s.batch_rating)
+      .filter(rating => rating && rating > 0);
 
     if (ratings.length === 0) return null;
 
@@ -765,7 +761,7 @@ class BrewSessionService {
    */
   calculateAverageABV(sessions: BrewSession[]): number | null {
     return this.calculateAverage(
-      sessions.filter((s) => s.status === "completed"),
+      sessions.filter(s => s.status === "completed"),
       "actual_abv"
     );
   }
@@ -776,7 +772,7 @@ class BrewSessionService {
   calculateSuccessRate(sessions: BrewSession[]): number | null {
     if (sessions.length === 0) return null;
 
-    const completed = sessions.filter((s) => s.status === "completed").length;
+    const completed = sessions.filter(s => s.status === "completed").length;
     return (completed / sessions.length) * 100;
   }
 
@@ -789,13 +785,13 @@ class BrewSessionService {
     if (sessions.length < 2) return null;
 
     const ogValues = sessions
-      .map((s) => s.actual_og)
+      .map(s => s.actual_og)
       .filter((v): v is number => v !== undefined && v !== null);
     const fgValues = sessions
-      .map((s) => s.actual_fg)
+      .map(s => s.actual_fg)
       .filter((v): v is number => v !== undefined && v !== null);
     const abvValues = sessions
-      .map((s) => s.actual_abv)
+      .map(s => s.actual_abv)
       .filter((v): v is number => v !== undefined && v !== null);
 
     return {
@@ -819,10 +815,10 @@ class BrewSessionService {
     if (sortedSessions.length < 2) return null;
 
     const abvValues = sortedSessions
-      .map((s) => s.actual_abv)
+      .map(s => s.actual_abv)
       .filter((v): v is number => v !== undefined && v !== null);
     const ratingValues = sortedSessions
-      .map((s) => s.batch_rating)
+      .map(s => s.batch_rating)
       .filter((v): v is number => v !== undefined && v !== null);
 
     return {
@@ -852,7 +848,7 @@ class BrewSessionService {
     if (values.length < 2) return 0;
 
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squaredDiffs = values.map((val) => Math.pow(val - mean, 2));
+    const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
     const variance =
       squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
 

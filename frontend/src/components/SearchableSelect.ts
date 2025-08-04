@@ -117,7 +117,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       // Extract items from Fuse results and limit results
       const processedResults: ProcessedSearchResult<T>[] = results
         .slice(0, maxResults)
-        .map((result) => ({
+        .map(result => ({
           item: result.item,
           score: result.score || 0,
           matches: [...(result.matches || [])],
@@ -127,7 +127,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
       setHighlightedIndex(0);
     } else if (query.length === 0) {
       // Show ALL options when no query, preserving original sorting from service
-      const allResults: ProcessedSearchResult<T>[] = options.map((item) => ({
+      const allResults: ProcessedSearchResult<T>[] = options.map(item => ({
         item,
         score: 0,
         matches: [],
@@ -181,14 +181,14 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex((prev) =>
+        setHighlightedIndex(prev =>
           prev < searchResults.length - 1 ? prev + 1 : 0
         );
         break;
 
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) =>
+        setHighlightedIndex(prev =>
           prev > 0 ? prev - 1 : searchResults.length - 1
         );
         break;
@@ -266,11 +266,11 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     const searchTerms = query
       .toLowerCase()
       .split(/\s+/)
-      .filter((term) => term.length > 0);
+      .filter(term => term.length > 0);
 
     let highlightedText = text;
 
-    searchTerms.forEach((term) => {
+    searchTerms.forEach(term => {
       // Create a regex that matches the term with word boundaries or at the start of words
       const regex = new RegExp(
         `(\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
@@ -308,7 +308,7 @@ const SearchableSelect = <T extends Record<string, any> = Ingredient>({
     if (!grainType) return "";
     return grainType
       .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 

@@ -77,9 +77,8 @@ const StyleAnalysis: React.FC<StyleAnalysisProps> = ({
       }
 
       // Also get style suggestions
-      const suggestionsResult = await Services.beerStyle.findMatchingStyles(
-        metrics
-      );
+      const suggestionsResult =
+        await Services.beerStyle.findMatchingStyles(metrics);
       setSuggestions(suggestionsResult.slice(0, 5));
     } catch (error: any) {
       console.error("Error loading real-time style analysis:", error);

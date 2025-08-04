@@ -186,7 +186,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
               id="batch_size"
               name="batch_size"
               value={displayBatchSize || ""}
-              onChange={(e) => {
+              onChange={e => {
                 // Update both batch size and unit
                 handleChange(e);
                 // Also update the batch_size_unit if needed

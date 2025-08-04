@@ -43,9 +43,8 @@ const ViewBrewSession: React.FC = () => {
         setError("");
 
         // Fetch the brew session using Services
-        const sessionData = await Services.brewSession.fetchBrewSession(
-          sessionId
-        );
+        const sessionData =
+          await Services.brewSession.fetchBrewSession(sessionId);
         console.log("Fetched brew session data:", sessionData);
         setSession(sessionData);
 
@@ -186,7 +185,7 @@ const ViewBrewSession: React.FC = () => {
       const fermentationData = session.fermentation_data || [];
       const latestGravityEntry = [...fermentationData]
         .reverse()
-        .find((entry) => entry.gravity);
+        .find(entry => entry.gravity);
 
       if (!latestGravityEntry?.gravity) {
         setError("No gravity reading available to set as final gravity");
@@ -332,7 +331,7 @@ const ViewBrewSession: React.FC = () => {
         {nextStatuses.length > 0 && (
           <div className="brew-session-update-status">
             <span className="brew-session-update-label">Update Status:</span>
-            {nextStatuses.map((status) => (
+            {nextStatuses.map(status => (
               <button
                 key={status}
                 onClick={() => updateSessionStatus(status)}
@@ -606,7 +605,7 @@ const ViewBrewSession: React.FC = () => {
               <div className="brew-session-section">
                 <h3 className="section-title">Batch Rating</h3>
                 <div className="rating-stars">
-                  {[1, 2, 3, 4, 5].map((star) => (
+                  {[1, 2, 3, 4, 5].map(star => (
                     <svg
                       key={star}
                       className={`rating-star ${
@@ -668,8 +667,8 @@ const ViewBrewSession: React.FC = () => {
                             {actualAttenuation > estimatedAttenuation + 5
                               ? "Your yeast performed better than expected with higher attenuation."
                               : actualAttenuation < estimatedAttenuation - 5
-                              ? "Your yeast had lower attenuation than expected."
-                              : "Your yeast performed close to expected attenuation."}
+                                ? "Your yeast had lower attenuation than expected."
+                                : "Your yeast performed close to expected attenuation."}
                           </p>
                         )}
                       </div>

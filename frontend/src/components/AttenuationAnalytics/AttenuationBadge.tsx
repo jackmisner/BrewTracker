@@ -105,8 +105,8 @@ const AttenuationBadge: React.FC<AttenuationBadgeProps> = ({
                     difference.direction === "higher"
                       ? "positive"
                       : difference.direction === "lower"
-                      ? "negative"
-                      : ""
+                        ? "negative"
+                        : ""
                   }`}
                 >
                   {difference.formatted}

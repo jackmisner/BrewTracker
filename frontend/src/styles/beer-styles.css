@@ -88,7 +88,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition-normal),
+  transition:
+    color var(--transition-normal),
     background-color var(--transition-normal);
 }
 
@@ -242,7 +243,8 @@
   border: 1px solid var(--color-blue-200);
   border-radius: var(--border-radius);
   padding: 0.75rem;
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
 }
 
@@ -590,7 +592,8 @@
   border: 1px solid var(--color-gray-200);
   border-radius: var(--border-radius);
   padding: 1rem;
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
 }
 

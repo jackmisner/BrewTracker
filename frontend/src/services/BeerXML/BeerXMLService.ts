@@ -100,7 +100,7 @@ class BeerXMLService {
   ): Promise<IngredientMatchingResult[]> {
     try {
       const response = await ApiService.beerxml.matchIngredients({
-        ingredients: ingredients.map((ing) => ({
+        ingredients: ingredients.map(ing => ({
           name: ing.name,
           type: ing.type,
           amount: ing.amount,
@@ -169,7 +169,7 @@ class BeerXMLService {
 
     // Check file type
     const fileName = file.name.toLowerCase();
-    const hasValidExtension = this.SUPPORTED_FILE_TYPES.some((ext) =>
+    const hasValidExtension = this.SUPPORTED_FILE_TYPES.some(ext =>
       fileName.endsWith(ext)
     );
 
@@ -234,7 +234,7 @@ class BeerXMLService {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = (e) => {
+      reader.onload = e => {
         try {
           const content = e.target?.result as string;
           resolve(content);
@@ -370,11 +370,11 @@ class BeerXMLService {
       },
     };
 
-    recipes.forEach((recipe) => {
+    recipes.forEach(recipe => {
       if (recipe.ingredients) {
         summary.totalIngredients += recipe.ingredients.length;
 
-        recipe.ingredients.forEach((ingredient) => {
+        recipe.ingredients.forEach(ingredient => {
           const type =
             (ingredient.type as any) === "adjunct" ? "other" : ingredient.type;
           if (
@@ -390,7 +390,7 @@ class BeerXMLService {
       }
 
       if (recipe.matchingResults) {
-        recipe.matchingResults.forEach((result) => {
+        recipe.matchingResults.forEach(result => {
           if (result.bestMatch && result.confidence > 0.7) {
             summary.matchingStats.matched++;
             if (result.confidence > 0.8) {

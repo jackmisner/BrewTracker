@@ -45,7 +45,7 @@ const AttenuationAnalyticsPage: React.FC = () => {
 
   const getTopPerformers = () => {
     return analytics
-      .filter((a) => attenuationAnalyticsServiceInstance.hasSignificantData(a))
+      .filter(a => attenuationAnalyticsServiceInstance.hasSignificantData(a))
       .sort(
         (a, b) =>
           (b.actual_attenuation_count || 0) - (a.actual_attenuation_count || 0)
@@ -56,12 +56,12 @@ const AttenuationAnalyticsPage: React.FC = () => {
   const getMostImprovedEstimates = () => {
     return analytics
       .filter(
-        (a) =>
+        a =>
           a.theoretical_attenuation &&
           a.actual_attenuation_average &&
           attenuationAnalyticsServiceInstance.hasSignificantData(a)
       )
-      .map((a) => ({
+      .map(a => ({
         ...a,
         improvement: Math.abs(
           (a.actual_attenuation_average || 0) - (a.theoretical_attenuation || 0)
@@ -220,7 +220,7 @@ const AttenuationAnalyticsPage: React.FC = () => {
               specs
             </p>
             <div className="improvement-list">
-              {improvedEstimates.map((yeast) => {
+              {improvedEstimates.map(yeast => {
                 const difference =
                   attenuationAnalyticsServiceInstance.formatAttenuationDifference(
                     yeast.theoretical_attenuation,

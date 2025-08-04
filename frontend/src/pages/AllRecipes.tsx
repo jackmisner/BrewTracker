@@ -136,7 +136,7 @@ const AllRecipes: React.FC = () => {
     // Apply search filter if there's a search term
     if (searchTerm && searchTerm.length >= 2 && fuse) {
       const results = fuse.search(searchTerm);
-      recipesToProcess = results.map((result) => result.item);
+      recipesToProcess = results.map(result => result.item);
     }
 
     // Apply sorting
@@ -170,7 +170,7 @@ const AllRecipes: React.FC = () => {
                 type="text"
                 placeholder="Search recipes by name, style, description..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="search-input"
               />
               <div className="search-icon-container">
@@ -220,7 +220,7 @@ const AllRecipes: React.FC = () => {
             <select
               id="sort-select"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={e => setSortBy(e.target.value)}
               className="sort-select"
             >
               <option value="updated_at_desc">Last Updated (Newest)</option>
@@ -276,7 +276,7 @@ const AllRecipes: React.FC = () => {
 
       {!loading && !error && filteredAndSortedRecipes.length > 0 && (
         <div className="recipes-grid">
-          {filteredAndSortedRecipes.map((recipe) => (
+          {filteredAndSortedRecipes.map(recipe => (
             <CompactRecipeCard key={recipe.recipe_id} recipe={recipe} />
           ))}
         </div>
