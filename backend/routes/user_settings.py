@@ -17,7 +17,7 @@ def validate_password(password):
     - At least one lowercase letter
     - At least one uppercase letter
     - At least one number
-    - At least one special character from ~!@#$%^&*()_-+={}|\:;"'<,>.?/
+    - At least one special character from ~!@#$%^&*()_-+={}|:;"'<,>.?/
     """
     if not password:
         return False, "Password is required"
@@ -37,7 +37,7 @@ def validate_password(password):
     if not re.search(r'[~!@#$%^&*()_\-+={}|\\:;"\'<,>.?/]', password):
         return (
             False,
-            "Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)",
+            "Password must contain at least one special character (~!@#$%^&*()_-+={}|:;\"'<,>.?/)",
         )
 
     return True, "Password is valid"

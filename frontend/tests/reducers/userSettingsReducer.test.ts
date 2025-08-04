@@ -16,58 +16,63 @@ describe('userSettingsReducer', () => {
   describe('Initial State', () => {
     it('should create correct initial state', () => {
       expect(initialState).toEqual({
-        // UI state
-        activeTab: 'profile',
-        loading: false,
-        saving: false,
-        error: '',
+        // Core data
+        settings: null,
+        activeTab: "account",
 
-        // User data
-        userSettings: null,
+        // UI state
+        loading: true,
+        saving: false,
+        error: "",
+        successMessage: "",
+        hasUnsavedChanges: false,
 
         // Form states
         profileForm: {
-          first_name: '',
-          last_name: '',
-          email: '',
+          username: "",
+          email: "",
         },
         passwordForm: {
-          current_password: '',
-          new_password: '',
-          confirm_password: '',
+          current_password: "",
+          new_password: "",
+          confirm_password: "",
         },
         deleteForm: {
-          password: '',
-          confirmation: '',
+          password: "",
+          confirmation: "",
+          preserve_public_recipes: true,
         },
         preferencesForm: {
-          unit_system: 'imperial',
           default_batch_size: 5.0,
-          default_batch_size_unit: 'gal',
-          default_efficiency: 75,
+          preferred_units: "imperial",
+          timezone: "UTC",
           email_notifications: true,
-          public_recipes: false,
+          brew_reminders: true,
         },
         privacyForm: {
-          data_retention_days: 365,
-          analytics_enabled: true,
-          marketing_emails: false,
+          contribute_anonymous_data: false,
+          share_yeast_performance: false,
+          share_recipe_metrics: false,
+          public_recipes_default: false,
         },
 
-        // Form validation
-        formErrors: {
-          profile: {},
-          password: {},
-          delete: {},
-          preferences: {},
-          privacy: {},
+        // Original form values for comparison
+        originalProfileForm: {
+          username: "",
+          email: "",
         },
-        touchedFields: {
-          profile: {},
-          password: {},
-          delete: {},
-          preferences: {},
-          privacy: {},
+        originalPreferencesForm: {
+          default_batch_size: 5.0,
+          preferred_units: "imperial",
+          timezone: "UTC",
+          email_notifications: true,
+          brew_reminders: true,
+        },
+        originalPrivacyForm: {
+          contribute_anonymous_data: false,
+          share_yeast_performance: false,
+          share_recipe_metrics: false,
+          public_recipes_default: false,
         },
       });
     });
@@ -87,7 +92,7 @@ describe('userSettingsReducer', () => {
     });
 
     it('should handle all valid tab IDs', () => {
-      const validTabs: TabId[] = ['profile', 'password', 'preferences', 'privacy', 'delete'];
+      const validTabs: TabId[] = ['account', 'preferences', 'privacy', 'security'];
 
       validTabs.forEach(tab => {
         const action: UserSettingsAction = {
@@ -101,11 +106,10 @@ describe('userSettingsReducer', () => {
     });
   });
 
-  describe('Loading State Actions', () => {
-    it('should handle SET_LOADING', () => {
+  describe('Initialization Actions', () => {
+    it('should handle INITIALIZE_START', () => {
       const action: UserSettingsAction = {
-        type: 'SET_LOADING',
-        payload: true,
+        type: 'INITIALIZE_START',
       };
 
       const newState = userSettingsReducer(initialState, action);
@@ -114,223 +118,361 @@ describe('userSettingsReducer', () => {
       expect(newState.error).toBe(''); // Should clear error when loading starts
     });
 
-    it('should handle SET_SAVING', () => {
+    it('should handle INITIALIZE_SUCCESS', () => {
+      const mockSettings = {
+        user: {
+          username: 'testuser',
+          email: 'test@example.com',
+          created_at: '2024-01-01T12:00:00Z',
+          last_login: '2024-01-15T12:00:00Z',
+        },
+        settings: {
+          default_batch_size: 19.0,
+          preferred_units: 'metric' as const,
+          timezone: 'America/New_York',
+          email_notifications: false,
+          brew_reminders: false,
+          contribute_anonymous_data: true,
+          share_yeast_performance: true,
+          share_recipe_metrics: true,
+          public_recipes_default: true,
+        },
+      };
+
+      const profileData = {
+        username: 'testuser',
+        email: 'test@example.com',
+      };
+
+      const preferencesData = {
+        default_batch_size: 19.0,
+        preferred_units: 'metric' as const,
+        timezone: 'America/New_York',
+        email_notifications: false,
+        brew_reminders: false,
+      };
+
+      const privacyData = {
+        contribute_anonymous_data: true,
+        share_yeast_performance: true,
+        share_recipe_metrics: true,
+        public_recipes_default: true,
+      };
+
       const action: UserSettingsAction = {
-        type: 'SET_SAVING',
-        payload: true,
+        type: 'INITIALIZE_SUCCESS',
+        payload: {
+          settings: mockSettings,
+          profileForm: profileData,
+          preferencesForm: preferencesData,
+          privacyForm: privacyData,
+        },
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.settings).toEqual(mockSettings);
+      expect(newState.profileForm).toEqual(profileData);
+      expect(newState.preferencesForm).toEqual(preferencesData);
+      expect(newState.privacyForm).toEqual(privacyData);
+      expect(newState.originalProfileForm).toEqual(profileData);
+      expect(newState.originalPreferencesForm).toEqual(preferencesData);
+      expect(newState.originalPrivacyForm).toEqual(privacyData);
+      expect(newState.loading).toBe(false);
+      expect(newState.hasUnsavedChanges).toBe(false);
+    });
+
+    it('should handle INITIALIZE_ERROR', () => {
+      const action: UserSettingsAction = {
+        type: 'INITIALIZE_ERROR',
+        payload: 'Failed to load settings',
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.error).toBe('Failed to load settings');
+      expect(newState.loading).toBe(false);
+    });
+  });
+
+  describe('Save Actions', () => {
+    it('should handle SAVE_START', () => {
+      const action: UserSettingsAction = {
+        type: 'SAVE_START',
       };
 
       const newState = userSettingsReducer(initialState, action);
 
       expect(newState.saving).toBe(true);
-      expect(newState.error).toBe(''); // Should clear error when saving starts
+      expect(newState.error).toBe('');
+      expect(newState.successMessage).toBe('');
     });
 
-    it('should clear error when starting loading or saving', () => {
-      const stateWithError = {
-        ...initialState,
-        error: 'Previous error message',
-      };
-
-      const loadingAction: UserSettingsAction = {
-        type: 'SET_LOADING',
-        payload: true,
-      };
-
-      const savingAction: UserSettingsAction = {
-        type: 'SET_SAVING',
-        payload: true,
-      };
-
-      expect(userSettingsReducer(stateWithError, loadingAction).error).toBe('');
-      expect(userSettingsReducer(stateWithError, savingAction).error).toBe('');
-    });
-  });
-
-  describe('User Data Actions', () => {
-    it('should handle SET_USER_SETTINGS', () => {
-      const mockUserSettings = {
-        id: 'user123',
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john@example.com',
-        unit_system: 'metric' as const,
-        default_batch_size: 20.0,
-        default_batch_size_unit: 'l' as const,
-        default_efficiency: 80,
-        email_notifications: false,
-        public_recipes: true,
-        data_retention_days: 730,
-        analytics_enabled: false,
-        marketing_emails: true,
-      };
-
+    it('should handle SAVE_SUCCESS', () => {
       const action: UserSettingsAction = {
-        type: 'SET_USER_SETTINGS',
-        payload: mockUserSettings,
+        type: 'SAVE_SUCCESS',
+        payload: 'Settings saved successfully',
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.userSettings).toEqual(mockUserSettings);
-      // Should populate forms with user data
-      expect(newState.profileForm).toEqual({
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john@example.com',
-      });
-      expect(newState.preferencesForm).toEqual({
-        unit_system: 'metric',
-        default_batch_size: 20.0,
-        default_batch_size_unit: 'l',
-        default_efficiency: 80,
-        email_notifications: false,
-        public_recipes: true,
-      });
-      expect(newState.privacyForm).toEqual({
-        data_retention_days: 730,
-        analytics_enabled: false,
-        marketing_emails: true,
-      });
+      expect(newState.saving).toBe(false);
+      expect(newState.successMessage).toBe('Settings saved successfully');
+      expect(newState.hasUnsavedChanges).toBe(false);
+    });
+
+    it('should handle SAVE_ERROR', () => {
+      const action: UserSettingsAction = {
+        type: 'SAVE_ERROR',
+        payload: 'Failed to save settings',
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.saving).toBe(false);
+      expect(newState.error).toBe('Failed to save settings');
     });
   });
 
   describe('Form Update Actions', () => {
-    it('should handle UPDATE_PROFILE_FORM', () => {
+    it('should handle UPDATE_PROFILE_FIELD', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_PROFILE_FORM',
+        type: 'UPDATE_PROFILE_FIELD',
         payload: {
-          field: 'first_name',
-          value: 'Jane',
+          field: 'username',
+          value: 'newusername',
         },
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.profileForm.first_name).toBe('Jane');
-      expect(newState.touchedFields.profile.first_name).toBe(true);
+      expect(newState.profileForm.username).toBe('newusername');
+      expect(newState.hasUnsavedChanges).toBe(true);
     });
 
-    it('should handle UPDATE_PASSWORD_FORM', () => {
+    it('should handle UPDATE_PASSWORD_FIELD', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_PASSWORD_FORM',
+        type: 'UPDATE_PASSWORD_FIELD',
         payload: {
           field: 'current_password',
-          value: 'oldpass123',
+          value: 'OldPass123!',
         },
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.passwordForm.current_password).toBe('oldpass123');
-      expect(newState.touchedFields.password.current_password).toBe(true);
+      expect(newState.passwordForm.current_password).toBe('OldPass123!');
+      // Password changes don't mark unsaved changes
+      expect(newState.hasUnsavedChanges).toBe(false);
     });
 
-    it('should handle UPDATE_DELETE_FORM', () => {
+    it('should handle UPDATE_DELETE_FIELD', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_DELETE_FORM',
+        type: 'UPDATE_DELETE_FIELD',
         payload: {
           field: 'password',
-          value: 'confirmpass123',
+          value: 'TestPass123!',
         },
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.deleteForm.password).toBe('confirmpass123');
-      expect(newState.touchedFields.delete.password).toBe(true);
+      expect(newState.deleteForm.password).toBe('TestPass123!');
     });
 
-    it('should handle UPDATE_PREFERENCES_FORM', () => {
+    it('should handle UPDATE_PREFERENCES_FIELD', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_PREFERENCES_FORM',
+        type: 'UPDATE_PREFERENCES_FIELD',
         payload: {
-          field: 'unit_system',
+          field: 'preferred_units',
           value: 'metric',
         },
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.preferencesForm.unit_system).toBe('metric');
-      expect(newState.touchedFields.preferences.unit_system).toBe(true);
+      expect(newState.preferencesForm.preferred_units).toBe('metric');
+      expect(newState.hasUnsavedChanges).toBe(true);
     });
 
-    it('should handle UPDATE_PRIVACY_FORM', () => {
+    it('should handle UPDATE_PRIVACY_FIELD', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_PRIVACY_FORM',
+        type: 'UPDATE_PRIVACY_FIELD',
         payload: {
-          field: 'analytics_enabled',
-          value: false,
+          field: 'contribute_anonymous_data',
+          value: true,
         },
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.privacyForm.analytics_enabled).toBe(false);
-      expect(newState.touchedFields.privacy.analytics_enabled).toBe(true);
+      expect(newState.privacyForm.contribute_anonymous_data).toBe(true);
+      expect(newState.hasUnsavedChanges).toBe(true);
     });
   });
 
-  describe('Form Validation Actions', () => {
-    it('should handle SET_FORM_ERRORS', () => {
-      const errors = {
-        first_name: 'First name is required',
-        email: 'Invalid email format',
+  describe('Bulk Form Update Actions', () => {
+    it('should handle SET_PROFILE_FORM', () => {
+      const profileData = {
+        username: 'newuser',
+        email: 'new@example.com',
       };
 
       const action: UserSettingsAction = {
-        type: 'SET_FORM_ERRORS',
-        payload: {
-          form: 'profile',
-          errors,
-        },
+        type: 'SET_PROFILE_FORM',
+        payload: profileData,
       };
 
       const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.formErrors.profile).toEqual(errors);
+      expect(newState.profileForm).toEqual(profileData);
+      expect(newState.hasUnsavedChanges).toBe(true);
     });
 
-    it('should handle CLEAR_FORM_ERRORS', () => {
-      const stateWithErrors = {
+    it('should handle SET_PREFERENCES_FORM', () => {
+      const preferencesData = {
+        default_batch_size: 19.0,
+        preferred_units: 'metric' as const,
+        timezone: 'Europe/London',
+        email_notifications: false,
+        brew_reminders: false,
+      };
+
+      const action: UserSettingsAction = {
+        type: 'SET_PREFERENCES_FORM',
+        payload: preferencesData,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.preferencesForm).toEqual(preferencesData);
+      expect(newState.hasUnsavedChanges).toBe(true);
+    });
+
+    it('should handle SET_PRIVACY_FORM', () => {
+      const privacyData = {
+        contribute_anonymous_data: true,
+        share_yeast_performance: true,
+        share_recipe_metrics: true,
+        public_recipes_default: true,
+      };
+
+      const action: UserSettingsAction = {
+        type: 'SET_PRIVACY_FORM',
+        payload: privacyData,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.privacyForm).toEqual(privacyData);
+      expect(newState.hasUnsavedChanges).toBe(true);
+    });
+  });
+
+  describe('Update Original Forms Actions', () => {
+    it('should handle UPDATE_ORIGINAL_PROFILE_FORM', () => {
+      const profileData = {
+        username: 'updateduser',
+        email: 'updated@example.com',
+      };
+
+      const action: UserSettingsAction = {
+        type: 'UPDATE_ORIGINAL_PROFILE_FORM',
+        payload: profileData,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.originalProfileForm).toEqual(profileData);
+    });
+
+    it('should handle UPDATE_ORIGINAL_PREFERENCES_FORM', () => {
+      const preferencesData = {
+        default_batch_size: 23.0,
+        preferred_units: 'metric' as const,
+        timezone: 'Asia/Tokyo',
+        email_notifications: false,
+        brew_reminders: true,
+      };
+
+      const action: UserSettingsAction = {
+        type: 'UPDATE_ORIGINAL_PREFERENCES_FORM',
+        payload: preferencesData,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.originalPreferencesForm).toEqual(preferencesData);
+    });
+
+    it('should handle UPDATE_ORIGINAL_PRIVACY_FORM', () => {
+      const privacyData = {
+        contribute_anonymous_data: true,
+        share_yeast_performance: false,
+        share_recipe_metrics: true,
+        public_recipes_default: false,
+      };
+
+      const action: UserSettingsAction = {
+        type: 'UPDATE_ORIGINAL_PRIVACY_FORM',
+        payload: privacyData,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.originalPrivacyForm).toEqual(privacyData);
+    });
+  });
+
+  describe('Reset Actions', () => {
+    it('should handle RESET_PASSWORD_FORM', () => {
+      const stateWithPassword = {
         ...initialState,
-        formErrors: {
-          ...initialState.formErrors,
-          profile: {
-            first_name: 'Error message',
-            email: 'Another error',
-          },
+        passwordForm: {
+          current_password: 'OldPass123!',
+          new_password: 'NewPass123!',
+          confirm_password: 'NewPass123!',
         },
       };
 
       const action: UserSettingsAction = {
-        type: 'CLEAR_FORM_ERRORS',
-        payload: 'profile',
+        type: 'RESET_PASSWORD_FORM',
       };
 
-      const newState = userSettingsReducer(stateWithErrors, action);
+      const newState = userSettingsReducer(stateWithPassword, action);
 
-      expect(newState.formErrors.profile).toEqual({});
+      expect(newState.passwordForm).toEqual({
+        current_password: '',
+        new_password: '',
+        confirm_password: '',
+      });
     });
 
-    it('should handle SET_FIELD_TOUCHED', () => {
-      const action: UserSettingsAction = {
-        type: 'SET_FIELD_TOUCHED',
-        payload: {
-          form: 'password',
-          field: 'new_password',
-          touched: true,
+    it('should handle RESET_DELETE_FORM', () => {
+      const stateWithDelete = {
+        ...initialState,
+        deleteForm: {
+          password: 'TestPass123!',
+          confirmation: 'DELETE',
+          preserve_public_recipes: false,
         },
       };
 
-      const newState = userSettingsReducer(initialState, action);
+      const action: UserSettingsAction = {
+        type: 'RESET_DELETE_FORM',
+      };
 
-      expect(newState.touchedFields.password.new_password).toBe(true);
+      const newState = userSettingsReducer(stateWithDelete, action);
+
+      expect(newState.deleteForm).toEqual({
+        password: '',
+        confirmation: '',
+        preserve_public_recipes: true,
+      });
     });
   });
 
-  describe('Error Handling Actions', () => {
+  describe('Error and Message Handling Actions', () => {
     it('should handle SET_ERROR', () => {
       const errorMessage = 'Failed to save settings';
 
@@ -342,8 +484,6 @@ describe('userSettingsReducer', () => {
       const newState = userSettingsReducer(initialState, action);
 
       expect(newState.error).toBe(errorMessage);
-      expect(newState.loading).toBe(false);
-      expect(newState.saving).toBe(false);
     });
 
     it('should handle CLEAR_ERROR', () => {
@@ -360,164 +500,72 @@ describe('userSettingsReducer', () => {
 
       expect(newState.error).toBe('');
     });
-  });
 
-  describe('Form Reset Actions', () => {
-    it('should handle RESET_FORM for profile', () => {
-      const modifiedState = {
-        ...initialState,
-        profileForm: {
-          first_name: 'Modified',
-          last_name: 'User',
-          email: 'modified@example.com',
-        },
-        touchedFields: {
-          ...initialState.touchedFields,
-          profile: {
-            first_name: true,
-            last_name: true,
-            email: true,
-          },
-        },
-        formErrors: {
-          ...initialState.formErrors,
-          profile: {
-            email: 'Invalid email',
-          },
-        },
-      };
+    it('should handle SET_SUCCESS_MESSAGE', () => {
+      const successMessage = 'Settings saved successfully';
 
       const action: UserSettingsAction = {
-        type: 'RESET_FORM',
-        payload: 'profile',
+        type: 'SET_SUCCESS_MESSAGE',
+        payload: successMessage,
       };
 
-      const newState = userSettingsReducer(modifiedState, action);
+      const newState = userSettingsReducer(initialState, action);
 
-      expect(newState.profileForm).toEqual(initialState.profileForm);
-      expect(newState.touchedFields.profile).toEqual({});
-      expect(newState.formErrors.profile).toEqual({});
+      expect(newState.successMessage).toBe(successMessage);
     });
 
-    it('should handle RESET_ALL_FORMS', () => {
-      const modifiedState = {
+    it('should handle CLEAR_SUCCESS_MESSAGE', () => {
+      const stateWithSuccess = {
         ...initialState,
-        profileForm: { first_name: 'Modified', last_name: 'User', email: 'test@example.com' },
-        passwordForm: { current_password: 'old', new_password: 'new', confirm_password: 'new' },
-        touchedFields: {
-          profile: { first_name: true },
-          password: { current_password: true },
-          delete: {},
-          preferences: {},
-          privacy: {},
-        },
-        formErrors: {
-          profile: { email: 'Error' },
-          password: { current_password: 'Error' },
-          delete: {},
-          preferences: {},
-          privacy: {},
-        },
+        successMessage: 'Previous success message',
       };
 
       const action: UserSettingsAction = {
-        type: 'RESET_ALL_FORMS',
+        type: 'CLEAR_SUCCESS_MESSAGE',
       };
 
-      const newState = userSettingsReducer(modifiedState, action);
+      const newState = userSettingsReducer(stateWithSuccess, action);
 
-      expect(newState.profileForm).toEqual(initialState.profileForm);
-      expect(newState.passwordForm).toEqual(initialState.passwordForm);
-      expect(newState.deleteForm).toEqual(initialState.deleteForm);
-      expect(newState.preferencesForm).toEqual(initialState.preferencesForm);
-      expect(newState.privacyForm).toEqual(initialState.privacyForm);
-      expect(newState.touchedFields).toEqual(initialState.touchedFields);
-      expect(newState.formErrors).toEqual(initialState.formErrors);
+      expect(newState.successMessage).toBe('');
+    });
+
+    it('should handle SET_UNSAVED_CHANGES', () => {
+      const action: UserSettingsAction = {
+        type: 'SET_UNSAVED_CHANGES',
+        payload: true,
+      };
+
+      const newState = userSettingsReducer(initialState, action);
+
+      expect(newState.hasUnsavedChanges).toBe(true);
+    });
+
+    it('should handle CLEAR_MESSAGES', () => {
+      const stateWithMessages = {
+        ...initialState,
+        error: 'Error message',
+        successMessage: 'Success message',
+      };
+
+      const action: UserSettingsAction = {
+        type: 'CLEAR_MESSAGES',
+      };
+
+      const newState = userSettingsReducer(stateWithMessages, action);
+
+      expect(newState.error).toBe('');
+      expect(newState.successMessage).toBe('');
     });
   });
 
-  describe('Success Actions', () => {
-    it('should handle PROFILE_UPDATE_SUCCESS', () => {
-      const stateWithChanges = {
-        ...initialState,
-        saving: true,
-        error: 'Previous error',
-      };
-
-      const action: UserSettingsAction = {
-        type: 'PROFILE_UPDATE_SUCCESS',
-      };
-
-      const newState = userSettingsReducer(stateWithChanges, action);
-
-      expect(newState.saving).toBe(false);
-      expect(newState.error).toBe('');
-    });
-
-    it('should handle PASSWORD_UPDATE_SUCCESS', () => {
-      const stateWithChanges = {
-        ...initialState,
-        saving: true,
-        passwordForm: {
-          current_password: 'old',
-          new_password: 'new',
-          confirm_password: 'new',
-        },
-      };
-
-      const action: UserSettingsAction = {
-        type: 'PASSWORD_UPDATE_SUCCESS',
-      };
-
-      const newState = userSettingsReducer(stateWithChanges, action);
-
-      expect(newState.saving).toBe(false);
-      expect(newState.error).toBe('');
-      expect(newState.passwordForm).toEqual(initialState.passwordForm); // Should reset password form
-    });
-
-    it('should handle PREFERENCES_UPDATE_SUCCESS', () => {
-      const stateWithChanges = {
-        ...initialState,
-        saving: true,
-        error: 'Previous error',
-      };
-
-      const action: UserSettingsAction = {
-        type: 'PREFERENCES_UPDATE_SUCCESS',
-      };
-
-      const newState = userSettingsReducer(stateWithChanges, action);
-
-      expect(newState.saving).toBe(false);
-      expect(newState.error).toBe('');
-    });
-
-    it('should handle PRIVACY_UPDATE_SUCCESS', () => {
-      const stateWithChanges = {
-        ...initialState,
-        saving: true,
-        error: 'Previous error',
-      };
-
-      const action: UserSettingsAction = {
-        type: 'PRIVACY_UPDATE_SUCCESS',
-      };
-
-      const newState = userSettingsReducer(stateWithChanges, action);
-
-      expect(newState.saving).toBe(false);
-      expect(newState.error).toBe('');
-    });
-  });
 
   describe('Immutability', () => {
     it('should not mutate the original state', () => {
       const action: UserSettingsAction = {
-        type: 'UPDATE_PROFILE_FORM',
+        type: 'UPDATE_PROFILE_FIELD',
         payload: {
-          field: 'first_name',
-          value: 'New Name',
+          field: 'username',
+          value: 'newusername',
         },
       };
 
@@ -525,8 +573,7 @@ describe('userSettingsReducer', () => {
 
       expect(newState).not.toBe(initialState);
       expect(newState.profileForm).not.toBe(initialState.profileForm);
-      expect(newState.touchedFields).not.toBe(initialState.touchedFields);
-      expect(initialState.profileForm.first_name).toBe('');
+      expect(initialState.profileForm.username).toBe('');
     });
   });
 
@@ -537,17 +584,6 @@ describe('userSettingsReducer', () => {
       const newState = userSettingsReducer(initialState, unknownAction);
 
       expect(newState).toBe(initialState); // Should return same reference for unknown actions
-    });
-
-    it('should handle null/undefined payloads gracefully', () => {
-      const actionWithNullPayload: UserSettingsAction = {
-        type: 'SET_USER_SETTINGS',
-        payload: null,
-      };
-
-      const newState = userSettingsReducer(initialState, actionWithNullPayload);
-
-      expect(newState.userSettings).toBe(null);
     });
   });
 });

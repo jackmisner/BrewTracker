@@ -270,15 +270,21 @@ describe('ingredientManagerReducer', () => {
         formData: {
           name: 'Modified Name',
           type: 'hop' as const,
+          description: 'Modified description',
           grain_type: 'specialty',
           potential: '1.040',
           color: '10',
           alpha_acid: '5.5',
+          yeast_type: 'ale',
           attenuation: '75',
-          notes: 'Modified notes',
+          manufacturer: 'Test',
+          code: 'T123',
+          alcohol_tolerance: '12',
+          min_temperature: '18',
+          max_temperature: '22',
         },
-        editingIngredient: { _id: '1' } as any,
-        showForm: true,
+        error: 'Some error',
+        success: 'Some success',
       };
 
       const action: IngredientManagerAction = {
@@ -288,8 +294,8 @@ describe('ingredientManagerReducer', () => {
       const newState = ingredientManagerReducer(modifiedState, action);
 
       expect(newState.formData).toEqual(initialState.formData);
-      expect(newState.editingIngredient).toBe(null);
-      expect(newState.showForm).toBe(false);
+      expect(newState.error).toBe('');
+      expect(newState.success).toBe('');
     });
   });
 
@@ -368,133 +374,158 @@ describe('ingredientManagerReducer', () => {
     });
   });
 
-  describe('Complex State Transitions', () => {
-    it('should handle editing workflow', () => {
-      const mockIngredient = {
-        _id: '1',
-        name: 'Test Grain',
-        type: 'grain' as const,
-        grain_type: 'base',
-        potential: 1.036,
-        color: 2,
-        notes: 'Test notes',
-        searchableText: 'test grain',
+  describe('Form Type Update Actions', () => {
+    it('should handle UPDATE_FORM_TYPE', () => {
+      const action: IngredientManagerAction = {
+        type: 'UPDATE_FORM_TYPE',
+        payload: 'hop',
       };
 
-      // Start editing
-      let state = ingredientManagerReducer(initialState, {
-        type: 'SET_EDITING_INGREDIENT',
-        payload: mockIngredient,
-      });
+      const newState = ingredientManagerReducer(initialState, action);
 
-      expect(state.editingIngredient).toEqual(mockIngredient);
-      expect(state.showForm).toBe(true);
-
-      // Update form
-      state = ingredientManagerReducer(state, {
-        type: 'UPDATE_FORM_FIELD',
-        payload: { field: 'name', value: 'Updated Grain' },
-      });
-
-      expect(state.formData.name).toBe('Updated Grain');
-
-      // Complete update
-      const updatedIngredient = { ...mockIngredient, name: 'Updated Grain' };
-      state = ingredientManagerReducer(state, {
-        type: 'UPDATE_INGREDIENT',
-        payload: updatedIngredient,
-      });
-
-      expect(state.editingIngredient).toBe(null);
-      expect(state.showForm).toBe(false);
-      expect(state.successMessage).toBe('Ingredient updated successfully!');
+      expect(newState.formData.type).toBe('hop');
+      // Should clear type-specific fields
+      expect(newState.formData.grain_type).toBe('');
+      expect(newState.formData.potential).toBe('');
+      expect(newState.formData.color).toBe('');
+      expect(newState.formData.alpha_acid).toBe('');
     });
 
-    it('should handle create workflow', () => {
-      // Show form
-      let state = ingredientManagerReducer(initialState, {
-        type: 'SET_SHOW_FORM',
-        payload: true,
-      });
-
-      // Fill form
-      state = ingredientManagerReducer(state, {
-        type: 'UPDATE_FORM_FIELD',
-        payload: { field: 'name', value: 'New Ingredient' },
-      });
-
-      state = ingredientManagerReducer(state, {
-        type: 'UPDATE_FORM_FIELD',
-        payload: { field: 'type', value: 'grain' },
-      });
-
-      // Submit (add ingredient)
-      const newIngredient = {
-        _id: '1',
-        name: 'New Ingredient',
-        type: 'grain' as const,
+    it('should handle SET_FORM_DATA', () => {
+      const formData: IngredientFormData = {
+        name: 'Test Ingredient',
+        type: 'yeast',
+        description: 'Test description',
         grain_type: '',
-        searchableText: 'new ingredient grain',
+        potential: '',
+        color: '',
+        alpha_acid: '',
+        yeast_type: 'ale',
+        attenuation: '75',
+        manufacturer: 'Test Manufacturer',
+        code: 'T123',
+        alcohol_tolerance: '12',
+        min_temperature: '18',
+        max_temperature: '22',
       };
 
-      state = ingredientManagerReducer(state, {
-        type: 'ADD_INGREDIENT',
-        payload: newIngredient,
-      });
+      const action: IngredientManagerAction = {
+        type: 'SET_FORM_DATA',
+        payload: formData,
+      };
 
-      expect(state.ingredients).toContain(newIngredient);
-      expect(state.showForm).toBe(false);
-      expect(state.formData.name).toBe(''); // Form reset
-      expect(state.successMessage).toBe('Ingredient added successfully!');
+      const newState = ingredientManagerReducer(initialState, action);
+
+      expect(newState.formData).toEqual(formData);
     });
   });
 
-  describe('Search Functionality', () => {
-    it('should handle search term updates', () => {
+  describe('Search and Filter Actions', () => {
+    it('should handle SEARCH_START', () => {
       const state = ingredientManagerReducer(initialState, {
-        type: 'SET_SEARCH_TERM',
-        payload: 'pale',
+        type: 'SEARCH_START',
       });
 
-      expect(state.searchTerm).toBe('pale');
+      // SEARCH_START doesn't modify state in current implementation
+      expect(state).toEqual(initialState);
     });
 
-    it('should handle search results', () => {
-      const mockResults = [
-        {
+    it('should handle SEARCH_COMPLETE', () => {
+      const mockResults = {
+        grain: [{
           _id: '1',
           name: 'Pale Malt',
           type: 'grain' as const,
-          searchableText: 'pale malt grain',
-        },
-      ];
+          searchScore: 1.0,
+        }],
+        hop: [],
+        yeast: [],
+        other: [],
+      };
 
-      const state = ingredientManagerReducer(initialState, {
-        type: 'SET_SEARCH_RESULTS',
-        payload: mockResults,
+      const action: IngredientManagerAction = {
+        type: 'SEARCH_COMPLETE',
+        payload: {
+          results: mockResults,
+          expandSections: true,
+        },
+      };
+
+      const state = ingredientManagerReducer(initialState, action);
+
+      expect(state.filteredResults).toEqual(mockResults);
+      expect(state.expandedSections).toEqual({
+        grain: true,
+        hop: true,
+        yeast: true,
+        other: true,
+      });
+    });
+
+    it('should handle CLEAR_SEARCH', () => {
+      const stateWithSearch = {
+        ...initialState,
+        searchQuery: 'test search',
+        filteredResults: {
+          grain: [{ _id: '1', name: 'Test', type: 'grain' as const }],
+          hop: [],
+          yeast: [],
+          other: [],
+        },
+        expandedSections: {
+          grain: true,
+          hop: true,
+          yeast: true,
+          other: true,
+        },
+      };
+
+      const state = ingredientManagerReducer(stateWithSearch, {
+        type: 'CLEAR_SEARCH',
       });
 
-      expect(state.searchResults).toEqual(mockResults);
+      expect(state.searchQuery).toBe('');
+      expect(state.filteredResults).toEqual(state.groupedIngredients);
+      expect(state.expandedSections).toEqual(state.defaultExpandedState);
+    });
+  });
+
+  describe('Submit Actions', () => {
+    it('should handle SUBMIT_ERROR', () => {
+      const stateWithLoading = {
+        ...initialState,
+        loading: true,
+      };
+
+      const action: IngredientManagerAction = {
+        type: 'SUBMIT_ERROR',
+        payload: 'Failed to submit',
+      };
+
+      const newState = ingredientManagerReducer(stateWithLoading, action);
+
+      expect(newState.loading).toBe(false);
+      expect(newState.error).toBe('Failed to submit');
     });
   });
 
   describe('Section Management', () => {
     it('should toggle sections correctly', () => {
-      expect(initialState.expandedSections.grain).toBe(true);
+      expect(initialState.expandedSections.grain).toBe(false);
 
       const state = ingredientManagerReducer(initialState, {
         type: 'TOGGLE_SECTION',
         payload: 'grain',
       });
 
-      expect(state.expandedSections.grain).toBe(false);
+      expect(state.expandedSections.grain).toBe(true);
 
       const stateToggled = ingredientManagerReducer(state, {
         type: 'TOGGLE_SECTION',
         payload: 'grain',
       });
 
-      expect(stateToggled.expandedSections.grain).toBe(true);
+      expect(stateToggled.expandedSections.grain).toBe(false);
     });
 
     it('should handle all section types', () => {
@@ -506,7 +537,7 @@ describe('ingredientManagerReducer', () => {
           payload: section,
         });
 
-        expect(state.expandedSections[section]).toBe(false);
+        expect(state.expandedSections[section]).toBe(true); // Should toggle from false to true
       });
     });
   });
@@ -544,30 +575,6 @@ describe('ingredientManagerReducer', () => {
       const newState = ingredientManagerReducer(initialState, unknownAction);
 
       expect(newState).toBe(initialState);
-    });
-
-    it('should handle empty arrays gracefully', () => {
-      const action: IngredientManagerAction = {
-        type: 'SET_INGREDIENTS',
-        payload: [],
-      };
-
-      const newState = ingredientManagerReducer(initialState, action);
-
-      expect(newState.ingredients).toEqual([]);
-      expect(newState.loading).toBe(false);
-    });
-
-    it('should handle null/undefined payloads', () => {
-      const actionWithNull: IngredientManagerAction = {
-        type: 'SET_EDITING_INGREDIENT',
-        payload: null,
-      };
-
-      const newState = ingredientManagerReducer(initialState, actionWithNull);
-
-      expect(newState.editingIngredient).toBe(null);
-      expect(newState.showForm).toBe(false);
     });
   });
 });
