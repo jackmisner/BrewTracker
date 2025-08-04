@@ -20,7 +20,7 @@ class TestMongoDBServiceUserMethods:
     def sample_user(self):
         """Create a sample user for testing"""
         user = User(username="testuser", email="test@example.com")
-        user.set_password("password123")
+        user.set_password("TestPass123!")
         user.save()
         return user
 

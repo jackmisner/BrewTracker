@@ -15,14 +15,14 @@ class TestIngredientEndpoints:
             json={
                 "username": "ingredientuser",
                 "email": "ingredients@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Login to get token
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "ingredientuser", "password": "password123"},
+            json={"username": "ingredientuser", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="ingredientuser").first()

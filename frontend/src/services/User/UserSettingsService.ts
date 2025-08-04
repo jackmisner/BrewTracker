@@ -254,6 +254,43 @@ class UserSettingsService {
   }
 
   /**
+   * Validate password strength
+   */
+  validatePasswordStrength(password: string): ValidationResult {
+    const errors: string[] = [];
+
+    if (!password) {
+      errors.push("Password is required");
+      return { isValid: false, errors };
+    }
+
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters long");
+    }
+
+    if (!/[a-z]/.test(password)) {
+      errors.push("Password must contain at least one lowercase letter");
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Password must contain at least one uppercase letter");
+    }
+
+    if (!/\d/.test(password)) {
+      errors.push("Password must contain at least one number");
+    }
+
+    if (!/[~!@#$%^&*()_\-+={}|\\:;"'<,>.?/]/.test(password)) {
+      errors.push("Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
    * Validate password change data
    */
   validatePasswordChange(passwordData: PasswordChangeData): ValidationResult {
@@ -267,8 +304,12 @@ class UserSettingsService {
       errors.push("New password is required");
     }
 
-    if (passwordData.new_password && passwordData.new_password.length < 6) {
-      errors.push("New password must be at least 6 characters");
+    // Validate new password strength
+    if (passwordData.new_password) {
+      const passwordValidation = this.validatePasswordStrength(passwordData.new_password);
+      if (!passwordValidation.isValid) {
+        errors.push(...passwordValidation.errors);
+      }
     }
 
     if (

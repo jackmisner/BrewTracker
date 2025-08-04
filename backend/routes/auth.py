@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime, timedelta
 
 import requests
@@ -10,6 +11,39 @@ from services.google_oauth_service import GoogleOAuthService
 from services.username_validation_service import UsernameValidationService
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def validate_password(password):
+    """
+    Validate password strength according to security requirements:
+    - At least 8 characters
+    - At least one lowercase letter
+    - At least one uppercase letter
+    - At least one number
+    - At least one special character from ~!@#$%^&*()_-+={}|\:;"'<,>.?/
+    """
+    if not password:
+        return False, "Password is required"
+
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter"
+
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter"
+
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number"
+
+    if not re.search(r'[~!@#$%^&*()_\-+={}|\\:;"\'<,>.?/]', password):
+        return (
+            False,
+            "Password must contain at least one special character (~!@#$%^&*()_-+={}|\\:;\"'<,>.?/)",
+        )
+
+    return True, "Password is valid"
 
 
 def get_ip():
@@ -54,6 +88,11 @@ def register():
     # Check if email already exists
     if User.objects(email=email).first():
         return jsonify({"error": "Email already exists"}), 400
+
+    # Validate password strength
+    is_valid_password, password_error = validate_password(password)
+    if not is_valid_password:
+        return jsonify({"error": password_error}), 400
 
     # Get user IP and geo info
     ip = get_ip()

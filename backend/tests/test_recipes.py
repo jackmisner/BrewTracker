@@ -17,14 +17,14 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "recipeuser",
                 "email": "recipe@example.com",
-                "password": "password123",
+                "password": "TestPass123!",
             },
         )
 
         # Login to get token
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "recipeuser", "password": "password123"},
+            json={"username": "recipeuser", "password": "TestPass123!"},
         )
         token = login_response.json["access_token"]
         user = User.objects(username="recipeuser").first()
@@ -169,7 +169,7 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "user1",
                 "email": "user1@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -177,16 +177,16 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "user2",
                 "email": "user2@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens
         user1_token = client.post(
-            "/api/auth/login", json={"username": "user1", "password": "pass123"}
+            "/api/auth/login", json={"username": "user1", "password": "Pass123!"}
         ).json["access_token"]
         user2_token = client.post(
-            "/api/auth/login", json={"username": "user2", "password": "pass123"}
+            "/api/auth/login", json={"username": "user2", "password": "Pass123!"}
         ).json["access_token"]
 
         user1_headers = {"Authorization": f"Bearer {user1_token}"}
@@ -260,7 +260,7 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "owner",
                 "email": "owner@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -268,16 +268,16 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "other",
                 "email": "other@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens
         owner_token = client.post(
-            "/api/auth/login", json={"username": "owner", "password": "pass123"}
+            "/api/auth/login", json={"username": "owner", "password": "Pass123!"}
         ).json["access_token"]
         other_token = client.post(
-            "/api/auth/login", json={"username": "other", "password": "pass123"}
+            "/api/auth/login", json={"username": "other", "password": "Pass123!"}
         ).json["access_token"]
 
         owner_headers = {"Authorization": f"Bearer {owner_token}"}
@@ -311,7 +311,7 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "owner",
                 "email": "owner@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -319,16 +319,16 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "other",
                 "email": "other@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens
         owner_token = client.post(
-            "/api/auth/login", json={"username": "owner", "password": "pass123"}
+            "/api/auth/login", json={"username": "owner", "password": "Pass123!"}
         ).json["access_token"]
         other_token = client.post(
-            "/api/auth/login", json={"username": "other", "password": "pass123"}
+            "/api/auth/login", json={"username": "other", "password": "Pass123!"}
         ).json["access_token"]
 
         owner_headers = {"Authorization": f"Bearer {owner_token}"}
@@ -498,7 +498,7 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "owner",
                 "email": "owner@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -506,16 +506,16 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "cloner",
                 "email": "cloner@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens
         owner_token = client.post(
-            "/api/auth/login", json={"username": "owner", "password": "pass123"}
+            "/api/auth/login", json={"username": "owner", "password": "Pass123!"}
         ).json["access_token"]
         cloner_token = client.post(
-            "/api/auth/login", json={"username": "cloner", "password": "pass123"}
+            "/api/auth/login", json={"username": "cloner", "password": "Pass123!"}
         ).json["access_token"]
 
         owner_headers = {"Authorization": f"Bearer {owner_token}"}
@@ -601,7 +601,7 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "owner",
                 "email": "owner@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
         client.post(
@@ -609,16 +609,16 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "other",
                 "email": "other@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         # Get tokens
         owner_token = client.post(
-            "/api/auth/login", json={"username": "owner", "password": "pass123"}
+            "/api/auth/login", json={"username": "owner", "password": "Pass123!"}
         ).json["access_token"]
         other_token = client.post(
-            "/api/auth/login", json={"username": "other", "password": "pass123"}
+            "/api/auth/login", json={"username": "other", "password": "Pass123!"}
         ).json["access_token"]
 
         owner_headers = {"Authorization": f"Bearer {owner_token}"}
@@ -651,12 +651,12 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "publicuser",
                 "email": "public@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         token = client.post(
-            "/api/auth/login", json={"username": "publicuser", "password": "pass123"}
+            "/api/auth/login", json={"username": "publicuser", "password": "Pass123!"}
         ).json["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -701,12 +701,12 @@ class TestRecipeEndpointsExtended:
             json={
                 "username": "filteruser",
                 "email": "filter@example.com",
-                "password": "pass123",
+                "password": "Pass123!",
             },
         )
 
         token = client.post(
-            "/api/auth/login", json={"username": "filteruser", "password": "pass123"}
+            "/api/auth/login", json={"username": "filteruser", "password": "Pass123!"}
         ).json["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
