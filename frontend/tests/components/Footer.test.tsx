@@ -2,11 +2,10 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import Footer from "../../src/components/Layout/Footer";
-import packageJson from "../../package.json";
 
-// Mock the package.json import
-jest.mock("../../package.json", () => ({
-  version: "1.2.3",
+// Mock the version constant
+jest.mock("@/constants/version", () => ({
+  APP_VERSION: "1.2.3",
 }));
 
 // Helper to render Footer with router context
@@ -112,7 +111,7 @@ describe("Footer", () => {
       expect(featureRequestLink).toHaveClass("footer-link");
     });
 
-    test("displays application version from package.json", () => {
+    test("displays application version from version constant", () => {
       renderFooter();
       
       const versionText = screen.getByText("Version 1.2.3");
