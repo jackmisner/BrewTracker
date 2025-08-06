@@ -166,7 +166,10 @@ export function hasInterpolatedData(data: ChartDataPoint[]): boolean {
 /**
  * Get statistics about interpolated data
  */
-export function getInterpolationStats(originalData: ChartDataPoint[], interpolatedData: ChartDataPoint[]): {
+export function getInterpolationStats(
+  originalData: ChartDataPoint[],
+  interpolatedData: ChartDataPoint[]
+): {
   totalPoints: number;
   interpolatedPoints: number;
   interpolatedGravity: number;
@@ -187,13 +190,24 @@ export function getInterpolationStats(originalData: ChartDataPoint[], interpolat
 
       const originalPoint = originalData[index];
       if (originalPoint && originalPoint.date === point.date) {
-        if ((originalPoint.gravity === null || originalPoint.gravity === undefined) && point.gravity !== null) {
+        if (
+          (originalPoint.gravity === null ||
+            originalPoint.gravity === undefined) &&
+          point.gravity !== null
+        ) {
           stats.interpolatedGravity++;
         }
-        if ((originalPoint.temperature === null || originalPoint.temperature === undefined) && point.temperature !== null) {
+        if (
+          (originalPoint.temperature === null ||
+            originalPoint.temperature === undefined) &&
+          point.temperature !== null
+        ) {
           stats.interpolatedTemperature++;
         }
-        if ((originalPoint.ph === null || originalPoint.ph === undefined) && point.ph !== null) {
+        if (
+          (originalPoint.ph === null || originalPoint.ph === undefined) &&
+          point.ph !== null
+        ) {
           stats.interpolatedPh++;
         }
       }
