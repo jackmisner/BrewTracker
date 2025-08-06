@@ -13,7 +13,8 @@ module.exports = {
       '@/reducers': path.resolve(__dirname, 'src/reducers'),
       '@/utils': path.resolve(__dirname, 'src/utils'),
       '@/types': path.resolve(__dirname, 'src/types'),
-      '@/styles': path.resolve(__dirname, 'src/styles')
+      '@/styles': path.resolve(__dirname, 'src/styles'),
+      '@/constants': path.resolve(__dirname, 'src/constants')
     }
   }
 };

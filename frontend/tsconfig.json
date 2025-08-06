@@ -28,7 +28,7 @@
 
     "baseUrl": "src",
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["../src/*"],
       "@/components/*": ["components/*"],
       "@/images/*": ["images/*"],
       "@/pages/*": ["pages/*"],
@@ -38,7 +38,8 @@
       "@/reducers/*": ["reducers/*"],
       "@/utils/*": ["utils/*"],
       "@/types/*": ["types/*"],
-      "@/styles/*": ["styles/*"]
+      "@/styles/*": ["styles/*"],
+      "@/constants/*": ["constants/*"]
     }
   },
 

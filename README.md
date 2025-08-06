@@ -74,6 +74,9 @@ BrewTracker/
 │   ├── requirements.txt                                  # Python package dependencies for backend
 │   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
 ├── frontend/
+│   ├── craco.config.js                                   # CRACO configuration for webpack path alias resolution
+│   ├── scripts/
+│   │   └── sync-version.js                               # Automated script to sync version constant with package.json
 │   ├── public/
 │   │   ├── index.html                                    # Main HTML template for React application
 │   ├── src/
@@ -89,6 +92,8 @@ BrewTracker/
 │   │   │   ├── GoogleSignInButton.tsx                    # FedCM-compatible Google Sign-In component with modern authentication support
 │   │   │   ├── RecipeActions.tsx                         # Action buttons for recipe operations with public recipe access control (edit, delete, clone, share)
 │   │   │   └── SearchableSelect.ts                       # Fuzzy search component with Fuse.js for intelligent ingredient matching and suggestions
+│   │   ├── constants/
+│   │   │   └── version.ts                                # Application version constant, automatically synchronized with package.json
 │   │   ├── contexts/
 │   │   │   └── UnitContext.ts                            # React context for global metric/imperial unit preference management
 │   │   ├── hooks/                                        # Custom React hooks for state management and business logic
@@ -475,6 +480,8 @@ BrewTracker implements a sophisticated system users architecture to handle accou
   - Fuse.js for fuzzy searching
   - TypeScript for type safety
   - Jest for testing
+  - CRACO for webpack configuration override
+  - Path aliases (`@/`) for clean imports
 
 - Backend:
   - Flask
@@ -535,6 +542,46 @@ pytest -v
 ```
 
 **Performance Tip**: Use `pytest -n auto` for parallel test execution, which automatically detects the number of CPU cores and runs tests concurrently for significantly faster test completion.
+
+### Version Management
+
+The frontend uses automated version synchronization to keep the displayed version in sync with `package.json`:
+
+```bash
+# Bump version and automatically update version constant
+npm run version:patch   # 1.7.10 -> 1.7.11
+npm run version:minor   # 1.7.10 -> 1.8.0  
+npm run version:major   # 1.7.10 -> 2.0.0
+
+# Manually sync version constant if needed
+npm run sync-version
+```
+
+The version is displayed in the footer and automatically updates when using npm version commands.
+
+### Path Aliases & Clean Imports
+
+The project uses TypeScript path aliases configured via CRACO for clean, maintainable imports:
+
+```typescript
+// ✅ Clean aliases (preferred)
+import { Services } from "@/services";
+import { Recipe } from "@/types";
+import { useRecipeBuilder } from "@/hooks/useRecipeBuilder";
+import { APP_VERSION } from "@/constants/version";
+
+// ❌ Relative imports (avoided)
+import { Services } from "../../../services";
+import { Recipe } from "../../types";
+```
+
+**Configured aliases:**
+- `@/components/*` → `src/components/*`
+- `@/services/*` → `src/services/*`  
+- `@/hooks/*` → `src/hooks/*`
+- `@/types/*` → `src/types/*`
+- `@/constants/*` → `src/constants/*`
+- And more...
 
 ### Quality Assurance
 
