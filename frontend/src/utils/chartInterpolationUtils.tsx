@@ -3,7 +3,7 @@
  * Provides functions to interpolate missing data points in fermentation tracking charts
  * for continuous line visualization while preserving data integrity.
  */
-import React from "react";
+import type { TooltipProps } from "recharts";
 
 export interface ChartDataPoint {
   date: string; // ISO date string for calculations
@@ -13,6 +13,9 @@ export interface ChartDataPoint {
   ph: number | null;
   isInterpolated?: boolean; // Flag to indicate interpolated data points
 }
+
+// Custom tooltip props type extending Recharts TooltipProps
+type CustomTooltipProps = TooltipProps<number, string>;
 
 /**
  * Linear interpolation between two values
@@ -231,126 +234,113 @@ export function createCustomDot(_metric: string) {
  * Enhanced tooltip component that shows interpolated data indicators
  */
 export function createCustomTooltip() {
-  return function CustomTooltip({ active, payload, label }: any) {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const isInterpolated = data.isInterpolated;
+  return function CustomTooltip(props: CustomTooltipProps) {
+    const { active, payload, label } = props;
 
-      const labelContent = [
-        `${label}`,
-        isInterpolated &&
-          React.createElement(
-            "span",
-            {
-              key: "estimated-label",
-              style: {
+    if (!active || !payload || !payload.length) {
+      return null;
+    }
+
+    // Type assertion for the payload data structure
+    const data = (payload[0] as any).payload as ChartDataPoint;
+    const isInterpolated = data.isInterpolated;
+
+    return (
+      <div
+        className="custom-tooltip"
+        style={{
+          backgroundColor: "#fff",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+          padding: "10px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}
+      >
+        <p
+          className="label"
+          style={{ marginBottom: "8px", fontWeight: "bold" }}
+        >
+          {label}
+          {isInterpolated && (
+            <span
+              style={{
                 color: "#888",
                 fontSize: "12px",
                 marginLeft: "8px",
                 fontStyle: "italic",
-              },
-            },
-            " (Contains estimated values)"
-          ),
-      ].filter(Boolean);
+              }}
+            >
+              {" "}
+              (Contains estimated values)
+            </span>
+          )}
+        </p>
 
-      const payloadElements = payload
-        .map((entry: any, index: number) => {
-          const value = entry.value;
-          if (value === null || value === undefined) return null;
+        {payload.map((entry, index) => {
+          const value = entry.value as number;
+          const name = entry.name || "";
+          const color = entry.color || "#000";
+          const dataKey = entry.dataKey || "";
+
+          if (value === null || value === undefined) {
+            return null;
+          }
 
           const isMetricInterpolated =
             data.isInterpolated &&
-            (entry.dataKey === "gravity" ||
-              entry.dataKey === "temperature" ||
-              entry.dataKey === "ph");
+            (dataKey === "gravity" ||
+              dataKey === "temperature" ||
+              dataKey === "ph");
 
           const formattedValue =
-            entry.dataKey === "gravity"
+            dataKey === "gravity"
               ? value.toFixed(3)
-              : entry.dataKey === "temperature"
-                ? Math.round(value)
-                : entry.dataKey === "ph"
+              : dataKey === "temperature"
+                ? Math.round(value).toString()
+                : dataKey === "ph"
                   ? value.toFixed(1)
-                  : value;
+                  : value.toString();
 
-          const content = [
-            `${entry.name}: ${formattedValue}`,
-            isMetricInterpolated &&
-              React.createElement(
-                "span",
-                {
-                  key: "asterisk",
-                  style: {
+          return (
+            <p
+              key={index}
+              style={{
+                color: color,
+                margin: "4px 0",
+                fontSize: "14px",
+              }}
+            >
+              {`${name}: ${formattedValue}`}
+              {isMetricInterpolated && (
+                <span
+                  style={{
                     color: "#888",
                     fontSize: "11px",
                     marginLeft: "4px",
                     fontStyle: "italic",
-                  },
-                },
-                " *"
-              ),
-          ].filter(Boolean);
-
-          return React.createElement(
-            "p",
-            {
-              key: index,
-              style: {
-                color: entry.color,
-                margin: "4px 0",
-                fontSize: "14px",
-              },
-            },
-            content
+                  }}
+                >
+                  {" "}
+                  *
+                </span>
+              )}
+            </p>
           );
-        })
-        .filter(Boolean);
+        })}
 
-      const footnote = isInterpolated
-        ? React.createElement(
-            "p",
-            {
-              key: "footnote",
-              style: {
-                fontSize: "11px",
-                color: "#888",
-                marginTop: "8px",
-                fontStyle: "italic",
-              },
-            },
-            "* Estimated value"
-          )
-        : null;
-
-      return React.createElement(
-        "div",
-        {
-          className: "custom-tooltip",
-          style: {
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            padding: "10px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          },
-        },
-        [
-          React.createElement(
-            "p",
-            {
-              key: "label",
-              className: "label",
-              style: { marginBottom: "8px", fontWeight: "bold" },
-            },
-            labelContent
-          ),
-          ...payloadElements,
-          footnote,
-        ].filter(Boolean)
-      );
-    }
-
-    return null;
+        {isInterpolated && (
+          <p
+            style={{
+              fontSize: "11px",
+              color: "#888",
+              marginTop: "8px",
+              fontStyle: "italic",
+            }}
+          >
+            * Estimated value
+          </p>
+        )}
+      </div>
+    );
   };
 }
