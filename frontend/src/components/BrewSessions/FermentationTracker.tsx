@@ -1,4 +1,10 @@
-import React, { useReducer, useEffect, useCallback, useRef } from "react";
+import React, {
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import {
   LineChart,
   Line,
@@ -22,6 +28,12 @@ import {
   FormData,
   validateField,
 } from "@/reducers";
+import {
+  interpolateChartData,
+  hasInterpolatedData,
+  createCustomTooltip,
+  ChartDataPoint,
+} from "@/utils/chartInterpolationUtils";
 import "@/styles/BrewSessions.css";
 
 interface FermentationTrackerProps {
@@ -33,12 +45,8 @@ interface FermentationTrackerProps {
   ) => void;
 }
 
-interface ChartData {
-  date: string; // ISO date string for calculations
-  displayDate: string; // Formatted date for chart display
-  gravity: number | null;
-  temperature: number | null;
-  ph: number | null;
+interface ChartData extends ChartDataPoint {
+  // Inherits all properties from ChartDataPoint including isInterpolated
 }
 
 const FermentationTracker: React.FC<FermentationTrackerProps> = ({
@@ -55,6 +63,20 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     fermentationReducer,
     createInitialFermentationState()
   );
+
+  // Interpolation state with local storage persistence
+  const [useInterpolation, setUseInterpolation] = useState<boolean>(() => {
+    const saved = localStorage.getItem("fermentation-use-interpolation");
+    return saved !== null ? JSON.parse(saved) : true; // Default to true
+  });
+
+  // Save interpolation preference to local storage
+  useEffect(() => {
+    localStorage.setItem(
+      "fermentation-use-interpolation",
+      JSON.stringify(useInterpolation)
+    );
+  }, [useInterpolation]);
 
   // Focus input when editing starts
   useEffect(() => {
@@ -483,8 +505,8 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     );
   };
 
-  // Format data for the chart
-  const formatChartData = (): ChartData[] => {
+  // Format raw data for the chart
+  const formatRawChartData = (): ChartData[] => {
     if (!state.fermentationData || state.fermentationData.length === 0) {
       return [];
     }
@@ -495,10 +517,22 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
       gravity: entry.gravity || null,
       temperature: entry.temperature || null,
       ph: entry.ph || null,
+      isInterpolated: false,
     }));
   };
 
-  const chartData = formatChartData();
+  // Get chart data with optional interpolation
+  const getChartData = (): ChartData[] => {
+    const rawData = formatRawChartData();
+
+    if (!useInterpolation || rawData.length === 0) {
+      return rawData;
+    }
+
+    return interpolateChartData(rawData) as ChartData[];
+  };
+
+  const chartData = getChartData();
 
   // Calculate gravity domain for chart Y-axis
   const calculateGravityDomain = (): [number, number] => {
@@ -717,12 +751,25 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
     <div className="fermentation-tracker">
       <div className="fermentation-header">
         <h2 className="fermentation-title">Fermentation Tracking</h2>
-        <button
-          onClick={() => dispatch({ type: "TOGGLE_FORM" })}
-          className="btn btn-primary"
-        >
-          {state.showForm ? "Cancel" : "Add Entry"}
-        </button>
+        <div className="fermentation-header-controls">
+          <button
+            onClick={() => setUseInterpolation(!useInterpolation)}
+            className={`btn ${useInterpolation ? "btn-secondary" : "btn-outline-secondary"}`}
+            title={
+              useInterpolation
+                ? "Show raw data with gaps"
+                : "Fill gaps with estimated values"
+            }
+          >
+            {useInterpolation ? "📊 Smooth" : "📈 Raw"}
+          </button>
+          <button
+            onClick={() => dispatch({ type: "TOGGLE_FORM" })}
+            className="btn btn-primary"
+          >
+            {state.showForm ? "Cancel" : "Add Entry"}
+          </button>
+        </div>
       </div>
 
       {/* Form for adding new fermentation data */}
@@ -1039,7 +1086,20 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
           {/* Chart visualization */}
           {chartData && chartData.length > 0 && (
             <div className="brew-session-section">
-              <h3 className="section-title">Fermentation Progress</h3>
+              <div className="section-title-with-info">
+                <h3 className="section-title">Fermentation Progress</h3>
+                {useInterpolation && hasInterpolatedData(chartData) && (
+                  <div
+                    className="interpolation-indicator"
+                    title="Chart shows estimated values for missing data points"
+                  >
+                    <span className="indicator-icon">📊</span>
+                    <span className="indicator-text">
+                      Contains estimated data
+                    </span>
+                  </div>
+                )}
+              </div>
               <div className="fermentation-chart">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -1065,7 +1125,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       domain={[0, 14]}
                       hide={true}
                     />
-                    <Tooltip />
+                    <Tooltip content={createCustomTooltip()} />
                     <Legend />
 
                     {/* Expected FG Reference Line */}
@@ -1154,6 +1214,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       stroke="#8884d8"
                       activeDot={{ r: 8 }}
                       name="Gravity"
+                      connectNulls={useInterpolation}
                     />
                     <Line
                       yAxisId="temp"
@@ -1163,6 +1224,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       name={`Temperature (${
                         unitSystem === "metric" ? "°C" : "°F"
                       })`}
+                      connectNulls={useInterpolation}
                     />
                     <Line
                       yAxisId="ph"
@@ -1171,6 +1233,7 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
                       stroke="#ff6b6b"
                       name="pH"
                       strokeDasharray="2 2"
+                      connectNulls={useInterpolation}
                     />
                   </LineChart>
                 </ResponsiveContainer>
