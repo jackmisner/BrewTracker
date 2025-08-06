@@ -605,6 +605,45 @@
   margin-bottom: 1rem;
 }
 
+.fermentation-header-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Interpolation indicators */
+.section-title-with-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.interpolation-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #fef3c7; /* amber-100 */
+  border: 1px solid #f59e0b; /* amber-500 */
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: #92400e; /* amber-800 */
+  cursor: help;
+}
+
+.indicator-icon {
+  font-size: 0.875rem;
+}
+
+.indicator-text {
+  font-weight: 500;
+}
+
+.interpolation-indicator:hover {
+  background-color: #fde68a; /* amber-200 */
+}
+
 .fermentation-title {
   font-size: 1.25rem;
   font-weight: 600;
