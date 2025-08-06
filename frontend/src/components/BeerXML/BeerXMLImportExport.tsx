@@ -1,14 +1,14 @@
 import React, { useReducer, useRef } from "react";
-import { Services } from "../../services";
-import IngredientMatchingReview from "./IngredientMatchingReview";
-import { Recipe, Ingredient } from "../../types";
+import { Services } from "@/services";
+import IngredientMatchingReview from "@/components/BeerXML/IngredientMatchingReview";
+import { Recipe, Ingredient } from "@/types";
 import {
   BeerXMLImportData,
   BeerXMLMetadata,
   BeerXMLExportResult,
-} from "../../types/beerxml";
-import { beerXMLReducer, createInitialBeerXMLState } from "../../reducers";
-import "../../styles/BeerXMLImportExport.css";
+} from "@/types/beerxml";
+import { beerXMLReducer, createInitialBeerXMLState } from "@/reducers";
+import "@/styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
   recipe?: Recipe;

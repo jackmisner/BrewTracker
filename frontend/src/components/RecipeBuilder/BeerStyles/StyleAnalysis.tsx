@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Services } from "../../../services";
-import { Recipe, RecipeMetrics } from "../../../types";
+import { Services } from "@/services";
+import { Recipe, RecipeMetrics } from "@/types";
 import {
   BeerStyleGuide,
   StyleSuggestion as BeerStyleSuggestion,
-} from "../../../types/beer-styles";
+} from "@/types/beer-styles";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
-} from "../../../utils/formatUtils";
+} from "@/utils/formatUtils";
 
 interface StyleMatch {
   matches: Record<string, boolean>;

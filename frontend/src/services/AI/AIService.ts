@@ -4,8 +4,8 @@
  * Replaces complex frontend AI logic with simple backend API calls
  */
 
-import ApiService from "../api";
-import { Recipe, RecipeIngredient, RecipeMetrics } from "../../types";
+import ApiService from "@/services/api";
+import { Recipe, RecipeIngredient, RecipeMetrics } from "@/types";
 
 export interface AIAnalysisRequest {
   // Support both old format (recipe_data) and new format (complete_recipe)
@@ -180,7 +180,7 @@ export class AIService {
     if (recipe.style) {
       try {
         // Import Services here to avoid circular dependencies
-        const { Services } = await import("../index");
+        const { Services } = await import("@/services");
         const allStyles = await Services.beerStyle.getAllStylesList();
         const matchingStyle = allStyles.find(
           (style: any) =>

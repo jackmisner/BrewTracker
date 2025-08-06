@@ -1,4 +1,4 @@
-import ApiService from "../api";
+import ApiService from "@/services/api";
 
 // Service-specific interfaces
 interface User {

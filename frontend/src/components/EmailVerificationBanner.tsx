@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import ApiService from "../services/api";
-import { User } from "../types";
-import "../styles/EmailVerificationBanner.css";
+import ApiService from "@/services/api";
+import { User } from "@/types";
+import "@/styles/EmailVerificationBanner.css";
 
 interface EmailVerificationBannerProps {
   user: User;

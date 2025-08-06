@@ -1,11 +1,11 @@
-import ApiService from "../api";
+import ApiService from "@/services/api";
 import {
   BrewSession,
   ID,
   GravityStabilizationAnalysis,
   DryHopAddition,
-} from "../../types";
-import { AddDryHopAdditionRequest } from "../../types/api";
+} from "@/types";
+import { AddDryHopAdditionRequest } from "@/types/api";
 
 // Service-specific interfaces
 interface BrewSessionValidation {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
-import ApiService from "../services/api";
-import CompactRecipeCard from "../components/CompactRecipeCard";
+import ApiService from "@/services/api";
+import CompactRecipeCard from "@/components/CompactRecipeCard";
 import { useNavigate } from "react-router";
-import { Recipe } from "../types";
-import "../styles/AllRecipes.css";
+import { Recipe } from "@/types";
+import "@/styles/AllRecipes.css";
 
 const AllRecipes: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);

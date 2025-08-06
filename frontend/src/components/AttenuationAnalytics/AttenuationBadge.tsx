@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { attenuationAnalyticsServiceInstance } from "../../services";
-import { AttenuationAnalytics, ID } from "../../types";
-import { formatAttenuation } from "../../utils/formatUtils";
+import { attenuationAnalyticsServiceInstance } from "@/services";
+import { AttenuationAnalytics, ID } from "@/types";
+import { formatAttenuation } from "@/utils/formatUtils";
 
 interface AttenuationBadgeProps {
   ingredientId: ID;

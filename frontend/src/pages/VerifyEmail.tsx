@@ -6,9 +6,9 @@ import React, {
   useRef,
 } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router";
-import ApiService from "../services/api";
-import { AuthContext } from "../App";
-import "../styles/Auth.css";
+import ApiService from "@/services/api";
+import { AuthContext } from "@/App";
+import "@/styles/Auth.css";
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();

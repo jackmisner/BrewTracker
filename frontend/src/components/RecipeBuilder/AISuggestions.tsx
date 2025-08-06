@@ -4,17 +4,17 @@ import {
   RecipeIngredient,
   RecipeMetrics,
   CreateRecipeIngredientData,
-} from "../../types";
-import { useUnits } from "../../contexts/UnitContext";
-import { formatIngredientAmount, formatIbu } from "../../utils/formatUtils";
-import { Services } from "../../services";
+} from "@/types";
+import { useUnits } from "@/contexts/UnitContext";
+import { formatIngredientAmount, formatIbu } from "@/utils/formatUtils";
+import { Services } from "@/services";
 import {
   aiSuggestionsReducer,
   createInitialAISuggestionsState,
   type Suggestion,
   type IngredientChange,
   type OptimizationResult,
-} from "../../reducers";
+} from "@/reducers";
 
 // Interfaces now imported from reducer
 

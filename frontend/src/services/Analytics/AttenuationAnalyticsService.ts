@@ -1,5 +1,5 @@
-import ApiService from "../api";
-import { AttenuationAnalytics, ID } from "../../types";
+import ApiService from "@/services/api";
+import { AttenuationAnalytics, ID } from "@/types";
 
 /**
  * Service class for managing attenuation analytics functionality

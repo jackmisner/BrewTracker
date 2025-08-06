@@ -1,6 +1,6 @@
 import React from "react";
-import { Recipe } from "../types";
-import { formatEfficiency } from "../utils/formatUtils";
+import { Recipe } from "@/types";
+import { formatEfficiency } from "@/utils/formatUtils";
 
 interface CompactRecipeInfoProps {
   recipe: Recipe;

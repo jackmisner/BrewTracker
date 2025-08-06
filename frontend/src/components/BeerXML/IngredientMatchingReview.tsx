@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Services } from "../../services";
-import ApiService from "../../services/api";
-import { Ingredient, IngredientFormData } from "../../types";
+import { Services } from "@/services";
+import ApiService from "@/services/api";
+import { Ingredient, IngredientFormData } from "@/types";
 import {
   IngredientMatchResult,
   IngredientMatchingDecision,
-} from "../../types/beerxml";
-import "../../styles/IngredientMatchingReview.css";
+} from "@/types/beerxml";
+import "@/styles/IngredientMatchingReview.css";
 
 // Use types from beerxml.ts
 type MatchingResult = IngredientMatchResult;

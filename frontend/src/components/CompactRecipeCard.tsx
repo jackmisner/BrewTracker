@@ -1,13 +1,13 @@
 import React from "react";
-import { Recipe, ID } from "../types";
+import { Recipe, ID } from "@/types";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
   getSrmColour,
-} from "../utils/formatUtils";
-import RecipeActions from "./RecipeActions";
+} from "@/utils/formatUtils";
+import RecipeActions from "@/components/RecipeActions";
 
 interface CompactRecipeCardProps {
   recipe: Recipe;

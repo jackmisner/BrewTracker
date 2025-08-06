@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
-import { Ingredient } from "../types";
-import { convertUnit } from "../utils/formatUtils";
+import { Ingredient } from "@/types";
+import { convertUnit } from "@/utils/formatUtils";
 
 // Processed search result for internal use
 interface ProcessedSearchResult<T> {

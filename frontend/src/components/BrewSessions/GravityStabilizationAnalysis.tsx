@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { GravityStabilizationAnalysis, ID } from "../../types";
-import { Services } from "../../services";
-import { formatGravity, formatPercentage } from "../../utils/formatUtils";
+import { GravityStabilizationAnalysis, ID } from "@/types";
+import { Services } from "@/services";
+import { formatGravity, formatPercentage } from "@/utils/formatUtils";
 
 interface GravityStabilizationAnalysisProps {
   sessionId: ID;

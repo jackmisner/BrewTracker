@@ -14,9 +14,9 @@
  */
 import React from "react";
 import { Link } from "react-router";
-import { User } from "../../types";
-import "../../styles/Header.css";
-import logo from "../../images/mugOfBeer512.png";
+import { User } from "@/types";
+import "@/styles/Header.css";
+import logo from "@/images/mugOfBeer512.png";
 
 interface HeaderProps {
   user: User | null;

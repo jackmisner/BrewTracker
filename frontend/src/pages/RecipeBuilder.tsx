@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useRecipeBuilder } from "../hooks/useRecipeBuilder";
-import BeerXMLImportExport from "../components/BeerXML/BeerXMLImportExport";
-import RecipeDetails from "../components/RecipeBuilder/RecipeDetails";
-import RecipeMetrics from "../components/RecipeBuilder/RecipeMetrics";
-import IngredientsList from "../components/RecipeBuilder/IngredientsList";
-import IngredientInputsContainer from "../components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
-import StyleAnalysis from "../components/RecipeBuilder/BeerStyles/StyleAnalysis";
-import AISuggestions from "../components/RecipeBuilder/AISuggestions";
-import { Services } from "../services";
+import { useRecipeBuilder } from "@/hooks/useRecipeBuilder";
+import BeerXMLImportExport from "@/components/BeerXML/BeerXMLImportExport";
+import RecipeDetails from "@/components/RecipeBuilder/RecipeDetails";
+import RecipeMetrics from "@/components/RecipeBuilder/RecipeMetrics";
+import IngredientsList from "@/components/RecipeBuilder/IngredientsList";
+import IngredientInputsContainer from "@/components/RecipeBuilder/IngredientInputs/IngredientInputsContainer";
+import StyleAnalysis from "@/components/RecipeBuilder/BeerStyles/StyleAnalysis";
+import AISuggestions from "@/components/RecipeBuilder/AISuggestions";
+import { Services } from "@/services";
 // Recipe and RecipeIngredient types used via hooks
-import "../styles/RecipeBuilder.css";
+import "@/styles/RecipeBuilder.css";
 
 // BeerXML state interface
 interface BeerXMLState {

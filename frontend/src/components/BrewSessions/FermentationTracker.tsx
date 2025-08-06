@@ -10,19 +10,19 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { Services } from "../../services";
-import { useUnits } from "../../contexts/UnitContext";
-import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
-import DryHopTracker from "./DryHopTracker";
-import { FermentationEntry, BrewSession, Recipe, ID } from "../../types";
-import { formatGravity, formatAttenuation } from "../../utils/formatUtils";
+import { Services } from "@/services";
+import { useUnits } from "@/contexts/UnitContext";
+import GravityStabilizationAnalysis from "@/components/BrewSessions/GravityStabilizationAnalysis";
+import DryHopTracker from "@/components/BrewSessions/DryHopTracker";
+import { FermentationEntry, BrewSession, Recipe, ID } from "@/types";
+import { formatGravity, formatAttenuation } from "@/utils/formatUtils";
 import {
   fermentationReducer,
   createInitialFermentationState,
   FormData,
   validateField,
-} from "../../reducers";
-import "../../styles/BrewSessions.css";
+} from "@/reducers";
+import "@/styles/BrewSessions.css";
 
 interface FermentationTrackerProps {
   sessionId: ID;

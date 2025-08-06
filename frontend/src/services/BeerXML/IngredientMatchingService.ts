@@ -1,5 +1,5 @@
 import Fuse from "fuse.js";
-import { Ingredient, IngredientsByType, RecipeIngredient } from "../../types";
+import { Ingredient, IngredientsByType, RecipeIngredient } from "@/types";
 
 // Service-specific interfaces
 interface MatchResult {

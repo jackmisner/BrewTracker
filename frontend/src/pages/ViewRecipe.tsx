@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Services } from "../services";
-import ApiService from "../services/api";
-import CompactRecipeHeader from "../components/CompactRecipeHeader";
-import CompactRecipeInfo from "../components/CompactRecipeInfo";
-import IngredientsList from "../components/RecipeBuilder/IngredientsList";
-import RecipeActions from "../components/RecipeActions";
+import { Services } from "@/services";
+import ApiService from "@/services/api";
+import CompactRecipeHeader from "@/components/CompactRecipeHeader";
+import CompactRecipeInfo from "@/components/CompactRecipeInfo";
+import IngredientsList from "@/components/RecipeBuilder/IngredientsList";
+import RecipeActions from "@/components/RecipeActions";
 import {
   Recipe,
   RecipeIngredient,
@@ -13,15 +13,15 @@ import {
   BrewSessionSummary,
   ID,
   User,
-} from "../types";
+} from "@/types";
 import {
   formatGravity,
   formatAbv,
   formatEfficiency,
   formatPercentage,
-} from "../utils/formatUtils";
-import "../styles/ViewRecipe.css";
-import "../styles/CompactComponents.css";
+} from "@/utils/formatUtils";
+import "@/styles/ViewRecipe.css";
+import "@/styles/CompactComponents.css";
 
 interface BrewingStats {
   averageOG?: number;

@@ -1,5 +1,5 @@
-import ApiService from "../api";
-import { Recipe, RecipeIngredient, ID } from "../../types";
+import ApiService from "@/services/api";
+import { Recipe, RecipeIngredient, ID } from "@/types";
 
 // Service-specific interfaces
 interface BeerXMLExportResult {

@@ -4,7 +4,7 @@ import {
   formatAbv,
   formatIbu,
   formatSrm,
-} from "../../../utils/formatUtils";
+} from "@/utils/formatUtils";
 
 interface StyleRange {
   minimum?: { value: number };

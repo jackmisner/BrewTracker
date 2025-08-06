@@ -1,14 +1,14 @@
-import FermentableInput from "./FermentableInput";
-import HopInput from "./HopInput";
-import YeastInput from "./YeastInput";
-import OtherInput from "./OtherInput";
+import FermentableInput from "@/components/RecipeBuilder/IngredientInputs/FermentableInput";
+import HopInput from "@/components/RecipeBuilder/IngredientInputs/HopInput";
+import YeastInput from "@/components/RecipeBuilder/IngredientInputs/YeastInput";
+import OtherInput from "@/components/RecipeBuilder/IngredientInputs/OtherInput";
 import React from "react";
 import {
   IngredientsByType,
   IngredientFormData,
   IngredientType,
   CreateRecipeIngredientData,
-} from "../../../types";
+} from "@/types";
 
 interface IngredientInputsContainerProps {
   ingredients: IngredientsByType;

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
-import { Services } from "../../../services";
+import { Services } from "@/services";
 import StyleAnalysis from "./StyleAnalysis";
-import { Recipe, RecipeMetrics } from "../../../types";
-import { BeerStyleGuide, StyleSuggestion } from "../../../types/beer-styles";
+import { Recipe, RecipeMetrics } from "@/types";
+import { BeerStyleGuide, StyleSuggestion } from "@/types/beer-styles";
 
 interface EnhancedBeerStyle extends BeerStyleGuide {
   display_name: string;

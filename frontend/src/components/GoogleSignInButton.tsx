@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import "../styles/GoogleSignInButton.css";
+import "@/styles/GoogleSignInButton.css";
 
 interface GoogleSignInButtonProps {
   onSuccess: (token: string) => void;

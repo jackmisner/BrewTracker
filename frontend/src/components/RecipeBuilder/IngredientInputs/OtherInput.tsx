@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useUnits } from "../../../contexts/UnitContext";
-import SearchableSelect from "../../SearchableSelect";
-import { Ingredient, IngredientFormData } from "../../../types";
-import { selectAllOnFocus } from "../../../utils/formatUtils";
-import "../../../styles/SearchableSelect.css";
+import { useUnits } from "@/contexts/UnitContext";
+import SearchableSelect from "@/components/SearchableSelect";
+import { Ingredient, IngredientFormData } from "@/types";
+import { selectAllOnFocus } from "@/utils/formatUtils";
+import "@/styles/SearchableSelect.css";
 
 interface UnitOption {
   value: string;

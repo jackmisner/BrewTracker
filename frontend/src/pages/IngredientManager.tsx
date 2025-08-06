@@ -1,17 +1,17 @@
 import React, { useReducer, useEffect, useMemo, useCallback } from "react";
 import Fuse from "fuse.js";
-import ApiService from "../services/api";
-import { ingredientServiceInstance } from "../services";
-import { useUnits } from "../contexts/UnitContext";
-import { convertUnit } from "../utils/formatUtils";
-import { Ingredient, IngredientType } from "../types";
+import ApiService from "@/services/api";
+import { ingredientServiceInstance } from "@/services";
+import { useUnits } from "@/contexts/UnitContext";
+import { convertUnit } from "@/utils/formatUtils";
+import { Ingredient, IngredientType } from "@/types";
 import {
   ingredientManagerReducer,
   createInitialIngredientManagerState,
   type GroupedIngredients,
   type IngredientWithSearch,
-} from "../reducers";
-import "../styles/IngredientManager.css";
+} from "@/reducers";
+import "@/styles/IngredientManager.css";
 
 // Interfaces now imported from reducer
 

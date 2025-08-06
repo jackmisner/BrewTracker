@@ -1,16 +1,16 @@
 import React, { useReducer, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Services } from "../../services";
-import { invalidateBrewSessionCaches } from "../../services/CacheManager";
-import { useUnits } from "../../contexts/UnitContext";
-import { UpdateBrewSessionFormData } from "../../types";
+import { Services } from "@/services";
+import { invalidateBrewSessionCaches } from "@/services/CacheManager";
+import { useUnits } from "@/contexts/UnitContext";
+import { UpdateBrewSessionFormData } from "@/types";
 // BrewSession and BrewSessionStatus types used in state interface
 import {
   brewSessionReducer,
   createInitialBrewSessionState,
   type EditBrewSessionFormData,
-} from "../../reducers";
-import "../../styles/BrewSessions.css";
+} from "@/reducers";
+import "@/styles/BrewSessions.css";
 
 // Interface now imported from reducer
 

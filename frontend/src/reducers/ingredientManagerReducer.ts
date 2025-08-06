@@ -1,6 +1,6 @@
 // reducers/ingredientManagerReducer.ts
 
-import { Ingredient, IngredientType } from "../types";
+import { Ingredient, IngredientType } from "@/types";
 
 // Form data interfaces (from IngredientManager.tsx)
 export interface IngredientFormData {

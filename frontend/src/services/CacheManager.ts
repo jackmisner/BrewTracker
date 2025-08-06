@@ -1,6 +1,6 @@
 import BrewSessionService from "./Brewing/BrewSessionService";
 import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalyticsService";
-import { ID } from "../types";
+import { ID } from "@/types";
 
 // Service-specific interfaces
 interface CacheEventCallback {

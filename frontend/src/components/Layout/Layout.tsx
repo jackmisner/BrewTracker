@@ -9,10 +9,10 @@
  * This component wraps its children with a header and footer, and manages layout styling using Tailwind CSS classes.
  */
 import React from "react";
-import Header from "./Header";
-import Footer from "./Footer";
-import EmailVerificationBanner from "../EmailVerificationBanner";
-import { User } from "../../types";
+import Header from "@/components/Layout/Header";
+import Footer from "@/components/Layout/Footer";
+import EmailVerificationBanner from "@/components/EmailVerificationBanner";
+import { User } from "@/types";
 
 interface LayoutProps {
   user: User | null;

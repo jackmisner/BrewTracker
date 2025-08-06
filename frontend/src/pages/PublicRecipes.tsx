@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
-import ApiService from "../services/api";
-import CompactRecipeCard from "../components/CompactRecipeCard";
-import { Recipe } from "../types";
-import "../styles/PublicRecipes.css";
+import ApiService from "@/services/api";
+import CompactRecipeCard from "@/components/CompactRecipeCard";
+import { Recipe } from "@/types";
+import "@/styles/PublicRecipes.css";
 
 interface Pagination {
   page: number;

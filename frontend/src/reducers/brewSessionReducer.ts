@@ -1,6 +1,6 @@
 // reducers/brewSessionReducer.ts
 
-import { Recipe, BrewSession, BrewSessionStatus } from "../types";
+import { Recipe, BrewSession, BrewSessionStatus } from "@/types";
 
 // Form data interfaces matching the components
 export interface CreateBrewSessionFormData {

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useUnits } from "../../../contexts/UnitContext";
-import SearchableSelect from "../../SearchableSelect";
-import AttenuationBadge from "../../AttenuationAnalytics/AttenuationBadge";
-import { Ingredient, IngredientFormData } from "../../../types";
-import { selectAllOnFocus, convertUnit } from "../../../utils/formatUtils";
-import "../../../styles/SearchableSelect.css";
-import "../../../styles/AttenuationAnalytics.css";
+import { useUnits } from "@/contexts/UnitContext";
+import SearchableSelect from "@/components/SearchableSelect";
+import AttenuationBadge from "@/components/AttenuationAnalytics/AttenuationBadge";
+import { Ingredient, IngredientFormData } from "@/types";
+import { selectAllOnFocus, convertUnit } from "@/utils/formatUtils";
+import "@/styles/SearchableSelect.css";
+import "@/styles/AttenuationAnalytics.css";
 
 interface UnitOption {
   value: string;
