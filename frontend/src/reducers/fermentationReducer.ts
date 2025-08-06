@@ -1,5 +1,5 @@
 // reducers/fermentationReducer.ts
-import { FermentationEntry } from "../types";
+import { FermentationEntry } from "@/types";
 
 // Form data interface
 export interface FormData {

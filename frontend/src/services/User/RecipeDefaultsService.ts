@@ -1,4 +1,4 @@
-import { useUnits } from "../../contexts/UnitContext";
+import { useUnits } from "@/contexts/UnitContext";
 
 // Service-specific interfaces
 interface DefaultRecipeData {

@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useUnits } from "../../contexts/UnitContext";
-import { Services } from "../../services";
-import AttenuationBadge from "../AttenuationAnalytics/AttenuationBadge";
-import { RecipeIngredient, IngredientType } from "../../types";
-import { formatTime as formatTimeUtil } from "../../utils/formatUtils";
-import "../../styles/AttenuationAnalytics.css";
+import { useUnits } from "@/contexts/UnitContext";
+import { Services } from "@/services";
+import AttenuationBadge from "@/components/AttenuationAnalytics/AttenuationBadge";
+import { RecipeIngredient, IngredientType } from "@/types";
+import { formatTime as formatTimeUtil } from "@/utils/formatUtils";
+import "@/styles/AttenuationAnalytics.css";
 
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];

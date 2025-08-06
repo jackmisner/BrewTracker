@@ -1,14 +1,14 @@
 import React, { useReducer, useEffect, useCallback } from "react";
 import { useNavigate, useBlocker } from "react-router";
-import { useUnits } from "../contexts/UnitContext";
-import { Services } from "../services";
-import { UserSettings as UserSettingsType } from "../types";
+import { useUnits } from "@/contexts/UnitContext";
+import { Services } from "@/services";
+import { UserSettings as UserSettingsType } from "@/types";
 import {
   userSettingsReducer,
   createInitialUserSettingsState,
   type TabId,
-} from "../reducers";
-import "../styles/UserSettings.css";
+} from "@/reducers";
+import "@/styles/UserSettings.css";
 
 interface Tab {
   id: TabId;

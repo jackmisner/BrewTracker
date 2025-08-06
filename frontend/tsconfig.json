@@ -4,46 +4,46 @@
     "module": "esnext",
     "lib": ["dom", "dom.iterable", "es6", "es2020"],
     "moduleResolution": "node",
-    
+
     "jsx": "react-jsx",
     "allowJs": true,
     "skipLibCheck": true,
-    
+
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    
+
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    
+
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    
+
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"],
+      "@/*": ["./*"],
       "@/components/*": ["components/*"],
+      "@/images/*": ["images/*"],
       "@/pages/*": ["pages/*"],
       "@/services/*": ["services/*"],
       "@/hooks/*": ["hooks/*"],
       "@/contexts/*": ["contexts/*"],
+      "@/reducers/*": ["reducers/*"],
       "@/utils/*": ["utils/*"],
       "@/types/*": ["types/*"],
       "@/styles/*": ["styles/*"]
     }
   },
-  
-  "include": [
-    "src/**/*"
-  ],
-  
+
+  "include": ["src/**/*"],
+
   "exclude": [
     "node_modules",
     "build",

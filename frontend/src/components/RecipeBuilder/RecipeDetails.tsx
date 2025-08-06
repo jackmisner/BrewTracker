@@ -1,9 +1,9 @@
 import React from "react";
-import { useUnits } from "../../contexts/UnitContext";
+import { useUnits } from "@/contexts/UnitContext";
 import { Link } from "react-router";
-import BeerStyleSelector from "./BeerStyles/BeerStyleSelector";
-import { Recipe, RecipeMetrics } from "../../types";
-import { selectAllOnFocus } from "../../utils/formatUtils";
+import BeerStyleSelector from "@/components/RecipeBuilder/BeerStyles/BeerStyleSelector";
+import { Recipe, RecipeMetrics } from "@/types";
+import { selectAllOnFocus } from "@/utils/formatUtils";
 
 interface RecipeDetailsProps {
   recipe: Recipe;

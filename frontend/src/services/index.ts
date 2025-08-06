@@ -15,7 +15,7 @@ import RecipeDefaultsService from "./User/RecipeDefaultsService";
 import UserSettingsService from "./User/UserSettingsService";
 import attenuationAnalyticsServiceInstance from "./Analytics/AttenuationAnalyticsService";
 import aiService from "./AI/AIService";
-import { ID } from "../types";
+import { ID } from "@/types";
 
 // Service-specific interfaces
 interface ServiceHealthStatus {

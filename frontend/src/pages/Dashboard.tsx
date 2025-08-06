@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import ApiService from "../services/api";
+import ApiService from "@/services/api";
 // Format utilities are now handled by individual components
-import { Recipe, BrewSession, ID } from "../types";
-import CompactRecipeCard from "../components/CompactRecipeCard";
-import CompactBrewSessionCard from "../components/CompactBrewSessionCard";
-import "../styles/Dashboard.css";
-import "../styles/AllRecipes.css"; // For CompactBrewSessionCard styles
+import { Recipe, BrewSession, ID } from "@/types";
+import CompactRecipeCard from "@/components/CompactRecipeCard";
+import CompactBrewSessionCard from "@/components/CompactBrewSessionCard";
+import "@/styles/Dashboard.css";
+import "@/styles/AllRecipes.css"; // For CompactBrewSessionCard styles
 
 interface DashboardStats {
   totalRecipes: number;

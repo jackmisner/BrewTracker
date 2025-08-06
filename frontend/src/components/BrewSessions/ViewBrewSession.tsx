@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { Services } from "../../services";
-import { invalidateBrewSessionCaches } from "../../services/CacheManager";
-import FermentationTracker from "./FermentationTracker";
-import GravityStabilizationAnalysis from "./GravityStabilizationAnalysis";
-import { Recipe, BrewSession } from "../../types";
+import { Services } from "@/services";
+import { invalidateBrewSessionCaches } from "@/services/CacheManager";
+import FermentationTracker from "@/components/BrewSessions/FermentationTracker";
+import GravityStabilizationAnalysis from "@/components/BrewSessions/GravityStabilizationAnalysis";
+import { Recipe, BrewSession } from "@/types";
 import {
   formatGravity,
   formatAbv,
   formatEfficiency,
   formatAttenuation,
   formatTemperature,
-} from "../../utils/formatUtils";
-import "../../styles/BrewSessions.css";
+} from "@/utils/formatUtils";
+import "@/styles/BrewSessions.css";
 
 type BrewSessionStatus =
   | "planned"

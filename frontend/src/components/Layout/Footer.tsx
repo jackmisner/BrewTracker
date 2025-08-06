@@ -11,8 +11,8 @@
  */
 import React from "react";
 import { Link } from "react-router";
-import packageJson from "../../../package.json";
-import "../../styles/Footer.css";
+import packageJson from "@/../package.json";
+import "@/styles/Footer.css";
 
 const Footer: React.FC = () => {
   const appVersion: string = packageJson.version;

@@ -2,8 +2,8 @@
 // Minimal working version with useReducer for core operations
 import { useReducer, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
-import { Services } from "../services";
-import { useUnits } from "../contexts/UnitContext";
+import { Services } from "@/services";
+import { useUnits } from "@/contexts/UnitContext";
 import {
   Recipe,
   RecipeIngredient,
@@ -16,9 +16,9 @@ import {
   StyleAnalysis,
   StyleSuggestion,
   RecipeAnalysis,
-} from "../types";
-import { convertUnit } from "../utils/formatUtils";
-import { recipeBuilderReducer, createInitialState } from "../reducers";
+} from "@/types";
+import { convertUnit } from "@/utils/formatUtils";
+import { recipeBuilderReducer, createInitialState } from "@/reducers";
 
 // Return interface for the hook (same API as before)
 interface UseRecipeBuilderReturn {

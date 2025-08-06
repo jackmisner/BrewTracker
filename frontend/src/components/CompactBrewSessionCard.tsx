@@ -1,6 +1,6 @@
 import React from "react";
-import { BrewSession, ID } from "../types";
-import { formatGravity, formatAbv } from "../utils/formatUtils";
+import { BrewSession, ID } from "@/types";
+import { formatGravity, formatAbv } from "@/utils/formatUtils";
 
 interface CompactBrewSessionCardProps {
   session: BrewSession;

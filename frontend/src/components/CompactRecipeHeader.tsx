@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { Recipe, ID } from "../types";
-import ApiService from "../services/api";
+import { Recipe, ID } from "@/types";
+import ApiService from "@/services/api";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
   getSrmColour,
-} from "../utils/formatUtils";
+} from "@/utils/formatUtils";
 
 interface CompactRecipeHeaderProps {
   recipe: Recipe;

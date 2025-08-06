@@ -1,20 +1,20 @@
 import React, { useReducer, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { Services } from "../../services";
-import { invalidateBrewSessionCaches } from "../../services/CacheManager";
+import { Services } from "@/services";
+import { invalidateBrewSessionCaches } from "@/services/CacheManager";
 // Recipe type used in state interface
 import {
   brewSessionReducer,
   createInitialBrewSessionState,
   type CreateBrewSessionFormData,
-} from "../../reducers";
+} from "@/reducers";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
-} from "../../utils/formatUtils";
-import "../../styles/BrewSessions.css";
+} from "@/utils/formatUtils";
+import "@/styles/BrewSessions.css";
 
 // Interface now imported from reducer
 

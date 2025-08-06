@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
-import ApiService from "../../services/api";
-import { ID } from "../../types";
+import ApiService from "@/services/api";
+import { ID } from "@/types";
 
 interface RecipeVersionHistoryProps {
   recipeId: ID;

@@ -1,4 +1,4 @@
-import ApiService from "../api";
+import ApiService from "@/services/api";
 import {
   BeerStyleGuide,
   StyleAnalysis,
@@ -6,7 +6,7 @@ import {
   RecipeMetrics,
   StyleRange,
   ID,
-} from "../../types";
+} from "@/types";
 
 // Service-specific interfaces
 interface InternalStyleMatch {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { attenuationAnalyticsServiceInstance } from "../services";
-import { AttenuationAnalytics } from "../types";
-import { formatAttenuation } from "../utils/formatUtils";
-import "../styles/AttenuationAnalytics.css";
+import { attenuationAnalyticsServiceInstance } from "@/services";
+import { AttenuationAnalytics } from "@/types";
+import { formatAttenuation } from "@/utils/formatUtils";
+import "@/styles/AttenuationAnalytics.css";
 
 interface SystemStats {
   total_yeast_ingredients: number;

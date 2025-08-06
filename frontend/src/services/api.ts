@@ -82,7 +82,7 @@ import {
 
   // Common types
   ID,
-} from "../types";
+} from "@/types";
 
 // API Configuration
 const API_URL: string =

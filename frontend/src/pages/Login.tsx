@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import ApiService from "../services/api";
-import { User } from "../types";
-import GoogleSignInButton from "../components/GoogleSignInButton";
-import "../styles/Auth.css";
+import ApiService from "@/services/api";
+import { User } from "@/types";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
+import "@/styles/Auth.css";
 
 interface LoginProps {
   onLogin: (user: User, token: string) => void;

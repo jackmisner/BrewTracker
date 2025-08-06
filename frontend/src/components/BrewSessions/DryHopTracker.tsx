@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Services } from "../../services";
+import { Services } from "@/services";
 import {
   DryHopAddition,
   ID,
   BrewSession,
   Recipe,
   RecipeIngredient,
-} from "../../types";
-import "../../styles/BrewSessions.css";
+} from "@/types";
+import "@/styles/BrewSessions.css";
 
 interface DryHopTrackerProps {
   sessionId: ID;

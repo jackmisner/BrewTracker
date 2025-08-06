@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "private": true,
   "license": "GPL-3.0-or-later",
   "dependencies": {
@@ -20,8 +20,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "craco start",
+    "build": "craco build",
     "test": "npx jest",
     "coverage": "npx jest --coverage --watchAll=false",
     "eject": "react-scripts eject",
@@ -41,7 +41,8 @@
     ],
     "moduleNameMapper": {
       "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-      "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.ts"
+      "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.ts",
+      "^@/(.*)$": "<rootDir>/src/$1"
     },
     "testMatch": [
       "<rootDir>/tests/**/*.test.{js,ts,tsx}"
@@ -108,6 +109,7 @@
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.27.1",
+    "@craco/craco": "^7.1.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.4",

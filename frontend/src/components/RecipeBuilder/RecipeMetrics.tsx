@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { useUnits } from "../../contexts/UnitContext";
+import { useUnits } from "@/contexts/UnitContext";
 import {
   formatGravity,
   formatAbv,
   formatIbu,
   formatSrm,
   getSrmColour,
-} from "../../utils/formatUtils";
-import { Recipe, RecipeMetrics as RecipeMetricsType } from "../../types";
+} from "@/utils/formatUtils";
+import { Recipe, RecipeMetrics as RecipeMetricsType } from "@/types";
 
 interface RecipeMetricsProps {
   metrics: RecipeMetricsType;

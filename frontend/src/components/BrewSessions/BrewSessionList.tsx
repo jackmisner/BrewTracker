@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router";
 import Fuse from "fuse.js";
-import ApiService from "../../services/api";
-import { BrewSession } from "../../types";
-import { formatGravity, formatAbv } from "../../utils/formatUtils";
-import "../../styles/BrewSessions.css";
+import ApiService from "@/services/api";
+import { BrewSession } from "@/types";
+import { formatGravity, formatAbv } from "@/utils/formatUtils";
+import "@/styles/BrewSessions.css";
 
 type BrewSessionStatus =
   | "all"
