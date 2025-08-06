@@ -218,6 +218,7 @@ export const fermentationReducer = (
     case "RESET_FORM":
       return {
         ...state,
+        submitting: false,
         formData: {
           gravity: "",
           temperature: "",
