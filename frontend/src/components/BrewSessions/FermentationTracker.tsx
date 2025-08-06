@@ -66,16 +66,25 @@ const FermentationTracker: React.FC<FermentationTrackerProps> = ({
 
   // Interpolation state with local storage persistence
   const [useInterpolation, setUseInterpolation] = useState<boolean>(() => {
-    const saved = localStorage.getItem("fermentation-use-interpolation");
-    return saved !== null ? JSON.parse(saved) : true; // Default to true
+    try {
+      const saved = localStorage.getItem("fermentation-use-interpolation");
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (error) {
+      console.warn("Failed to load interpolation preference:", error);
+      return true;
+    }
   });
 
   // Save interpolation preference to local storage
   useEffect(() => {
-    localStorage.setItem(
-      "fermentation-use-interpolation",
-      JSON.stringify(useInterpolation)
-    );
+    try {
+      localStorage.setItem(
+        "fermentation-use-interpolation",
+        JSON.stringify(useInterpolation)
+      );
+    } catch (error) {
+      console.warn("Failed to save interpolation preference:", error);
+    }
   }, [useInterpolation]);
 
   // Focus input when editing starts
