@@ -1,15 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useUnits } from "@/contexts/UnitContext";
 import SearchableSelect from "@/components/SearchableSelect";
-import { Ingredient, IngredientFormData } from "@/types";
+import { Ingredient, IngredientFormData, GrainType } from "@/types";
 import { selectAllOnFocus } from "@/utils/formatUtils";
 import "@/styles/SearchableSelect.css";
+
+type GrainTypeFilter = "all" | GrainType;
 
 interface UnitOption {
   value: string;
   label: string;
   description: string;
 }
+
+interface GrainTypeOption {
+  value: GrainTypeFilter;
+  label: string;
+  grainType?: GrainType;
+}
+
+const GRAIN_TYPE_OPTIONS: GrainTypeOption[] = [
+  { value: "all", label: "All grain types" },
+  { value: "base_malt", label: "Base Malts", grainType: "base_malt" },
+  {
+    value: "caramel_crystal",
+    label: "Caramel/Crystal",
+    grainType: "caramel_crystal",
+  },
+  { value: "roasted", label: "Roasted", grainType: "roasted" },
+  {
+    value: "specialty_malt",
+    label: "Specialty",
+    grainType: "specialty_malt",
+  },
+  { value: "adjunct_grain", label: "Adjunct", grainType: "adjunct_grain" },
+  { value: "smoked", label: "Smoked", grainType: "smoked" },
+];
 
 interface FermentableFormData {
   ingredient_id: string;
@@ -49,6 +75,8 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [resetTrigger, setResetTrigger] = useState<number>(0);
+  const [grainTypeFilter, setGrainTypeFilter] =
+    useState<GrainTypeFilter>("all");
 
   // Get available units based on unit system
   const getAvailableUnits = (): UnitOption[] => {
@@ -76,6 +104,40 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
     includeMatches: true,
     minMatchCharLength: 2,
     ignoreLocation: true,
+  };
+
+  // Filter grains based on selected grain type
+  const filteredGrains = useMemo(() => {
+    if (grainTypeFilter === "all") {
+      return grains;
+    }
+    return grains.filter(grain => grain.grain_type === grainTypeFilter);
+  }, [grains, grainTypeFilter]);
+
+  const handleGrainTypeFilterChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
+    const newFilter = e.target.value as GrainTypeFilter;
+    setGrainTypeFilter(newFilter);
+
+    // Clear current fermentable selection when filter changes
+    setFermentableForm(prev => ({
+      ...prev,
+      ingredient_id: "",
+      color: "",
+      selectedIngredient: null,
+    }));
+
+    // Trigger SearchableSelect reset
+    setResetTrigger(prev => prev + 1);
+
+    // Clear ingredient selection error if present
+    if (errors.ingredient_id) {
+      setErrors(prev => ({
+        ...prev,
+        ingredient_id: null,
+      }));
+    }
   };
 
   const handleChange = (
@@ -291,10 +353,30 @@ const FermentableInput: React.FC<FermentableInputProps> = ({
             </select>
           </div>
 
+          {/* Grain Type Filter - 140px */}
+          <div className="grain-type-filter">
+            <select
+              id="fermentable-grain-type-filter"
+              name="grainTypeFilter"
+              value={grainTypeFilter}
+              onChange={handleGrainTypeFilterChange}
+              className="bt-input-control grain-type-select"
+              disabled={disabled}
+              data-testid="grain-type-filter-select"
+              aria-label="Filter by grain type"
+            >
+              {GRAIN_TYPE_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Fermentable Selector - 1fr */}
           <div className="ingredient-selector">
             <SearchableSelect
-              options={grains}
+              options={filteredGrains}
               onSelect={handleFermentableSelect}
               placeholder="Search fermentables (malt, grain, sugar)..."
               searchKey="name"
