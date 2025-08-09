@@ -330,6 +330,19 @@ export function formatVolume(
   }
 }
 
+/**
+ * Formats temperature with automatic unit conversion and display
+ *
+ * @param temp - Temperature value in the source unit
+ * @param unit - Source unit (e.g., "f" for Fahrenheit, "c" for Celsius)
+ * @param unitSystem - Target unit system ("metric" or "imperial")
+ * @returns Formatted temperature string with appropriate unit symbol
+ *
+ * @example
+ * formatTemperature(68, "f", "metric") // Returns "20°C" (converts F to C)
+ * formatTemperature(20, "c", "imperial") // Returns "68°F" (converts C to F)
+ * formatTemperature(68, "f", "imperial") // Returns "68°F" (no conversion needed)
+ */
 export function formatTemperature(
   temp: number | string | null | undefined,
   unit: TemperatureUnit | string,

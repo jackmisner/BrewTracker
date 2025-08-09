@@ -87,9 +87,9 @@
 
 /* Specific grid layouts for each ingredient type */
 .ingredient-inputs--grain {
-  grid-template-columns: var(--amount-container-width) 1fr 110px var(
-      --button-width
-    );
+  grid-template-columns:
+    var(--amount-container-width) var(--grain-type-filter-width)
+    1fr 110px var(--button-width);
 }
 
 .ingredient-inputs--grain .amount-input {
@@ -100,6 +100,45 @@
 .ingredient-inputs--grain .unit-select {
   min-width: 50px;
   max-width: 100px;
+}
+
+.grain-type-filter {
+  width: 140px;
+  min-width: 140px;
+}
+
+/* ==========================================================================
+   Utility Classes - Input Controls
+   ========================================================================== */
+.bt-input-control {
+  padding: 0.625rem 0.5rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  line-height: 1.25;
+  background-color: white;
+  height: var(--input-height);
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.bt-input-control:focus {
+  outline: none;
+  border-color: var(--color-amber-600);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+.bt-input-control:disabled {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-500);
+  cursor: not-allowed;
+}
+
+.grain-type-select {
+  width: 100%;
+  cursor: pointer;
 }
 
 .ingredient-inputs--hop {
@@ -812,6 +851,7 @@
   }
 
   .amount-container,
+  .grain-type-filter,
   .ingredient-selector,
   .color-input-container,
   .alpha-input-container,

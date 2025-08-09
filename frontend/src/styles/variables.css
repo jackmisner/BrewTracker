@@ -49,6 +49,7 @@
   /* Dimensions */
   --input-height: 42px;
   --amount-container-width: 120px;
+  --grain-type-filter-width: 140px;
   --button-width: 100px;
   --border-radius: 0.375rem;
   --border-radius-sm: 0.25rem;
