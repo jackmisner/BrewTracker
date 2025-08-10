@@ -412,7 +412,38 @@ class MongoDBService:
                         ing_data, user_unit_system
                     )
                 )
-                recipe_ingredient = RecipeIngredient(**normalized_ing_data)
+
+                # Only include fields that exist in the RecipeIngredient model
+                recipe_ingredient_fields = {
+                    "ingredient_id": normalized_ing_data.get("ingredient_id"),
+                    "name": normalized_ing_data.get("name"),
+                    "type": normalized_ing_data.get("type"),
+                    "grain_type": normalized_ing_data.get("grain_type"),
+                    "amount": float(normalized_ing_data.get("amount", 0)),
+                    "unit": normalized_ing_data.get("unit", ""),
+                    "use": normalized_ing_data.get("use", ""),
+                    "time": (
+                        int(normalized_ing_data.get("time", 0))
+                        if normalized_ing_data.get("time") is not None
+                        else None
+                    ),
+                    "potential": normalized_ing_data.get("potential"),
+                    "color": normalized_ing_data.get("color"),
+                    "alpha_acid": normalized_ing_data.get("alpha_acid"),
+                    "attenuation": normalized_ing_data.get("attenuation"),
+                }
+
+                # Filter out None values to avoid validation errors
+                recipe_ingredient_fields = {
+                    k: v
+                    for k, v in recipe_ingredient_fields.items()
+                    if v is not None and v != ""
+                }
+
+                print(
+                    f"Creating RecipeIngredient with fields: {list(recipe_ingredient_fields.keys())}"
+                )
+                recipe_ingredient = RecipeIngredient(**recipe_ingredient_fields)
                 recipe.ingredients.append(recipe_ingredient)
 
             # Set creation timestamps

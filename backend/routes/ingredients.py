@@ -15,6 +15,7 @@ def get_ingredients():
     # Optional query parameters
     type_filter = request.args.get("type")
     search = request.args.get("search")
+    category_filter = request.args.get("category")
 
     # Build query
     query = {}
@@ -22,6 +23,16 @@ def get_ingredients():
         query["type"] = type_filter
     if search:
         query["name__icontains"] = search
+
+    # Add category filtering for type-specific fields
+    if category_filter:
+        if type_filter == "grain":
+            query["grain_type"] = category_filter
+        elif type_filter == "yeast":
+            query["yeast_type"] = category_filter
+        # Note: hops don't have a hop_type field in the current schema
+        # For hops, we could implement category filtering based on alpha_acid ranges
+        # or add a hop_type field to the schema in the future
 
     ingredients = Ingredient.objects(**query)
 
