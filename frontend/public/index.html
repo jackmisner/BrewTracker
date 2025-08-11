@@ -13,14 +13,16 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
-    <script>
-      kofiWidgetOverlay.draw("jackmisner", {
-        type: "floating-chat",
-        "floating-chat.donateButton.text": "Donate",
-        "floating-chat.donateButton.background-color": "#fcbf47",
-        "floating-chat.donateButton.text-color": "#323842",
-      });
-    </script>
+    <script
+      src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"
+      async
+      defer
+      onload="window.kofiWidgetOverlay && window.kofiWidgetOverlay.draw('jackmisner', {
+        type: 'floating-chat',
+        'floating-chat.donateButton.text': 'Donate',
+        'floating-chat.donateButton.background-color': '#fcbf47',
+        'floating-chat.donateButton.text-color': '#323842'
+      });"
+    ></script>
   </body>
 </html>
