@@ -958,7 +958,7 @@ class MongoDBService:
             brew_session = BrewSession(**session_data)
             brew_session.save()
 
-            return brew_session
+            return brew_session, "Brew session created successfully"
         except Exception as e:
             print(f"Database error creating brew session: {e}")
             return None, str(e)

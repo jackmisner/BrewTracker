@@ -76,12 +76,12 @@ def create_brew_session():
         data["temperature_unit"] = preferred_temp_unit
 
     # Create brew session
-    session = MongoDBService.create_brew_session(data)
+    session, message = MongoDBService.create_brew_session(data)
 
     if session:
         return jsonify(session.to_dict()), 201
     else:
-        return jsonify({"error": "Failed to create brew session"}), 400
+        return jsonify({"error": f"Failed to create brew session: {message}"}), 400
 
 
 @brew_sessions_bp.route("/<session_id>", methods=["PUT"])
