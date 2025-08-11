@@ -5,10 +5,7 @@
     <link rel="icon" href="%PUBLIC_URL%/mugOfBeer.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="For all your homebrew needs"
-    />
+    <meta name="description" content="For all your homebrew needs" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo512.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Brewtracker</title>
@@ -16,5 +13,16 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <script
+      src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"
+      async
+      defer
+      onload="window.kofiWidgetOverlay && window.kofiWidgetOverlay.draw('jackmisner', {
+        type: 'floating-chat',
+        'floating-chat.donateButton.text': 'Donate',
+        'floating-chat.donateButton.background-color': '#fcbf47',
+        'floating-chat.donateButton.text-color': '#323842'
+      });"
+    ></script>
   </body>
 </html>
