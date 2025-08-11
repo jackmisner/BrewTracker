@@ -945,9 +945,24 @@ class MongoDBService:
             print(f"Database error: {e}")
             return []
 
+    
     @staticmethod
     def create_brew_session(session_data):
-        """Create a new brew session"""
+        """
+        Creates a new brew session in the database with the provided session data.
+        Args:
+            session_data (dict): A dictionary containing the data for the brew session. 
+                Expected keys include any fields required by the BrewSession model. 
+                The 'status' field is optional and defaults to 'in_progress'. 
+                The 'brew_date' is automatically set to the current UTC time.
+        Returns:
+            tuple: A tuple containing:
+                - brew_session (BrewSession or None): The created BrewSession object if successful, otherwise None.
+                - message (str): A success message or an error message if an exception occurred.
+        Raises:
+            Exception: Any exception raised during the creation or saving of the BrewSession is caught and returned as an error message.
+        """
+    
         # print(f"Creating brew session with data: {session_data}")
         try:
             # Set default values
