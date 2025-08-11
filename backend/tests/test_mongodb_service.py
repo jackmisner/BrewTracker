@@ -340,9 +340,10 @@ class TestMongoDBServiceBrewSessionMethods:
             "status": "planned",
         }
 
-        session = MongoDBService.create_brew_session(session_data)
+        session, message = MongoDBService.create_brew_session(session_data)
 
         assert session is not None
+        assert message == "Brew session created successfully"
         assert session.name == "Test Brew Session"
         assert session.recipe_id == recipe.id
         assert session.user_id == user.id
@@ -360,7 +361,7 @@ class TestMongoDBServiceBrewSessionMethods:
                 "name": f"Session {i}",
                 "status": "planned",
             }
-            MongoDBService.create_brew_session(session_data)
+            session, _ = MongoDBService.create_brew_session(session_data)
 
         result = MongoDBService.get_user_brew_sessions(user.id, page=1, per_page=3)
 
@@ -378,7 +379,7 @@ class TestMongoDBServiceBrewSessionMethods:
             "user_id": user.id,
             "name": "Original Session",
         }
-        session = MongoDBService.create_brew_session(session_data)
+        session, _ = MongoDBService.create_brew_session(session_data)
 
         update_data = {
             "name": "Updated Session",
