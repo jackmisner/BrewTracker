@@ -110,8 +110,19 @@ class User(Document):
             "username",
             "email",
             "google_id",
-            {"fields": ["password_reset_token"], "sparse": True, "unique": True},
+            {
+                "fields": ["password_reset_token"],
+                "sparse": True,
+                "unique": True,
+                "name": "idx_users_pwd_reset_token",
+            },
+            {
+                "fields": ["password_reset_expires"],
+                "sparse": True,
+                "name": "idx_users_pwd_reset_expires",
+            },
         ],
+        "index_background": True,  # Set background indexing at the meta level
     }
 
     def set_password(self, password):
@@ -123,13 +134,23 @@ class User(Document):
         return check_password_hash(self.password_hash, password)
 
     def _get_secret_key(self):
-        """Get secret key for HMAC operations"""
+        """Get secret key for password reset HMAC operations"""
+        # Check for dedicated password reset secret first
+        secret_key = os.environ.get("PASSWORD_RESET_SECRET")
+
+        if secret_key:
+            return secret_key.encode("utf-8")
+
+        # Fall back to JWT secret key
         secret_key = os.environ.get("JWT_SECRET_KEY")
-        if not secret_key:
-            raise ValueError(
-                "JWT_SECRET_KEY environment variable is required for secure token operations"
-            )
-        return secret_key.encode("utf-8")
+
+        if secret_key:
+            return secret_key.encode("utf-8")
+
+        # Neither secret is available
+        raise ValueError(
+            "Either PASSWORD_RESET_SECRET or JWT_SECRET_KEY environment variable is required for secure password reset token operations"
+        )
 
     def set_password_reset_token(self, raw_token):
         """Store a secure hash of the password reset token"""

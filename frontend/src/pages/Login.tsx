@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router";
 import ApiService from "@/services/api";
 import { User } from "@/types";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
@@ -159,9 +160,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
 
               <div className="auth-form-group auth-forgot-password">
-                <a href="/forgot-password" className="auth-forgot-link">
+                <Link to="/forgot-password" className="auth-forgot-link">
                   Forgot your password?
-                </a>
+                </Link>
               </div>
 
               <button
@@ -184,9 +185,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             <div className="auth-nav">
               <p className="auth-nav-text">Don't have an account?</p>
-              <a href="/register" className="auth-nav-link">
+              <Link to="/register" className="auth-nav-link">
                 Create an account
-              </a>
+              </Link>
             </div>
           </div>
         </div>

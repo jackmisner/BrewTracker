@@ -3,6 +3,27 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import ApiService from "@/services/api";
 import "@/styles/Auth.css";
 
+/**
+ * Type guard and utility function to safely extract error messages from unknown error types
+ */
+function extractErrorMessage(err: unknown): string {
+  const e = err as any;
+  // Axios-like error with response.data.error
+  if (typeof e?.response?.data?.error === "string") {
+    return e.response.data.error;
+  }
+  // Standard Error
+  if (e instanceof Error && typeof e.message === "string") {
+    return e.message;
+  }
+  // Object with a message property
+  if (typeof e?.message === "string") {
+    return e.message;
+  }
+  // Fallback
+  return "Failed to reset password. Please try again or request a new reset link.";
+}
+
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -59,11 +80,8 @@ const ResetPassword: React.FC = () => {
         new_password: formData.newPassword,
       });
       setSuccess(true);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-          "Failed to reset password. Please try again or request a new reset link."
-      );
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -86,7 +104,7 @@ const ResetPassword: React.FC = () => {
     const hasLower = /[a-z]/.test(password);
     const hasUpper = /[A-Z]/.test(password);
     const hasNumber = /\d/.test(password);
-    const hasSpecial = /[~!@#$%^&*()_\-+={}|\\:;"'<,>.?/]/.test(password);
+    const hasSpecial = /[~!@#$%^&*()_\-+={}[\]|\\:;"'<,>.?/`]/.test(password);
     const isLongEnough = password.length >= 8;
 
     const score = [
@@ -114,7 +132,16 @@ const ResetPassword: React.FC = () => {
 
           <div className="auth-content">
             <div className="success-message">
-              <div className="success-icon">✅</div>
+              <div className="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
               <p>Your password has been successfully reset!</p>
               <p className="success-details">
                 You can now log in with your new password.
@@ -147,7 +174,16 @@ const ResetPassword: React.FC = () => {
           <form onSubmit={handleSubmit} className="auth-form" noValidate>
             {error && (
               <div className="error-message">
-                <span className="error-icon">⚠️</span>
+                <span className="error-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </span>
                 {error}
               </div>
             )}
@@ -176,7 +212,27 @@ const ResetPassword: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? "👁️" : "🙈"}
+                  {showConfirmPassword ? (
+                    <svg
+                      className="icon-eye"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="icon-eye-off"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  )}
                 </button>
               </div>
               {formData.newPassword && (
@@ -215,7 +271,27 @@ const ResetPassword: React.FC = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   tabIndex={-1}
                 >
-                  {showConfirmPassword ? "👁️" : "🙈"}
+                  {showPassword ? (
+                    <svg
+                      className="icon-eye"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="icon-eye-off"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  )}
                 </button>
               </div>
               {formData.confirmPassword &&
@@ -232,7 +308,8 @@ const ResetPassword: React.FC = () => {
                 !formData.newPassword ||
                 !formData.confirmPassword ||
                 formData.newPassword !== formData.confirmPassword ||
-                !token
+                !token ||
+                getPasswordStrengthClass(formData.newPassword) !== "strong"
               }
             >
               {loading ? "Resetting..." : "Reset Password"}

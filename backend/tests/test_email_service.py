@@ -153,6 +153,71 @@ class TestEmailService(unittest.TestCase):
         self.assertTrue(can_send)
         self.assertIsNone(error)
 
+    @patch.dict(
+        os.environ,
+        {
+            "PASSWORD_RESET_SECRET": "dedicated_password_reset_secret",
+            "JWT_SECRET_KEY": "jwt_secret",
+        },
+    )
+    def test_get_secret_key_with_password_reset_secret(self):
+        """Test that EmailService uses PASSWORD_RESET_SECRET when available"""
+        secret_key = EmailService._get_secret_key()
+
+        # Should use PASSWORD_RESET_SECRET
+        self.assertEqual(secret_key, b"dedicated_password_reset_secret")
+
+    @patch.dict(os.environ, {"JWT_SECRET_KEY": "jwt_secret"}, clear=True)
+    def test_get_secret_key_fallback_to_jwt(self):
+        """Test EmailService fallback to JWT_SECRET_KEY when PASSWORD_RESET_SECRET is not available"""
+        secret_key = EmailService._get_secret_key()
+
+        # Should fallback to JWT_SECRET_KEY
+        self.assertEqual(secret_key, b"jwt_secret")
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_get_secret_key_raises_error_when_no_secrets(self):
+        """Test that EmailService raises ValueError when neither secret is available"""
+        with self.assertRaises(ValueError) as context:
+            EmailService._get_secret_key()
+
+        self.assertIn(
+            "Either PASSWORD_RESET_SECRET or JWT_SECRET_KEY", str(context.exception)
+        )
+
+    @patch.dict(
+        os.environ, {"PASSWORD_RESET_SECRET": "", "JWT_SECRET_KEY": "jwt_secret"}
+    )
+    def test_get_secret_key_empty_password_reset_secret_falls_back(self):
+        """Test that empty PASSWORD_RESET_SECRET falls back to JWT_SECRET_KEY"""
+        secret_key = EmailService._get_secret_key()
+
+        # Should fallback to JWT_SECRET_KEY when PASSWORD_RESET_SECRET is empty
+        self.assertEqual(secret_key, b"jwt_secret")
+
+    @patch.dict(
+        os.environ,
+        {"PASSWORD_RESET_SECRET": "password_secret", "JWT_SECRET_KEY": "jwt_secret"},
+    )
+    def test_compute_token_hash_uses_correct_secret(self):
+        """Test that EmailService token hash operations use the correct secret"""
+        token = "test_token_12345"
+
+        # Compute token hash
+        token_hash = EmailService._compute_token_hash(token)
+
+        # Should be a hex string (from HMAC SHA256)
+        self.assertIsInstance(token_hash, str)
+        self.assertEqual(len(token_hash), 64)  # SHA256 hex = 64 characters
+
+        # Same token should produce same hash
+        self.assertEqual(token_hash, EmailService._compute_token_hash(token))
+
+        # Different token should produce different hash
+        self.assertNotEqual(
+            token_hash, EmailService._compute_token_hash("different_token")
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

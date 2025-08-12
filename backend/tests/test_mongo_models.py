@@ -1,4 +1,6 @@
+import os
 from datetime import UTC, date, datetime
+from unittest.mock import patch
 
 import pytest
 from bson import ObjectId
@@ -240,6 +242,69 @@ class TestUser:
         # Dates should be converted to ISO format
         assert isinstance(user_dict["created_at"], str)
         assert isinstance(user_dict["last_login"], str)
+
+    @patch.dict(
+        os.environ,
+        {
+            "PASSWORD_RESET_SECRET": "dedicated_password_reset_secret",
+            "JWT_SECRET_KEY": "jwt_secret",
+        },
+    )
+    def test_get_secret_key_with_password_reset_secret(self):
+        """Test that PASSWORD_RESET_SECRET is preferred when available"""
+        user = User(username="testuser", email="test@example.com")
+
+        secret_key = user._get_secret_key()
+
+        # Should use PASSWORD_RESET_SECRET
+        assert secret_key == b"dedicated_password_reset_secret"
+
+    @patch.dict(os.environ, {"JWT_SECRET_KEY": "jwt_secret"}, clear=True)
+    def test_get_secret_key_fallback_to_jwt(self):
+        """Test fallback to JWT_SECRET_KEY when PASSWORD_RESET_SECRET is not available"""
+        user = User(username="testuser", email="test@example.com")
+
+        secret_key = user._get_secret_key()
+
+        # Should fallback to JWT_SECRET_KEY
+        assert secret_key == b"jwt_secret"
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_get_secret_key_raises_error_when_no_secrets(self):
+        """Test that ValueError is raised when neither secret is available"""
+        user = User(username="testuser", email="test@example.com")
+
+        with pytest.raises(ValueError) as exc_info:
+            user._get_secret_key()
+
+        assert "Either PASSWORD_RESET_SECRET or JWT_SECRET_KEY" in str(exc_info.value)
+
+    @patch.dict(
+        os.environ, {"PASSWORD_RESET_SECRET": "", "JWT_SECRET_KEY": "jwt_secret"}
+    )
+    def test_get_secret_key_empty_password_reset_secret_falls_back(self):
+        """Test that empty PASSWORD_RESET_SECRET falls back to JWT_SECRET_KEY"""
+        user = User(username="testuser", email="test@example.com")
+
+        secret_key = user._get_secret_key()
+
+        # Should fallback to JWT_SECRET_KEY when PASSWORD_RESET_SECRET is empty
+        assert secret_key == b"jwt_secret"
+
+    @patch.dict(
+        os.environ,
+        {"PASSWORD_RESET_SECRET": "password_secret", "JWT_SECRET_KEY": "jwt_secret"},
+    )
+    def test_password_reset_token_uses_correct_secret(self):
+        """Test that password reset token operations use the correct secret"""
+        user = User(username="testuser", email="test@example.com")
+
+        # Set a password reset token
+        user.set_password_reset_token("test_token_12345")
+
+        # Verify token should work with the same secret
+        assert user.verify_password_reset_token("test_token_12345") is True
+        assert user.verify_password_reset_token("wrong_token") is False
 
 
 class TestIngredient:

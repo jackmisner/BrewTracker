@@ -519,6 +519,8 @@ def forgot_password():
     """Request password reset for user email"""
     try:
         data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid JSON payload"}), 400
         email = data.get("email", "").strip().lower()
 
         if not email:
@@ -539,11 +541,14 @@ def forgot_password():
 
         # Check if email is verified
         if not user.email_verified:
+            # Return generic response to avoid account enumeration
             return (
                 jsonify(
-                    {"error": "Email must be verified before requesting password reset"}
+                    {
+                        "message": "If the email exists, a password reset link has been sent"
+                    }
                 ),
-                400,
+                200,
             )
 
         # Check rate limiting for password reset requests
@@ -575,6 +580,8 @@ def reset_password():
     """Reset user password using token"""
     try:
         data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid JSON payload"}), 400
         token = data.get("token")
         new_password = data.get("new_password")
 
@@ -591,6 +598,66 @@ def reset_password():
 
         # Verify reset token
         result = EmailService.verify_password_reset_token(token)
+
+        if not result["success"]:
+            return jsonify({"error": result["error"]}), 400
+
+        user = result["user"]
+
+        # Update user password
+        user.set_password(new_password)
+
+        # Clear reset token fields
+        user.set_password_reset_token(None)
+        user.password_reset_expires = None
+        user.password_reset_sent_at = None
+        user.save()
+
+        return jsonify({"message": "Password reset successful"}), 200
+
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@auth_bp.route("/reset-password-enhanced", methods=["POST"])
+def reset_password_enhanced():
+    """Reset user password using token with optional user identifier for enhanced security and performance"""
+    try:
+        data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid JSON payload"}), 400
+
+        token = data.get("token")
+        new_password = data.get("new_password")
+        raw_email = data.get("email")  # Optional user identifier
+        raw_username = data.get("username")  # Optional user identifier
+
+        # Normalize optional identifiers
+        email = (
+            raw_email.strip().lower()
+            if isinstance(raw_email, str) and raw_email.strip()
+            else None
+        )
+        username = (
+            raw_username.strip()
+            if isinstance(raw_username, str) and raw_username.strip()
+            else None
+        )
+        if not token:
+            return jsonify({"error": "Reset token is required"}), 400
+
+        if not new_password:
+            return jsonify({"error": "New password is required"}), 400
+
+        # Validate new password strength
+        is_valid_password, password_error = validate_password(new_password)
+        if not is_valid_password:
+            return jsonify({"error": password_error}), 400
+
+        # Verify reset token with optional user identifier for enhanced performance
+        result = EmailService.verify_password_reset_token_with_identifier(
+            token, email=email, username=username
+        )
 
         if not result["success"]:
             return jsonify({"error": result["error"]}), 400

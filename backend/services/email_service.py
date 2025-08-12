@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import logging
 import os
 import secrets
@@ -32,6 +34,21 @@ class EmailService:
     SMTP_SERVER = "smtp-mail.outlook.com"
     SMTP_PORT = 587
     FROM_EMAIL = "jack@brewtracker.co.uk"
+
+    @staticmethod
+    def _get_secret_key():
+        """Get secret key for password reset HMAC operations"""
+        # Use the same logic as User model for consistency
+        from models.mongo_models import User
+        dummy_user = User()
+        return dummy_user._get_secret_key()
+
+    @staticmethod
+    def _compute_token_hash(raw_token):
+        """Compute HMAC-SHA256 hash of the raw token"""
+        return hmac.new(
+            EmailService._get_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
 
     @staticmethod
     def _get_smtp_credentials():
@@ -420,26 +437,76 @@ class EmailService:
         if not token:
             return {"success": False, "error": "Token is required"}
 
-        # Since we can no longer directly query by token (we store hashes),
-        # we need to find users with non-null reset tokens and verify each one
-        users_with_reset_tokens = User.objects(
-            password_reset_token__ne=None, password_reset_expires__ne=None
-        )
+        try:
+            # Compute the HMAC hash of the incoming token
+            token_hash = EmailService._compute_token_hash(token)
 
-        current_time = datetime.now(UTC)
+            # Query directly for user with matching hashed token that hasn't expired
+            current_time = datetime.now(UTC)
 
-        for user in users_with_reset_tokens:
-            # Check if token is expired first (optimization)
-            if user.password_reset_expires.tzinfo is None:
-                expires_utc = user.password_reset_expires.replace(tzinfo=UTC)
-            else:
-                expires_utc = user.password_reset_expires
+            user = User.objects(
+                password_reset_token=token_hash,
+                password_reset_expires__gte=current_time,
+            ).first()
 
-            if expires_utc < current_time:
-                continue  # Skip expired tokens
+            if not user:
+                return {"success": False, "error": "Invalid or expired reset token"}
 
-            # Verify the token hash
+            # Optional defense-in-depth: verify token using constant-time comparison
             if user.verify_password_reset_token(token):
                 return {"success": True, "user": user}
+            else:
+                email_logger.warning(
+                    "Token hash matched but verification failed - potential attack attempt"
+                )
+                return {"success": False, "error": "Invalid or expired reset token"}
 
-        return {"success": False, "error": "Invalid or expired reset token"}
+        except ValueError as e:
+            email_logger.error(f"Token verification failed: {e}")
+            return {"success": False, "error": "Token verification error"}
+
+    @staticmethod
+    def verify_password_reset_token_with_identifier(token, email=None, username=None):
+        """Verify password reset token with optional user identifier for enhanced security and performance"""
+        if not token:
+            return {"success": False, "error": "Token is required"}
+
+        if not email and not username:
+            # Fall back to the standard verification method
+            return EmailService.verify_password_reset_token(token)
+
+        try:
+            # Compute the HMAC hash of the incoming token
+            token_hash = EmailService._compute_token_hash(token)
+
+            # Build query with user identifier for direct lookup
+            current_time = datetime.now(UTC)
+            query_filters = {
+                "password_reset_token": token_hash,
+                "password_reset_expires__gte": current_time,
+            }
+
+            # Add user identifier to query for more specific lookup
+            if email:
+                query_filters["email"] = email
+            elif username:
+                query_filters["username"] = username
+
+            user = User.objects(**query_filters).first()
+
+            if not user:
+                # For security, return same error regardless of whether token or identifier is wrong
+                return {"success": False, "error": "Invalid or expired reset token"}
+
+            # Defense-in-depth: verify token using constant-time comparison
+            if user.verify_password_reset_token(token):
+                return {"success": True, "user": user}
+            else:
+                email_logger.warning(
+                    f"Token hash matched but verification failed for user {user.username} - potential attack attempt"
+                )
+                return {"success": False, "error": "Invalid or expired reset token"}
+
+        except ValueError as e:
+            email_logger.error(f"Token verification with identifier failed: {e}")
+            return {"success": False, "error": "Token verification error"}

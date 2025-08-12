@@ -4,6 +4,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Login from "../../src/pages/Login";
 import ApiService from "../../src/services/api";
+import { MemoryRouter } from 'react-router';
+
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>);
 
 // Mock the API service
 jest.mock("../../src/services/api");
@@ -16,7 +20,7 @@ describe("Login", () => {
   });
 
   test("renders login form", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     expect(screen.getByText("Welcome Back")).toBeInTheDocument();
     expect(
@@ -28,7 +32,7 @@ describe("Login", () => {
   });
 
   test("renders navigation link to register", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     expect(screen.getByText("Don't have an account?")).toBeInTheDocument();
     expect(screen.getByText("Create an account")).toBeInTheDocument();
@@ -39,7 +43,7 @@ describe("Login", () => {
 
   test("handles form input changes", async () => {
     const user = userEvent.setup();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -52,7 +56,7 @@ describe("Login", () => {
   });
 
   test("requires username and password fields", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -77,7 +81,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -112,7 +116,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -134,7 +138,7 @@ describe("Login", () => {
       () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -169,7 +173,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockRejectedValue(mockError);
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -193,7 +197,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockRejectedValue(new Error("Network error"));
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -216,7 +220,7 @@ describe("Login", () => {
     // First, cause an error
     (ApiService.auth.login as jest.Mock).mockRejectedValueOnce(new Error("Login failed"));
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -254,7 +258,7 @@ describe("Login", () => {
   });
 
   test("form inputs have correct placeholders", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     expect(
       screen.getByPlaceholderText("Enter your username")
@@ -265,7 +269,7 @@ describe("Login", () => {
   });
 
   test("password input has correct type", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const passwordInput = screen.getByLabelText("Password");
     expect(passwordInput).toHaveAttribute("type", "password");
@@ -273,7 +277,7 @@ describe("Login", () => {
 
   test("form prevents submission with empty fields", async () => {
     const user = userEvent.setup();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const submitButton = screen.getByRole("button", { name: "Sign In" });
     await user.click(submitButton);
@@ -289,7 +293,7 @@ describe("Login", () => {
       () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -319,7 +323,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
@@ -338,7 +342,7 @@ describe("Login", () => {
   });
 
   test("displays appropriate CSS classes", () => {
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     expect(screen.getByTestId("auth-wrapper")).toBeInTheDocument();
     expect(screen.getByTestId("auth-container")).toBeInTheDocument();
@@ -351,7 +355,7 @@ describe("Login", () => {
 
     (ApiService.auth.login as jest.Mock).mockRejectedValue(new Error("Test error"));
 
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const usernameInput = screen.getByLabelText("Username");
     const passwordInput = screen.getByLabelText("Password");
