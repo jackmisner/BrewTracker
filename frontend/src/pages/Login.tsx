@@ -158,6 +158,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 />
               </div>
 
+              <div className="auth-form-group auth-forgot-password">
+                <a href="/forgot-password" className="auth-forgot-link">
+                  Forgot your password?
+                </a>
+              </div>
+
               <button
                 type="submit"
                 className={`auth-submit-button ${loading ? "loading" : ""}`}

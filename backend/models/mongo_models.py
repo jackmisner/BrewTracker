@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import os
 from datetime import UTC, datetime
 
 from mongoengine import (
@@ -96,7 +99,20 @@ class User(Document):
     email_verification_expires = DateTimeField()
     email_verification_sent_at = DateTimeField()
 
-    meta = {"collection": "users", "indexes": ["username", "email", "google_id"]}
+    # Password reset fields
+    password_reset_token = StringField()
+    password_reset_expires = DateTimeField()
+    password_reset_sent_at = DateTimeField()
+
+    meta = {
+        "collection": "users",
+        "indexes": [
+            "username",
+            "email",
+            "google_id",
+            {"fields": ["password_reset_token"], "sparse": True, "unique": True},
+        ],
+    }
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -105,6 +121,39 @@ class User(Document):
         if not self.password_hash:
             return False  # Google users don't have passwords
         return check_password_hash(self.password_hash, password)
+
+    def _get_secret_key(self):
+        """Get secret key for HMAC operations"""
+        secret_key = os.environ.get("JWT_SECRET_KEY")
+        if not secret_key:
+            raise ValueError(
+                "JWT_SECRET_KEY environment variable is required for secure token operations"
+            )
+        return secret_key.encode("utf-8")
+
+    def set_password_reset_token(self, raw_token):
+        """Store a secure hash of the password reset token"""
+        if raw_token:
+            # Use HMAC-SHA256 for token hashing
+            token_hash = hmac.new(
+                self._get_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+            ).hexdigest()
+            self.password_reset_token = token_hash
+        else:
+            self.password_reset_token = None
+
+    def verify_password_reset_token(self, raw_token):
+        """Verify the password reset token by comparing hashes"""
+        if not self.password_reset_token or not raw_token:
+            return False
+
+        # Generate hash of provided token
+        provided_hash = hmac.new(
+            self._get_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+
+        # Use secure comparison to prevent timing attacks
+        return hmac.compare_digest(self.password_reset_token, provided_hash)
 
     def set_google_info(self, google_id, profile_picture=None):
         """Set Google authentication information"""

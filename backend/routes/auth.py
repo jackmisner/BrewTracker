@@ -512,3 +512,101 @@ def get_verification_status():
         ),
         200,
     )
+
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    """Request password reset for user email"""
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        # Find user by email
+        user = User.objects(email=email).first()
+        if not user:
+            # Don't reveal whether email exists - always return success
+            return (
+                jsonify(
+                    {
+                        "message": "If the email exists, a password reset link has been sent"
+                    }
+                ),
+                200,
+            )
+
+        # Check if email is verified
+        if not user.email_verified:
+            return (
+                jsonify(
+                    {"error": "Email must be verified before requesting password reset"}
+                ),
+                400,
+            )
+
+        # Check rate limiting for password reset requests
+        can_send, error_message = EmailService.can_resend_password_reset(user)
+        if not can_send:
+            return jsonify({"error": error_message}), 429
+
+        # Generate reset token and send email
+        success = EmailService.send_password_reset_email(user)
+
+        if success:
+            return (
+                jsonify(
+                    {
+                        "message": "If the email exists, a password reset link has been sent"
+                    }
+                ),
+                200,
+            )
+        else:
+            return jsonify({"error": "Failed to send password reset email"}), 500
+
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    """Reset user password using token"""
+    try:
+        data = request.get_json()
+        token = data.get("token")
+        new_password = data.get("new_password")
+
+        if not token:
+            return jsonify({"error": "Reset token is required"}), 400
+
+        if not new_password:
+            return jsonify({"error": "New password is required"}), 400
+
+        # Validate new password strength
+        is_valid_password, password_error = validate_password(new_password)
+        if not is_valid_password:
+            return jsonify({"error": password_error}), 400
+
+        # Verify reset token
+        result = EmailService.verify_password_reset_token(token)
+
+        if not result["success"]:
+            return jsonify({"error": result["error"]}), 400
+
+        user = result["user"]
+
+        # Update user password
+        user.set_password(new_password)
+
+        # Clear reset token fields
+        user.set_password_reset_token(None)
+        user.password_reset_expires = None
+        user.password_reset_sent_at = None
+        user.save()
+
+        return jsonify({"message": "Password reset successful"}), 200
+
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500

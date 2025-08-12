@@ -19,6 +19,10 @@ import {
   VerifyEmailResponse,
   ResendVerificationResponse,
   VerificationStatusResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 
   // User types
   ChangePasswordRequest,
@@ -184,6 +188,17 @@ const ApiService = {
     getVerificationStatus: (): Promise<
       AxiosResponse<VerificationStatusResponse>
     > => api.get("/auth/verification-status"),
+
+    // Password reset endpoints
+    forgotPassword: (
+      data: ForgotPasswordRequest
+    ): Promise<AxiosResponse<ForgotPasswordResponse>> =>
+      api.post("/auth/forgot-password", data),
+
+    resetPassword: (
+      data: ResetPasswordRequest
+    ): Promise<AxiosResponse<ResetPasswordResponse>> =>
+      api.post("/auth/reset-password", data),
   },
 
   // User settings endpoints
