@@ -10,6 +10,33 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/brewtracker")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt_dev_secret")
+
+    # Password reset secret with fallback to JWT_SECRET_KEY
+    PASSWORD_RESET_SECRET = os.getenv(
+        "PASSWORD_RESET_SECRET", os.getenv("JWT_SECRET_KEY", "jwt_dev_secret")
+    )
+
+    # Security monitoring configuration (optional - defaults will be used if not set)
+    SECURITY_FAILED_LOGIN_THRESHOLD = int(
+        os.getenv("SECURITY_FAILED_LOGIN_THRESHOLD", "10")
+    )
+    SECURITY_FAILED_LOGIN_WINDOW = int(
+        os.getenv("SECURITY_FAILED_LOGIN_WINDOW", "1800")
+    )  # 30 minutes
+    SECURITY_SUSPICIOUS_REQUEST_THRESHOLD = int(
+        os.getenv("SECURITY_SUSPICIOUS_REQUEST_THRESHOLD", "25")
+    )
+    SECURITY_SUSPICIOUS_REQUEST_WINDOW = int(
+        os.getenv("SECURITY_SUSPICIOUS_REQUEST_WINDOW", "600")
+    )  # 10 minutes
+
+    # IP allowlist for bypassing security checks (comma-separated string or list)
+    SECURITY_IP_ALLOWLIST = (
+        os.getenv("SECURITY_IP_ALLOWLIST", "").split(",")
+        if os.getenv("SECURITY_IP_ALLOWLIST")
+        else []
+    )
+
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_TOKEN_LOCATION = ["headers"]
 
@@ -18,7 +45,35 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
     # MongoDB connection options
-    MONGODB_SETTINGS = {"host": MONGO_URI, "uuidRepresentation": "standard"}
+    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
+
+    # Add TLS/SSL options if environment variables are provided
+    if os.getenv("MONGO_TLS_CA_FILE"):
+        MONGO_OPTIONS.update(
+            {
+                "tls": True,
+                "tlsCAFile": os.getenv("MONGO_TLS_CA_FILE"),
+            }
+        )
+    if os.getenv("MONGO_TLS_CERT_FILE"):
+        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
+    if os.getenv("MONGO_TLS_KEY_FILE"):
+        MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
+
+    # Legacy SSL options support (fallback to ssl_* parameters)
+    if os.getenv("MONGO_SSL_CA_CERTS"):
+        MONGO_OPTIONS.update(
+            {
+                "ssl": True,
+                "ssl_ca_certs": os.getenv("MONGO_SSL_CA_CERTS"),
+            }
+        )
+    if os.getenv("MONGO_SSL_CERTFILE"):
+        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
+    if os.getenv("MONGO_SSL_KEYFILE"):
+        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+
+    MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
 
 class ProductionConfig(Config):
@@ -26,27 +81,100 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
 
-    # Require production environment variables
+    # Require production environment variables (no fallbacks)
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    # Password reset secret with fallback to JWT_SECRET_KEY for production
+    PASSWORD_RESET_SECRET = os.getenv(
+        "PASSWORD_RESET_SECRET", os.getenv("JWT_SECRET_KEY")
+    )
+
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
     # Longer token expiry for production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
 
-    # Production MongoDB settings with SSL
-    MONGODB_SETTINGS = {
-        "host": MONGO_URI,
+    # Production MongoDB settings with enhanced security
+    MONGO_OPTIONS = {
         "uuidRepresentation": "standard",
         "retryWrites": True,
         "w": "majority",
+        "readConcern": {"level": "majority"},
+        "ssl": True,  # Enable SSL in production
+        "ssl_cert_reqs": "required",
     }
+
+    # Add TLS/SSL options if environment variables are provided
+    if os.getenv("MONGO_TLS_CA_FILE"):
+        MONGO_OPTIONS.update(
+            {
+                "tls": True,
+                "tlsCAFile": os.getenv("MONGO_TLS_CA_FILE"),
+            }
+        )
+    if os.getenv("MONGO_TLS_CERT_FILE"):
+        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
+    if os.getenv("MONGO_TLS_KEY_FILE"):
+        MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
+
+    # Legacy SSL options support (fallback to ssl_* parameters)
+    if os.getenv("MONGO_SSL_CA_CERTS"):
+        MONGO_OPTIONS["ssl_ca_certs"] = os.getenv("MONGO_SSL_CA_CERTS")
+    if os.getenv("MONGO_SSL_CERTFILE"):
+        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
+    if os.getenv("MONGO_SSL_KEYFILE"):
+        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+
+    MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
+
+    @staticmethod
+    def _validate_secret_strength(secret_value, secret_name):
+        """
+        Shared helper to validate secret key strength with consistent rules.
+
+        Args:
+            secret_value: The secret value to validate
+            secret_name: Name of the secret (for error messages)
+
+        Raises:
+            ValueError: If secret is empty, too short, or uses weak defaults
+        """
+        if not secret_value:
+            raise ValueError(f"{secret_name} must be set and non-empty")
+
+        # Strip whitespace to prevent bypass of length/weakness checks
+        secret_stripped = secret_value.strip()
+
+        if len(secret_stripped) < 32:
+            raise ValueError(f"{secret_name} must be at least 32 characters")
+
+        # Check against known weak values (using stripped and normalized value)
+        secret_normalized = secret_stripped.lower()
+        weak_exact_values = {
+            "default",
+            "password",
+            "secret",
+            "dev",
+            "test",
+            "jwt_dev_secret",
+            "jwt_secret",
+            "dev_secret_key",
+        }
+        weak_prefix_suffix = {"dev", "test", "default"}
+
+        if secret_normalized in weak_exact_values or any(
+            secret_normalized.startswith(prefix) or secret_normalized.endswith(prefix)
+            for prefix in weak_prefix_suffix
+        ):
+            raise ValueError(
+                f"{secret_name} appears to be a known weak default or development/test secret"
+            )
 
     @classmethod
     def validate_required_vars(cls):
-        """Validate that all required environment variables are set"""
+        """Validate that all required environment variables are set with strong values"""
         required_vars = [
             "SECRET_KEY",
             "MONGO_URI",
@@ -61,6 +189,34 @@ class ProductionConfig(Config):
                 f"Missing required environment variables: {', '.join(missing_vars)}"
             )
 
+        # Validate all secret keys using shared helper
+        secret_key = os.getenv("SECRET_KEY", "")
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        password_reset_secret = os.getenv("PASSWORD_RESET_SECRET", "")
+
+        cls._validate_secret_strength(secret_key, "SECRET_KEY")
+        cls._validate_secret_strength(jwt_secret, "JWT_SECRET_KEY")
+
+        # PASSWORD_RESET_SECRET validation respects existing fallback semantics
+        if password_reset_secret:
+            cls._validate_secret_strength(
+                password_reset_secret, "PASSWORD_RESET_SECRET"
+            )
+        elif not jwt_secret:
+            raise ValueError(
+                "PASSWORD_RESET_SECRET or JWT_SECRET_KEY must be set in production"
+            )
+
+        # Ensure PASSWORD_RESET_SECRET is different from JWT_SECRET_KEY if both are set
+        if (
+            password_reset_secret
+            and jwt_secret
+            and password_reset_secret.strip() == jwt_secret.strip()
+        ):
+            raise ValueError(
+                "PASSWORD_RESET_SECRET must be different from JWT_SECRET_KEY in production"
+            )
+
 
 class TestConfig(Config):
     TESTING = True
@@ -69,5 +225,9 @@ class TestConfig(Config):
     )
     JWT_SECRET_KEY = "test-jwt-secret-key"
 
+    # Test-specific password reset secret (will fallback to JWT if not set)
+    PASSWORD_RESET_SECRET = os.getenv("PASSWORD_RESET_SECRET", "test-jwt-secret-key")
+
     # Override MongoDB settings for testing
-    MONGODB_SETTINGS = {"host": MONGO_URI, "uuidRepresentation": "standard"}
+    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
+    MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}

@@ -262,7 +262,7 @@ HTMLCanvasElement.prototype.getContext = jest.fn();
   mockApiError: (error: string) => Promise.reject(new Error(error)),
 };
 
-// Mock react-router-dom for tests that don't explicitly test routing
+// Mock react-router for tests that don't explicitly test routing
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => jest.fn(),

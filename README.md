@@ -65,11 +65,19 @@ BrewTracker/
 │   │   ├── mongodb_service.py                            # Database abstraction layer with connection management and query utilities
 │   │   └── user_deletion_service.py                      # Comprehensive user account deletion with data preservation options
 │   ├── tests/                                            # pytest test suite for backend functionality
-│   ├── utils/                                            # Utility functions
+│   ├── utils/                                            # Utility functions and security components
 │   │   ├── __init__.py
 │   │   ├── brewing_calculation_core.py                   # Pure brewing mathematics (OG, FG, ABV, IBU, SRM calculations) - centralized calculation logic used by all services
+│   │   ├── crypto.py                                     # Secure cryptographic utilities for password reset tokens with HMAC-SHA256
+│   │   ├── error_handlers.py                             # Centralized error handling with security-conscious information disclosure prevention
+│   │   ├── geolocation_service.py                        # Secure HTTPS geolocation service with multiple providers and fallback mechanisms
+│   │   ├── input_sanitization.py                         # Multi-layer input sanitization for different data types with XSS protection
+│   │   ├── rate_limiter.py                               # Configurable rate limiting framework with Redis support and endpoint-specific limits
 │   │   ├── recipe_orm_calculator.py                      # Recipe calculations integrated with MongoDB models and validation
 │   │   ├── recipe_api_calculator.py                      # Real-time recipe calculations for API endpoints without database persistence - also used by AI services
+│   │   ├── request_validation.py                         # Comprehensive request validation with size limits, field requirements, and security checks
+│   │   ├── security_headers.py                           # HTTP security headers (HSTS, CSP, X-Frame-Options, XSS protection, cache control)
+│   │   ├── security_monitor.py                           # Real-time security monitoring with brute force detection, audit logging, and alerting
 │   │   └── unit_conversions.py                           # Metric/imperial conversion utilities for weight, volume, and temperature
 │   ├── requirements.txt                                  # Python package dependencies for backend
 │   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
@@ -222,8 +230,8 @@ npm install
 
 # Backend dependencies
 cd ../backend
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -262,6 +270,9 @@ JWT_SECRET_KEY="your_secret_key_here"
 SECRET_KEY="your_flask_secret_key_here"
 FLASK_APP="app.py"
 FLASK_ENV="development"
+
+# Security Configuration
+PASSWORD_RESET_SECRET="your_password_reset_secret_here"  # Optional: Falls back to JWT_SECRET_KEY if not set
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
@@ -335,6 +346,7 @@ show collections
 
 ```bash
 cd backend
+source .venv/bin/activate  # Activate virtual environment
 flask run
 ```
 
@@ -398,6 +410,17 @@ Visit `http://localhost:3000` to access the application.
   - Responsive design optimized for desktop and mobile
   - Real-time recipe calculations and validation
   - Comprehensive search with Fuse.js fuzzy matching
+
+- 🔒 Security & Privacy
+  - **Comprehensive Security Hardening**: Complete OWASP Top 10 vulnerability protection
+  - **Rate Limiting**: Intelligent rate limiting with configurable limits per endpoint type
+  - **Input Validation**: Multi-layer input sanitization with XSS and injection protection
+  - **Security Headers**: Full HTTP security headers (HSTS, CSP, X-Frame-Options, etc.)
+  - **Secure Authentication**: HMAC-SHA256 password reset tokens and JWT security
+  - **Real-time Monitoring**: Brute force detection and security event logging
+  - **Production Security**: Enhanced production configuration with secret validation
+  - **HTTPS Services**: Secure geolocation services with multiple provider fallback
+  - **Error Handling**: Security-conscious error responses preventing information disclosure
 
 ## 🤖 AI Recipe Analysis Engine
 
@@ -484,19 +507,24 @@ BrewTracker implements a sophisticated system users architecture to handle accou
   - Path aliases (`@/`) for clean imports
 
 - Backend:
-  - Flask
+  - Flask with comprehensive security hardening
   - MongoEngine & PyMongo
-  - JWT Authentication
-  - MongoDB
+  - JWT Authentication with secure token handling
+  - MongoDB with production-ready security configuration
+  - Rate limiting with Flask-Limiter
+  - Input validation and sanitization with Marshmallow
+  - Security monitoring and audit logging
+  - HTTPS geolocation services with fallback mechanisms
 
 ## 🧪 Development & Testing
 
 ### Test Coverage Overview
 
 - **Frontend**: 1,849 tests with Jest and React Testing Library
-- **Backend**: 447 tests with pytest and mongomock
+- **Backend**: 473+ tests with pytest and mongomock (includes security component tests)
 - **Coverage Target**: 70% minimum for both frontend and backend
-- **Total Test Suite**: Comprehensive end-to-end testing including component, service, and integration tests
+- **Security Testing**: Comprehensive security component testing including cryptographic utilities, rate limiting, input validation, and geolocation service mocking
+- **Total Test Suite**: End-to-end testing including component, service, security, and integration tests
 
 ### Frontend Testing
 
@@ -520,28 +548,28 @@ npm test -- --testPathPattern=CompactRecipeCard
 
 ```bash
 cd backend
-source venv/bin/activate
+source .venv/bin/activate  # Activate virtual environment first
 
-# Run all tests (447 tests)
+# Run all tests (473+ tests including security components)
 pytest
 
-# Run tests in parallel for faster execution (recommended)
-pytest -n auto
-
-# Run tests with coverage reporting
+# Run tests with coverage reporting (recommended)
 pytest --cov
 
-# Run tests with coverage reporting in parallel (fastest with coverage)
-pytest --cov -n auto
-
-# Run specific test module
+# Run specific test modules
 pytest tests/test_ingredients.py
+pytest tests/test_auth.py tests/test_crypto_utils.py  # Security tests
 
 # Run tests with verbose output
-pytest -v
+pytest --cov -v
+
+# Note: Parallel execution (pytest -n auto) may cause issues due to 
+# security monitoring components and shared database state
 ```
 
-**Performance Tip**: Use `pytest -n auto` for parallel test execution, which automatically detects the number of CPU cores and runs tests concurrently for significantly faster test completion.
+**Important**: Always activate your virtual environment (`.venv`) before running tests. The security implementation includes new dependencies (`marshmallow`, `Flask-Limiter`) that must be installed in your virtual environment.
+
+**Security Testing**: The test suite now includes comprehensive security component testing including geolocation service mocking (London, UK), cryptographic utilities, rate limiting, and input validation.
 
 ### Version Management
 

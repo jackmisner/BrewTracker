@@ -28,8 +28,8 @@ def setup_test_db():
     base_uri = config.TestConfig.MONGO_URI.rsplit("/", 1)[0]  # Remove existing db name
     test_uri = f"{base_uri}/{db_name}"
 
-    # Connect to worker-specific test database with proper UUID representation
-    connect(host=test_uri, uuidRepresentation="standard", alias="default")
+    # Connect to worker-specific test database with proper UUID representation and MONGO_OPTIONS
+    connect(host=test_uri, alias="default", **config.TestConfig.MONGO_OPTIONS)
 
     yield
 
@@ -125,17 +125,9 @@ def clean_db():
 
 
 @pytest.fixture(autouse=True)
-def mock_requests():
-    """Mock all requests.get calls to prevent network calls during tests"""
-    with patch("routes.auth.requests.get") as mock_get:
-        # Mock successful geo lookup response
-        mock_response = type(
-            "MockResponse",
-            (),
-            {
-                "status_code": 200,
-                "json": lambda: {"countryCode": "US", "timezone": "America/New_York"},
-            },
-        )()
-        mock_get.return_value = mock_response
-        yield mock_get
+def mock_geolocation_service():
+    """Mock geolocation service to prevent network calls during tests"""
+    with patch("utils.geolocation_service.GeolocationService.get_geo_info") as mock_geo:
+        # Mock successful geo lookup response for London, UK
+        mock_geo.return_value = {"country_code": "GB", "timezone": "Europe/London"}
+        yield mock_geo

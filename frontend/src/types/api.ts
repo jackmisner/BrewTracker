@@ -78,6 +78,24 @@ export interface VerificationStatusResponse {
   verification_sent_at?: string;
 }
 
+// Password reset API types
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 // User API types
 export interface ChangePasswordRequest {
   current_password: string;

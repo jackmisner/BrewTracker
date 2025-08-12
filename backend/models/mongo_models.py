@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import os
 from datetime import UTC, datetime
 
 from mongoengine import (
@@ -19,6 +22,8 @@ from mongoengine import (
 from mongoengine.queryset.visitor import Q  # Add this import
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from utils.crypto import get_password_reset_secret
+
 
 def initialize_db(mongo_uri):
     """Initialize database connection only if not already connected"""
@@ -31,7 +36,22 @@ def initialize_db(mongo_uri):
     except ConnectionFailure:
         # No connection exists, create new one
         print(f"Connecting to MongoDB: {mongo_uri}")
-        connect(host=mongo_uri, uuidRepresentation="standard")
+        # Import config to get MONGO_OPTIONS
+        from flask import Flask
+
+        import config
+
+        # Create temporary app to get config
+        app = Flask(__name__)
+        env = os.getenv("FLASK_ENV", "development")
+        if env == "production":
+            app.config.from_object(config.ProductionConfig)
+        elif env == "testing":
+            app.config.from_object(config.TestConfig)
+        else:
+            app.config.from_object(config.Config)
+
+        connect(host=mongo_uri, **app.config["MONGO_OPTIONS"])
 
 
 # User model
@@ -96,7 +116,31 @@ class User(Document):
     email_verification_expires = DateTimeField()
     email_verification_sent_at = DateTimeField()
 
-    meta = {"collection": "users", "indexes": ["username", "email", "google_id"]}
+    # Password reset fields
+    password_reset_token = StringField()
+    password_reset_expires = DateTimeField()
+    password_reset_sent_at = DateTimeField()
+
+    meta = {
+        "collection": "users",
+        "indexes": [
+            "username",
+            "email",
+            "google_id",
+            {
+                "fields": ["password_reset_token"],
+                "sparse": True,
+                "unique": True,
+                "name": "idx_users_pwd_reset_token",
+            },
+            {
+                "fields": ["password_reset_expires"],
+                "sparse": True,
+                "name": "idx_users_pwd_reset_expires",
+            },
+        ],
+        "index_background": True,  # Set background indexing at the meta level
+    }
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -105,6 +149,34 @@ class User(Document):
         if not self.password_hash:
             return False  # Google users don't have passwords
         return check_password_hash(self.password_hash, password)
+
+    def _get_secret_key(self):
+        """Get secret key for password reset HMAC operations"""
+        return get_password_reset_secret()
+
+    def set_password_reset_token(self, raw_token):
+        """Store a secure hash of the password reset token"""
+        if raw_token:
+            # Use HMAC-SHA256 for token hashing
+            token_hash = hmac.new(
+                self._get_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+            ).hexdigest()
+            self.password_reset_token = token_hash
+        else:
+            self.password_reset_token = None
+
+    def verify_password_reset_token(self, raw_token):
+        """Verify the password reset token by comparing hashes"""
+        if not self.password_reset_token or not raw_token:
+            return False
+
+        # Generate hash of provided token
+        provided_hash = hmac.new(
+            self._get_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+
+        # Use secure comparison to prevent timing attacks
+        return hmac.compare_digest(self.password_reset_token, provided_hash)
 
     def set_google_info(self, google_id, profile_picture=None):
         """Set Google authentication information"""
