@@ -5,16 +5,29 @@ Provides consistent error responses and logging without information disclosure.
 """
 
 import logging
-import traceback
 from functools import wraps
 
 from flask import Flask, jsonify, request, has_request_context
 from flask_jwt_extended.exceptions import JWTExtendedException
 from marshmallow import ValidationError as MarshmallowValidationError
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
-from werkzeug.exceptions import HTTPException
 
 logger = logging.getLogger(__name__)
+
+def _safe_client_ip() -> str:
+    if not has_request_context():
+        return "unknown"
+    try:
+        # Prefer trusted proxy headers if present
+        xff = request.headers.get("X-Forwarded-For")
+        if xff:
+            return xff.split(",")[0].strip()
+        xrip = request.headers.get("X-Real-IP")
+        if xrip:
+            return xrip
+        return request.remote_addr or "unknown"
+    except Exception:
+        return "unknown"
 
 
 def setup_error_handlers(app: Flask):
@@ -47,7 +60,8 @@ def setup_error_handlers(app: Flask):
     @app.errorhandler(401)
     def unauthorized(error):
         """Handle unauthorized errors."""
-        logger.warning(f"Unauthorized access attempt from {request.remote_addr}")
+        remote_addr = _safe_client_ip()
+        logger.warning(f"Unauthorized access attempt from {remote_addr}")
         return (
             jsonify({"error": "Unauthorized", "message": "Authentication required"}),
             401,
@@ -75,7 +89,8 @@ def setup_error_handlers(app: Flask):
     @app.errorhandler(413)
     def request_too_large(error):
         """Handle request too large errors."""
-        logger.warning(f"Request too large from {request.remote_addr}")
+        remote_addr = _safe_client_ip()
+        logger.warning(f"Request too large from {remote_addr}")
         return (
             jsonify(
                 {
@@ -118,7 +133,8 @@ def setup_error_handlers(app: Flask):
     @app.errorhandler(JWTExtendedException)
     def handle_jwt_exceptions(error):
         """Handle JWT related errors."""
-        logger.warning(f"JWT error from {request.remote_addr}: {error.__class__.__name__}")
+        remote_addr = _safe_client_ip()
+        logger.warning(f"JWT error from {remote_addr}: {error.__class__.__name__}")
         return (
             jsonify(
                 {"error": "Authentication error", "message": "Invalid or expired token"}

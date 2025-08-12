@@ -16,6 +16,15 @@ class Config:
         "PASSWORD_RESET_SECRET", os.getenv("JWT_SECRET_KEY", "jwt_dev_secret")
     )
 
+    # Security monitoring configuration (optional - defaults will be used if not set)
+    SECURITY_FAILED_LOGIN_THRESHOLD = int(os.getenv("SECURITY_FAILED_LOGIN_THRESHOLD", "10"))
+    SECURITY_FAILED_LOGIN_WINDOW = int(os.getenv("SECURITY_FAILED_LOGIN_WINDOW", "1800"))  # 30 minutes
+    SECURITY_SUSPICIOUS_REQUEST_THRESHOLD = int(os.getenv("SECURITY_SUSPICIOUS_REQUEST_THRESHOLD", "25"))
+    SECURITY_SUSPICIOUS_REQUEST_WINDOW = int(os.getenv("SECURITY_SUSPICIOUS_REQUEST_WINDOW", "600"))  # 10 minutes
+    
+    # IP allowlist for bypassing security checks (comma-separated string or list)
+    SECURITY_IP_ALLOWLIST = os.getenv("SECURITY_IP_ALLOWLIST", "").split(',') if os.getenv("SECURITY_IP_ALLOWLIST") else []
+
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_TOKEN_LOCATION = ["headers"]
 

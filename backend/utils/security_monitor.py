@@ -5,14 +5,15 @@ Provides logging, metrics, and alerting for security events.
 """
 
 import logging
+import os
 import threading
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from flask import g, request, abort, jsonify
+from flask import g, request, abort, jsonify, current_app
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 # Thread-safe storage for security metrics
@@ -39,12 +40,133 @@ security_logger.addHandler(security_handler)
 class SecurityMonitor:
     """Security monitoring and alerting system."""
 
-    # Rate limiting thresholds
-    FAILED_LOGIN_THRESHOLD = 5  # per 15 minutes
-    FAILED_LOGIN_WINDOW = 900  # 15 minutes in seconds
+    # Default thresholds (more lenient than before)
+    DEFAULT_FAILED_LOGIN_THRESHOLD = 10  # per 30 minutes (increased from 5/15min)
+    DEFAULT_FAILED_LOGIN_WINDOW = 1800  # 30 minutes in seconds (increased from 15min)
 
-    SUSPICIOUS_REQUEST_THRESHOLD = 10  # per 5 minutes
-    SUSPICIOUS_REQUEST_WINDOW = 300  # 5 minutes in seconds
+    DEFAULT_SUSPICIOUS_REQUEST_THRESHOLD = 25  # per 10 minutes (increased from 10/5min)
+    DEFAULT_SUSPICIOUS_REQUEST_WINDOW = 600  # 10 minutes in seconds (increased from 5min)
+
+    _allowlist_cache = None
+    _allowlist_cache_time = 0
+    _cache_ttl = 300  # Cache allowlist for 5 minutes
+
+    @classmethod
+    def _get_config_value(cls, key: str, default: Any, value_type: type = int) -> Any:
+        """Get configuration value from Flask app config or environment variables."""
+        try:
+            # Try Flask app config first (allows runtime configuration)
+            if current_app and hasattr(current_app, 'config') and key in current_app.config:
+                return value_type(current_app.config[key])
+        except RuntimeError:
+            # Outside application context
+            pass
+        
+        # Fall back to environment variables
+        env_value = os.getenv(key)
+        if env_value is not None:
+            try:
+                return value_type(env_value)
+            except (ValueError, TypeError):
+                security_logger.warning(f"Invalid {key} environment variable: {env_value}, using default: {default}")
+        
+        return default
+
+    @classmethod
+    def get_failed_login_threshold(cls) -> int:
+        """Get configurable failed login threshold."""
+        return cls._get_config_value('SECURITY_FAILED_LOGIN_THRESHOLD', cls.DEFAULT_FAILED_LOGIN_THRESHOLD)
+
+    @classmethod
+    def get_failed_login_window(cls) -> int:
+        """Get configurable failed login window in seconds."""
+        return cls._get_config_value('SECURITY_FAILED_LOGIN_WINDOW', cls.DEFAULT_FAILED_LOGIN_WINDOW)
+
+    @classmethod
+    def get_suspicious_request_threshold(cls) -> int:
+        """Get configurable suspicious request threshold."""
+        return cls._get_config_value('SECURITY_SUSPICIOUS_REQUEST_THRESHOLD', cls.DEFAULT_SUSPICIOUS_REQUEST_THRESHOLD)
+
+    @classmethod
+    def get_suspicious_request_window(cls) -> int:
+        """Get configurable suspicious request window in seconds."""
+        return cls._get_config_value('SECURITY_SUSPICIOUS_REQUEST_WINDOW', cls.DEFAULT_SUSPICIOUS_REQUEST_WINDOW)
+
+    @classmethod
+    def _get_allowlist_ips(cls) -> List[str]:
+        """Get list of allowlisted IP addresses from configuration."""
+        current_time = time.time()
+        
+        # Use cached allowlist if still valid
+        if (cls._allowlist_cache is not None and 
+            current_time - cls._allowlist_cache_time < cls._cache_ttl):
+            return cls._allowlist_cache
+        
+        allowlist = []
+        
+        try:
+            # Try Flask app config first
+            if current_app and hasattr(current_app, 'config'):
+                config_allowlist = current_app.config.get('SECURITY_IP_ALLOWLIST')
+                if config_allowlist:
+                    if isinstance(config_allowlist, list):
+                        allowlist.extend(config_allowlist)
+                    elif isinstance(config_allowlist, str):
+                        # Support comma-separated string
+                        allowlist.extend([ip.strip() for ip in config_allowlist.split(',') if ip.strip()])
+        except RuntimeError:
+            # Outside application context
+            pass
+        
+        # Check environment variable
+        env_allowlist = os.getenv('SECURITY_IP_ALLOWLIST')
+        if env_allowlist:
+            # Support comma-separated string in env var
+            env_ips = [ip.strip() for ip in env_allowlist.split(',') if ip.strip()]
+            allowlist.extend(env_ips)
+        
+        # Always include localhost variants for health checks
+        default_allowlist = ['127.0.0.1', '::1', 'localhost']
+        for ip in default_allowlist:
+            if ip not in allowlist:
+                allowlist.append(ip)
+        
+        # Cache the result
+        cls._allowlist_cache = allowlist
+        cls._allowlist_cache_time = current_time
+        
+        return allowlist
+
+    @classmethod
+    def _extract_client_ip(cls) -> str:
+        """Extract client IP address handling X-Forwarded-For headers."""
+        # Check X-Forwarded-For header (reverse proxy/CDN scenarios)
+        forwarded_for = request.headers.get('X-Forwarded-For')
+        if forwarded_for:
+            # Take the first IP in the chain (original client)
+            return forwarded_for.split(',')[0].strip()
+        
+        # Check X-Real-IP header (alternative forwarded header)
+        real_ip = request.headers.get('X-Real-IP')
+        if real_ip:
+            return real_ip.strip()
+        
+        # Fall back to direct connection IP
+        return request.remote_addr or '127.0.0.1'
+
+    @classmethod
+    def is_ip_allowlisted(cls, ip_address: str = None) -> bool:
+        """Check if IP address is in the allowlist."""
+        if ip_address is None:
+            ip_address = cls._extract_client_ip()
+        
+        allowlist = cls._get_allowlist_ips()
+        is_allowed = ip_address in allowlist
+        
+        if is_allowed:
+            security_logger.info(f"Request from allowlisted IP bypassed security checks: {ip_address}")
+        
+        return is_allowed
 
     @classmethod
     def log_authentication_attempt(
@@ -207,11 +329,11 @@ class SecurityMonitor:
 
             # Determine thresholds based on attempt type
             if attempt_type == "login":
-                threshold = cls.FAILED_LOGIN_THRESHOLD
-                window = cls.FAILED_LOGIN_WINDOW
+                threshold = cls.get_failed_login_threshold()
+                window = cls.get_failed_login_window()
             else:
-                threshold = cls.SUSPICIOUS_REQUEST_THRESHOLD
-                window = cls.SUSPICIOUS_REQUEST_WINDOW
+                threshold = cls.get_suspicious_request_threshold()
+                window = cls.get_suspicious_request_window()
 
             # Count recent attempts
             cutoff_time = time.time() - window
@@ -320,12 +442,19 @@ def check_request_security():
     if request.path in ["/api/health", "/health"]:
         return
 
+    # Check if IP is allowlisted (bypass all security checks)
+    if SecurityMonitor.is_ip_allowlisted():
+        return
+
+    # Extract client IP for security checks
+    client_ip = SecurityMonitor._extract_client_ip()
+
     # Check if IP is blocked
-    if SecurityMonitor.is_ip_blocked(request.remote_addr):
+    if SecurityMonitor.is_ip_blocked(client_ip):
         SecurityMonitor.log_security_alert(
             "BLOCKED_IP_ACCESS",
-            f"Blocked IP {request.remote_addr} attempted access",
-            ip_address=request.remote_addr,
+            f"Blocked IP {client_ip} attempted access",
+            ip_address=client_ip,
             severity="high",
         )
         # Block the request immediately
@@ -342,12 +471,12 @@ def check_request_security():
                         SecurityMonitor.log_suspicious_request(
                             "LARGE_PAYLOAD",
                             f"Large payload in field {key}",
-                            ip_address=request.remote_addr,
+                            ip_address=client_ip,
                         )
         except Exception as e:
             # Log JSON parsing errors as suspicious activity
             SecurityMonitor.log_suspicious_request(
                 "JSON_PARSE_ERROR",
                 f"Failed to parse JSON payload: {type(e).__name__}",
-                ip_address=request.remote_addr,
+                ip_address=client_ip,
             )
