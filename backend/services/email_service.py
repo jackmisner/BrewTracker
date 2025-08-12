@@ -40,6 +40,7 @@ class EmailService:
         """Get secret key for password reset HMAC operations"""
         # Use the same logic as User model for consistency
         from models.mongo_models import User
+
         dummy_user = User()
         return dummy_user._get_secret_key()
 

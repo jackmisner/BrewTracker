@@ -71,9 +71,12 @@ class ProductionConfig(Config):
             raise ValueError(
                 f"Missing required environment variables: {', '.join(missing_vars)}"
             )
-            
+
         if not os.getenv("PASSWORD_RESET_SECRET") and not os.getenv("JWT_SECRET_KEY"):
-            raise ValueError("PASSWORD_RESET_SECRET or JWT_SECRET_KEY must be set in production")
+            raise ValueError(
+                "PASSWORD_RESET_SECRET or JWT_SECRET_KEY must be set in production"
+            )
+
 
 class TestConfig(Config):
     TESTING = True
