@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, abort
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
@@ -19,6 +19,9 @@ from routes.brew_sessions import brew_sessions_bp
 from routes.ingredients import ingredients_bp
 from routes.recipes import recipes_bp
 from routes.user_settings import user_settings_bp
+from utils.error_handlers import setup_error_handlers
+from utils.security_headers import add_security_headers
+from utils.security_monitor import check_request_security
 
 
 def create_app(config_class=None):
@@ -98,6 +101,22 @@ def create_app(config_class=None):
     )
     print(f"CORS enabled for origins: {allowed_origins}")
     print(f"Backend deployment trigger test - {flask_env} mode")
+
+    # Add security components
+    add_security_headers(app)
+    setup_error_handlers(app)
+
+    # Add security monitoring middleware
+    @app.before_request
+    def before_request():
+        try:
+            check_request_security()
+        except (SystemExit, KeyboardInterrupt):
+            # Re-raise critical exceptions
+            raise
+        except Exception as e:
+            app.logger.exception("Security check failed in before_request handler")
+            abort(500)
 
     # Register blueprints
     app.register_blueprint(ai_bp, url_prefix="/api/ai")

@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from models.mongo_models import User
+from utils.crypto import get_password_reset_secret
 
 # Configure email-specific logger
 email_logger = logging.getLogger("email_service")
@@ -38,11 +39,7 @@ class EmailService:
     @staticmethod
     def _get_secret_key():
         """Get secret key for password reset HMAC operations"""
-        # Use the same logic as User model for consistency
-        from models.mongo_models import User
-
-        dummy_user = User()
-        return dummy_user._get_secret_key()
+        return get_password_reset_secret()
 
     @staticmethod
     def _compute_token_hash(raw_token):

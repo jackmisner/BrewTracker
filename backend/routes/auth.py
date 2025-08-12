@@ -1,7 +1,6 @@
 import re
 from datetime import UTC, datetime, timedelta
 
-import requests
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
@@ -9,6 +8,7 @@ from models.mongo_models import User, UserSettings
 from services.email_service import EmailService
 from services.google_oauth_service import GoogleOAuthService
 from services.username_validation_service import UsernameValidationService
+from utils.geolocation_service import GeolocationService
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -47,23 +47,25 @@ def validate_password(password):
 
 
 def get_ip():
-    if request.headers.getlist("X-Forwarded-For"):
-        return request.headers.getlist("X-Forwarded-For")[0]
+    """Extract client IP address from request headers with proper validation."""
+    # Check for forwarded headers (reverse proxy/CDN scenarios)
+    forwarded_for = request.headers.getlist("X-Forwarded-For")
+    if forwarded_for:
+        # Take the first IP in the chain (original client)
+        return forwarded_for[0].split(",")[0].strip()
+
+    # Check other common forwarded headers
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
+
+    # Fallback to direct connection
     return request.remote_addr
 
 
 def get_geo_info(ip):
-    try:
-        res = requests.get(f"http://ip-api.com/json/{ip}")
-        if res.status_code == 200:
-            data = res.json()
-            return {
-                "country_code": data.get("countryCode"),
-                "timezone": data.get("timezone"),
-            }
-    except Exception as e:
-        print(f"[IP Geo] Lookup failed: {e}")
-    return {"country_code": None, "timezone": "UTC"}
+    """Get geographic information for IP address using secure service."""
+    return GeolocationService.get_geo_info(ip)
 
 
 @auth_bp.route("/register", methods=["POST"])

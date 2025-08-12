@@ -22,6 +22,8 @@ from mongoengine import (
 from mongoengine.queryset.visitor import Q  # Add this import
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from utils.crypto import get_password_reset_secret
+
 
 def initialize_db(mongo_uri):
     """Initialize database connection only if not already connected"""
@@ -135,22 +137,7 @@ class User(Document):
 
     def _get_secret_key(self):
         """Get secret key for password reset HMAC operations"""
-        # Check for dedicated password reset secret first
-        secret_key = os.environ.get("PASSWORD_RESET_SECRET")
-
-        if secret_key:
-            return secret_key.encode("utf-8")
-
-        # Fall back to JWT secret key
-        secret_key = os.environ.get("JWT_SECRET_KEY")
-
-        if secret_key:
-            return secret_key.encode("utf-8")
-
-        # Neither secret is available
-        raise ValueError(
-            "Either PASSWORD_RESET_SECRET or JWT_SECRET_KEY environment variable is required for secure password reset token operations"
-        )
+        return get_password_reset_secret()
 
     def set_password_reset_token(self, raw_token):
         """Store a secure hash of the password reset token"""
