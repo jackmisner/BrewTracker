@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 from mongoengine import connect, disconnect
@@ -16,7 +17,22 @@ def initialize_db(mongo_uri):
     except ConnectionFailure:
         # No connection exists, create new one
         print(f"Connecting to MongoDB: {mongo_uri}")
-        connect(host=mongo_uri, uuidRepresentation="standard")
+        # Import config to get MONGO_OPTIONS
+        from flask import Flask
+
+        import config
+
+        # Create temporary app to get config
+        app = Flask(__name__)
+        env = os.getenv("FLASK_ENV", "development")
+        if env == "production":
+            app.config.from_object(config.ProductionConfig)
+        elif env == "testing":
+            app.config.from_object(config.TestConfig)
+        else:
+            app.config.from_object(config.Config)
+
+        connect(host=mongo_uri, **app.config["MONGO_OPTIONS"])
 
 
 def seed_ingredients(mongo_uri, json_file_path):

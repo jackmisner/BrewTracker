@@ -7,12 +7,13 @@ Provides consistent error responses and logging without information disclosure.
 import logging
 from functools import wraps
 
-from flask import Flask, jsonify, request, has_request_context
+from flask import Flask, has_request_context, jsonify, request
 from flask_jwt_extended.exceptions import JWTExtendedException
 from marshmallow import ValidationError as MarshmallowValidationError
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 
 logger = logging.getLogger(__name__)
+
 
 def _safe_client_ip() -> str:
     if not has_request_context():
@@ -38,14 +39,16 @@ def setup_error_handlers(app: Flask):
         """Handle bad request errors."""
         # Safely get error details without exposing sensitive information
         error_type = type(error).__name__
-        error_msg = str(error)[:100] if str(error) else "Unknown error"  # Truncate message
+        error_msg = (
+            str(error)[:100] if str(error) else "Unknown error"
+        )  # Truncate message
         remote_addr = "unknown"
         if has_request_context():
             try:
                 remote_addr = request.remote_addr or "unknown"
             except Exception:
                 pass
-        
+
         logger.warning(f"Bad request from {remote_addr}: {error_type} - {error_msg}")
         return (
             jsonify(
@@ -70,7 +73,13 @@ def setup_error_handlers(app: Flask):
     @app.errorhandler(403)
     def forbidden(error):
         """Handle forbidden errors."""
-        logger.warning(f"Forbidden access attempt from {request.remote_addr}")
+        remote_addr = "unknown"
+        if has_request_context():
+            try:
+                remote_addr = request.remote_addr or "unknown"
+            except Exception:
+                remote_addr = "unknown"
+        logger.warning(f"Forbidden access attempt from {remote_addr}")
         return jsonify({"error": "Forbidden", "message": "Access denied"}), 403
 
     @app.errorhandler(404)
@@ -104,7 +113,8 @@ def setup_error_handlers(app: Flask):
     @app.errorhandler(429)
     def rate_limit_exceeded(error):
         """Handle rate limit errors."""
-        logger.warning(f"Rate limit exceeded from {request.remote_addr}")
+        remote_addr = _safe_client_ip()
+        logger.warning(f"Rate limit exceeded from {remote_addr}")
         return (
             jsonify(
                 {
@@ -187,9 +197,9 @@ def setup_error_handlers(app: Flask):
         """Handle Marshmallow validation errors."""
         # Log full error details for debugging
         logger.error(f"Schema validation error: {error.messages}")
-        
+
         # In production, hide internal validation details
-        if app.config.get('DEBUG', False):
+        if app.config.get("DEBUG", False):
             response_data = {
                 "error": "Validation error",
                 "message": "The provided data is invalid",
@@ -200,7 +210,7 @@ def setup_error_handlers(app: Flask):
                 "error": "Validation error",
                 "message": "Invalid input provided",
             }
-        
+
         return jsonify(response_data), 400
 
 
@@ -264,7 +274,7 @@ def log_security_event(
     message = f"SECURITY EVENT [{event_type}]: {details}"
     if user_id:
         message += f" | User: {user_id}"
-    
+
     # Safely get remote address
     if has_request_context():
         try:
@@ -273,7 +283,7 @@ def log_security_event(
             remote_addr = "unknown"
     else:
         remote_addr = "unknown"
-    
+
     message += f" | IP: {remote_addr}"
 
     if severity == "error":

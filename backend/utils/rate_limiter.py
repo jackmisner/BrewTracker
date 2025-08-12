@@ -14,6 +14,7 @@ from flask_limiter.util import get_remote_address
 # Conditional import of JWT functionality
 try:
     from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
@@ -25,7 +26,7 @@ def get_user_id():
     """Get user ID from JWT token for authenticated rate limiting."""
     if not JWT_AVAILABLE:
         return get_remote_address()
-    
+
     try:
         verify_jwt_in_request(optional=True)
         user_id = get_jwt_identity()

@@ -28,8 +28,8 @@ def setup_test_db():
     base_uri = config.TestConfig.MONGO_URI.rsplit("/", 1)[0]  # Remove existing db name
     test_uri = f"{base_uri}/{db_name}"
 
-    # Connect to worker-specific test database with proper UUID representation
-    connect(host=test_uri, uuidRepresentation="standard", alias="default")
+    # Connect to worker-specific test database with proper UUID representation and MONGO_OPTIONS
+    connect(host=test_uri, alias="default", **config.TestConfig.MONGO_OPTIONS)
 
     yield
 

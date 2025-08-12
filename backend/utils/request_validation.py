@@ -116,7 +116,7 @@ def sanitize_string_input(
 ) -> str:
     """
     Sanitize string input using the centralized InputSanitizer.
-    
+
     Args:
         value: Input value to sanitize
         max_length: Maximum allowed length
@@ -126,9 +126,7 @@ def sanitize_string_input(
         Sanitized string
     """
     result = InputSanitizer.sanitize_string(
-        value=value, 
-        max_length=max_length, 
-        allow_empty=allow_empty
+        value=value, max_length=max_length, allow_empty=allow_empty
     )
     # Match expected return types - return empty string instead of None when allow_empty=True
     if result is None and allow_empty:

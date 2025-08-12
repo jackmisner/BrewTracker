@@ -9,11 +9,11 @@ import os
 import threading
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
+from datetime import UTC, datetime
 from functools import wraps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from flask import g, request, abort, jsonify, current_app
+from flask import abort, current_app, request
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 # Thread-safe storage for security metrics
@@ -45,7 +45,9 @@ class SecurityMonitor:
     DEFAULT_FAILED_LOGIN_WINDOW = 1800  # 30 minutes in seconds (increased from 15min)
 
     DEFAULT_SUSPICIOUS_REQUEST_THRESHOLD = 25  # per 10 minutes (increased from 10/5min)
-    DEFAULT_SUSPICIOUS_REQUEST_WINDOW = 600  # 10 minutes in seconds (increased from 5min)
+    DEFAULT_SUSPICIOUS_REQUEST_WINDOW = (
+        600  # 10 minutes in seconds (increased from 5min)
+    )
 
     _allowlist_cache = None
     _allowlist_cache_time = 0
@@ -56,116 +58,141 @@ class SecurityMonitor:
         """Get configuration value from Flask app config or environment variables."""
         try:
             # Try Flask app config first (allows runtime configuration)
-            if current_app and hasattr(current_app, 'config') and key in current_app.config:
+            if (
+                current_app
+                and hasattr(current_app, "config")
+                and key in current_app.config
+            ):
                 return value_type(current_app.config[key])
         except RuntimeError:
             # Outside application context
             pass
-        
+
         # Fall back to environment variables
         env_value = os.getenv(key)
         if env_value is not None:
             try:
                 return value_type(env_value)
             except (ValueError, TypeError):
-                security_logger.warning(f"Invalid {key} environment variable: {env_value}, using default: {default}")
-        
+                security_logger.warning(
+                    f"Invalid {key} environment variable: {env_value}, using default: {default}"
+                )
+
         return default
 
     @classmethod
     def get_failed_login_threshold(cls) -> int:
         """Get configurable failed login threshold."""
-        return cls._get_config_value('SECURITY_FAILED_LOGIN_THRESHOLD', cls.DEFAULT_FAILED_LOGIN_THRESHOLD)
+        return cls._get_config_value(
+            "SECURITY_FAILED_LOGIN_THRESHOLD", cls.DEFAULT_FAILED_LOGIN_THRESHOLD
+        )
 
     @classmethod
     def get_failed_login_window(cls) -> int:
         """Get configurable failed login window in seconds."""
-        return cls._get_config_value('SECURITY_FAILED_LOGIN_WINDOW', cls.DEFAULT_FAILED_LOGIN_WINDOW)
+        return cls._get_config_value(
+            "SECURITY_FAILED_LOGIN_WINDOW", cls.DEFAULT_FAILED_LOGIN_WINDOW
+        )
 
     @classmethod
     def get_suspicious_request_threshold(cls) -> int:
         """Get configurable suspicious request threshold."""
-        return cls._get_config_value('SECURITY_SUSPICIOUS_REQUEST_THRESHOLD', cls.DEFAULT_SUSPICIOUS_REQUEST_THRESHOLD)
+        return cls._get_config_value(
+            "SECURITY_SUSPICIOUS_REQUEST_THRESHOLD",
+            cls.DEFAULT_SUSPICIOUS_REQUEST_THRESHOLD,
+        )
 
     @classmethod
     def get_suspicious_request_window(cls) -> int:
         """Get configurable suspicious request window in seconds."""
-        return cls._get_config_value('SECURITY_SUSPICIOUS_REQUEST_WINDOW', cls.DEFAULT_SUSPICIOUS_REQUEST_WINDOW)
+        return cls._get_config_value(
+            "SECURITY_SUSPICIOUS_REQUEST_WINDOW", cls.DEFAULT_SUSPICIOUS_REQUEST_WINDOW
+        )
 
     @classmethod
     def _get_allowlist_ips(cls) -> List[str]:
         """Get list of allowlisted IP addresses from configuration."""
         current_time = time.time()
-        
+
         # Use cached allowlist if still valid
-        if (cls._allowlist_cache is not None and 
-            current_time - cls._allowlist_cache_time < cls._cache_ttl):
+        if (
+            cls._allowlist_cache is not None
+            and current_time - cls._allowlist_cache_time < cls._cache_ttl
+        ):
             return cls._allowlist_cache
-        
+
         allowlist = []
-        
+
         try:
             # Try Flask app config first
-            if current_app and hasattr(current_app, 'config'):
-                config_allowlist = current_app.config.get('SECURITY_IP_ALLOWLIST')
+            if current_app and hasattr(current_app, "config"):
+                config_allowlist = current_app.config.get("SECURITY_IP_ALLOWLIST")
                 if config_allowlist:
                     if isinstance(config_allowlist, list):
                         allowlist.extend(config_allowlist)
                     elif isinstance(config_allowlist, str):
                         # Support comma-separated string
-                        allowlist.extend([ip.strip() for ip in config_allowlist.split(',') if ip.strip()])
+                        allowlist.extend(
+                            [
+                                ip.strip()
+                                for ip in config_allowlist.split(",")
+                                if ip.strip()
+                            ]
+                        )
         except RuntimeError:
             # Outside application context
             pass
-        
+
         # Check environment variable
-        env_allowlist = os.getenv('SECURITY_IP_ALLOWLIST')
+        env_allowlist = os.getenv("SECURITY_IP_ALLOWLIST")
         if env_allowlist:
             # Support comma-separated string in env var
-            env_ips = [ip.strip() for ip in env_allowlist.split(',') if ip.strip()]
+            env_ips = [ip.strip() for ip in env_allowlist.split(",") if ip.strip()]
             allowlist.extend(env_ips)
-        
+
         # Always include localhost variants for health checks
-        default_allowlist = ['127.0.0.1', '::1', 'localhost']
+        default_allowlist = ["127.0.0.1", "::1", "localhost"]
         for ip in default_allowlist:
             if ip not in allowlist:
                 allowlist.append(ip)
-        
+
         # Cache the result
         cls._allowlist_cache = allowlist
         cls._allowlist_cache_time = current_time
-        
+
         return allowlist
 
     @classmethod
     def _extract_client_ip(cls) -> str:
         """Extract client IP address handling X-Forwarded-For headers."""
         # Check X-Forwarded-For header (reverse proxy/CDN scenarios)
-        forwarded_for = request.headers.get('X-Forwarded-For')
+        forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:
             # Take the first IP in the chain (original client)
-            return forwarded_for.split(',')[0].strip()
-        
+            return forwarded_for.split(",")[0].strip()
+
         # Check X-Real-IP header (alternative forwarded header)
-        real_ip = request.headers.get('X-Real-IP')
+        real_ip = request.headers.get("X-Real-IP")
         if real_ip:
             return real_ip.strip()
-        
+
         # Fall back to direct connection IP
-        return request.remote_addr or '127.0.0.1'
+        return request.remote_addr or "127.0.0.1"
 
     @classmethod
     def is_ip_allowlisted(cls, ip_address: str = None) -> bool:
         """Check if IP address is in the allowlist."""
         if ip_address is None:
             ip_address = cls._extract_client_ip()
-        
+
         allowlist = cls._get_allowlist_ips()
         is_allowed = ip_address in allowlist
-        
+
         if is_allowed:
-            security_logger.info(f"Request from allowlisted IP bypassed security checks: {ip_address}")
-        
+            security_logger.info(
+                f"Request from allowlisted IP bypassed security checks: {ip_address}"
+            )
+
         return is_allowed
 
     @classmethod
@@ -189,7 +216,7 @@ class SecurityMonitor:
             "username": username,
             "ip": ip_address,
             "user_agent": user_agent or "unknown",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         security_logger.info(f"{event_type}: {log_data}")
@@ -226,7 +253,7 @@ class SecurityMonitor:
             "details": details,
             "ip": ip_address,
             "user_id": user_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         security_logger.warning(f"SUSPICIOUS_REQUEST: {log_data}")
@@ -268,7 +295,7 @@ class SecurityMonitor:
             "severity": severity,
             "ip": ip_address,
             "user_id": user_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if severity in ["high", "critical"]:
@@ -305,7 +332,7 @@ class SecurityMonitor:
             "action": action,
             "user_id": user_id,
             "ip": ip_address,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         security_logger.info(f"DATA_ACCESS: {log_data}")
@@ -387,6 +414,8 @@ def monitor_endpoint(resource_type: str = None, action: str = None):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             start_time = time.time()
+            # Extract client IP once and reuse throughout the function
+            client_ip = SecurityMonitor._extract_client_ip()
 
             try:
                 # Get user info
@@ -406,7 +435,7 @@ def monitor_endpoint(resource_type: str = None, action: str = None):
                         resource_id=str(resource_id),
                         action=action,
                         user_id=user_id,
-                        ip_address=request.remote_addr,
+                        ip_address=client_ip,
                     )
 
                 return result
@@ -416,7 +445,7 @@ def monitor_endpoint(resource_type: str = None, action: str = None):
                 SecurityMonitor.log_suspicious_request(
                     request_type="ENDPOINT_ERROR",
                     details=f"Error in {f.__name__}: {str(e)[:100]}",
-                    ip_address=request.remote_addr,
+                    ip_address=client_ip,
                     user_id=get_jwt_identity(),
                 )
                 raise
@@ -428,7 +457,7 @@ def monitor_endpoint(resource_type: str = None, action: str = None):
                     SecurityMonitor.log_suspicious_request(
                         request_type="SLOW_RESPONSE",
                         details=f"Slow response from {f.__name__}: {response_time:.2f}s",
-                        ip_address=request.remote_addr,
+                        ip_address=client_ip,
                     )
 
         return decorated_function
@@ -462,10 +491,21 @@ def check_request_security():
 
     # Check for suspicious patterns in request
     if request.is_json:
+        # Check total payload size first (before JSON parsing)
+        if (
+            request.content_length and request.content_length > 10 * 1024 * 1024
+        ):  # 10MB limit
+            SecurityMonitor.log_suspicious_request(
+                "OVERSIZED_PAYLOAD",
+                f"Payload size {request.content_length} bytes exceeds limit",
+                ip_address=client_ip,
+            )
+            abort(413)  # Payload Too Large
+
         try:
             data = request.get_json(silent=True)
             if data and isinstance(data, dict):
-                # Check for common injection patterns
+                # Check for large field values
                 for key, value in data.items():
                     if isinstance(value, str) and len(value) > 1000:
                         SecurityMonitor.log_suspicious_request(
@@ -473,10 +513,12 @@ def check_request_security():
                             f"Large payload in field {key}",
                             ip_address=client_ip,
                         )
+                        abort(413)  # Payload Too Large
         except Exception as e:
-            # Log JSON parsing errors as suspicious activity
-            SecurityMonitor.log_suspicious_request(
-                "JSON_PARSE_ERROR",
-                f"Failed to parse JSON payload: {type(e).__name__}",
-                ip_address=client_ip,
-            )
+            # Only log JSON parsing errors, not abort exceptions
+            if not hasattr(e, "code") or e.code != 413:
+                SecurityMonitor.log_suspicious_request(
+                    "JSON_PARSE_ERROR",
+                    f"Failed to parse JSON payload: {type(e).__name__}",
+                    ip_address=client_ip,
+                )

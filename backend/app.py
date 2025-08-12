@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify, abort
+from flask import Flask, abort, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
@@ -63,7 +63,7 @@ def create_app(config_class=None):
     except ConnectionFailure:
         # No connection exists, create new one
         print("Creating new MongoDB connection")
-        connect(host=app.config["MONGO_URI"], uuidRepresentation="standard")
+        connect(host=app.config["MONGO_URI"], **app.config["MONGO_OPTIONS"])
 
     # Initialize other extensions
     JWTManager(app)
