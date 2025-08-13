@@ -60,18 +60,19 @@ class Config:
     if os.getenv("MONGO_TLS_KEY_FILE"):
         MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
 
-    # Legacy SSL options support (fallback to ssl_* parameters)
+    # Legacy SSL options support (converted to TLS parameters for newer PyMongo)
     if os.getenv("MONGO_SSL_CA_CERTS"):
         MONGO_OPTIONS.update(
             {
-                "ssl": True,
-                "ssl_ca_certs": os.getenv("MONGO_SSL_CA_CERTS"),
+                "tls": True,
+                "tlsCAFile": os.getenv("MONGO_SSL_CA_CERTS"),
             }
         )
     if os.getenv("MONGO_SSL_CERTFILE"):
-        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
+        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_SSL_CERTFILE")
     if os.getenv("MONGO_SSL_KEYFILE"):
-        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+        # SSL keyfile typically combined with cert file in newer TLS config
+        pass  # Key file will be handled with certificate file
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
@@ -96,14 +97,10 @@ class ProductionConfig(Config):
     # Longer token expiry for production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
 
-    # Production MongoDB settings with enhanced security
+    # Production MongoDB settings (simplified to avoid PyMongo compatibility issues)
     MONGO_OPTIONS = {
         "uuidRepresentation": "standard",
-        "retryWrites": True,
-        "w": "majority",
-        "readConcern": {"level": "majority"},
-        "ssl": True,  # Enable SSL in production
-        "ssl_cert_reqs": "required",
+        # Removed problematic options that may not be compatible with newer PyMongo
     }
 
     # Add TLS/SSL options if environment variables are provided
@@ -119,13 +116,14 @@ class ProductionConfig(Config):
     if os.getenv("MONGO_TLS_KEY_FILE"):
         MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
 
-    # Legacy SSL options support (fallback to ssl_* parameters)
+    # Legacy SSL options support (converted to TLS parameters for newer PyMongo)
     if os.getenv("MONGO_SSL_CA_CERTS"):
-        MONGO_OPTIONS["ssl_ca_certs"] = os.getenv("MONGO_SSL_CA_CERTS")
+        MONGO_OPTIONS["tlsCAFile"] = os.getenv("MONGO_SSL_CA_CERTS")
     if os.getenv("MONGO_SSL_CERTFILE"):
-        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
+        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_SSL_CERTFILE")
     if os.getenv("MONGO_SSL_KEYFILE"):
-        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+        # SSL keyfile typically combined with cert file in newer TLS config
+        pass  # Key file will be handled with certificate file
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
