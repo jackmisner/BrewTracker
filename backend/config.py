@@ -48,17 +48,21 @@ class Config:
     def _build_tls_options():
         """Helper to build TLS/SSL options from environment variables."""
         options = {}
-        
+
         # Check if any TLS or legacy SSL environment variables are present
         tls_vars = [
-            "MONGO_TLS_CA_FILE", "MONGO_TLS_CERT_FILE", "MONGO_TLS_KEY_FILE",
-            "MONGO_SSL_CA_CERTS", "MONGO_SSL_CERTFILE", "MONGO_SSL_KEYFILE"
+            "MONGO_TLS_CA_FILE",
+            "MONGO_TLS_CERT_FILE",
+            "MONGO_TLS_KEY_FILE",
+            "MONGO_SSL_CA_CERTS",
+            "MONGO_SSL_CERTFILE",
+            "MONGO_SSL_KEYFILE",
         ]
-        
+
         has_tls_config = any(os.getenv(var) for var in tls_vars)
         if has_tls_config:
             options["tls"] = True
-        
+
         # Modern TLS options (preferred)
         if os.getenv("MONGO_TLS_CA_FILE"):
             options["tlsCAFile"] = os.getenv("MONGO_TLS_CA_FILE")
@@ -66,7 +70,7 @@ class Config:
             options["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
         if os.getenv("MONGO_TLS_KEY_FILE"):
             options["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
-        
+
         # Legacy SSL options (mapped to TLS parameters)
         if os.getenv("MONGO_SSL_CA_CERTS"):
             options["tlsCAFile"] = os.getenv("MONGO_SSL_CA_CERTS")
@@ -74,7 +78,7 @@ class Config:
             options["tlsCertificateKeyFile"] = os.getenv("MONGO_SSL_CERTFILE")
         if os.getenv("MONGO_SSL_KEYFILE"):
             options["tlsPrivateKeyFile"] = os.getenv("MONGO_SSL_KEYFILE")
-        
+
         return options
 
     # MongoDB connection options (removed uuidRepresentation for PyMongo 4.x compatibility)
