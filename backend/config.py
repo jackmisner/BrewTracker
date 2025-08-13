@@ -44,34 +44,46 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-    # MongoDB connection options
-    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
+    @staticmethod
+    def _build_tls_options():
+        """Helper to build TLS/SSL options from environment variables."""
+        options = {}
 
-    # Add TLS/SSL options if environment variables are provided
-    if os.getenv("MONGO_TLS_CA_FILE"):
-        MONGO_OPTIONS.update(
-            {
-                "tls": True,
-                "tlsCAFile": os.getenv("MONGO_TLS_CA_FILE"),
-            }
-        )
-    if os.getenv("MONGO_TLS_CERT_FILE"):
-        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
-    if os.getenv("MONGO_TLS_KEY_FILE"):
-        MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
+        # Check if any TLS or legacy SSL environment variables are present
+        tls_vars = [
+            "MONGO_TLS_CA_FILE",
+            "MONGO_TLS_CERT_FILE",
+            "MONGO_TLS_KEY_FILE",
+            "MONGO_SSL_CA_CERTS",
+            "MONGO_SSL_CERTFILE",
+            "MONGO_SSL_KEYFILE",
+        ]
 
-    # Legacy SSL options support (fallback to ssl_* parameters)
-    if os.getenv("MONGO_SSL_CA_CERTS"):
-        MONGO_OPTIONS.update(
-            {
-                "ssl": True,
-                "ssl_ca_certs": os.getenv("MONGO_SSL_CA_CERTS"),
-            }
-        )
-    if os.getenv("MONGO_SSL_CERTFILE"):
-        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
-    if os.getenv("MONGO_SSL_KEYFILE"):
-        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+        has_tls_config = any(os.getenv(var) for var in tls_vars)
+        if has_tls_config:
+            options["tls"] = True
+
+        # Modern TLS options (preferred)
+        if os.getenv("MONGO_TLS_CA_FILE"):
+            options["tlsCAFile"] = os.getenv("MONGO_TLS_CA_FILE")
+        if os.getenv("MONGO_TLS_CERT_FILE"):
+            options["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
+        if os.getenv("MONGO_TLS_KEY_FILE"):
+            options["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
+
+        # Legacy SSL options (mapped to TLS parameters)
+        if os.getenv("MONGO_SSL_CA_CERTS"):
+            options["tlsCAFile"] = os.getenv("MONGO_SSL_CA_CERTS")
+        if os.getenv("MONGO_SSL_CERTFILE"):
+            options["tlsCertificateKeyFile"] = os.getenv("MONGO_SSL_CERTFILE")
+        if os.getenv("MONGO_SSL_KEYFILE"):
+            options["tlsPrivateKeyFile"] = os.getenv("MONGO_SSL_KEYFILE")
+
+        return options
+
+    # MongoDB connection options (removed uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {}
+    MONGO_OPTIONS.update(_build_tls_options.__func__())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
@@ -96,36 +108,9 @@ class ProductionConfig(Config):
     # Longer token expiry for production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
 
-    # Production MongoDB settings with enhanced security
-    MONGO_OPTIONS = {
-        "uuidRepresentation": "standard",
-        "retryWrites": True,
-        "w": "majority",
-        "readConcern": {"level": "majority"},
-        "ssl": True,  # Enable SSL in production
-        "ssl_cert_reqs": "required",
-    }
-
-    # Add TLS/SSL options if environment variables are provided
-    if os.getenv("MONGO_TLS_CA_FILE"):
-        MONGO_OPTIONS.update(
-            {
-                "tls": True,
-                "tlsCAFile": os.getenv("MONGO_TLS_CA_FILE"),
-            }
-        )
-    if os.getenv("MONGO_TLS_CERT_FILE"):
-        MONGO_OPTIONS["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
-    if os.getenv("MONGO_TLS_KEY_FILE"):
-        MONGO_OPTIONS["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
-
-    # Legacy SSL options support (fallback to ssl_* parameters)
-    if os.getenv("MONGO_SSL_CA_CERTS"):
-        MONGO_OPTIONS["ssl_ca_certs"] = os.getenv("MONGO_SSL_CA_CERTS")
-    if os.getenv("MONGO_SSL_CERTFILE"):
-        MONGO_OPTIONS["ssl_certfile"] = os.getenv("MONGO_SSL_CERTFILE")
-    if os.getenv("MONGO_SSL_KEYFILE"):
-        MONGO_OPTIONS["ssl_keyfile"] = os.getenv("MONGO_SSL_KEYFILE")
+    # Production MongoDB settings (removed uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {}
+    MONGO_OPTIONS.update(Config._build_tls_options())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
@@ -228,6 +213,6 @@ class TestConfig(Config):
     # Test-specific password reset secret (will fallback to JWT if not set)
     PASSWORD_RESET_SECRET = os.getenv("PASSWORD_RESET_SECRET", "test-jwt-secret-key")
 
-    # Override MongoDB settings for testing
-    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
+    # Override MongoDB settings for testing (removed uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {}
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
