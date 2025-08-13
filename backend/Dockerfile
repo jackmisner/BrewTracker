@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements-prod.txt .
 
 # Install Python dependencies into a relocatable prefix (will compile native extensions if needed)
-RUN pip install --no-cache-dir --prefix=/install -r requirements-prod.txt
+RUN python -m pip install --no-cache-dir --prefix=/install -r requirements-prod.txt
 
 # Runtime stage: Create clean, minimal runtime image
 FROM python:3.13-slim AS runtime
@@ -32,13 +32,14 @@ COPY --from=builder /install /usr/local
 # Copy application code
 COPY . .
 
-# Create non-root user for security and set up secure permissions
-RUN useradd --create-home --shell /bin/bash app \
+# Create non-root system user for security and set up secure permissions
+RUN useradd --system --create-home --shell /usr/sbin/nologin app \
     && mkdir -p /app/certs \
     && chown -R app:app /app \
     && chmod 700 /app/certs \
     && find /app -path '/app/certs*' -prune -o -type d -exec chmod 750 {} + \
-    && find /app -path '/app/certs*' -prune -o -type f -exec chmod 640 {} +
+    && find /app -path '/app/certs*' -prune -o -name '*.sh' -exec chmod 750 {} + \
+    && find /app -path '/app/certs*' -prune -o -type f ! -name '*.sh' -exec chmod 640 {} +
 USER app
 
 # Expose port
@@ -60,9 +61,9 @@ EXPOSE 5000
 # - MONGO_TLS_CERT_FILE: Path to client certificate
 # - MONGO_TLS_KEY_FILE: Path to private key
 
-# Health check
+# Health check using stdlib urllib (no third-party dependencies)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/api/health')" || exit 1
+    CMD python -c "import urllib.request, urllib.error; urllib.request.urlopen('http://localhost:5000/api/health', timeout=10); exit(0)" || exit 1
 
 # Run the application
 CMD ["python", "app.py"]
