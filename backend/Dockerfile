@@ -1,21 +1,34 @@
-# Use Python 3.13 slim image for smaller size
-FROM python:3.13-slim
+# Build stage: Install build dependencies and compile Python packages
+FROM python:3.13-slim AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and security updates
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    ca-certificates \
-    && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements-prod.txt .
 
-# Install Python dependencies
+# Install Python dependencies (will compile native extensions if needed)
 RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Runtime stage: Create clean, minimal runtime image
+FROM python:3.13-slim AS runtime
+
+# Set working directory
+WORKDIR /app
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from build stage
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY . .
