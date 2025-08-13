@@ -20,13 +20,13 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 # Copy application code
 COPY . .
 
-# Create directories for TLS certificates (optional)
-RUN mkdir -p /app/certs && chmod 755 /app/certs
-
-# Create non-root user for security
+# Create non-root user for security and set up secure permissions
 RUN useradd --create-home --shell /bin/bash app \
+    && mkdir -p /app/certs \
     && chown -R app:app /app \
-    && chmod -R 755 /app
+    && chmod 700 /app/certs \
+    && find /app -type d ! -path "/app/certs" -exec chmod 750 {} + \
+    && find /app -type f ! -path "/app/certs/*" -exec chmod 640 {} +
 USER app
 
 # Expose port
