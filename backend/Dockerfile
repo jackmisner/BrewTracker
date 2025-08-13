@@ -38,8 +38,8 @@ RUN useradd --create-home --shell /bin/bash app \
     && mkdir -p /app/certs \
     && chown -R app:app /app \
     && chmod 700 /app/certs \
-    && find /app -type d ! -path "/app/certs" -exec chmod 750 {} + \
-    && find /app -type f ! -path "/app/certs/*" -exec chmod 640 {} +
+    && find /app -path '/app/certs*' -prune -o -type d -exec chmod 750 {} + \
+    && find /app -path '/app/certs*' -prune -o -type f -exec chmod 640 {} +
 USER app
 
 # Expose port
