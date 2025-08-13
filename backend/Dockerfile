@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements first for better caching
 COPY requirements-prod.txt .
 
-# Install Python dependencies (will compile native extensions if needed)
-RUN pip install --no-cache-dir -r requirements-prod.txt
+# Install Python dependencies into a relocatable prefix (will compile native extensions if needed)
+RUN pip install --no-cache-dir --prefix=/install -r requirements-prod.txt
 
 # Runtime stage: Create clean, minimal runtime image
 FROM python:3.13-slim AS runtime
@@ -27,8 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from build stage
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY . .
