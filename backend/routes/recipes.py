@@ -541,12 +541,16 @@ def _get_complete_version_history(current_recipe, viewer_id):
                     break
 
     # Get direct children of current recipe (for backward compatibility)
-    # Restrict to public children only for non-owners
+    # Scope to owner's children for owners, public children for non-owners
     child_versions = []
     children_query = Recipe.objects(parent_recipe_id=current_recipe.id)
 
     # Apply access control for child versions
-    if not is_owner:
+    if is_owner:
+        # Owner sees only their own child recipes
+        children_query = children_query.filter(user_id=current_recipe.user_id)
+    else:
+        # Non-owners see only public child recipes
         children_query = children_query.filter(is_public=True)
 
     children = children_query
