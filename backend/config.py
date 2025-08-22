@@ -81,8 +81,8 @@ class Config:
 
         return options
 
-    # MongoDB connection options (removed uuidRepresentation for PyMongo 4.x compatibility)
-    MONGO_OPTIONS = {}
+    # MongoDB connection options (explicit uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
     MONGO_OPTIONS.update(_build_tls_options.__func__())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
@@ -108,8 +108,8 @@ class ProductionConfig(Config):
     # Longer token expiry for production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
 
-    # Production MongoDB settings (removed uuidRepresentation for PyMongo 4.x compatibility)
-    MONGO_OPTIONS = {}
+    # Production MongoDB settings (explicit uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
     MONGO_OPTIONS.update(Config._build_tls_options())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
@@ -213,6 +213,6 @@ class TestConfig(Config):
     # Test-specific password reset secret (will fallback to JWT if not set)
     PASSWORD_RESET_SECRET = os.getenv("PASSWORD_RESET_SECRET", "test-jwt-secret-key")
 
-    # Override MongoDB settings for testing (removed uuidRepresentation for PyMongo 4.x compatibility)
-    MONGO_OPTIONS = {}
+    # Override MongoDB settings for testing (explicit uuidRepresentation for PyMongo 4.x compatibility)
+    MONGO_OPTIONS = {"uuidRepresentation": "standard"}
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}

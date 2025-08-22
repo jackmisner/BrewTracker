@@ -567,12 +567,42 @@ class TestRecipeEndpointsExtended:
         )
         v2_id = clone_response.json["recipe_id"]
 
-        # Get version history for original
+        # Get version history for original (v1)
         response = client.get(f"/api/recipes/{original_id}/versions", headers=headers)
 
         assert response.status_code == 200
         assert response.json["current_version"] == 1
-        assert response.json["parent_recipe"] is None  # Original has no parent
+
+        # Check enhanced API fields
+        assert "all_versions" in response.json
+        assert "total_versions" in response.json
+        assert "immediate_parent" in response.json
+        assert "root_recipe" in response.json
+
+        # For v1: should have no immediate parent but should be its own root
+        assert response.json["immediate_parent"] is None
+        assert response.json["root_recipe"] is not None
+        assert response.json["root_recipe"]["recipe_id"] == original_id
+        assert response.json["total_versions"] == 2  # v1 and v2
+
+        # All versions should include both v1 and v2
+        all_versions = response.json["all_versions"]
+        assert len(all_versions) == 2
+
+        # Check v1 details
+        v1_info = next(v for v in all_versions if v["version"] == 1)
+        assert v1_info["is_current"] == True
+        assert v1_info["is_root"] == True
+        assert v1_info["is_available"] == True
+
+        # Check v2 details
+        v2_info = next(v for v in all_versions if v["version"] == 2)
+        assert v2_info["is_current"] == False
+        assert v2_info["is_root"] == False
+        assert v2_info["is_available"] == True
+
+        # Backward compatibility checks
+        assert response.json["parent_recipe"] is not None  # Now points to root
         assert len(response.json["child_versions"]) == 1  # Has one child (v2)
 
         # Get version history for v2
@@ -580,6 +610,26 @@ class TestRecipeEndpointsExtended:
 
         assert response.status_code == 200
         assert response.json["current_version"] == 2
+
+        # For v2: should have v1 as immediate parent and root
+        assert response.json["immediate_parent"] is not None
+        assert response.json["immediate_parent"]["recipe_id"] == original_id
+        assert response.json["immediate_parent"]["version"] == 1
+
+        assert response.json["root_recipe"] is not None
+        assert response.json["root_recipe"]["recipe_id"] == original_id
+
+        # All versions should still include both v1 and v2
+        all_versions = response.json["all_versions"]
+        assert len(all_versions) == 2
+
+        # Check current version marking
+        v1_info = next(v for v in all_versions if v["version"] == 1)
+        v2_info = next(v for v in all_versions if v["version"] == 2)
+        assert v1_info["is_current"] == False
+        assert v2_info["is_current"] == True
+
+        # Backward compatibility checks
         assert response.json["parent_recipe"] is not None
         assert response.json["parent_recipe"]["recipe_id"] == original_id
 
