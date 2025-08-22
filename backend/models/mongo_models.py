@@ -417,7 +417,6 @@ class Recipe(Document):
     # Enhanced version tracking fields
     original_author = StringField()  # Original author for cloned public recipes
     clone_count = IntField(default=0)  # Number of times this recipe has been cloned
-    is_owner = BooleanField(default=True)  # True if current user owns this recipe
 
     # Estimated values
     estimated_og = FloatField()

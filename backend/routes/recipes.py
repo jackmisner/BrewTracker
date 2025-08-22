@@ -1,3 +1,5 @@
+from collections import deque
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, jsonify, request
@@ -407,25 +409,30 @@ def get_recipe_versions(recipe_id):
         return jsonify({"error": "Access denied"}), 403
 
     # Build complete version history
-    version_history = _get_complete_version_history(recipe)
+    version_history = _get_complete_version_history(recipe, user_id)
 
     return jsonify(version_history), 200
 
 
-def _get_complete_version_history(current_recipe):
-    """Build complete version history for a recipe"""
+def _get_complete_version_history(current_recipe, viewer_id):
+    """Build complete version history for a recipe with proper access controls"""
 
-    # Find the root recipe (traverse up the parent chain)
-    root_recipe = current_recipe
+    is_owner = str(current_recipe.user_id) == viewer_id
+
+    # Find the root recipe (traverse up the parent chain with access checks)
     ancestors = []
-
-    # Build chain of ancestors (from current back to root)
     temp_recipe = current_recipe
     while temp_recipe and temp_recipe.parent_recipe_id:
         parent = Recipe.objects(id=temp_recipe.parent_recipe_id).first()
         if parent:
-            ancestors.insert(0, parent)  # Insert at beginning to maintain order
-            temp_recipe = parent
+            # Check if viewer has access to this parent
+            parent_is_accessible = str(parent.user_id) == viewer_id or parent.is_public
+            if parent_is_accessible:
+                ancestors.insert(0, parent)  # Insert at beginning to maintain order
+                temp_recipe = parent
+            else:
+                # Stop traversal if viewer lacks access to prevent leaking private ancestors
+                break
         else:
             break
 
@@ -435,18 +442,27 @@ def _get_complete_version_history(current_recipe):
     # Get all recipes in this version family (root + all descendants, recursively)
     all_recipes = []
     seen_ids = set()
-    frontier = [root_recipe]
+    frontier = deque([root_recipe])  # Use deque for O(1) pop operations
     while frontier:
-        node = frontier.pop(0)
+        node = frontier.popleft()  # O(1) operation with deque
         node_id_str = str(node.id)
         if node_id_str in seen_ids:
             continue
         seen_ids.add(node_id_str)
         all_recipes.append(node)
-        # Scope to the same owner to avoid leaking other users' private clones
-        children = list(
-            Recipe.objects(parent_recipe_id=node.id, user_id=root_recipe.user_id)
-        )
+
+        # Build children query with proper access controls
+        children_query = Recipe.objects(parent_recipe_id=node.id)
+
+        # If viewer is not the owner of the current recipe being viewed,
+        # scope children to current recipe owner and filter by is_public for non-owners
+        if not is_owner:
+            children_query = children_query.filter(is_public=True)
+
+        # Scope to the current recipe's owner (not root) for proper branch discovery
+        children_query = children_query.filter(user_id=current_recipe.user_id)
+
+        children = list(children_query)
         frontier.extend(children)
 
     # Sort by version (stable tie-break on id to keep ordering deterministic)
@@ -478,20 +494,20 @@ def _get_complete_version_history(current_recipe):
                 "unit_system": version_info["unit_system"],
             }
 
-        # Find immediate parent: the recipe with version one less than current
-        if (
-            version_info["is_current"]
-            and i > 0
-            and current_recipe.version
-            and current_recipe.version > 1
-        ):
-            prev_recipe = all_recipes[i - 1]
-            immediate_parent = {
-                "recipe_id": str(prev_recipe.id),
-                "name": prev_recipe.name,
-                "version": prev_recipe.version,
-                "unit_system": getattr(prev_recipe, "unit_system", "imperial"),
-            }
+        # Track immediate parent by parent_recipe_id, not by index
+        if version_info["is_current"] and current_recipe.parent_recipe_id:
+            # Find parent in all_recipes by matching parent_recipe_id
+            for parent_recipe in all_recipes:
+                if str(parent_recipe.id) == str(current_recipe.parent_recipe_id):
+                    immediate_parent = {
+                        "recipe_id": str(parent_recipe.id),
+                        "name": parent_recipe.name,
+                        "version": parent_recipe.version,
+                        "unit_system": getattr(
+                            parent_recipe, "unit_system", "imperial"
+                        ),
+                    }
+                    break
 
     # Handle edge case where current recipe is not found in family
     # (could happen if parent_recipe_id points to root but current isn't in descendants)
@@ -509,26 +525,31 @@ def _get_complete_version_history(current_recipe):
         }
         all_versions.append(current_version_info)
 
-        # Re-sort after adding current recipe
-        all_versions.sort(key=lambda v: v["version"])
+        # Re-sort after adding current recipe using stable sorting
+        all_versions.sort(key=lambda v: (v["version"], v["recipe_id"]))
 
-        # Find immediate parent again
-        for i, version in enumerate(all_versions):
-            if version["is_current"] and i > 0:
-                prev_version = all_versions[i - 1]
-                immediate_parent = {
-                    "recipe_id": prev_version["recipe_id"],
-                    "name": prev_version["name"],
-                    "version": prev_version["version"],
-                    "unit_system": prev_version["unit_system"],
-                }
-                break
+        # Find immediate parent by parent_recipe_id, not by index
+        if current_recipe.parent_recipe_id:
+            for version in all_versions:
+                if version["recipe_id"] == str(current_recipe.parent_recipe_id):
+                    immediate_parent = {
+                        "recipe_id": version["recipe_id"],
+                        "name": version["name"],
+                        "version": version["version"],
+                        "unit_system": version["unit_system"],
+                    }
+                    break
 
     # Get direct children of current recipe (for backward compatibility)
+    # Restrict to public children only for non-owners
     child_versions = []
-    children = Recipe.objects(
-        parent_recipe_id=current_recipe.id, user_id=current_recipe.user_id
-    )
+    children_query = Recipe.objects(parent_recipe_id=current_recipe.id)
+
+    # Apply access control for child versions
+    if not is_owner:
+        children_query = children_query.filter(is_public=True)
+
+    children = children_query
     for child in children:
         child_versions.append(
             {
