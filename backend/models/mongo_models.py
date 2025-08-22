@@ -414,6 +414,10 @@ class Recipe(Document):
     version = IntField(default=1)
     parent_recipe_id = ObjectIdField()
 
+    # Enhanced version tracking fields
+    original_author = StringField()  # Original author for cloned public recipes
+    clone_count = IntField(default=0)  # Number of times this recipe has been cloned
+
     # Estimated values
     estimated_og = FloatField()
     estimated_fg = FloatField()
