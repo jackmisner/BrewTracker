@@ -102,10 +102,10 @@ class MongoDBService:
             has_next = page < total_pages
             has_prev = page > 1
 
-            # Convert to dicts with unit_system
+            # Convert to dicts with unit_system and user context
             recipes_data = []
             for recipe in recipes:
-                recipe_dict = recipe.to_dict()
+                recipe_dict = recipe.to_dict_with_user_context(user_id)
                 # Ensure unit_system is included
                 if "unit_system" not in recipe_dict:
                     recipe_dict["unit_system"] = getattr(

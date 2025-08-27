@@ -164,7 +164,7 @@ def create_recipe():
             jsonify(
                 {
                     "message": "Recipe created successfully",
-                    "recipe": recipe.to_dict(),
+                    "recipe": recipe.to_dict_with_user_context(user_id),
                     "recipe_id": str(recipe.id),
                 }
             ),
@@ -205,7 +205,7 @@ def update_recipe(recipe_id):
         updated_recipe, message = MongoDBService.update_recipe(recipe_id, data)
 
         if updated_recipe:
-            return jsonify(updated_recipe.to_dict()), 200
+            return jsonify(updated_recipe.to_dict_with_user_context(user_id)), 200
         else:
             return jsonify({"error": message}), 400
     except ValidationError as e:
@@ -357,7 +357,7 @@ def clone_recipe(recipe_id):
     cloned_recipe, message = MongoDBService.clone_recipe(recipe_id, user_id)
 
     if cloned_recipe:
-        return jsonify(cloned_recipe.to_dict()), 201
+        return jsonify(cloned_recipe.to_dict_with_user_context(user_id)), 201
     else:
         return jsonify({"error": message}), 400
 
@@ -383,7 +383,7 @@ def clone_public_recipe(recipe_id):
     )
 
     if cloned_recipe:
-        return jsonify(cloned_recipe.to_dict()), 201
+        return jsonify(cloned_recipe.to_dict_with_user_context(user_id)), 201
     else:
         return jsonify({"error": message}), 400
 
@@ -577,8 +577,11 @@ def _get_complete_version_history(current_recipe, viewer_id):
 
 
 @recipes_bp.route("/public", methods=["GET"])
+@jwt_required()
 def get_public_recipes():
     """Get all public recipes from all users"""
+    # Get current user ID
+    current_user_id = get_jwt_identity()
     page = max(int(request.args.get("page", 1)), 1)  # Ensure page is at least 1
     per_page = max(
         int(request.args.get("per_page", 10)), 1
@@ -647,14 +650,19 @@ def get_public_recipes():
         # Include username and enhanced metadata for each recipe
         recipes_with_metadata = []
         for recipe in recipes:
-            recipe_dict = recipe.to_dict()
+            raw_viewer_id = get_jwt_identity()
+            try:
+                viewer_id = ObjectId(raw_viewer_id) if raw_viewer_id else None
+            except (InvalidId, TypeError):
+                viewer_id = None
+            recipe_dict = recipe.to_dict_with_user_context(viewer_id)
 
             # Get the username
             user = User.objects(id=recipe.user_id).first()
             recipe_dict["username"] = user.username if user else "Unknown"
 
             # Add style analysis if metrics are available
-            if all([recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
+            if all(v is not None for v in [recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
                 recipe_dict["has_metrics"] = True
                 recipe_dict["style_category"] = (
                     classify_beer_style(recipe.style) if recipe.style else None
