@@ -577,7 +577,7 @@ def _get_complete_version_history(current_recipe, viewer_id):
 
 
 @recipes_bp.route("/public", methods=["GET"])
-@jwt_required()
+@jwt_required(optional=True)
 def get_public_recipes():
     """Get all public recipes from all users"""
     # Get current user ID
@@ -662,7 +662,14 @@ def get_public_recipes():
             recipe_dict["username"] = user.username if user else "Unknown"
 
             # Add style analysis if metrics are available
-            if all(v is not None for v in [recipe.estimated_og, recipe.estimated_abv, recipe.estimated_ibu]):
+            if all(
+                v is not None
+                for v in [
+                    recipe.estimated_og,
+                    recipe.estimated_abv,
+                    recipe.estimated_ibu,
+                ]
+            ):
                 recipe_dict["has_metrics"] = True
                 recipe_dict["style_category"] = (
                     classify_beer_style(recipe.style) if recipe.style else None

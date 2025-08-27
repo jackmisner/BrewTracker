@@ -417,7 +417,9 @@ class Recipe(Document):
     # Enhanced version tracking fields
     original_author = StringField()  # Original author for cloned public recipes
     clone_count = IntField(default=0)  # Number of times this recipe has been cloned
-    is_owner = BooleanField(default=True)  # Whether current user owns this recipe (context-dependent)
+    is_owner = BooleanField(
+        default=True
+    )  # Whether current user owns this recipe (context-dependent)
 
     # Estimated values
     estimated_og = FloatField()
@@ -455,7 +457,7 @@ class Recipe(Document):
             return str(self.user_id) == str(uid)
         except Exception:
             return False
-    
+
     def to_dict_with_user_context(self, viewer_user_id=None):
         """Convert to dictionary with user context for is_owner field"""
         result = self.to_dict()
