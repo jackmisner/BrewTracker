@@ -417,6 +417,9 @@ class Recipe(Document):
     # Enhanced version tracking fields
     original_author = StringField()  # Original author for cloned public recipes
     clone_count = IntField(default=0)  # Number of times this recipe has been cloned
+    is_owner = BooleanField(
+        default=True
+    )  # Whether current user owns this recipe (context-dependent)
 
     # Estimated values
     estimated_og = FloatField()
@@ -442,6 +445,25 @@ class Recipe(Document):
         "collection": "recipes",
         "indexes": ["user_id", "name", "style", ("user_id", "is_public"), "created_at"],
     }
+
+    def get_is_owner(self, viewer_user_id):
+        """Compute whether the viewer is the owner of this recipe"""
+        if not viewer_user_id or not self.user_id:
+            return False
+        uid = getattr(viewer_user_id, "id", viewer_user_id)
+        if isinstance(uid, dict) and "user_id" in uid:
+            uid = uid["user_id"]
+        try:
+            return str(self.user_id) == str(uid)
+        except Exception:
+            return False
+
+    def to_dict_with_user_context(self, viewer_user_id=None):
+        """Convert to dictionary with user context for is_owner field"""
+        result = self.to_dict()
+        # Override is_owner with computed value based on viewer context
+        result["is_owner"] = self.get_is_owner(viewer_user_id)
+        return result
 
     def suggest_matching_styles(self):
         """Find beer styles that match this recipe's specifications"""
@@ -541,6 +563,9 @@ class Recipe(Document):
             "parent_recipe_id": (
                 str(self.parent_recipe_id) if self.parent_recipe_id else None
             ),
+            "original_author": self.original_author,
+            "clone_count": self.clone_count,
+            "is_owner": self.is_owner,
             "estimated_og": self.estimated_og,
             "estimated_fg": self.estimated_fg,
             "estimated_abv": self.estimated_abv,
