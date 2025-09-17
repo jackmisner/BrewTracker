@@ -624,27 +624,36 @@ class MongoDBService:
             new_recipe.boil_time = original_recipe.boil_time
             new_recipe.efficiency = original_recipe.efficiency
             new_recipe.notes = original_recipe.notes
+
+            # Handle mash temperature - copy from original if exists, set defaults if missing
             if (
-                not original_recipe.mash_temperature
-                or original_recipe["mash_temperature"] is None
+                original_recipe.mash_temperature is not None
+                and original_recipe.mash_temperature != ""
             ):
+                # Copy existing mash temperature from original recipe
+                new_recipe.mash_temperature = original_recipe.mash_temperature
+                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit or (
+                    "C" if user and user.get_preferred_units() == "metric" else "F"
+                )
+            else:
+                # Set default mash temperature if original doesn't have one
                 if user and user.get_preferred_units() == "metric":
-                    new_recipe["mash_temperature"] = (
+                    new_recipe.mash_temperature = (
                         67.0  # Celsius - balanced enzyme activity
                     )
-                    new_recipe["mash_temp_unit"] = "C"
+                    new_recipe.mash_temp_unit = "C"
                 else:
-                    new_recipe["mash_temperature"] = (
+                    new_recipe.mash_temperature = (
                         152.0  # Fahrenheit - balanced enzyme activity
                     )
-                    new_recipe["mash_temp_unit"] = "F"
+                    new_recipe.mash_temp_unit = "F"
 
-            # Ensure mash_temp_unit is set if temperature is provided
-            if not original_recipe.mash_temp_unit and original_recipe.mash_temperature:
-                if user and user.get_preferred_units() == "metric":
-                    new_recipe["mash_temp_unit"] = "C"
-                else:
-                    new_recipe["mash_temp_unit"] = "F"
+            # Copy mash time if present (defaults to 60 minutes if not set)
+            new_recipe.mash_time = original_recipe.mash_time or 60
+
+            # For private recipe versioning, preserve original author if it exists
+            # This maintains attribution chain when versioning already-cloned recipes
+            new_recipe.original_author = original_recipe.original_author
 
             # Set unit system to cloner's preference
             new_recipe.unit_system = unit_system
@@ -735,10 +744,7 @@ class MongoDBService:
                 new_recipe.notes = attribution_text
 
             # Handle mash temperature with user preference
-            if (
-                not original_recipe.mash_temperature
-                or original_recipe.mash_temperature is None
-            ):
+            if original_recipe.mash_temperature in [None, ""]:  # If original is missing
                 if user and user.get_preferred_units() == "metric":
                     new_recipe.mash_temperature = 67.0  # Celsius
                     new_recipe.mash_temp_unit = "C"
@@ -747,7 +753,12 @@ class MongoDBService:
                     new_recipe.mash_temp_unit = "F"
             else:
                 new_recipe.mash_temperature = original_recipe.mash_temperature
-                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit
+                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit or (
+                    "C" if user and user.get_preferred_units() == "metric" else "F"
+                )
+
+            # Copy mash time if present (defaults to 60 minutes if not set)
+            new_recipe.mash_time = original_recipe.mash_time or 60
 
             # Set unit system to cloner's preference
             new_recipe.unit_system = unit_system
@@ -755,6 +766,9 @@ class MongoDBService:
             # NO parent-child relationship for public clones
             new_recipe.parent_recipe_id = None
             new_recipe.version = 1  # Always version 1 for unlinked copies
+
+            # Set original author for public clones (passed as parameter)
+            new_recipe.original_author = original_author
 
             # Copy metrics from the original recipe
             new_recipe.estimated_og = original_recipe.estimated_og
