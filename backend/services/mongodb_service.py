@@ -744,10 +744,7 @@ class MongoDBService:
                 new_recipe.notes = attribution_text
 
             # Handle mash temperature with user preference
-            if (
-                not original_recipe.mash_temperature
-                or original_recipe.mash_temperature is None
-            ):
+            if original_recipe.mash_temperature in [None, ""]:  # If original is missing
                 if user and user.get_preferred_units() == "metric":
                     new_recipe.mash_temperature = 67.0  # Celsius
                     new_recipe.mash_temp_unit = "C"
@@ -756,7 +753,9 @@ class MongoDBService:
                     new_recipe.mash_temp_unit = "F"
             else:
                 new_recipe.mash_temperature = original_recipe.mash_temperature
-                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit
+                new_recipe.mash_temp_unit = original_recipe.mash_temp_unit or (
+                    "C" if user and user.get_preferred_units() == "metric" else "F"
+                )
 
             # Copy mash time if present (defaults to 60 minutes if not set)
             new_recipe.mash_time = original_recipe.mash_time or 60
