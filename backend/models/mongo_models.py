@@ -957,3 +957,132 @@ class BrewSession(Document):
         }
 
         return base_dict
+
+
+class DataVersion(Document):
+    """Model to track version information for static data collections"""
+
+    # Data type identifier
+    data_type = StringField(
+        required=True, unique=True, max_length=50
+    )  # 'ingredients' or 'beer_styles'
+
+    # Version information
+    version = StringField(required=True, max_length=100)  # Version hash or identifier
+    last_modified = DateTimeField(required=True, default=lambda: datetime.now(UTC))
+
+    # Metadata
+    total_records = IntField(default=0)  # Number of records in the collection
+    checksum = StringField(max_length=64)  # Optional checksum for data integrity
+
+    # Performance optimization fields
+    last_count_update = DateTimeField(default=lambda: datetime.now(UTC))
+    count_cache_ttl = IntField(
+        default=300
+    )  # TTL for count cache in seconds (5 minutes)
+
+    meta = {
+        "collection": "data_versions",
+        "indexes": ["data_type", "last_modified", "last_count_update"],
+    }
+
+    def to_dict(self):
+        return {
+            "data_type": self.data_type,
+            "version": self.version,
+            "last_modified": (
+                self.last_modified.isoformat() if self.last_modified else None
+            ),
+            "total_records": self.total_records,
+            "checksum": self.checksum,
+        }
+
+    @classmethod
+    def get_or_create_version(cls, data_type):
+        """Get existing version or create a new one"""
+        version = cls.objects(data_type=data_type).first()
+        if not version:
+            # Create initial version
+            import uuid
+
+            version = cls(
+                data_type=data_type,
+                version=str(uuid.uuid4()),
+                last_modified=datetime.now(UTC),
+                total_records=0,
+            )
+            version.save()
+        return version
+
+    def is_count_cache_valid(self):
+        """Check if the cached count is still valid"""
+        if not self.last_count_update:
+            return False
+
+        cache_age = (datetime.now(UTC) - self.last_count_update).total_seconds()
+        return cache_age < self.count_cache_ttl
+
+    def update_count_cache(self, model_class):
+        """Update the cached record count"""
+        try:
+            current_count = model_class.objects().count()
+
+            # Only update if count has changed or cache is expired
+            if self.total_records != current_count or not self.is_count_cache_valid():
+                self.total_records = current_count
+                self.last_count_update = datetime.now(UTC)
+                self.save()
+                return True
+            return False
+        except Exception as e:
+            # Log error but don't fail the request
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to update count cache for {self.data_type}: {e}")
+            return False
+
+    @classmethod
+    def get_or_create_version_optimized(cls, data_type, model_class=None):
+        """Get version with optimized count handling"""
+        version = cls.objects(data_type=data_type).first()
+        if not version:
+            # Create initial version
+            import uuid
+
+            initial_count = 0
+
+            # Get initial count if model class is provided
+            if model_class:
+                try:
+                    initial_count = model_class.objects().count()
+                except Exception:
+                    pass  # Use default 0 if count fails
+
+            version = cls(
+                data_type=data_type,
+                version=str(uuid.uuid4()),
+                last_modified=datetime.now(UTC),
+                total_records=initial_count,
+                last_count_update=datetime.now(UTC),
+            )
+            version.save()
+        elif model_class and not version.is_count_cache_valid():
+            # Update count cache if expired
+            version.update_count_cache(model_class)
+
+        return version
+
+    @classmethod
+    def update_version(cls, data_type, total_records=None):
+        """Update version when data changes"""
+        import uuid
+
+        version = cls.get_or_create_version(data_type)
+        version.version = str(uuid.uuid4())
+        version.last_modified = datetime.now(UTC)
+        if total_records is not None:
+            version.total_records = total_records
+            version.last_count_update = datetime.now(UTC)
+        version.save()
+        return version

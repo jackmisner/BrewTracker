@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from models.mongo_models import Ingredient, User
+from models.mongo_models import DataVersion, Ingredient, User
 from services.mongodb_service import MongoDBService
 
 ingredients_bp = Blueprint("ingredients", __name__)
@@ -161,3 +161,34 @@ def get_ingredient_recipes(ingredient_id):
         ),
         200,
     )
+
+
+@ingredients_bp.route("/version", methods=["GET"])
+def get_ingredients_version():
+    """Get current version information for ingredients data"""
+    try:
+        # Get version with optimized count handling
+        version = DataVersion.get_or_create_version_optimized("ingredients", Ingredient)
+
+        return (
+            jsonify(
+                {
+                    "version": version.version,
+                    "last_modified": (
+                        version.last_modified.isoformat()
+                        if version.last_modified
+                        else None
+                    ),
+                    "total_records": version.total_records,
+                    "data_type": "ingredients",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting ingredients version: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500

@@ -2,7 +2,7 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from models.mongo_models import BeerStyleGuide, Recipe
+from models.mongo_models import BeerStyleGuide, DataVersion, Recipe
 from services.mongodb_service import MongoDBService
 
 beer_styles_bp = Blueprint("beer_styles", __name__)
@@ -30,6 +30,39 @@ def search_beer_styles():
     except Exception as e:
         print(f"Error searching beer styles: {e}")
         return jsonify({"error": "Failed to search beer styles"}), 500
+
+
+@beer_styles_bp.route("/version", methods=["GET"])
+def get_beer_styles_version():
+    """Get current version information for beer styles data"""
+    try:
+        # Get version with optimized count handling
+        version = DataVersion.get_or_create_version_optimized(
+            "beer_styles", BeerStyleGuide
+        )
+
+        return (
+            jsonify(
+                {
+                    "version": version.version,
+                    "last_modified": (
+                        version.last_modified.isoformat()
+                        if version.last_modified
+                        else None
+                    ),
+                    "total_records": version.total_records,
+                    "data_type": "beer_styles",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting beer styles version: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @beer_styles_bp.route("/<style_id>", methods=["GET"])
