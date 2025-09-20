@@ -1,8 +1,9 @@
 import logging
 import os
+import re
 from pathlib import Path
 
-from flask import Flask, abort, jsonify
+from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
@@ -71,15 +72,41 @@ def create_app(config_class=None):
     # Configure CORS based on environment
     flask_env = os.getenv("FLASK_ENV", "development")
     print(f"FLASK_ENV detected: {flask_env}")
+
+    # Configure secure Vercel origin pattern
+    vercel_regex_env = os.getenv("VERCEL_ORIGIN_REGEX")
+    if vercel_regex_env:
+        try:
+            vercel_pattern = re.compile(vercel_regex_env)
+        except re.error as e:
+            raise RuntimeError(f"Invalid VERCEL_ORIGIN_REGEX pattern: {e}") from e
+    else:
+        # Default to project-scoped pattern
+        vercel_pattern = re.compile(r"^https://brewtracker-[A-Za-z0-9-]+\.vercel\.app$")
+
     if flask_env == "production":
-        # Production CORS - restrict to your frontend domain
+        # Production CORS - tightened security
         allowed_origins = [
             os.getenv(
                 "FRONTEND_URL",
                 "https://brewtracker-wheat.vercel.app",
             ),
-            "https://*.vercel.app",  # Allow Vercel preview deployments
+            # Vercel deployments with project-scoped regex pattern
+            vercel_pattern,
+            # Native app schemes only
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://localhost",
+            "https://localhost",
         ]
+
+        # Only allow null origins if explicitly enabled
+        if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
+            allowed_origins.extend(
+                [
+                    "null",  # WebView/file/about:blank resolve to Origin: null (security: only for dev - can come from untrusted contexts)
+                ]
+            )
     else:
         # Development CORS
         allowed_origins = [
@@ -89,18 +116,41 @@ def create_app(config_class=None):
             "http://127.0.0.1:5000",
             "http://localhost:8081",
             "http://127.0.0.1:8081",
-            "http://192.168.0.10:8081",
+            # Mobile development origins
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://localhost",
+            "https://localhost",
+            "null",  # WebView/file/about:blank resolve to Origin: null (security: only for dev - can come from untrusted contexts)
+            # Android APK development origins
+            "app://localhost",
+            "https://anonymous",  # Some Android WebViews use this
+            # Flexible IP ranges for mobile development (regex patterns)
+            re.compile(
+                r"^http://192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d):8081$"
+            ),
+            re.compile(
+                r"^http://10\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d):8081$"
+            ),
         ]
+
+    # Set credentials support based on environment and explicit flag
+    supports_credentials = (
+        flask_env != "production"
+        or os.getenv("ENABLE_CORS_CREDENTIALS", "false").lower() == "true"
+    )
 
     CORS(
         app,
         origins=allowed_origins,
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
-        supports_credentials=True,
+        supports_credentials=supports_credentials,
     )
-    print(f"CORS enabled for origins: {allowed_origins}")
-    print(f"Backend deployment trigger test - {flask_env} mode")
+    if flask_env == "development":
+        print(f"CORS enabled for origins: {allowed_origins}")
+    else:
+        print(f"CORS enabled with {len(allowed_origins)} configured origins")
 
     # Add security components
     add_security_headers(app)
