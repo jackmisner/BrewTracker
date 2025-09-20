@@ -79,6 +79,13 @@ def create_app(config_class=None):
                 "https://brewtracker-wheat.vercel.app",
             ),
             "https://*.vercel.app",  # Allow Vercel preview deployments
+            # Android app origins
+            "capacitor://localhost",  # Capacitor apps
+            "ionic://localhost",  # Ionic apps
+            "http://localhost",  # React Native/Expo local development
+            "https://localhost",  # HTTPS local development
+            "file://",  # File protocol for mobile apps
+            "about:blank",  # Initial app load state
         ]
     else:
         # Development CORS
@@ -90,6 +97,16 @@ def create_app(config_class=None):
             "http://localhost:8081",
             "http://127.0.0.1:8081",
             "http://192.168.0.10:8081",
+            # Mobile development origins
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://localhost",
+            "https://localhost",
+            "file://",
+            "about:blank",
+            # Flexible IP ranges for mobile development
+            "http://192.168.*:8081",
+            "http://10.*:8081",
         ]
 
     CORS(
