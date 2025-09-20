@@ -79,7 +79,7 @@ def create_app(config_class=None):
         try:
             vercel_pattern = re.compile(vercel_regex_env)
         except re.error as e:
-            raise RuntimeError(f"Invalid VERCEL_ORIGIN_REGEX pattern: {e}")
+            raise RuntimeError(f"Invalid VERCEL_ORIGIN_REGEX pattern: {e}") from e
     else:
         # Default to project-scoped pattern
         vercel_pattern = re.compile(r"^https://brewtracker-[A-Za-z0-9-]+\.vercel\.app$")
@@ -104,7 +104,7 @@ def create_app(config_class=None):
         if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
             allowed_origins.extend(
                 [
-                    "null",  # file:// and about:blank yield Origin: null
+                    "null",  # WebView/file/about:blank resolve to Origin: null (security: only for dev - can come from untrusted contexts)
                 ]
             )
     else:
@@ -121,7 +121,7 @@ def create_app(config_class=None):
             "ionic://localhost",
             "http://localhost",
             "https://localhost",
-            "null",  # WebView/file/about:blank resolve to Origin: null
+            "null",  # WebView/file/about:blank resolve to Origin: null (security: only for dev - can come from untrusted contexts)
             # Android APK development origins
             "app://localhost",
             "https://anonymous",  # Some Android WebViews use this
@@ -147,8 +147,10 @@ def create_app(config_class=None):
         allow_headers=["Content-Type", "Authorization"],
         supports_credentials=supports_credentials,
     )
-    print(f"CORS enabled for origins: {allowed_origins}")
-    print(f"Backend deployment trigger test - {flask_env} mode")
+    if flask_env == "development":
+        print(f"CORS enabled for origins: {allowed_origins}")
+    else:
+        print(f"CORS enabled with {len(allowed_origins)} configured origins")
 
     # Add security components
     add_security_headers(app)
