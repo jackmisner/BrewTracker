@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 
-from flask import Flask, abort, jsonify
+from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
@@ -80,7 +80,7 @@ def create_app(config_class=None):
                 "https://brewtracker-wheat.vercel.app",
             ),
             # Vercel deployments with regex pattern
-            re.compile(r"^https://.*\.vercel\.app$"),
+            re.compile(r"^https://[A-Za-z0-9-]+\.vercel\.app$"),
             # Native app schemes only
             "capacitor://localhost",
             "ionic://localhost",
@@ -92,9 +92,7 @@ def create_app(config_class=None):
         if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
             allowed_origins.extend(
                 [
-                    "file://",
-                    "about:blank",
-                    "null",
+                    "null",  # file:// and about:blank yield Origin: null
                 ]
             )
     else:
@@ -114,10 +112,17 @@ def create_app(config_class=None):
             "https://localhost",
             "file://",
             "about:blank",
-            "null",  # WebView null origins
+            "null",  # WebView null origins (important for development APKs)
+            # Android APK development origins
+            "app://localhost",
+            "https://anonymous",  # Some Android WebViews use this
             # Flexible IP ranges for mobile development (regex patterns)
-            re.compile(r"^http://192\.168\.\d{1,3}\.\d{1,3}:8081$"),
-            re.compile(r"^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}:8081$"),
+            re.compile(
+                r"^http://192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d):8081$"
+            ),
+            re.compile(
+                r"^http://10\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d):8081$"
+            ),
         ]
 
     # Set credentials support based on environment and explicit flag
@@ -139,6 +144,17 @@ def create_app(config_class=None):
     # Add security components
     add_security_headers(app)
     setup_error_handlers(app)
+
+    # Add request origin logging for development debugging
+    if flask_env == "development":
+
+        @app.before_request
+        def log_request_origin():
+            origin = request.headers.get("Origin", "No Origin Header")
+            user_agent = request.headers.get("User-Agent", "No User-Agent")
+            print(
+                f"[CORS DEBUG] Request from Origin: '{origin}' | User-Agent: {user_agent[:100]}..."
+            )
 
     # Add security monitoring middleware
     @app.before_request
