@@ -72,6 +72,18 @@ def create_app(config_class=None):
     # Configure CORS based on environment
     flask_env = os.getenv("FLASK_ENV", "development")
     print(f"FLASK_ENV detected: {flask_env}")
+
+    # Configure secure Vercel origin pattern
+    vercel_regex_env = os.getenv("VERCEL_ORIGIN_REGEX")
+    if vercel_regex_env:
+        try:
+            vercel_pattern = re.compile(vercel_regex_env)
+        except re.error as e:
+            raise RuntimeError(f"Invalid VERCEL_ORIGIN_REGEX pattern: {e}")
+    else:
+        # Default to project-scoped pattern
+        vercel_pattern = re.compile(r"^https://brewtracker-[A-Za-z0-9-]+\.vercel\.app$")
+
     if flask_env == "production":
         # Production CORS - tightened security
         allowed_origins = [
@@ -79,8 +91,8 @@ def create_app(config_class=None):
                 "FRONTEND_URL",
                 "https://brewtracker-wheat.vercel.app",
             ),
-            # Vercel deployments with regex pattern
-            re.compile(r"^https://[A-Za-z0-9-]+\.vercel\.app$"),
+            # Vercel deployments with project-scoped regex pattern
+            vercel_pattern,
             # Native app schemes only
             "capacitor://localhost",
             "ionic://localhost",
@@ -104,15 +116,12 @@ def create_app(config_class=None):
             "http://127.0.0.1:5000",
             "http://localhost:8081",
             "http://127.0.0.1:8081",
-            "http://192.168.0.10:8081",
             # Mobile development origins
             "capacitor://localhost",
             "ionic://localhost",
             "http://localhost",
             "https://localhost",
-            "file://",
-            "about:blank",
-            "null",  # WebView null origins (important for development APKs)
+            "null",  # WebView/file/about:blank resolve to Origin: null
             # Android APK development origins
             "app://localhost",
             "https://anonymous",  # Some Android WebViews use this
