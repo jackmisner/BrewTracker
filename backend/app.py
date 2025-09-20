@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from pathlib import Path
 
 from flask import Flask, abort, jsonify
@@ -72,21 +73,30 @@ def create_app(config_class=None):
     flask_env = os.getenv("FLASK_ENV", "development")
     print(f"FLASK_ENV detected: {flask_env}")
     if flask_env == "production":
-        # Production CORS - restrict to your frontend domain
+        # Production CORS - tightened security
         allowed_origins = [
             os.getenv(
                 "FRONTEND_URL",
                 "https://brewtracker-wheat.vercel.app",
             ),
-            "https://*.vercel.app",  # Allow Vercel preview deployments
-            # Android app origins
-            "capacitor://localhost",  # Capacitor apps
-            "ionic://localhost",  # Ionic apps
-            "http://localhost",  # React Native/Expo local development
-            "https://localhost",  # HTTPS local development
-            "file://",  # File protocol for mobile apps
-            "about:blank",  # Initial app load state
+            # Vercel deployments with regex pattern
+            re.compile(r"^https://.*\.vercel\.app$"),
+            # Native app schemes only
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://localhost",
+            "https://localhost",
         ]
+
+        # Only allow null origins if explicitly enabled
+        if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
+            allowed_origins.extend(
+                [
+                    "file://",
+                    "about:blank",
+                    "null",
+                ]
+            )
     else:
         # Development CORS
         allowed_origins = [
@@ -104,17 +114,24 @@ def create_app(config_class=None):
             "https://localhost",
             "file://",
             "about:blank",
-            # Flexible IP ranges for mobile development
-            "http://192.168.*:8081",
-            "http://10.*:8081",
+            "null",  # WebView null origins
+            # Flexible IP ranges for mobile development (regex patterns)
+            re.compile(r"^http://192\.168\.\d{1,3}\.\d{1,3}:8081$"),
+            re.compile(r"^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}:8081$"),
         ]
+
+    # Set credentials support based on environment and explicit flag
+    supports_credentials = (
+        flask_env != "production"
+        or os.getenv("ENABLE_CORS_CREDENTIALS", "false").lower() == "true"
+    )
 
     CORS(
         app,
         origins=allowed_origins,
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
-        supports_credentials=True,
+        supports_credentials=supports_credentials,
     )
     print(f"CORS enabled for origins: {allowed_origins}")
     print(f"Backend deployment trigger test - {flask_env} mode")
