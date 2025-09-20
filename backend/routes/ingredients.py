@@ -96,6 +96,13 @@ def create_ingredient():
     ingredient = Ingredient(**data)
     ingredient.save()
 
+    # Bump data version (update count eagerly)
+    try:
+        DataVersion.update_version(
+            "ingredients", total_records=Ingredient.objects().count()
+        )
+    except Exception:
+        pass  # non-blocking
     return jsonify(ingredient.to_dict()), 201
 
 
@@ -115,7 +122,11 @@ def update_ingredient(ingredient_id):
             setattr(ingredient, key, value)
 
     ingredient.save()
-
+    # Bump data version (non-blocking)
+    try:
+        DataVersion.update_version("ingredients")
+    except Exception:
+        pass
     return jsonify(ingredient.to_dict()), 200
 
 
@@ -129,7 +140,12 @@ def delete_ingredient(ingredient_id):
 
     # Delete ingredient
     ingredient.delete()
-
+    try:
+        DataVersion.update_version(
+            "ingredients", total_records=Ingredient.objects().count()
+        )
+    except Exception:
+        pass
     return jsonify({"message": "Ingredient deleted successfully"}), 200
 
 
@@ -170,21 +186,23 @@ def get_ingredients_version():
         # Get version with optimized count handling
         version = DataVersion.get_or_create_version_optimized("ingredients", Ingredient)
 
-        return (
-            jsonify(
-                {
-                    "version": version.version,
-                    "last_modified": (
-                        version.last_modified.isoformat()
-                        if version.last_modified
-                        else None
-                    ),
-                    "total_records": version.total_records,
-                    "data_type": "ingredients",
-                }
+        payload = {
+            "version": version.version,
+            "last_modified": (
+                version.last_modified.isoformat() if version.last_modified else None
             ),
-            200,
-        )
+            "total_records": version.total_records,
+            "data_type": "ingredients",
+        }
+        if request.if_none_match and request.if_none_match.contains(version.version):
+            return "", 304
+        resp = jsonify(payload)
+        resp.set_etag(version.version)
+        if version.last_modified:
+            resp.last_modified = version.last_modified
+        resp.cache_control.public = True
+        resp.cache_control.max_age = getattr(version, "count_cache_ttl", 60)
+        return resp, 200
 
     except Exception as e:
         import logging

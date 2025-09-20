@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import os
 from datetime import UTC, datetime
+from typing import ClassVar
 
 from mongoengine import (
     CASCADE,
@@ -19,7 +20,8 @@ from mongoengine import (
     StringField,
     connect,
 )
-from mongoengine.queryset.visitor import Q  # Add this import
+from mongoengine.errors import NotUniqueError
+from mongoengine.queryset.visitor import Q
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from utils.crypto import get_password_reset_secret
@@ -978,10 +980,10 @@ class DataVersion(Document):
     # Performance optimization fields
     last_count_update = DateTimeField(default=lambda: datetime.now(UTC))
     count_cache_ttl = IntField(
-        default=300
+        default=300, min_value=0
     )  # TTL for count cache in seconds (5 minutes)
 
-    meta = {
+    meta: "ClassVar[dict]" = {
         "collection": "data_versions",
         "indexes": ["data_type", "last_modified", "last_count_update"],
     }
@@ -1011,7 +1013,11 @@ class DataVersion(Document):
                 last_modified=datetime.now(UTC),
                 total_records=0,
             )
-            version.save()
+            try:
+                version.save()
+            except NotUniqueError:
+                # Another process created it: fetch the existing one
+                version = cls.objects(data_type=data_type).first()
         return version
 
     def is_count_cache_valid(self):
@@ -1039,7 +1045,12 @@ class DataVersion(Document):
             import logging
 
             logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to update count cache for {self.data_type}: {e}")
+            logger.warning(
+                "Failed to update count cache for %s: %s",
+                self.data_type,
+                e,
+                exc_info=True,
+            )
             return False
 
     @classmethod
@@ -1066,7 +1077,11 @@ class DataVersion(Document):
                 total_records=initial_count,
                 last_count_update=datetime.now(UTC),
             )
-            version.save()
+            try:
+                version.save()
+            except NotUniqueError:
+                # Another process created it: fetch the existing one
+                version = cls.objects(data_type=data_type).first()
         elif model_class and not version.is_count_cache_valid():
             # Update count cache if expired
             version.update_count_cache(model_class)

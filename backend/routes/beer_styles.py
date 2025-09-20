@@ -41,21 +41,24 @@ def get_beer_styles_version():
             "beer_styles", BeerStyleGuide
         )
 
-        return (
-            jsonify(
-                {
-                    "version": version.version,
-                    "last_modified": (
-                        version.last_modified.isoformat()
-                        if version.last_modified
-                        else None
-                    ),
-                    "total_records": version.total_records,
-                    "data_type": "beer_styles",
-                }
+        payload = {
+            "version": version.version,
+            "last_modified": (
+                version.last_modified.isoformat() if version.last_modified else None
             ),
-            200,
-        )
+            "total_records": version.total_records,
+            "data_type": "beer_styles",
+        }
+        # Conditional GET
+        if request.if_none_match and request.if_none_match.contains(version.version):
+            return "", 304
+        resp = jsonify(payload)
+        resp.set_etag(version.version)
+        if version.last_modified:
+            resp.last_modified = version.last_modified
+        resp.cache_control.public = True
+        resp.cache_control.max_age = getattr(version, "count_cache_ttl", 60)
+        return resp, 200
 
     except Exception as e:
         import logging
