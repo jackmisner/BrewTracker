@@ -145,17 +145,6 @@ def create_app(config_class=None):
     add_security_headers(app)
     setup_error_handlers(app)
 
-    # Add request origin logging for development debugging
-    if flask_env == "development":
-
-        @app.before_request
-        def log_request_origin():
-            origin = request.headers.get("Origin", "No Origin Header")
-            user_agent = request.headers.get("User-Agent", "No User-Agent")
-            print(
-                f"[CORS DEBUG] Request from Origin: '{origin}' | User-Agent: {user_agent[:100]}..."
-            )
-
     # Add security monitoring middleware
     @app.before_request
     def before_request():
