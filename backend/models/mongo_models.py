@@ -20,8 +20,9 @@ from mongoengine import (
     StringField,
     connect,
 )
-from mongoengine.errors import NotUniqueError
+from mongoengine.errors import MongoEngineException, NotUniqueError
 from mongoengine.queryset.visitor import Q
+from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from utils.crypto import get_password_reset_secret
@@ -983,7 +984,7 @@ class DataVersion(Document):
         default=300, min_value=0
     )  # TTL for count cache in seconds (5 minutes)
 
-    meta: "ClassVar[dict]" = {
+    meta: ClassVar[dict] = {
         "collection": "data_versions",
         "indexes": ["data_type", "last_modified", "last_count_update"],
     }
@@ -1040,7 +1041,7 @@ class DataVersion(Document):
                 self.save()
                 return True
             return False
-        except Exception as e:
+        except (MongoEngineException, PyMongoError) as e:
             # Log error but don't fail the request
             import logging
 
@@ -1067,8 +1068,15 @@ class DataVersion(Document):
             if model_class:
                 try:
                     initial_count = model_class.objects().count()
-                except Exception:
-                    pass  # Use default 0 if count fails
+                except (MongoEngineException, PyMongoError) as e:
+                    import logging
+
+                    logging.getLogger(__name__).debug(
+                        "Initial count fetch failed for %s: %s",
+                        data_type,
+                        e,
+                        exc_info=True,
+                    )
 
             version = cls(
                 data_type=data_type,
@@ -1090,14 +1098,21 @@ class DataVersion(Document):
 
     @classmethod
     def update_version(cls, data_type, total_records=None):
-        """Update version when data changes"""
+        """Update version when data changes (atomic)."""
         import uuid
 
-        version = cls.get_or_create_version(data_type)
-        version.version = str(uuid.uuid4())
-        version.last_modified = datetime.now(UTC)
+        now = datetime.now(UTC)
+        new_version = str(uuid.uuid4())
+        update = {
+            "set__version": new_version,
+            "set__last_modified": now,
+        }
         if total_records is not None:
-            version.total_records = total_records
-            version.last_count_update = datetime.now(UTC)
-        version.save()
+            update["set__total_records"] = total_records
+            update["set__last_count_update"] = now
+        version = cls.objects(data_type=data_type).modify(
+            upsert=True,
+            new=True,
+            **update,
+        )
         return version

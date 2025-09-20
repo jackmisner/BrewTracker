@@ -101,8 +101,14 @@ def create_ingredient():
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except Exception:
-        pass  # non-blocking
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Failed to update ingredients DataVersion after create: %s",
+            e,
+            exc_info=True,
+        )
     return jsonify(ingredient.to_dict()), 201
 
 
@@ -125,8 +131,14 @@ def update_ingredient(ingredient_id):
     # Bump data version (non-blocking)
     try:
         DataVersion.update_version("ingredients")
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Failed to update ingredients DataVersion after update: %s",
+            e,
+            exc_info=True,
+        )
     return jsonify(ingredient.to_dict()), 200
 
 
@@ -144,8 +156,14 @@ def delete_ingredient(ingredient_id):
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Failed to update ingredients DataVersion after delete: %s",
+            e,
+            exc_info=True,
+        )
     return jsonify({"message": "Ingredient deleted successfully"}), 200
 
 
