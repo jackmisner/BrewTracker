@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from mongoengine import OperationError
+from mongoengine.errors import OperationError
 from pymongo.errors import PyMongoError
 
 from models.mongo_models import DataVersion, Ingredient, User
@@ -212,10 +212,11 @@ def get_ingredients_version():
                 version.last_modified.isoformat() if version.last_modified else None
             ),
             "total_records": version.total_records,
-            "data_type": "ingredients",
+            "data_type": version.data_type,
         }
         resp = jsonify(payload)
-        resp.set_etag(version.version)
+        # Ensure ETag changes when payload changes (version or total_records)
+        resp.set_etag(f"{version.version}:{version.total_records}")
         if version.last_modified:
             resp.last_modified = version.last_modified
         resp.cache_control.public = True
