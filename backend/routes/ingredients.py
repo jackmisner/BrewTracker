@@ -1,3 +1,5 @@
+import logging
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from mongoengine.errors import MongoEngineException
@@ -6,6 +8,7 @@ from pymongo.errors import PyMongoError
 from models.mongo_models import DataVersion, Ingredient, User
 from services.mongodb_service import MongoDBService
 
+logger = logging.getLogger(__name__)
 ingredients_bp = Blueprint("ingredients", __name__)
 
 
@@ -104,9 +107,7 @@ def create_ingredient():
             "ingredients", total_records=Ingredient.objects().count()
         )
     except (MongoEngineException, PyMongoError) as e:
-        import logging
-
-        logging.getLogger(__name__).warning(
+        logger.warning(
             "Failed to update ingredients DataVersion after create: %s",
             e,
             exc_info=True,
@@ -134,9 +135,7 @@ def update_ingredient(ingredient_id):
     try:
         DataVersion.update_version("ingredients")
     except (MongoEngineException, PyMongoError) as e:
-        import logging
-
-        logging.getLogger(__name__).warning(
+        logger.warning(
             "Failed to update ingredients DataVersion after update: %s",
             e,
             exc_info=True,
@@ -159,9 +158,7 @@ def delete_ingredient(ingredient_id):
             "ingredients", total_records=Ingredient.objects().count()
         )
     except (MongoEngineException, PyMongoError) as e:
-        import logging
-
-        logging.getLogger(__name__).warning(
+        logger.warning(
             "Failed to update ingredients DataVersion after delete: %s",
             e,
             exc_info=True,
@@ -223,11 +220,8 @@ def get_ingredients_version():
         resp.cache_control.max_age = getattr(version, "count_cache_ttl", 60)
         # Let Werkzeug apply 304 for ETag/If-Modified-Since and strip body if needed
         resp = resp.make_conditional(request)
-        return resp
-
     except (MongoEngineException, PyMongoError) as e:
-        import logging
-
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error getting ingredients version: {e}", exc_info=True)
+        logger.error("Error getting ingredients version: %s", e, exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+    else:
+        return resp
