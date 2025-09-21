@@ -13,7 +13,7 @@
     {
       "src": "/static/(.*)",
       "headers": {
-        "cache-control": "s-maxage=31536000,immutable"
+        "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable"
       }
     },
     {
@@ -26,6 +26,7 @@
       },
       "continue": false
     },
+    { "handle": "filesystem" },
     {
       "src": "/(.*)",
       "dest": "/index.html"
