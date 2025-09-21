@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.brewtracker.android",
+      "sha256_cert_fingerprints": [
+        "D9:0C:D0:B8:7C:FA:E3:4B:61:54:55:FF:BA:A4:E8:8F:C2:B0:85:56:DC:54:0B:49:7A:95:B8:75:95:1C:F4:DE"
+      ]
+    }
+  }
+]
