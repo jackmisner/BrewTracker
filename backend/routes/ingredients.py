@@ -103,16 +103,22 @@ def create_ingredient():
 
     # Bump data version (update count eagerly)
     try:
-        DataVersion.update_version(
-            "ingredients", total_records=Ingredient.objects().count()
-        )
+        # Atomic version bump + count increment (requires helper on DataVersion)
+        DataVersion.bump_and_adjust_count("ingredients", delta=1)
     except (MongoEngineException, PyMongoError) as e:
         logger.warning(
             "Failed to update ingredients DataVersion after create: %s",
             e,
             exc_info=True,
         )
-    return jsonify(ingredient.to_dict()), 201
+    from flask import url_for
+
+    resp = jsonify(ingredient.to_dict())
+    resp.status_code = 201
+    resp.headers["Location"] = url_for(
+        "ingredients.get_ingredient", ingredient_id=str(ingredient.id), _external=True
+    )
+    return resp
 
 
 @ingredients_bp.route("/<ingredient_id>", methods=["PUT"])
@@ -125,9 +131,24 @@ def update_ingredient(ingredient_id):
     if not ingredient:
         return jsonify({"error": "Ingredient not found"}), 404
 
-    # Update ingredient fields
+    ALLOWED_UPDATE_FIELDS = {
+        "name",
+        "type",
+        "description",
+        "potential",
+        "color",
+        "grain_type",
+        "alpha_acid",
+        "attenuation",
+        "manufacturer",
+        "code",
+        "alcohol_tolerance",
+        "min_temperature",
+        "max_temperature",
+        "yeast_type",
+    }
     for key, value in data.items():
-        if hasattr(ingredient, key):
+        if key in ALLOWED_UPDATE_FIELDS:
             setattr(ingredient, key, value)
 
     ingredient.save()
@@ -154,16 +175,15 @@ def delete_ingredient(ingredient_id):
     # Delete ingredient
     ingredient.delete()
     try:
-        DataVersion.update_version(
-            "ingredients", total_records=Ingredient.objects().count()
-        )
+        # Atomic version bump + count decrement (requires helper on DataVersion)
+        DataVersion.bump_and_adjust_count("ingredients", delta=-1)
     except (MongoEngineException, PyMongoError) as e:
         logger.warning(
             "Failed to update ingredients DataVersion after delete: %s",
             e,
             exc_info=True,
         )
-    return jsonify({"message": "Ingredient deleted successfully"}), 200
+    return "", 204
 
 
 @ingredients_bp.route("/<ingredient_id>/recipes", methods=["GET"])
@@ -213,7 +233,11 @@ def get_ingredients_version():
         }
         resp = jsonify(payload)
         # Ensure ETag changes when payload changes (version or total_records)
-        resp.set_etag(f"{version.version}:{version.total_records}")
+        etag_parts = [version.version, str(version.total_records)]
+        # Include checksum if available for more granularity (not implemented yet)
+        if getattr(version, "checksum", None):
+            etag_parts.append(version.checksum)
+        resp.set_etag(":".join(etag_parts))
         if version.last_modified:
             resp.last_modified = version.last_modified
         resp.cache_control.public = True

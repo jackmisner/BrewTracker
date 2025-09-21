@@ -1118,3 +1118,18 @@ class DataVersion(Document):
             **update,
         )
         return version
+
+    @classmethod
+    def bump_and_adjust_count(cls, data_type, delta=0):
+        import uuid
+
+        now = datetime.now(UTC)
+        return cls.objects(data_type=data_type).modify(
+            upsert=True,
+            new=True,
+            inc__total_records=delta,
+            set__version=str(uuid.uuid4()),
+            set__last_modified=now,
+            set__last_count_update=now,
+            set_on_insert__data_type=data_type,
+        )
