@@ -1,9 +1,14 @@
+import logging
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from mongoengine.errors import MongoEngineException
+from pymongo.errors import PyMongoError
 
-from models.mongo_models import Ingredient, User
+from models.mongo_models import DataVersion, Ingredient, User
 from services.mongodb_service import MongoDBService
 
+logger = logging.getLogger(__name__)
 ingredients_bp = Blueprint("ingredients", __name__)
 
 
@@ -96,7 +101,24 @@ def create_ingredient():
     ingredient = Ingredient(**data)
     ingredient.save()
 
-    return jsonify(ingredient.to_dict()), 201
+    # Bump data version (update count eagerly)
+    try:
+        # Atomic version bump + count increment (requires helper on DataVersion)
+        DataVersion.bump_and_adjust_count("ingredients", delta=1)
+    except (MongoEngineException, PyMongoError) as e:
+        logger.warning(
+            "Failed to update ingredients DataVersion after create: %s",
+            e,
+            exc_info=True,
+        )
+    from flask import url_for
+
+    resp = jsonify(ingredient.to_dict())
+    resp.status_code = 201
+    resp.headers["Location"] = url_for(
+        "ingredients.get_ingredient", ingredient_id=str(ingredient.id), _external=True
+    )
+    return resp
 
 
 @ingredients_bp.route("/<ingredient_id>", methods=["PUT"])
@@ -109,13 +131,36 @@ def update_ingredient(ingredient_id):
     if not ingredient:
         return jsonify({"error": "Ingredient not found"}), 404
 
-    # Update ingredient fields
+    ALLOWED_UPDATE_FIELDS = {
+        "name",
+        "type",
+        "description",
+        "potential",
+        "color",
+        "grain_type",
+        "alpha_acid",
+        "attenuation",
+        "manufacturer",
+        "code",
+        "alcohol_tolerance",
+        "min_temperature",
+        "max_temperature",
+        "yeast_type",
+    }
     for key, value in data.items():
-        if hasattr(ingredient, key):
+        if key in ALLOWED_UPDATE_FIELDS:
             setattr(ingredient, key, value)
 
     ingredient.save()
-
+    # Bump data version (non-blocking)
+    try:
+        DataVersion.update_version("ingredients")
+    except (MongoEngineException, PyMongoError) as e:
+        logger.warning(
+            "Failed to update ingredients DataVersion after update: %s",
+            e,
+            exc_info=True,
+        )
     return jsonify(ingredient.to_dict()), 200
 
 
@@ -129,8 +174,16 @@ def delete_ingredient(ingredient_id):
 
     # Delete ingredient
     ingredient.delete()
-
-    return jsonify({"message": "Ingredient deleted successfully"}), 200
+    try:
+        # Atomic version bump + count decrement (requires helper on DataVersion)
+        DataVersion.bump_and_adjust_count("ingredients", delta=-1)
+    except (MongoEngineException, PyMongoError) as e:
+        logger.warning(
+            "Failed to update ingredients DataVersion after delete: %s",
+            e,
+            exc_info=True,
+        )
+    return "", 204
 
 
 @ingredients_bp.route("/<ingredient_id>/recipes", methods=["GET"])
@@ -161,3 +214,38 @@ def get_ingredient_recipes(ingredient_id):
         ),
         200,
     )
+
+
+@ingredients_bp.route("/version", methods=["GET"])
+def get_ingredients_version():
+    """Get current version information for ingredients data"""
+    try:
+        # Get version with optimized count handling
+        version = DataVersion.get_or_create_version_optimized("ingredients", Ingredient)
+
+        payload = {
+            "version": version.version,
+            "last_modified": (
+                version.last_modified.isoformat() if version.last_modified else None
+            ),
+            "total_records": version.total_records,
+            "data_type": version.data_type,
+        }
+        resp = jsonify(payload)
+        # Ensure ETag changes when payload changes (version or total_records)
+        etag_parts = [version.version, str(version.total_records)]
+        # Include checksum if available for more granularity (not implemented yet)
+        if getattr(version, "checksum", None):
+            etag_parts.append(version.checksum)
+        resp.set_etag(":".join(etag_parts))
+        if version.last_modified:
+            resp.last_modified = version.last_modified
+        resp.cache_control.public = True
+        resp.cache_control.max_age = getattr(version, "count_cache_ttl", 60)
+        # Let Werkzeug apply 304 for ETag/If-Modified-Since and strip body if needed
+        resp = resp.make_conditional(request)
+    except (MongoEngineException, PyMongoError) as e:
+        logger.error("Error getting ingredients version: %s", e, exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+    else:
+        return resp

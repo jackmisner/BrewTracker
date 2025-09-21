@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import os
 from datetime import UTC, datetime
+from typing import ClassVar
 
 from mongoengine import (
     CASCADE,
@@ -19,7 +20,9 @@ from mongoengine import (
     StringField,
     connect,
 )
-from mongoengine.queryset.visitor import Q  # Add this import
+from mongoengine.errors import NotUniqueError, OperationError
+from mongoengine.queryset.visitor import Q
+from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from utils.crypto import get_password_reset_secret
@@ -957,3 +960,176 @@ class BrewSession(Document):
         }
 
         return base_dict
+
+
+class DataVersion(Document):
+    """Model to track version information for static data collections"""
+
+    # Data type identifier
+    data_type = StringField(
+        required=True, unique=True, max_length=50
+    )  # 'ingredients' or 'beer_styles'
+
+    # Version information
+    version = StringField(required=True, max_length=100)  # Version hash or identifier
+    last_modified = DateTimeField(required=True, default=lambda: datetime.now(UTC))
+
+    # Metadata
+    total_records = IntField(default=0)  # Number of records in the collection
+    checksum = StringField(max_length=64)  # Optional checksum for data integrity
+
+    # Performance optimization fields
+    last_count_update = DateTimeField(default=lambda: datetime.now(UTC))
+    count_cache_ttl = IntField(
+        default=300, min_value=0
+    )  # TTL for count cache in seconds (5 minutes)
+
+    meta: ClassVar[dict] = {
+        "collection": "data_versions",
+        "indexes": ["data_type", "last_modified", "last_count_update"],
+    }
+
+    def to_dict(self):
+        return {
+            "data_type": self.data_type,
+            "version": self.version,
+            "last_modified": (
+                self.last_modified.isoformat() if self.last_modified else None
+            ),
+            "total_records": self.total_records,
+            "checksum": self.checksum,
+        }
+
+    @classmethod
+    def get_or_create_version(cls, data_type):
+        """Get existing version or create a new one"""
+        version = cls.objects(data_type=data_type).first()
+        if not version:
+            # Create initial version
+            import uuid
+
+            version = cls(
+                data_type=data_type,
+                version=str(uuid.uuid4()),
+                last_modified=datetime.now(UTC),
+                total_records=0,
+            )
+            try:
+                version.save()
+            except NotUniqueError:
+                # Another process created it: fetch the existing one
+                version = cls.objects(data_type=data_type).first()
+        return version
+
+    def is_count_cache_valid(self):
+        """Check if the cached count is still valid"""
+        if not self.last_count_update:
+            return False
+
+        cache_age = (datetime.now(UTC) - self.last_count_update).total_seconds()
+        return cache_age < self.count_cache_ttl
+
+    def update_count_cache(self, model_class):
+        """Update the cached record count"""
+        try:
+            current_count = model_class.objects().count()
+
+            # Only update if count has changed or cache is expired
+            if self.total_records != current_count or not self.is_count_cache_valid():
+                self.total_records = current_count
+                self.last_count_update = datetime.now(UTC)
+                self.save()
+                return True
+            else:
+                return False
+        except (OperationError, PyMongoError) as e:
+            # Log error but don't fail the request
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "Failed to update count cache for %s: %s",
+                self.data_type,
+                e,
+                exc_info=True,
+            )
+            return False
+
+    @classmethod
+    def get_or_create_version_optimized(cls, data_type, model_class=None):
+        """Get version with optimized count handling"""
+        version = cls.objects(data_type=data_type).first()
+        if not version:
+            # Create initial version
+            import uuid
+
+            initial_count = 0
+
+            # Get initial count if model class is provided
+            if model_class:
+                try:
+                    initial_count = model_class.objects().count()
+                except (OperationError, PyMongoError) as e:
+                    import logging
+
+                    logging.getLogger(__name__).debug(
+                        "Initial count fetch failed for %s: %s",
+                        data_type,
+                        e,
+                        exc_info=True,
+                    )
+
+            version = cls(
+                data_type=data_type,
+                version=str(uuid.uuid4()),
+                last_modified=datetime.now(UTC),
+                total_records=initial_count,
+                last_count_update=datetime.now(UTC),
+            )
+            try:
+                version.save()
+            except NotUniqueError:
+                # Another process created it: fetch the existing one
+                version = cls.objects(data_type=data_type).first()
+        elif model_class and not version.is_count_cache_valid():
+            # Update count cache if expired
+            version.update_count_cache(model_class)
+
+        return version
+
+    @classmethod
+    def update_version(cls, data_type, total_records=None):
+        """Update version when data changes (atomic)."""
+        import uuid
+
+        now = datetime.now(UTC)
+        new_version = str(uuid.uuid4())
+        update = {
+            "set__version": new_version,
+            "set__last_modified": now,
+        }
+        if total_records is not None:
+            update["set__total_records"] = total_records
+            update["set__last_count_update"] = now
+        version = cls.objects(data_type=data_type).modify(
+            upsert=True,
+            new=True,
+            set_on_insert__data_type=data_type,
+            **update,
+        )
+        return version
+
+    @classmethod
+    def bump_and_adjust_count(cls, data_type, delta=0):
+        import uuid
+
+        now = datetime.now(UTC)
+        return cls.objects(data_type=data_type).modify(
+            upsert=True,
+            new=True,
+            inc__total_records=delta,
+            set__version=str(uuid.uuid4()),
+            set__last_modified=now,
+            set__last_count_update=now,
+            set_on_insert__data_type=data_type,
+        )

@@ -315,8 +315,8 @@ class TestIngredientEndpoints:
         ingredient = sample_ingredients[-1]  # Irish Moss
         response = client.delete(f"/api/ingredients/{ingredient.id}", headers=headers)
 
-        assert response.status_code == 200
-        assert "deleted successfully" in response.json["message"]
+        assert response.status_code == 204  # "No Content" HTTP status
+        assert response.data == b""
 
         # Verify ingredient is deleted
         deleted_ingredient = Ingredient.objects(id=ingredient.id).first()
