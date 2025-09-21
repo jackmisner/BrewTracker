@@ -20,8 +20,11 @@
       "src": "/.well-known/assetlinks.json",
       "dest": "/.well-known/assetlinks.json",
       "headers": {
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+        "cache-control": "public, max-age=3600",
+        "access-control-allow-origin": "*"
+      },
+      "continue": false
     },
     {
       "src": "/(.*)",
