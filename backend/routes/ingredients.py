@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from mongoengine import OperationError
+from pymongo.errors import PyMongoError
 
 from models.mongo_models import DataVersion, Ingredient, User
 from services.mongodb_service import MongoDBService
@@ -101,7 +103,7 @@ def create_ingredient():
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except Exception as e:
+    except (OperationError, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -131,7 +133,7 @@ def update_ingredient(ingredient_id):
     # Bump data version (non-blocking)
     try:
         DataVersion.update_version("ingredients")
-    except Exception as e:
+    except (OperationError, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -156,7 +158,7 @@ def delete_ingredient(ingredient_id):
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except Exception as e:
+    except (OperationError, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -212,17 +214,17 @@ def get_ingredients_version():
             "total_records": version.total_records,
             "data_type": "ingredients",
         }
-        if request.if_none_match and request.if_none_match.contains(version.version):
-            return "", 304
         resp = jsonify(payload)
         resp.set_etag(version.version)
         if version.last_modified:
             resp.last_modified = version.last_modified
         resp.cache_control.public = True
         resp.cache_control.max_age = getattr(version, "count_cache_ttl", 60)
-        return resp, 200
+        # Let Werkzeug apply 304 for ETag/If-Modified-Since and strip body if needed
+        resp = resp.make_conditional(request)
+        return resp
 
-    except Exception as e:
+    except (OperationError, PyMongoError) as e:
         import logging
 
         logger = logging.getLogger(__name__)

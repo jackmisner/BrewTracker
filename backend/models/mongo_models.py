@@ -20,7 +20,7 @@ from mongoengine import (
     StringField,
     connect,
 )
-from mongoengine.errors import MongoEngineException, NotUniqueError
+from mongoengine.errors import NotUniqueError, OperationError
 from mongoengine.queryset.visitor import Q
 from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -1040,8 +1040,9 @@ class DataVersion(Document):
                 self.last_count_update = datetime.now(UTC)
                 self.save()
                 return True
-            return False
-        except (MongoEngineException, PyMongoError) as e:
+            else:
+                return False
+        except (OperationError, PyMongoError) as e:
             # Log error but don't fail the request
             import logging
 
@@ -1068,7 +1069,7 @@ class DataVersion(Document):
             if model_class:
                 try:
                     initial_count = model_class.objects().count()
-                except (MongoEngineException, PyMongoError) as e:
+                except (OperationError, PyMongoError) as e:
                     import logging
 
                     logging.getLogger(__name__).debug(
@@ -1113,6 +1114,7 @@ class DataVersion(Document):
         version = cls.objects(data_type=data_type).modify(
             upsert=True,
             new=True,
+            set_on_insert__data_type=data_type,
             **update,
         )
         return version
