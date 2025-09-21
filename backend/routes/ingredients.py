@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from mongoengine.errors import OperationError
+from mongoengine.errors import MongoEngineException
 from pymongo.errors import PyMongoError
 
 from models.mongo_models import DataVersion, Ingredient, User
@@ -103,7 +103,7 @@ def create_ingredient():
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except (OperationError, PyMongoError) as e:
+    except (MongoEngineException, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -133,7 +133,7 @@ def update_ingredient(ingredient_id):
     # Bump data version (non-blocking)
     try:
         DataVersion.update_version("ingredients")
-    except (OperationError, PyMongoError) as e:
+    except (MongoEngineException, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -158,7 +158,7 @@ def delete_ingredient(ingredient_id):
         DataVersion.update_version(
             "ingredients", total_records=Ingredient.objects().count()
         )
-    except (OperationError, PyMongoError) as e:
+    except (MongoEngineException, PyMongoError) as e:
         import logging
 
         logging.getLogger(__name__).warning(
@@ -225,7 +225,7 @@ def get_ingredients_version():
         resp = resp.make_conditional(request)
         return resp
 
-    except (OperationError, PyMongoError) as e:
+    except (MongoEngineException, PyMongoError) as e:
         import logging
 
         logger = logging.getLogger(__name__)
