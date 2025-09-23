@@ -8,6 +8,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
 from mongoengine.connection import ConnectionFailure, get_connection
+from werkzeug.exceptions import HTTPException
 
 import config
 from models.mongo_models import BeerStyleGuide, Ingredient, User
@@ -70,8 +71,8 @@ def create_app(config_class=None):
     JWTManager(app)
 
     # Configure CORS based on environment
-    flask_env = os.getenv("FLASK_ENV", "development")
-    app.logger.debug("FLASK_ENV detected: %s", flask_env)
+    flask_env = env
+    app.logger.debug("FLASK_ENV detected: %s", env)
 
     # Configure secure Vercel origin pattern
     vercel_regex_env = os.getenv("VERCEL_ORIGIN_REGEX")
@@ -96,10 +97,9 @@ def create_app(config_class=None):
             # Native app schemes only
             "capacitor://localhost",
             "ionic://localhost",
-            "http://localhost",
-            "https://localhost",
         ]
-
+        if os.getenv("ALLOW_LOCALHOST_IN_PROD", "false").lower() == "true":
+            allowed_origins.extend(["http://localhost", "https://localhost"])
         # Only allow null origins if explicitly enabled
         if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
             allowed_origins.extend(
@@ -166,7 +166,10 @@ def create_app(config_class=None):
         except (SystemExit, KeyboardInterrupt):
             # Re-raise critical exceptions
             raise
-        except Exception as e:
+        except HTTPException:
+            # Preserve intended HTTP error (e.g., 400/401/403)
+            raise
+        except Exception:
             app.logger.exception("Security check failed in before_request handler")
             abort(500)
 
