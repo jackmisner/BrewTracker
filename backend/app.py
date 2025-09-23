@@ -71,7 +71,7 @@ def create_app(config_class=None):
 
     # Configure CORS based on environment
     flask_env = os.getenv("FLASK_ENV", "development")
-    app.logger.debug(f"FLASK_ENV detected: {flask_env}")
+    app.logger.debug("FLASK_ENV detected: %s", flask_env)
 
     # Configure secure Vercel origin pattern
     vercel_regex_env = os.getenv("VERCEL_ORIGIN_REGEX")
@@ -247,7 +247,7 @@ def create_app(config_class=None):
                 seed_system_users(mongo_uri, json_file_path)
 
         except Exception:
-            app.logger.exception("Warning: Could not check/seed data:")
+            app.logger.exception("Could not check/seed data:")
 
     return app
 
