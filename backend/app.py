@@ -147,10 +147,7 @@ def create_app(config_class=None):
         allow_headers=["Content-Type", "Authorization"],
         supports_credentials=supports_credentials,
     )
-    if flask_env == "development":
-        print(f"CORS enabled for origins: {allowed_origins}")
-    else:
-        print(f"CORS enabled with {len(allowed_origins)} configured origins")
+    print(f"CORS enabled with {len(allowed_origins)} configured origins")
 
     # Add security components
     add_security_headers(app)
@@ -215,10 +212,6 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_ingredients(mongo_uri, json_file_path)
-            else:
-                print(
-                    "Ingredients already exist in the database. Skipping ingredient seed operation."
-                )
 
             # Seed beer styles
             if BeerStyleGuide.objects.count() == 0:
@@ -234,10 +227,6 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_beer_styles(mongo_uri, json_file_path)
-            else:
-                print(
-                    "Beer styles already exist in the database. Skipping beer style seed operation."
-                )
 
             # Seed system users
             if User.objects(email__endswith="@brewtracker.system").count() == 0:
@@ -251,10 +240,6 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_system_users(mongo_uri, json_file_path)
-            else:
-                print(
-                    "System users already exist in the database. Skipping system users seed operation."
-                )
 
         except Exception as e:
             print(f"Warning: Could not check/seed data: {e}")
