@@ -147,7 +147,7 @@ def create_app(config_class=None):
         allow_headers=["Content-Type", "Authorization"],
         supports_credentials=supports_credentials,
     )
-    print(f"CORS enabled with {len(allowed_origins)} configured origins")
+    app.logger.info("CORS enabled with %d configured origins", len(allowed_origins))
 
     # Add security components
     add_security_headers(app)
