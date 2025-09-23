@@ -8,6 +8,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
 from mongoengine.connection import ConnectionFailure, get_connection
+from werkzeug.exceptions import HTTPException
 
 import config
 from models.mongo_models import BeerStyleGuide, Ingredient, User
@@ -60,18 +61,18 @@ def create_app(config_class=None):
     try:
         # Check if connection already exists
         get_connection()
-        print("MongoDB connection already exists, using existing connection")
+        app.logger.debug("MongoDB connection already exists; reusing connection")
     except ConnectionFailure:
         # No connection exists, create new one
-        print("Creating new MongoDB connection")
+        app.logger.debug("Creating new MongoDB connection")
         connect(host=app.config["MONGO_URI"], **app.config["MONGO_OPTIONS"])
 
     # Initialize other extensions
     JWTManager(app)
 
     # Configure CORS based on environment
-    flask_env = os.getenv("FLASK_ENV", "development")
-    print(f"FLASK_ENV detected: {flask_env}")
+    flask_env = env
+    app.logger.debug("FLASK_ENV detected: %s", env)
 
     # Configure secure Vercel origin pattern
     vercel_regex_env = os.getenv("VERCEL_ORIGIN_REGEX")
@@ -96,10 +97,9 @@ def create_app(config_class=None):
             # Native app schemes only
             "capacitor://localhost",
             "ionic://localhost",
-            "http://localhost",
-            "https://localhost",
         ]
-
+        if os.getenv("ALLOW_LOCALHOST_IN_PROD", "false").lower() == "true":
+            allowed_origins.extend(["http://localhost", "https://localhost"])
         # Only allow null origins if explicitly enabled
         if os.getenv("ALLOW_NULL_ORIGIN", "false").lower() == "true":
             allowed_origins.extend(
@@ -147,10 +147,12 @@ def create_app(config_class=None):
         allow_headers=["Content-Type", "Authorization"],
         supports_credentials=supports_credentials,
     )
-    if flask_env == "development":
-        print(f"CORS enabled for origins: {allowed_origins}")
-    else:
-        print(f"CORS enabled with {len(allowed_origins)} configured origins")
+    app.logger.debug(
+        "CORS enabled (env=%s, supports_credentials=%s, origins=%d)",
+        flask_env,
+        supports_credentials,
+        len(allowed_origins),
+    )
 
     # Add security components
     add_security_headers(app)
@@ -164,7 +166,10 @@ def create_app(config_class=None):
         except (SystemExit, KeyboardInterrupt):
             # Re-raise critical exceptions
             raise
-        except Exception as e:
+        except HTTPException:
+            # Preserve intended HTTP error (e.g., 400/401/403)
+            raise
+        except Exception:
             app.logger.exception("Security check failed in before_request handler")
             abort(500)
 
@@ -203,7 +208,7 @@ def create_app(config_class=None):
         try:
             # Seed ingredients
             if Ingredient.objects.count() == 0:
-                print(
+                app.logger.info(
                     "No ingredients found in database. Running ingredient seed operation..."
                 )
                 from seeds.seed_ingredients import seed_ingredients
@@ -215,14 +220,10 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_ingredients(mongo_uri, json_file_path)
-            else:
-                print(
-                    "Ingredients already exist in the database. Skipping ingredient seed operation."
-                )
 
             # Seed beer styles
             if BeerStyleGuide.objects.count() == 0:
-                print(
+                app.logger.info(
                     "No beer styles found in database. Running beer style seed operation..."
                 )
                 from seeds.seed_beer_styles import seed_beer_styles
@@ -234,14 +235,10 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_beer_styles(mongo_uri, json_file_path)
-            else:
-                print(
-                    "Beer styles already exist in the database. Skipping beer style seed operation."
-                )
 
             # Seed system users
             if User.objects(email__endswith="@brewtracker.system").count() == 0:
-                print(
+                app.logger.info(
                     "No system users found in database. Running system users seed operation..."
                 )
                 from seeds.seed_system_users import seed_system_users
@@ -251,13 +248,9 @@ def create_app(config_class=None):
                     "MONGO_URI", "mongodb://localhost:27017/brewtracker"
                 )
                 seed_system_users(mongo_uri, json_file_path)
-            else:
-                print(
-                    "System users already exist in the database. Skipping system users seed operation."
-                )
 
-        except Exception as e:
-            print(f"Warning: Could not check/seed data: {e}")
+        except Exception:
+            app.logger.exception("Could not check/seed data:")
 
     return app
 
