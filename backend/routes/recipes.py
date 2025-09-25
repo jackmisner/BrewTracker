@@ -212,14 +212,16 @@ def update_recipe(recipe_id):
         print(f"Validation error in update_recipe: {e}")
 
         # Extract detailed validation error information
-        error_details = []
-        if hasattr(e, "errors") and e.errors:
-            for field, error_list in e.errors.items():
-                for error in error_list:
-                    if hasattr(error, "message"):
-                        error_details.append(f"{field}: {error.message}")
-                    else:
-                        error_details.append(f"{field}: {str(error)}")
+        error_details: list[str] = []
+        if hasattr(e, "to_dict"):
+            error_map = e.to_dict() or {}
+            for field, messages in error_map.items():
+                if isinstance(messages, (list, tuple)):
+                    error_details.extend(f"{field}: {msg}" for msg in messages)
+                else:
+                    error_details.append(f"{field}: {messages}")
+        elif hasattr(e, "message") and e.message:
+            error_details.append(str(e.message))
 
         # Create a more informative error message
         detailed_error = (
