@@ -209,8 +209,40 @@ def update_recipe(recipe_id):
         else:
             return jsonify({"error": message}), 400
     except ValidationError as e:
-        print(f"Database error: {e}")
-        return jsonify({"error": "Invalid recipe ID format"}), 400
+        print(f"Validation error in update_recipe: {e}")
+
+        # Extract detailed validation error information
+        error_details = []
+        if hasattr(e, "errors") and e.errors:
+            for field, error_list in e.errors.items():
+                for error in error_list:
+                    if hasattr(error, "message"):
+                        error_details.append(f"{field}: {error.message}")
+                    else:
+                        error_details.append(f"{field}: {str(error)}")
+
+        # Create a more informative error message
+        detailed_error = (
+            f"Validation failed: {'; '.join(error_details)}"
+            if error_details
+            else str(e)
+        )
+
+        return (
+            jsonify(
+                {
+                    "error": detailed_error,
+                    "validation_details": error_details if error_details else [str(e)],
+                }
+            ),
+            400,
+        )
+    except Exception as e:
+        print(f"Unexpected error in update_recipe: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to update recipe: {str(e)}"}), 500
 
 
 @recipes_bp.route("/<recipe_id>", methods=["DELETE"])
