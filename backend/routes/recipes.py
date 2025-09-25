@@ -259,13 +259,15 @@ def update_recipe(recipe_id):
                     field_errors[field] = [str(m) for m in messages]
                 else:
                     field_errors[field] = [str(messages)]
+        else:
+            # Fallback when validation error doesn't have structured field data
+            field_errors["_error"] = [str(e)]
 
         response = {
             "error": detailed_error,
             "validation_details": error_details if error_details else [str(e)],
+            "field_errors": field_errors,
         }
-        if field_errors:
-            response["field_errors"] = field_errors
         return jsonify(response), 422
     except NotUniqueError as e:
         logger.warning(
