@@ -1,3 +1,4 @@
+import logging
 from collections import deque
 
 from bson import ObjectId
@@ -6,7 +7,6 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from mongoengine.errors import NotUniqueError, OperationError, ValidationError
 from mongoengine.queryset.visitor import Q
-import logging
 
 from models.mongo_models import Recipe, User
 from services.mongodb_service import MongoDBService
