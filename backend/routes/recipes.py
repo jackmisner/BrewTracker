@@ -253,12 +253,15 @@ def update_recipe(recipe_id):
                     "validation_details": error_details if error_details else [str(e)],
                 }
             ),
-            400,
+            422,
         )
-    except (OperationError, NotUniqueError) as e:
+    except NotUniqueError as e:
+        logger.warning("Duplicate key in update_recipe: %s", e)
+        return jsonify({"error": "Recipe already exists"}), 409
+    except OperationError as e:
         logger.warning("Update failed: %s", e)
         return jsonify({"error": "Failed to update recipe"}), 400
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in update_recipe")
         return jsonify({"error": "Failed to update recipe"}), 500
 
