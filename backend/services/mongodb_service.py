@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from bson import ObjectId
+from mongoengine.errors import NotUniqueError, OperationError, ValidationError
 from pymongo.errors import PyMongoError
 
 from models.mongo_models import (
@@ -563,6 +564,10 @@ class MongoDBService:
 
             return recipe, "Recipe updated successfully"
 
+        except (ValidationError, NotUniqueError, OperationError) as e:
+            print(f"Database error updating recipe: {e}")
+            # Re-raise specific MongoEngine exceptions to be handled by route
+            raise
         except Exception as e:
             print(f"Database error updating recipe: {e}")
             return None, str(e)
