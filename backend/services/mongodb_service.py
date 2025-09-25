@@ -1,6 +1,8 @@
+import logging
 from datetime import UTC, datetime
 
 from bson import ObjectId
+from mongoengine.errors import NotUniqueError, OperationError, ValidationError
 from pymongo.errors import PyMongoError
 
 from models.mongo_models import (
@@ -12,6 +14,8 @@ from models.mongo_models import (
     User,
 )
 from utils.unit_conversions import UnitConverter
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDBService:
@@ -26,7 +30,7 @@ class MongoDBService:
         try:
             return User.objects(id=user_id).first()
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None
 
     @staticmethod
@@ -35,7 +39,7 @@ class MongoDBService:
         try:
             return User.objects(username=username).first()
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None
 
     @staticmethod
@@ -57,7 +61,7 @@ class MongoDBService:
                 "recent_recipes": [recipe.to_dict() for recipe in recent_recipes],
             }
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {"recent_sessions": [], "recent_recipes": []}
 
     ###########################################################
@@ -76,7 +80,7 @@ class MongoDBService:
             return recipe.to_dict()
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None
 
     @staticmethod
@@ -126,7 +130,7 @@ class MongoDBService:
             }
 
         except Exception as e:
-            print(f"Error getting user recipes: {e}")
+            logger.warning("Error getting user recipes: %s", e)
             return {
                 "items": [],
                 "page": 1,
@@ -170,7 +174,7 @@ class MongoDBService:
                 "prev_num": page - 1 if has_prev else None,
             }
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {
                 "items": [],
                 "page": page,
@@ -259,7 +263,7 @@ class MongoDBService:
                 "total_brews": stats.get("total_brews"),
             }
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None
 
     @staticmethod
@@ -321,7 +325,7 @@ class MongoDBService:
 
             return results
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return []
 
     @staticmethod
@@ -342,7 +346,7 @@ class MongoDBService:
                 return 5.0  # Will be displayed as 5 gal by frontend
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return 5.0
 
     @staticmethod
@@ -456,8 +460,8 @@ class MongoDBService:
 
             return recipe
         except Exception as e:
-            print(f"Database error creating recipe: {e}")
-            print(f"Recipe data: {recipe_data}")
+            logger.warning("Database error creating recipe: %s", e)
+            logger.warning("Recipe data: %s", recipe_data)
             import traceback
 
             traceback.print_exc()
@@ -563,8 +567,16 @@ class MongoDBService:
 
             return recipe, "Recipe updated successfully"
 
+        except (ValidationError, NotUniqueError, OperationError) as e:
+            logger.warning(
+                "Database error updating recipe: %s",
+                e,
+                extra={"recipe_id": str(recipe_id)},
+            )
+            # Re-raise specific MongoEngine exceptions to be handled by route
+            raise
         except Exception as e:
-            print(f"Database error updating recipe: {e}")
+            logger.warning("Database error updating recipe: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -696,7 +708,7 @@ class MongoDBService:
 
             return new_recipe, "Recipe cloned successfully"
         except Exception as e:
-            print(f"Database error cloning recipe: {e}")
+            logger.warning("Database error cloning recipe: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -804,7 +816,7 @@ class MongoDBService:
 
             return new_recipe, "Public recipe cloned successfully with attribution"
         except Exception as e:
-            print(f"Database error cloning public recipe: {e}")
+            logger.warning("Database error cloning public recipe: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -843,7 +855,7 @@ class MongoDBService:
             }
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {
                 "items": [],
                 "page": page,
@@ -890,7 +902,7 @@ class MongoDBService:
             }
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {
                 "items": [],
                 "page": page,
@@ -937,7 +949,7 @@ class MongoDBService:
                 "prev_num": page - 1 if has_prev else None,
             }
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {
                 "items": [],
                 "page": page,
@@ -956,7 +968,7 @@ class MongoDBService:
         try:
             return BrewSession.objects(recipe_id=recipe_id)
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return []
 
     @staticmethod
@@ -988,7 +1000,7 @@ class MongoDBService:
 
             return brew_session, "Brew session created successfully"
         except Exception as e:
-            print(f"Database error creating brew session: {e}")
+            logger.warning("Database error creating brew session: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -1071,7 +1083,7 @@ class MongoDBService:
             return brew_session, "Brew session updated successfully"
 
         except Exception as e:
-            print(f"Database error updating brew session: {e}")
+            logger.warning("Database error updating brew session: %s", e)
             import traceback
 
             traceback.print_exc()  # This will help debug the actual error
@@ -1131,7 +1143,7 @@ class MongoDBService:
             return True, "Fermentation entry added successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return False, str(e)
 
     @staticmethod
@@ -1155,7 +1167,7 @@ class MongoDBService:
             ], "Fermentation data retrieved successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -1180,7 +1192,7 @@ class MongoDBService:
             return True, "Fermentation entry updated successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return False, str(e)
 
     @staticmethod
@@ -1202,7 +1214,7 @@ class MongoDBService:
             return True, "Fermentation entry deleted successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return False, str(e)
 
     @staticmethod
@@ -1214,7 +1226,7 @@ class MongoDBService:
                 return None, "No fermentation data available"
             return MongoDBService.get_fermentation_stats_from_session(session)
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None, str(e)
 
     @staticmethod
@@ -1299,7 +1311,7 @@ class MongoDBService:
             return stats, "Fermentation statistics calculated successfully"
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None, str(e)
 
     ###########################################################
@@ -1331,7 +1343,7 @@ class MongoDBService:
 
             return categories
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return {}
 
     @staticmethod
@@ -1360,7 +1372,7 @@ class MongoDBService:
 
             return [style.to_dict() for style in styles]
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return []
 
     @staticmethod
@@ -1378,7 +1390,7 @@ class MongoDBService:
 
             return suggestions
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return []
 
     @staticmethod
@@ -1396,7 +1408,7 @@ class MongoDBService:
 
             return analysis
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return None
 
     @staticmethod
@@ -1426,7 +1438,7 @@ class MongoDBService:
             return matches[:10]  # Return top 10 matches
 
         except Exception as e:
-            print(f"Database error: {e}")
+            logger.warning("Database error: %s", e)
             return []
 
     ###########################################################

@@ -1,10 +1,11 @@
+import logging
 from collections import deque
 
 from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from mongoengine.errors import ValidationError
+from mongoengine.errors import NotUniqueError, OperationError, ValidationError
 from mongoengine.queryset.visitor import Q
 
 from models.mongo_models import Recipe, User
@@ -12,6 +13,8 @@ from services.mongodb_service import MongoDBService
 from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 recipes_bp = Blueprint("recipes", __name__)
+
+logger = logging.getLogger(__name__)
 
 
 @recipes_bp.route("", methods=["GET"])
@@ -209,8 +212,83 @@ def update_recipe(recipe_id):
         else:
             return jsonify({"error": message}), 400
     except ValidationError as e:
-        print(f"Database error: {e}")
-        return jsonify({"error": "Invalid recipe ID format"}), 400
+        logger.warning(
+            "Validation error in update_recipe: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
+
+        # Extract detailed validation error information
+        error_details: list[str] = []
+
+        def _flatten(prefix, node):
+            if node is None:
+                return
+            if isinstance(node, (list, tuple)):
+                for i, item in enumerate(node):
+                    _flatten(f"{prefix}[{i}]" if prefix else f"[{i}]", item)
+                return
+            if isinstance(node, dict):
+                for key, val in node.items():
+                    next_prefix = f"{prefix}.{key}" if prefix else str(key)
+                    _flatten(next_prefix, val)
+                return
+            if hasattr(node, "message"):
+                error_details.append(f"{prefix}: {node.message}")
+            else:
+                error_details.append(f"{prefix}: {node}")
+
+        if hasattr(e, "to_dict"):
+            _flatten("", e.to_dict() or {})
+        elif hasattr(e, "message") and e.message:
+            error_details.append(str(e.message))
+
+        # Create a more informative error message
+        detailed_error = (
+            f"Validation failed: {'; '.join(error_details)}"
+            if error_details
+            else str(e)
+        )
+
+        # Build per-field error map for the client
+        field_errors: dict[str, list[str]] = {}
+        if hasattr(e, "to_dict"):
+            raw = e.to_dict() or {}
+            for field, messages in raw.items():
+                if isinstance(messages, (list, tuple)):
+                    field_errors[field] = [str(m) for m in messages]
+                else:
+                    field_errors[field] = [str(messages)]
+        else:
+            # Fallback when validation error doesn't have structured field data
+            field_errors["_error"] = [str(e)]
+
+        response = {
+            "error": detailed_error,
+            "validation_details": error_details if error_details else [str(e)],
+            "field_errors": field_errors,
+        }
+        return jsonify(response), 422
+    except NotUniqueError as e:
+        logger.warning(
+            "Duplicate key in update_recipe: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
+        return jsonify({"error": "Recipe already exists"}), 409
+    except OperationError as e:
+        logger.warning(
+            "Update failed: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
+        return jsonify({"error": "Failed to update recipe"}), 400
+    except Exception:
+        logger.exception(
+            "Unexpected error in update_recipe",
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
+        return jsonify({"error": "Failed to update recipe"}), 500
 
 
 @recipes_bp.route("/<recipe_id>", methods=["DELETE"])
