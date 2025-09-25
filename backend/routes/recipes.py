@@ -212,7 +212,11 @@ def update_recipe(recipe_id):
         else:
             return jsonify({"error": message}), 400
     except ValidationError as e:
-        logger.warning("Validation error in update_recipe: %s", e)
+        logger.warning(
+            "Validation error in update_recipe: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
 
         # Extract detailed validation error information
         error_details: list[str] = []
@@ -246,23 +250,42 @@ def update_recipe(recipe_id):
             else str(e)
         )
 
-        return (
-            jsonify(
-                {
-                    "error": detailed_error,
-                    "validation_details": error_details if error_details else [str(e)],
-                }
-            ),
-            422,
-        )
+        # Build per-field error map for the client
+        field_errors: dict[str, list[str]] = {}
+        if hasattr(e, "to_dict"):
+            raw = e.to_dict() or {}
+            for field, messages in raw.items():
+                if isinstance(messages, (list, tuple)):
+                    field_errors[field] = [str(m) for m in messages]
+                else:
+                    field_errors[field] = [str(messages)]
+
+        response = {
+            "error": detailed_error,
+            "validation_details": error_details if error_details else [str(e)],
+        }
+        if field_errors:
+            response["field_errors"] = field_errors
+        return jsonify(response), 422
     except NotUniqueError as e:
-        logger.warning("Duplicate key in update_recipe: %s", e)
+        logger.warning(
+            "Duplicate key in update_recipe: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
         return jsonify({"error": "Recipe already exists"}), 409
     except OperationError as e:
-        logger.warning("Update failed: %s", e)
+        logger.warning(
+            "Update failed: %s",
+            e,
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
         return jsonify({"error": "Failed to update recipe"}), 400
     except Exception:
-        logger.exception("Unexpected error in update_recipe")
+        logger.exception(
+            "Unexpected error in update_recipe",
+            extra={"recipe_id": recipe_id, "user_id": user_id},
+        )
         return jsonify({"error": "Failed to update recipe"}), 500
 
 
