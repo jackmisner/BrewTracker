@@ -4,7 +4,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from mongoengine.errors import ValidationError
+from mongoengine.errors import NotUniqueError, OperationError, ValidationError
 from mongoengine.queryset.visitor import Q
 
 from models.mongo_models import Recipe, User
@@ -12,6 +12,9 @@ from services.mongodb_service import MongoDBService
 from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 recipes_bp = Blueprint("recipes", __name__)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @recipes_bp.route("", methods=["GET"])
@@ -209,17 +212,30 @@ def update_recipe(recipe_id):
         else:
             return jsonify({"error": message}), 400
     except ValidationError as e:
-        print(f"Validation error in update_recipe: {e}")
+        logger.warning("Validation error in update_recipe: %s", e)
 
         # Extract detailed validation error information
         error_details: list[str] = []
+
+        def _flatten(prefix, node):
+            if node is None:
+                return
+            if isinstance(node, (list, tuple)):
+                for i, item in enumerate(node):
+                    _flatten(f"{prefix}[{i}]" if prefix else f"[{i}]", item)
+                return
+            if isinstance(node, dict):
+                for key, val in node.items():
+                    next_prefix = f"{prefix}.{key}" if prefix else str(key)
+                    _flatten(next_prefix, val)
+                return
+            if hasattr(node, "message"):
+                error_details.append(f"{prefix}: {node.message}")
+            else:
+                error_details.append(f"{prefix}: {node}")
+
         if hasattr(e, "to_dict"):
-            error_map = e.to_dict() or {}
-            for field, messages in error_map.items():
-                if isinstance(messages, (list, tuple)):
-                    error_details.extend(f"{field}: {msg}" for msg in messages)
-                else:
-                    error_details.append(f"{field}: {messages}")
+            _flatten("", e.to_dict() or {})
         elif hasattr(e, "message") and e.message:
             error_details.append(str(e.message))
 
@@ -239,12 +255,12 @@ def update_recipe(recipe_id):
             ),
             400,
         )
+    except (OperationError, NotUniqueError) as e:
+        logger.warning("Update failed: %s", e)
+        return jsonify({"error": "Failed to update recipe"}), 400
     except Exception as e:
-        print(f"Unexpected error in update_recipe: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return jsonify({"error": f"Failed to update recipe: {str(e)}"}), 500
+        logger.exception("Unexpected error in update_recipe")
+        return jsonify({"error": "Failed to update recipe"}), 500
 
 
 @recipes_bp.route("/<recipe_id>", methods=["DELETE"])
