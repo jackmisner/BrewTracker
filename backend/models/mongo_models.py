@@ -1026,7 +1026,13 @@ class DataVersion(Document):
         if not self.last_count_update:
             return False
 
-        cache_age = (datetime.now(UTC) - self.last_count_update).total_seconds()
+        # Handle timezone-aware/naive datetime compatibility
+        last_update = self.last_count_update
+        if last_update.tzinfo is None:
+            # Convert naive datetime to timezone-aware
+            last_update = last_update.replace(tzinfo=UTC)
+
+        cache_age = (datetime.now(UTC) - last_update).total_seconds()
         return cache_age < self.count_cache_ttl
 
     def update_count_cache(self, model_class):
