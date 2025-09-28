@@ -3,6 +3,7 @@
 import { useReducer, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "@/services";
+import { convertRecipeUnits } from "@/utils/formatUtils";
 import { useUnits } from "@/contexts/UnitContext";
 import {
   Recipe,
@@ -97,8 +98,24 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   // Initialize state with reducer
   const [state, dispatch] = useReducer(
     recipeBuilderReducer,
-    createInitialState(unitSystem)
+    createInitialState("metric") // Start with default, will update when units load
   );
+
+  // Update unit system when context finishes loading
+  useEffect(() => {
+    if (!unitContextLoading && unitSystem) {
+      dispatch({ type: "UPDATE_UNIT_SYSTEM", payload: { unitSystem } });
+
+      // Update originalRecipeRef to the new-unit snapshot to prevent false unsaved-change detection
+      if (originalRecipeRef.current) {
+        const convertedRecipe = convertRecipeUnits(
+          originalRecipeRef.current,
+          unitSystem
+        );
+        originalRecipeRef.current = convertedRecipe;
+      }
+    }
+  }, [unitContextLoading, unitSystem]);
 
   // Initialize data on mount
   useEffect(() => {
@@ -258,6 +275,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             metrics,
           },
         });
+
+        // Normalize the loaded recipe to the current unit system
+        if (unitSystem) {
+          dispatch({ type: "UPDATE_UNIT_SYSTEM", payload: { unitSystem } });
+          // Set originalRecipeRef to the normalized recipe from state
+          // This happens in the next effect cycle after state is updated
+        }
       } catch (error) {
         console.error("Error initializing recipe builder:", error);
         if (effectMounted) {
@@ -277,6 +301,18 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       Services.metrics.cancelCalculation("recipe-builder");
     };
   }, [recipeId, unitSystem, unitContextLoading]);
+
+  // Update originalRecipeRef after initialization and unit normalization
+  useEffect(() => {
+    if (
+      !state.loading &&
+      state.recipe &&
+      state.recipe.recipe_id &&
+      !state.hasUnsavedChanges
+    ) {
+      originalRecipeRef.current = state.recipe;
+    }
+  }, [state.loading, state.recipe, state.hasUnsavedChanges]);
 
   // Update recipe field
   const updateRecipe = useCallback(

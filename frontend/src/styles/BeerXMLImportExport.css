@@ -362,6 +362,18 @@
   line-height: 1.4;
 }
 
+/* Export info message */
+.export-info-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 4px;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
