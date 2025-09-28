@@ -112,7 +112,10 @@ export type RecipeBuilderAction =
 
   // Utility actions
   | { type: "CLEAR_ERROR" }
-  | { type: "UPDATE_UNIT_SYSTEM"; payload: { unitSystem: "metric" | "imperial" } }
+  | {
+      type: "UPDATE_UNIT_SYSTEM";
+      payload: { unitSystem: "metric" | "imperial" };
+    }
   | { type: "CANCEL_OPERATIONS" }
   | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
   | { type: "REFRESH_AVAILABLE_INGREDIENTS"; payload: IngredientsByType }
