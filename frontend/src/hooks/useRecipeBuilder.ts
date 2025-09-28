@@ -312,12 +312,7 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
     ) {
       originalRecipeRef.current = state.recipe;
     }
-  }, [
-    state.loading,
-    state.recipe.recipe_id,
-    state.recipe.batch_size_unit,
-    state.hasUnsavedChanges,
-  ]);
+  }, [state.loading, state.recipe, state.hasUnsavedChanges]);
 
   // Update recipe field
   const updateRecipe = useCallback(
