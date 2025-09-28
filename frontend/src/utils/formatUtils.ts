@@ -88,6 +88,63 @@ export const convertUnit = (
   };
 };
 
+// Helper function to convert recipe units with consistent 2-decimal rounding
+export const convertRecipeUnits = (
+  recipe: any,
+  targetSystem: "metric" | "imperial"
+): any => {
+  const currentSystem = recipe.batch_size_unit === "l" ? "metric" : "imperial";
+
+  // No conversion needed if already in target system
+  if (currentSystem === targetSystem) {
+    return recipe;
+  }
+
+  // Convert batch size (only if defined)
+  const hasBatchSize =
+    recipe.batch_size !== undefined && !!recipe.batch_size_unit;
+  const batchSizeConversion = hasBatchSize
+    ? convertUnit(
+        recipe.batch_size,
+        recipe.batch_size_unit,
+        targetSystem === "metric" ? "l" : "gal"
+      )
+    : null;
+  // Convert mash temperature if it exists
+  let convertedMashTemp = recipe.mash_temperature;
+  const targetTempUnit = targetSystem === "metric" ? "c" : "f";
+  if (recipe.mash_temperature !== undefined) {
+    const currentTempUnitRaw =
+      recipe.mash_temp_unit ?? (currentSystem === "metric" ? "c" : "f");
+    const currentTempUnit = currentTempUnitRaw.toString().toLowerCase();
+    const tempConversion = convertUnit(
+      recipe.mash_temperature,
+      currentTempUnit,
+      targetTempUnit
+    );
+    convertedMashTemp = tempConversion.value;
+  }
+
+  return {
+    ...recipe,
+    batch_size: hasBatchSize ? batchSizeConversion?.value : recipe.batch_size,
+    batch_size_unit: hasBatchSize
+      ? targetSystem === "metric"
+        ? "l"
+        : "gal"
+      : recipe.batch_size_unit,
+    mash_temperature:
+      recipe.mash_temperature !== undefined
+        ? Math.round(convertedMashTemp * 100) / 100
+        : undefined,
+    // store lowercase internal units; display functions uppercase as needed
+    mash_temp_unit:
+      recipe.mash_temperature !== undefined
+        ? targetTempUnit
+        : recipe.mash_temp_unit,
+  };
+};
+
 // Get appropriate unit for display based on unit system and measurement type
 export const getAppropriateUnit = (
   unitSystem: UnitSystem,

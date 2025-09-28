@@ -3,6 +3,7 @@
 import { useReducer, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Services } from "@/services";
+import { convertRecipeUnits } from "@/utils/formatUtils";
 import { useUnits } from "@/contexts/UnitContext";
 import {
   Recipe,
@@ -107,47 +108,11 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
 
       // Update originalRecipeRef to the new-unit snapshot to prevent false unsaved-change detection
       if (originalRecipeRef.current) {
-        const currentRecipe = originalRecipeRef.current;
-        const currentSystem =
-          currentRecipe.batch_size_unit === "l" ? "metric" : "imperial";
-
-        // Only update if we're actually switching systems (same logic as reducer)
-        if (currentSystem !== unitSystem) {
-          let convertedBatchSize = currentRecipe.batch_size;
-          let convertedMashTemp = currentRecipe.mash_temperature;
-
-          // Convert batch size (same logic as reducer)
-          if (unitSystem === "metric") {
-            convertedBatchSize =
-              Math.round(currentRecipe.batch_size * 3.78541 * 100) / 100;
-          } else {
-            convertedBatchSize =
-              Math.round(currentRecipe.batch_size * 0.264172 * 100) / 100;
-          }
-
-          // Convert mash temperature if it exists (same logic as reducer)
-          if (currentRecipe.mash_temperature !== undefined) {
-            if (unitSystem === "metric") {
-              convertedMashTemp =
-                Math.round(
-                  (((currentRecipe.mash_temperature - 32) * 5) / 9) * 100
-                ) / 100;
-            } else {
-              convertedMashTemp =
-                Math.round(
-                  ((currentRecipe.mash_temperature * 9) / 5 + 32) * 100
-                ) / 100;
-            }
-          }
-
-          originalRecipeRef.current = {
-            ...originalRecipeRef.current,
-            batch_size: convertedBatchSize,
-            batch_size_unit: unitSystem === "metric" ? "l" : "gal",
-            mash_temperature: convertedMashTemp,
-            mash_temp_unit: unitSystem === "metric" ? "C" : "F",
-          };
-        }
+        const convertedRecipe = convertRecipeUnits(
+          originalRecipeRef.current,
+          unitSystem
+        );
+        originalRecipeRef.current = convertedRecipe;
       }
     }
   }, [unitContextLoading, unitSystem]);
@@ -310,6 +275,13 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
             metrics,
           },
         });
+
+        // Normalize the loaded recipe to the current unit system
+        if (unitSystem) {
+          dispatch({ type: "UPDATE_UNIT_SYSTEM", payload: { unitSystem } });
+          // Set originalRecipeRef to the normalized recipe from state
+          // This happens in the next effect cycle after state is updated
+        }
       } catch (error) {
         console.error("Error initializing recipe builder:", error);
         if (effectMounted) {
@@ -329,6 +301,23 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
       Services.metrics.cancelCalculation("recipe-builder");
     };
   }, [recipeId, unitSystem, unitContextLoading]);
+
+  // Update originalRecipeRef after initialization and unit normalization
+  useEffect(() => {
+    if (
+      !state.loading &&
+      state.recipe &&
+      state.recipe.recipe_id &&
+      !state.hasUnsavedChanges
+    ) {
+      originalRecipeRef.current = state.recipe;
+    }
+  }, [
+    state.loading,
+    state.recipe.recipe_id,
+    state.recipe.batch_size_unit,
+    state.hasUnsavedChanges,
+  ]);
 
   // Update recipe field
   const updateRecipe = useCallback(

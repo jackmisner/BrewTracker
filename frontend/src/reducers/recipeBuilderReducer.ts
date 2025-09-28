@@ -112,7 +112,7 @@ export type RecipeBuilderAction =
 
   // Utility actions
   | { type: "CLEAR_ERROR" }
-  | { type: "UPDATE_UNIT_SYSTEM"; payload: { unitSystem: string } }
+  | { type: "UPDATE_UNIT_SYSTEM"; payload: { unitSystem: "metric" | "imperial" } }
   | { type: "CANCEL_OPERATIONS" }
   | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
   | { type: "REFRESH_AVAILABLE_INGREDIENTS"; payload: IngredientsByType }
@@ -432,13 +432,26 @@ export const recipeBuilderReducer = (
         error: null,
       };
 
-    case "UPDATE_UNIT_SYSTEM":
-      const targetSystem = action.payload.unitSystem;
+    case "UPDATE_UNIT_SYSTEM": {
+      // Validate payload
+      const { unitSystem } = action.payload;
+      if (unitSystem !== "metric" && unitSystem !== "imperial") {
+        return state;
+      }
+
+      const targetSystem = unitSystem;
       const currentRecipe = state.recipe;
 
-      // Determine current system based on current units
-      const currentSystem =
-        currentRecipe.batch_size_unit === "l" ? "metric" : "imperial";
+      // Determine current system based on current units defensively
+      let currentSystem: "metric" | "imperial";
+      if (currentRecipe.batch_size_unit === "l") {
+        currentSystem = "metric";
+      } else if (currentRecipe.batch_size_unit === "gal") {
+        currentSystem = "imperial";
+      } else {
+        // Unknown unit - treat as no-op
+        return state;
+      }
 
       // Only convert if we're actually switching systems
       if (currentSystem === targetSystem) {
@@ -484,7 +497,10 @@ export const recipeBuilderReducer = (
           mash_temperature: convertedMashTemp,
           mash_temp_unit: targetSystem === "metric" ? "C" : "F",
         },
+        hasUnsavedChanges: true,
+        calculatingMetrics: true,
       };
+    }
 
     case "CANCEL_OPERATIONS":
       return {
