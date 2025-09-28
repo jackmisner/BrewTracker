@@ -159,9 +159,11 @@ describe("App", () => {
       });
     });
 
-    it("removes invalid token and shows login when profile fetch fails", async () => {
+    it("removes invalid token and shows login when profile fetch fails with auth error", async () => {
       (global as any).mockLocalStorage.getItem.mockReturnValue("invalid-token");
-      (ApiService.auth.getProfile as jest.Mock).mockRejectedValue(new Error("Token expired"));
+      const authError = new Error("Unauthorized");
+      (authError as any).response = { status: 401 };
+      (ApiService.auth.getProfile as jest.Mock).mockRejectedValue(authError);
 
       renderApp();
 
@@ -291,7 +293,8 @@ describe("App", () => {
           "Failed to get user profile:",
           expect.any(Error)
         );
-        expect((global as any).mockLocalStorage.removeItem).toHaveBeenCalledWith(
+        // For network errors, token should NOT be removed (preserved for retry)
+        expect((global as any).mockLocalStorage.removeItem).not.toHaveBeenCalledWith(
           "token"
         );
         expect(screen.getByTestId("login-page")).toBeInTheDocument();

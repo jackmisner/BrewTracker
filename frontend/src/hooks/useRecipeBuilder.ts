@@ -97,8 +97,60 @@ export function useRecipeBuilder(recipeId?: ID): UseRecipeBuilderReturn {
   // Initialize state with reducer
   const [state, dispatch] = useReducer(
     recipeBuilderReducer,
-    createInitialState(unitSystem)
+    createInitialState("metric") // Start with default, will update when units load
   );
+
+  // Update unit system when context finishes loading
+  useEffect(() => {
+    if (!unitContextLoading && unitSystem) {
+      dispatch({ type: "UPDATE_UNIT_SYSTEM", payload: { unitSystem } });
+
+      // Update originalRecipeRef to the new-unit snapshot to prevent false unsaved-change detection
+      if (originalRecipeRef.current) {
+        const currentRecipe = originalRecipeRef.current;
+        const currentSystem =
+          currentRecipe.batch_size_unit === "l" ? "metric" : "imperial";
+
+        // Only update if we're actually switching systems (same logic as reducer)
+        if (currentSystem !== unitSystem) {
+          let convertedBatchSize = currentRecipe.batch_size;
+          let convertedMashTemp = currentRecipe.mash_temperature;
+
+          // Convert batch size (same logic as reducer)
+          if (unitSystem === "metric") {
+            convertedBatchSize =
+              Math.round(currentRecipe.batch_size * 3.78541 * 100) / 100;
+          } else {
+            convertedBatchSize =
+              Math.round(currentRecipe.batch_size * 0.264172 * 100) / 100;
+          }
+
+          // Convert mash temperature if it exists (same logic as reducer)
+          if (currentRecipe.mash_temperature !== undefined) {
+            if (unitSystem === "metric") {
+              convertedMashTemp =
+                Math.round(
+                  (((currentRecipe.mash_temperature - 32) * 5) / 9) * 100
+                ) / 100;
+            } else {
+              convertedMashTemp =
+                Math.round(
+                  ((currentRecipe.mash_temperature * 9) / 5 + 32) * 100
+                ) / 100;
+            }
+          }
+
+          originalRecipeRef.current = {
+            ...originalRecipeRef.current,
+            batch_size: convertedBatchSize,
+            batch_size_unit: unitSystem === "metric" ? "l" : "gal",
+            mash_temperature: convertedMashTemp,
+            mash_temp_unit: unitSystem === "metric" ? "C" : "F",
+          };
+        }
+      }
+    }
+  }, [unitContextLoading, unitSystem]);
 
   // Initialize data on mount
   useEffect(() => {

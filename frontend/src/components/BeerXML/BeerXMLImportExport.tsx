@@ -164,10 +164,21 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   const exportToBeerXML = async (): Promise<void> => {
     if (!recipe || !ingredients || !onExport) return;
 
+    // Check if recipe is saved
+    const id = recipe.recipe_id ?? recipe.id;
+    if (id == null) {
+      dispatch({
+        type: "EXPORT_ERROR",
+        payload:
+          "Cannot export unsaved recipe. Please save your recipe first to enable BeerXML export.",
+      });
+      return;
+    }
+
     dispatch({ type: "EXPORT_START" });
 
     try {
-      const result = await Services.BeerXML.service.exportRecipe(recipe.id);
+      const result = await Services.BeerXML.service.exportRecipe(id);
 
       // Download file
       Services.BeerXML.service.downloadBeerXML(
@@ -442,7 +453,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
             <button
               onClick={exportToBeerXML}
               disabled={
-                exportState.isExporting || !recipe || !ingredients?.length
+                exportState.isExporting ||
+                !recipe ||
+                !ingredients?.length ||
+                (recipe.recipe_id ?? recipe.id) == null
               }
               className="btn btn-primary"
             >
@@ -455,6 +469,15 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                 <>📄 Export as BeerXML</>
               )}
             </button>
+
+            {/* Show message for unsaved recipes */}
+            {(recipe?.recipe_id ?? recipe?.id) == null && recipe && (
+              <div className="export-info-message">
+                <small>
+                  💡 Save your recipe first to enable BeerXML export
+                </small>
+              </div>
+            )}
           </div>
 
           {/* Export Errors */}

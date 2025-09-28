@@ -112,6 +112,7 @@ export type RecipeBuilderAction =
 
   // Utility actions
   | { type: "CLEAR_ERROR" }
+  | { type: "UPDATE_UNIT_SYSTEM"; payload: { unitSystem: string } }
   | { type: "CANCEL_OPERATIONS" }
   | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
   | { type: "REFRESH_AVAILABLE_INGREDIENTS"; payload: IngredientsByType }
@@ -429,6 +430,60 @@ export const recipeBuilderReducer = (
       return {
         ...state,
         error: null,
+      };
+
+    case "UPDATE_UNIT_SYSTEM":
+      const targetSystem = action.payload.unitSystem;
+      const currentRecipe = state.recipe;
+
+      // Determine current system based on current units
+      const currentSystem =
+        currentRecipe.batch_size_unit === "l" ? "metric" : "imperial";
+
+      // Only convert if we're actually switching systems
+      if (currentSystem === targetSystem) {
+        return state;
+      }
+
+      let convertedBatchSize = currentRecipe.batch_size;
+      let convertedMashTemp = currentRecipe.mash_temperature;
+
+      // Convert batch size
+      if (targetSystem === "metric") {
+        // Imperial to metric: gallons to liters (1 gal = 3.78541 L)
+        convertedBatchSize =
+          Math.round(currentRecipe.batch_size * 3.78541 * 100) / 100;
+      } else {
+        // Metric to imperial: liters to gallons (1 L = 0.264172 gal)
+        convertedBatchSize =
+          Math.round(currentRecipe.batch_size * 0.264172 * 100) / 100;
+      }
+
+      // Convert mash temperature if it exists
+      if (currentRecipe.mash_temperature !== undefined) {
+        if (targetSystem === "metric") {
+          // Imperial to metric: F to C
+          convertedMashTemp =
+            Math.round(
+              (((currentRecipe.mash_temperature - 32) * 5) / 9) * 100
+            ) / 100;
+        } else {
+          // Metric to imperial: C to F
+          convertedMashTemp =
+            Math.round(((currentRecipe.mash_temperature * 9) / 5 + 32) * 100) /
+            100;
+        }
+      }
+
+      return {
+        ...state,
+        recipe: {
+          ...state.recipe,
+          batch_size: convertedBatchSize,
+          batch_size_unit: targetSystem === "metric" ? "l" : "gal",
+          mash_temperature: convertedMashTemp,
+          mash_temp_unit: targetSystem === "metric" ? "C" : "F",
+        },
       };
 
     case "CANCEL_OPERATIONS":

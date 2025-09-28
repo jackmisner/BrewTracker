@@ -42,9 +42,15 @@ import EditBrewSession from "./components/BrewSessions/EditBrewSession";
 // Authentication context
 export const AuthContext = React.createContext<{
   user: User | null;
+  loading: boolean;
   handleLogin: (userData: User, token: string) => void;
   handleLogout: () => void;
-}>({ user: null, handleLogin: () => {}, handleLogout: () => {} });
+}>({
+  user: null,
+  loading: true,
+  handleLogin: () => {},
+  handleLogout: () => {},
+});
 
 // Root layout component that provides authentication context
 const RootLayout: React.FC = () => {
@@ -52,24 +58,52 @@ const RootLayout: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    let isMounted = true; // Flag to prevent race conditions
+
     // Check if user is logged in
     const token = localStorage.getItem("token");
+
     if (token) {
       ApiService.auth
         .getProfile()
         .then(response => {
-          setUser(response.data.user);
+          if (!isMounted) return; // Prevent state updates on unmounted component
+
+          // The user data might be directly in response.data, not nested under .user
+          const userData = response.data.user || response.data;
+          setUser(userData);
+          setLoading(false);
         })
         .catch((error: any) => {
+          if (!isMounted) return; // Prevent state updates on unmounted component
+
           console.error("Failed to get user profile:", error);
-          localStorage.removeItem("token");
-        })
-        .finally(() => {
+
+          // Only remove token for authentication errors (401/403)
+          if (
+            error.response &&
+            (error.response.status === 401 || error.response.status === 403)
+          ) {
+            localStorage.removeItem("token");
+            setUser(null);
+          } else {
+            // For network errors or server errors, keep token but clear user state
+            // This allows retry without forcing re-authentication
+            setUser(null);
+            console.warn(
+              "Profile fetch failed due to network/server error. Token preserved for retry."
+            );
+          }
           setLoading(false);
         });
     } else {
       setLoading(false);
     }
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLogin = (userData: User, token: string): void => {
@@ -91,7 +125,9 @@ const RootLayout: React.FC = () => {
   return (
     <UnitProvider>
       <Layout user={user} onLogout={handleLogout}>
-        <AuthContext.Provider value={{ user, handleLogin, handleLogout }}>
+        <AuthContext.Provider
+          value={{ user, loading, handleLogin, handleLogout }}
+        >
           <Outlet />
         </AuthContext.Provider>
       </Layout>
@@ -99,10 +135,20 @@ const RootLayout: React.FC = () => {
   );
 };
 
-// Protected route component
+// Protected route component with proper loading handling
 const ProtectedRoute: React.FC = () => {
-  const { user } = React.useContext(AuthContext);
-  if (!user) return <Navigate to="/login" replace />;
+  const { user, loading } = React.useContext(AuthContext);
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  // Only redirect to login if we're sure there's no user and we're not loading
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <Outlet />;
 };
 
@@ -110,8 +156,16 @@ const ProtectedRoute: React.FC = () => {
 const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { user } = React.useContext(AuthContext);
-  if (user) return <Navigate to="/" replace />;
+  const { user, loading } = React.useContext(AuthContext);
+
+  // Don't show loading for auth pages - let them render immediately
+  // This prevents flash and allows Google login to work properly
+
+  // Redirect to home if already authenticated (but not if still loading)
+  if (user && !loading) {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 };
 

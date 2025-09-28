@@ -61,8 +61,17 @@ const RecipeActions: React.FC<RecipeActionsProps> = ({
           refreshTrigger();
         }
 
-        // Navigate to the new recipe
-        navigate(`/recipes/${(response.data as any).recipe_id}/edit`);
+        // Navigate to the new recipe with better error handling
+        // Handle different response formats: API format vs test mock format
+        const newRecipeId =
+          response.data?.data?.recipe_id ?? (response.data as any)?.recipe_id;
+        if (newRecipeId !== null && newRecipeId !== undefined) {
+          navigate(`/recipes/${newRecipeId}/edit`);
+        } else {
+          console.error("No recipe_id in clone response:", response.data);
+          // Fallback navigation
+          navigate("/recipes");
+        }
       }
     } catch (error: any) {
       console.error("Error cloning recipe:", error);

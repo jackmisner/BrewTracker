@@ -4,4 +4,4 @@
  * This file is automatically updated when running npm version commands.
  * Do not edit manually - it will be overwritten.
  */
-export const APP_VERSION = "1.9.5";
+export const APP_VERSION = "1.9.6";
