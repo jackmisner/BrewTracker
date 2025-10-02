@@ -30,6 +30,7 @@ export interface DryHopAddition {
   removal_date?: string; // ISO date string when removed
   notes?: string;
   phase?: string; // fermentation, secondary, etc.
+  recipe_instance_id?: string; // Unique instance ID from recipe ingredient (for duplicate hop tracking)
 }
 
 export interface DryHopAdditionFormData {

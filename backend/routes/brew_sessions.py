@@ -365,6 +365,9 @@ def add_dry_hop_addition(session_id):
             duration_days=data.get("duration_days"),
             notes=data.get("notes", ""),
             phase=data.get("phase", "fermentation"),
+            recipe_instance_id=data.get(
+                "recipe_instance_id"
+            ),  # Critical for duplicate hop tracking
         )
 
         # Add to session

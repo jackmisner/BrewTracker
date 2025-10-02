@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import UTC, datetime
 
 from bson import ObjectId
@@ -16,6 +17,15 @@ from models.mongo_models import (
 from utils.unit_conversions import UnitConverter
 
 logger = logging.getLogger(__name__)
+
+
+def generate_instance_id():
+    """Generate a unique instance ID for recipe ingredients.
+
+    Used to differentiate duplicate ingredients (e.g., same hop used multiple times).
+    Format: inst-<uuid> for maximum uniqueness and compatibility with frontend.
+    """
+    return f"inst-{uuid.uuid4()}"
 
 
 class MongoDBService:
@@ -431,6 +441,8 @@ class MongoDBService:
                         if normalized_ing_data.get("time") is not None
                         else None
                     ),
+                    "instance_id": normalized_ing_data.get("instance_id")
+                    or generate_instance_id(),  # Generate if not provided
                     "potential": normalized_ing_data.get("potential"),
                     "color": normalized_ing_data.get("color"),
                     "alpha_acid": normalized_ing_data.get("alpha_acid"),
@@ -543,6 +555,8 @@ class MongoDBService:
                         "unit": normalized_ing_data.get("unit", ""),
                         "use": normalized_ing_data.get("use", ""),
                         "time": int(normalized_ing_data.get("time", 0)),
+                        "instance_id": normalized_ing_data.get("instance_id")
+                        or generate_instance_id(),  # Generate if not provided (preserves existing if sent)
                         "potential": normalized_ing_data.get("potential"),
                         "color": normalized_ing_data.get("color"),
                         "alpha_acid": normalized_ing_data.get("alpha_acid"),

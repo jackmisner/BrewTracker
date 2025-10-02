@@ -359,6 +359,9 @@ class RecipeIngredient(EmbeddedDocument):
     unit = StringField(required=True, max_length=20)  # oz, lb, g, kg, etc.
     use = StringField(max_length=50)  # mash, boil, dry hop, etc.
     time = IntField()  # time in minutes (boil time, steep time, etc.)
+    instance_id = (
+        StringField()
+    )  # Unique instance ID for duplicate ingredient handling (e.g., dry-hops)
 
     # Additional fields denormalized from Ingredient for quick access
     potential = FloatField()
@@ -386,6 +389,7 @@ class RecipeIngredient(EmbeddedDocument):
         return {
             "id": frontend_id,  # Add frontend-compatible ID for React keys
             "ingredient_id": ingredient_id_str,  # Keep original for backend operations
+            "instance_id": self.instance_id,  # Unique instance ID for duplicate handling
             "name": self.name,
             "type": self.type,
             "grain_type": self.grain_type,
@@ -831,6 +835,9 @@ class DryHopAddition(EmbeddedDocument):
     phase = StringField(
         max_length=20, default="fermentation"
     )  # fermentation, secondary, etc.
+    recipe_instance_id = (
+        StringField()
+    )  # Unique instance ID from recipe ingredient (for duplicate hop tracking)
 
     def to_dict(self):
         return {
@@ -847,6 +854,7 @@ class DryHopAddition(EmbeddedDocument):
             ),
             "notes": self.notes,
             "phase": self.phase,
+            "recipe_instance_id": self.recipe_instance_id,  # Unique instance ID for duplicate hop tracking
         }
 
 

@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.9.7",
+  "version": "1.9.8",
   "private": true,
   "license": "GPL-3.0-or-later",
   "dependencies": {

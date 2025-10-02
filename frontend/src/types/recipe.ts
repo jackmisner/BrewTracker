@@ -113,6 +113,7 @@ export interface Ingredient extends BaseEntity {
 export interface RecipeIngredient {
   id?: string; // Frontend-generated ID for state management
   ingredient_id: ID | null;
+  instance_id?: string; // Unique instance ID for duplicate ingredient handling (backend-generated)
   name: string;
   type: IngredientType;
   grain_type?: GrainType;

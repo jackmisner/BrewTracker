@@ -50,14 +50,41 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({
       return ingredient.use === "dry_hop" || ingredient.use === "dry-hop";
     });
 
+    console.log("[DryHopTracker] Recipe dry-hop ingredients:", {
+      count: dryHopIngredients.length,
+      ingredients: dryHopIngredients.map(ing => ({
+        name: ing.name,
+        instance_id: ing.instance_id,
+        hasInstanceId: !!ing.instance_id,
+      })),
+    });
+
+    console.log("[DryHopTracker] Session dry-hop additions:", {
+      count: sessionDryHops.length,
+      additions: sessionDryHops.map(hop => ({
+        hop_name: hop.hop_name,
+        recipe_instance_id: hop.recipe_instance_id,
+        hasInstanceId: !!hop.recipe_instance_id,
+        addition_date: hop.addition_date,
+        removal_date: hop.removal_date,
+      })),
+    });
+
     // Create RecipeDryHop objects with tracking information
     const processedDryHops: RecipeDryHop[] = dryHopIngredients.map(
       ingredient => {
         // Find matching session dry hop addition if it exists
-        const matchingSessionHop = sessionDryHops.find(
-          sessionHop =>
+        // Match by instance_id first (for duplicate hops), fallback to name matching
+        const matchingSessionHop = sessionDryHops.find(sessionHop => {
+          // If both have instance_id, match by that (most reliable for duplicates)
+          if (ingredient.instance_id && sessionHop.recipe_instance_id) {
+            return sessionHop.recipe_instance_id === ingredient.instance_id;
+          }
+          // Fallback to name matching for backward compatibility
+          return (
             sessionHop.hop_name.toLowerCase() === ingredient.name.toLowerCase()
-        );
+          );
+        });
 
         const plannedDays = ingredient.time
           ? Math.round(ingredient.time / (24 * 60))
@@ -121,7 +148,15 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({
         duration_days: recipeDryHop.plannedDays,
         notes: `Added from recipe: ${recipeDryHop.ingredient.name}`,
         phase: "fermentation",
+        recipe_instance_id: recipeDryHop.ingredient.instance_id, // Critical for duplicate hop tracking
       };
+
+      console.log("[DryHopTracker] Adding dry-hop to fermenter:", {
+        hop_name: submissionData.hop_name,
+        recipe_instance_id: submissionData.recipe_instance_id,
+        hasInstanceId: !!submissionData.recipe_instance_id,
+        submissionData,
+      });
 
       await Services.brewSession.addDryHopAddition(sessionId, submissionData);
       await fetchSessionDryHops(); // Refresh session data
@@ -150,11 +185,24 @@ const DryHopTracker: React.FC<DryHopTrackerProps> = ({
       setError("");
 
       // Find the matching session dry hop to get its index
-      const matchingSessionHopIndex = sessionDryHops.findIndex(
-        sessionHop =>
+      // Match by instance_id first (for duplicate hops), fallback to name matching
+      const matchingSessionHopIndex = sessionDryHops.findIndex(sessionHop => {
+        // If both have instance_id, match by that (most reliable for duplicates)
+        if (
+          recipeDryHop.ingredient.instance_id &&
+          sessionHop.recipe_instance_id
+        ) {
+          return (
+            sessionHop.recipe_instance_id ===
+            recipeDryHop.ingredient.instance_id
+          );
+        }
+        // Fallback to name matching for backward compatibility
+        return (
           sessionHop.hop_name.toLowerCase() ===
           recipeDryHop.ingredient.name.toLowerCase()
-      );
+        );
+      });
 
       if (matchingSessionHopIndex === -1) {
         setError("Could not find dry hop addition to remove");
