@@ -706,6 +706,9 @@ class MongoDBService:
                 new_ing.unit = ing.unit
                 new_ing.use = ing.use
                 new_ing.time = ing.time
+                new_ing.instance_id = (
+                    generate_instance_id()
+                )  # Generate new ID for cloned ingredient
                 new_ing.potential = ing.potential
                 new_ing.color = ing.color
                 new_ing.alpha_acid = ing.alpha_acid
@@ -815,6 +818,9 @@ class MongoDBService:
                 new_ing.use = ing.use
                 new_ing.time = ing.time
                 new_ing.potential = ing.potential
+                new_ing.instance_id = (
+                    generate_instance_id()
+                )  # Generate new ID for cloned ingredient
                 new_ing.color = ing.color
                 new_ing.alpha_acid = ing.alpha_acid
                 new_ing.attenuation = ing.attenuation

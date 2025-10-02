@@ -403,7 +403,7 @@ def update_dry_hop_addition(session_id, addition_index):
         return jsonify({"error": "Access denied"}), 403
 
     # Check if addition index is valid
-    if addition_index >= len(session.dry_hop_additions):
+    if addition_index < 0 or addition_index >= len(session.dry_hop_additions):
         return jsonify({"error": "Dry hop addition not found"}), 404
 
     try:
@@ -460,7 +460,7 @@ def delete_dry_hop_addition(session_id, addition_index):
         return jsonify({"error": "Access denied"}), 403
 
     # Check if addition index is valid
-    if addition_index >= len(session.dry_hop_additions):
+    if addition_index < 0 or addition_index >= len(session.dry_hop_additions):
         return jsonify({"error": "Dry hop addition not found"}), 404
 
     try:
