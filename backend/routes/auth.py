@@ -679,3 +679,53 @@ def reset_password_enhanced():
 
     except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
+
+
+@auth_bp.route("/refresh-token", methods=["POST"])
+@jwt_required()
+def refresh_token():
+    """
+    Refresh JWT access token for biometric re-authentication.
+
+    This endpoint allows biometric-authenticated users to obtain a fresh access token
+    without re-entering their password. The existing valid JWT token serves as proof
+    of prior authentication.
+
+    Security:
+    - Requires valid JWT token (user must have been authenticated previously)
+    - No password storage needed on client side
+    - Token expiration follows standard JWT security practices
+
+    Returns:
+        200: New access token with extended expiration
+        401: Invalid or expired token
+        404: User not found
+    """
+    try:
+        user_id = get_jwt_identity()
+        user = User.objects(id=user_id).first()
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Update last login timestamp
+        user.last_login = datetime.now(UTC)
+        user.save()
+
+        # Create fresh access token
+        expires = timedelta(days=1)
+        access_token = create_access_token(identity=str(user.id), expires_delta=expires)
+
+        return (
+            jsonify(
+                {
+                    "access_token": access_token,
+                    "user": user.to_dict(),
+                    "message": "Token refreshed successfully",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"error": "Failed to refresh token"}), 500
