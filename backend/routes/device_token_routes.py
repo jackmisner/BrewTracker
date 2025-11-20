@@ -104,7 +104,7 @@ def create_device_token():
             200,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error creating device token")
         return jsonify({"error": "Failed to create device token"}), 500
 
@@ -246,7 +246,7 @@ def biometric_login():
             200,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error during biometric login from IP %s", client_ip)
         # Don't log failed attempt for system errors (only for auth failures)
         return jsonify({"error": "Biometric login failed"}), 500
@@ -282,7 +282,7 @@ def list_device_tokens():
 
         return jsonify({"tokens": [token.to_dict() for token in tokens]}), 200
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error listing device tokens")
         return jsonify({"error": "Failed to list device tokens"}), 500
 
@@ -321,7 +321,7 @@ def revoke_device_token(device_id):
             200,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error revoking device token")
         return jsonify({"error": "Failed to revoke device token"}), 500
 
@@ -359,6 +359,6 @@ def revoke_all_device_tokens():
             200,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error revoking all device tokens")
         return jsonify({"error": "Failed to revoke device tokens"}), 500

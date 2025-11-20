@@ -157,10 +157,10 @@ def test_security_config():
 
 BrewTracker processes client IP addresses for the following security purposes:
 
-1. **Rate Limiting**: Prevent brute force attacks on authentication endpoints
+1. **Rate Limiting**: Prevent brute force attacks on authentication endpoints (in-memory, 30 min window)
 2. **Security Monitoring**: Detect and block suspicious activity patterns
 3. **Audit Logging**: Maintain security audit trails for compliance and investigation
-4. **Failed Login Tracking**: Track failed authentication attempts per IP address
+4. **Failed Login Tracking**: Track failed authentication attempts per IP address (dual storage: in-memory for rate limiting, database for audit)
 
 ### Legal Basis (GDPR Article 6)
 
@@ -173,10 +173,11 @@ IP address processing is justified under:
 
 | Data Type | Storage Location | Retention Period | Justification |
 |-----------|-----------------|------------------|---------------|
-| Failed Login Attempts | In-memory (Python dict) | 30 minutes (window based) | Rate limiting only |
+| Failed Login Attempts (Rate Limiting) | In-memory (Flask-Limiter) | 30 minutes (window based) | Rate limiting only |
+| Failed Login Attempts (Audit) | Database (FailedLoginAttempt collection) | 30 days (TTL) | Audit/compliance and security investigation |
 | Suspicious Requests | In-memory (Python dict) | 10 minutes (window based) | Rate limiting only |
 | Security Logs | `security.log` file | 90 days (default) | Security investigation and compliance |
-| Audit Logs | Database (if implemented) | 1 year (configurable) | Compliance requirements |
+| Device Tokens | Database (DeviceToken collection) | 90 days (TTL) | Biometric authentication |
 
 **Configuration**:
 ```bash
