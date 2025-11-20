@@ -209,8 +209,9 @@ Your privacy policy **must** document:
 - User rights and how to exercise them
 - Contact information for data protection officer (if applicable)
 
-**Privacy Policy Location**: `[SPECIFY YOUR PRIVACY POLICY URL]`
-**Data Protection Contact**: `[SPECIFY DPO/PRIVACY CONTACT EMAIL]`
+**Privacy Policy Location**: `https://www.brewtracker.co.uk/privacy`
+
+**Data Protection Contact**: `jack@brewtracker.co.uk`
 
 ### Implementation Checklist
 
@@ -243,12 +244,6 @@ security_logger.info(
 security_logger.info(
     f"User password: {password}"  # ❌ Never log passwords
 )
-
-# Hash or pseudonymize IPs for long-term analytics (optional)
-import hashlib
-ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()[:12]
-analytics_logger.info(f"Request from IP hash {ip_hash}")
-```
 
 ## References
 
