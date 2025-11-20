@@ -9,6 +9,7 @@ from flask_jwt_extended import JWTManager
 from mongoengine import connect, disconnect
 from mongoengine.connection import ConnectionFailure, get_connection
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import config
 from models.mongo_models import BeerStyleGuide, Ingredient, User
@@ -18,10 +19,12 @@ from routes.auth import auth_bp
 from routes.beer_styles import beer_styles_bp
 from routes.beerxml import beerxml_bp
 from routes.brew_sessions import brew_sessions_bp
+from routes.device_token_routes import device_token_bp
 from routes.ingredients import ingredients_bp
 from routes.recipes import recipes_bp
 from routes.user_settings import user_settings_bp
 from utils.error_handlers import setup_error_handlers
+from utils.rate_limiter import RATE_LIMITS, setup_rate_limiter
 from utils.security_headers import add_security_headers
 from utils.security_monitor import check_request_security
 
@@ -42,6 +45,34 @@ def create_app(config_class=None):
             app.config.from_object(config.TestConfig)
         else:
             app.config.from_object(config.Config)
+
+    # Configure ProxyFix middleware for X-Forwarded-* header handling
+    # CRITICAL SECURITY: Only enable when behind trusted proxies with proper firewall rules
+    # See PROXY_DEPLOYMENT.md for deployment requirements and security considerations
+    if app.config.get("ENABLE_PROXY_FIX", False):
+        x_for = app.config.get("TRUSTED_PROXY_COUNT", 0)
+        x_host = app.config.get("TRUSTED_PROXY_HOST_COUNT", 0)
+        x_proto = app.config.get("TRUSTED_PROXY_PROTO_COUNT", 0)
+
+        if x_for > 0:
+            app.wsgi_app = ProxyFix(
+                app.wsgi_app, x_for=x_for, x_host=x_host, x_proto=x_proto
+            )
+            app.logger.info(
+                f"ProxyFix middleware enabled: x_for={x_for}, x_host={x_host}, x_proto={x_proto}"
+            )
+            app.logger.warning(
+                "ProxyFix enabled: Ensure firewall restricts connections to trusted proxies only! "
+                "See PROXY_DEPLOYMENT.md for security requirements."
+            )
+        else:
+            app.logger.warning(
+                "ENABLE_PROXY_FIX=true but TRUSTED_PROXY_COUNT=0. ProxyFix not applied."
+            )
+    else:
+        app.logger.info(
+            "ProxyFix disabled (ENABLE_PROXY_FIX=false). Using direct IP detection."
+        )
 
     # Configure logging for development debugging
     if env == "development":
@@ -69,6 +100,10 @@ def create_app(config_class=None):
 
     # Initialize other extensions
     JWTManager(app)
+
+    # Initialize rate limiter
+    limiter = setup_rate_limiter(app)
+    app.logger.info("Rate limiter initialized")
 
     # Configure CORS based on environment
     flask_env = env
@@ -176,6 +211,7 @@ def create_app(config_class=None):
     # Register blueprints
     app.register_blueprint(ai_bp, url_prefix="/api/ai")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(device_token_bp, url_prefix="/api/auth")  # Biometric auth
     app.register_blueprint(recipes_bp, url_prefix="/api/recipes")
     app.register_blueprint(ingredients_bp, url_prefix="/api/ingredients")
     app.register_blueprint(brew_sessions_bp, url_prefix="/api/brew-sessions")
@@ -185,6 +221,19 @@ def create_app(config_class=None):
     app.register_blueprint(
         attenuation_analytics_bp, url_prefix="/api/attenuation-analytics"
     )
+
+    # Apply rate limiting to biometric login endpoint
+    # Access the view function by the endpoint name (blueprint.function_name)
+    biometric_login_view = app.view_functions.get("device_token.biometric_login")
+    if biometric_login_view:
+        # RATE_LIMITS["biometric_login"] is a list, apply each limit
+        for limit in RATE_LIMITS["biometric_login"]:
+            limiter.limit(limit)(biometric_login_view)
+        app.logger.info("Rate limiting applied to biometric login endpoint")
+    else:
+        app.logger.warning(
+            "Could not apply rate limiting to biometric login endpoint (view not found)"
+        )
 
     @app.route("/api/health", methods=["GET"])
     def health_check():

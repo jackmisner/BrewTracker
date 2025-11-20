@@ -87,6 +87,8 @@ def clean_db():
     from models.mongo_models import (
         BeerStyleGuide,
         BrewSession,
+        DeviceToken,
+        FailedLoginAttempt,
         Ingredient,
         Recipe,
         User,
@@ -115,6 +117,16 @@ def clean_db():
 
     try:
         BeerStyleGuide.drop_collection()
+    except:
+        pass
+
+    try:
+        DeviceToken.drop_collection()
+    except:
+        pass
+
+    try:
+        FailedLoginAttempt.drop_collection()
     except:
         pass
 

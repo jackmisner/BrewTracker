@@ -37,6 +37,38 @@ class Config:
         else []
     )
 
+    # Proxy configuration for X-Forwarded-* header handling
+    # CRITICAL: Only enable when behind a trusted proxy with proper firewall rules
+    # See PROXY_DEPLOYMENT.md for detailed configuration guide
+    ENABLE_PROXY_FIX = os.getenv("ENABLE_PROXY_FIX", "false").lower() == "true"
+
+    try:
+        TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", "0"))
+        if TRUSTED_PROXY_COUNT < 0:
+            raise ValueError("TRUSTED_PROXY_COUNT must be non-negative")
+    except ValueError as e:
+        raise ValueError(f"Invalid TRUSTED_PROXY_COUNT configuration: {e}")
+
+    try:
+        TRUSTED_PROXY_HOST_COUNT = int(
+            os.getenv("TRUSTED_PROXY_HOST_COUNT", os.getenv("TRUSTED_PROXY_COUNT", "0"))
+        )
+        if TRUSTED_PROXY_HOST_COUNT < 0:
+            raise ValueError("TRUSTED_PROXY_HOST_COUNT must be non-negative")
+    except ValueError as e:
+        raise ValueError(f"Invalid TRUSTED_PROXY_HOST_COUNT configuration: {e}")
+
+    try:
+        TRUSTED_PROXY_PROTO_COUNT = int(
+            os.getenv(
+                "TRUSTED_PROXY_PROTO_COUNT", os.getenv("TRUSTED_PROXY_COUNT", "0")
+            )
+        )
+        if TRUSTED_PROXY_PROTO_COUNT < 0:
+            raise ValueError("TRUSTED_PROXY_PROTO_COUNT must be non-negative")
+    except ValueError as e:
+        raise ValueError(f"Invalid TRUSTED_PROXY_PROTO_COUNT configuration: {e}")
+
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_TOKEN_LOCATION = ["headers"]
 
