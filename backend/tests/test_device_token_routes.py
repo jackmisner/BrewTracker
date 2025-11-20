@@ -152,6 +152,31 @@ class TestDeviceTokenCreation:
         data = response.get_json()
         assert "device_id is required" in data["error"]
 
+    def test_create_device_token_invalid_json(
+        self, client_with_device_tokens, auth_headers
+    ):
+        """Test that invalid JSON body returns 400"""
+        response = client_with_device_tokens.post(
+            "/api/auth/device-token",
+            data="not valid json",
+            headers={**auth_headers, "Content-Type": "application/json"},
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Invalid or missing JSON body" in data["error"]
+
+    def test_create_device_token_missing_json(
+        self, client_with_device_tokens, auth_headers
+    ):
+        """Test that missing JSON body returns 400"""
+        response = client_with_device_tokens.post(
+            "/api/auth/device-token",
+            headers=auth_headers,
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Invalid or missing JSON body" in data["error"]
+
     def test_create_device_token_revokes_existing(
         self, client_with_device_tokens, test_user, auth_headers, device_token
     ):
@@ -295,6 +320,26 @@ class TestBiometricLogin:
         assert response.status_code == 400
         data = response.get_json()
         assert "device_token is required" in data["error"]
+
+    def test_biometric_login_invalid_json(self, client_with_device_tokens):
+        """Test biometric login with invalid JSON body"""
+        response = client_with_device_tokens.post(
+            "/api/auth/biometric-login",
+            data="not valid json",
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Invalid or missing JSON body" in data["error"]
+
+    def test_biometric_login_missing_json(self, client_with_device_tokens):
+        """Test biometric login with missing JSON body"""
+        response = client_with_device_tokens.post("/api/auth/biometric-login")
+
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Invalid or missing JSON body" in data["error"]
 
 
 class TestRateLimiting:

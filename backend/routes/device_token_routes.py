@@ -60,7 +60,10 @@ def create_device_token():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid or missing JSON body"}), 400
+
         device_id = data.get("device_id")
         device_name = data.get("device_name")
         platform = data.get("platform", "unknown")
@@ -154,7 +157,10 @@ def biometric_login():
     user_agent = request.headers.get("User-Agent", "Unknown")
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid or missing JSON body"}), 400
+
         raw_token = data.get("device_token")
 
         if not raw_token:
