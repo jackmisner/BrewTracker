@@ -25,7 +25,7 @@ from mongoengine.queryset.visitor import Q
 from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from utils.crypto import get_password_reset_secret
+from utils.crypto import get_hmac_secret_key
 
 
 def initialize_db(mongo_uri):
@@ -155,7 +155,7 @@ class User(Document):
 
     def _get_secret_key(self):
         """Get secret key for password reset HMAC operations"""
-        return get_password_reset_secret()
+        return get_hmac_secret_key()
 
     def set_password_reset_token(self, raw_token):
         """Store a secure hash of the password reset token"""
@@ -274,6 +274,171 @@ class User(Document):
             "settings": (
                 self.settings.to_dict() if self.settings else UserSettings().to_dict()
             ),
+        }
+
+
+class FailedLoginAttempt(Document):
+    """
+    Track failed biometric login attempts for security monitoring.
+
+    Records failed login attempts with IP address and timestamp to:
+    - Detect brute force attacks
+    - Provide audit trail for security investigations
+    - Enable account lockout if needed
+    - Monitor suspicious activity patterns
+    """
+
+    ip_address = StringField(required=True, max_length=45)  # IPv4 or IPv6
+    device_id = StringField(max_length=255)  # Device ID from request if provided
+    attempted_at = DateTimeField(default=lambda: datetime.now(UTC))
+    user_agent = StringField(max_length=500)  # Browser/app info for forensics
+    failure_reason = StringField(
+        max_length=100
+    )  # "invalid_token", "expired_token", etc.
+
+    meta = {
+        "collection": "failed_login_attempts",
+        "indexes": [
+            "ip_address",
+            {"fields": ["attempted_at"], "expireAfterSeconds": 2592000},  # 30 days TTL
+        ],
+        "index_background": True,
+    }
+
+    @classmethod
+    def log_failed_attempt(
+        cls, ip_address, device_id=None, user_agent=None, reason=None
+    ):
+        """Log a failed login attempt"""
+        attempt = cls(
+            ip_address=ip_address,
+            device_id=device_id,
+            user_agent=user_agent,
+            failure_reason=reason,
+        )
+        attempt.save()
+        return attempt
+
+    @classmethod
+    def get_recent_failures(cls, ip_address, minutes=5):
+        """Get count of recent failed attempts from an IP address"""
+        from datetime import timedelta
+
+        cutoff = datetime.now(UTC) - timedelta(minutes=minutes)
+        return cls.objects(ip_address=ip_address, attempted_at__gte=cutoff).count()
+
+
+class DeviceToken(Document):
+    """
+    Device tokens for biometric authentication.
+
+    Stores long-lived refresh tokens tied to specific devices, enabling
+    secure biometric login without storing user passwords on the device.
+
+    Security features:
+    - Token revocation support (revoked field)
+    - Automatic expiration (expires_at)
+    - Device identification for audit trail
+    - Platform tracking (Android, Web, iOS)
+    """
+
+    user = ReferenceField(User, required=True, reverse_delete_rule=CASCADE)
+    device_id = StringField(required=True, max_length=255)
+    device_name = StringField(max_length=100)  # e.g., "Pixel 6", "Chrome on MacOS"
+    platform = StringField(max_length=50)  # "android", "web", "ios"
+    token_hash = StringField(required=True)  # HMAC-SHA256 hash of the actual token
+    created_at = DateTimeField(default=lambda: datetime.now(UTC))
+    last_used = DateTimeField()
+    expires_at = DateTimeField(required=True)
+    revoked = BooleanField(default=False)
+    revoked_at = DateTimeField()
+
+    meta = {
+        "collection": "device_tokens",
+        "indexes": [
+            ("user", "device_id"),  # Compound index for user + device lookups
+            "token_hash",
+            {"fields": ["expires_at"], "expireAfterSeconds": 0},  # TTL index
+        ],
+        "index_background": True,
+    }
+
+    def is_valid(self):
+        """Check if token is still valid (not expired or revoked)"""
+        if self.revoked:
+            return False
+        # Ensure both datetimes are timezone-aware for comparison
+        expires_at = self.expires_at
+        if expires_at.tzinfo is None:
+            # If stored datetime is naive, assume UTC
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(UTC):
+            return False
+        return True
+
+    def revoke(self):
+        """Revoke this device token"""
+        self.revoked = True
+        self.revoked_at = datetime.now(UTC)
+        self.save()
+
+    def update_last_used(self):
+        """Update last_used timestamp"""
+        self.last_used = datetime.now(UTC)
+        self.save()
+
+    @classmethod
+    def hash_token(cls, raw_token):
+        """
+        Create HMAC-SHA256 hash of raw token for storage.
+
+        Uses the same HMAC secret key as password reset tokens for consistency.
+        This provides better security than plain SHA-256 by incorporating a secret key.
+
+        Args:
+            raw_token (str): The raw device token to hash
+
+        Returns:
+            str: Hexadecimal HMAC-SHA256 hash of the token
+        """
+        from utils.crypto import get_hmac_secret_key
+
+        return hmac.new(
+            get_hmac_secret_key(), raw_token.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+
+    @classmethod
+    def find_by_token(cls, raw_token):
+        """Find device token by raw token value (regardless of revocation status)"""
+        token_hash = cls.hash_token(raw_token)
+        return cls.objects(token_hash=token_hash).first()
+
+    @classmethod
+    def revoke_all_for_user(cls, user_id):
+        """Revoke all device tokens for a user (e.g., on password change)"""
+        now = datetime.now(UTC)
+        cls.objects(user=user_id, revoked=False).update(
+            set__revoked=True, set__revoked_at=now
+        )
+
+    @classmethod
+    def revoke_device(cls, user_id, device_id):
+        """Revoke all tokens for a specific user device"""
+        now = datetime.now(UTC)
+        cls.objects(user=user_id, device_id=device_id, revoked=False).update(
+            set__revoked=True, set__revoked_at=now
+        )
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "device_id": self.device_id,
+            "device_name": self.device_name,
+            "platform": self.platform,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_used": self.last_used.isoformat() if self.last_used else None,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "revoked": self.revoked,
         }
 
 

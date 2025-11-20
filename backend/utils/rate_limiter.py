@@ -69,6 +69,8 @@ RATE_LIMITS = {
     "auth_register": ["3 per minute", "10 per hour"],
     "auth_password_reset": ["3 per minute", "10 per hour"],
     "auth_verification": ["5 per minute", "20 per hour"],
+    # Biometric authentication (strict brute force protection)
+    "biometric_login": ["10 per minute", "30 per hour"],
     # Data creation/modification (moderate limits)
     "create_recipe": ["10 per minute", "100 per hour"],
     "create_brew_session": ["5 per minute", "50 per hour"],
