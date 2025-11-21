@@ -127,6 +127,8 @@ def create_app(config_class=None):
                 "FRONTEND_URL",
                 "https://brewtracker-wheat.vercel.app",
             ),
+            # Custom domain
+            "https://brewtracker.co.uk",
             # Vercel deployments with project-scoped regex pattern
             vercel_pattern,
             # Native app schemes only
