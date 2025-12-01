@@ -350,7 +350,8 @@ class RecipeContext:
                 if new_amount is not None:
                     if not isinstance(new_amount, (int, float)) or new_amount <= 0:
                         logger.warning(
-                            f"Invalid ingredient amount: {new_amount} - must be positive numeric (use 'ingredient_removed' to remove ingredients)"
+                            f"Invalid ingredient amount for '{ingredient_name}': {new_amount} - "
+                            "must be positive numeric (use 'ingredient_removed' to remove ingredients)"
                         )
                         return
                     ingredient["amount"] = new_amount
@@ -399,11 +400,15 @@ class RecipeContext:
             )
 
         if new_value is not None:
+            if not isinstance(new_value, (int, float)):
+                logger.warning(
+                    f"Non-numeric temperature value for '{parameter}': {new_value!r} - "
+                    "expected int or float"
+                )
+                return
             # Defensive check for reasonable brewing temperatures
             # Covers both Celsius (-20 to 120°C) and Fahrenheit (0 to 250°F)
-            if isinstance(new_value, (int, float)) and (
-                new_value < -20 or new_value > 250
-            ):
+            if new_value < -20 or new_value > 250:
                 logger.warning(
                     f"Temperature value {new_value} for '{parameter}' seems out of reasonable brewing range"
                 )
