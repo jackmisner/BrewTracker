@@ -584,6 +584,7 @@ class RecipeContext:
         """
         Detect if recipe currently uses metric units.
         Checks ingredients and batch size unit to determine the predominant unit system.
+        Returns True only if metric truly predominates (ties are not treated as metric).
         """
         ingredients = self.recipe.get("ingredients", [])
         metric_count = 0
@@ -604,8 +605,11 @@ class RecipeContext:
         elif batch_unit in ["gal", "gallon", "gallons"]:
             imperial_count += 1
 
-        # Metric if more metric units than imperial, or tied but has metric ingredients
-        return metric_count >= imperial_count
+        # Only return True if metric truly predominates
+        # Pure metric (no imperial at all) or more metric than imperial
+        if metric_count > 0 and imperial_count == 0:
+            return True
+        return metric_count > imperial_count
 
     def _evaluate_target_system_is_metric(self, config: Dict[str, Any] = None) -> bool:
         """
