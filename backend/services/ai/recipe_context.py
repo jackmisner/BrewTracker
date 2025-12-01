@@ -348,9 +348,9 @@ class RecipeContext:
         for ingredient in ingredients:
             if ingredient.get("name") == ingredient_name:
                 if new_amount is not None:
-                    if not isinstance(new_amount, (int, float)) or new_amount < 0:
+                    if not isinstance(new_amount, (int, float)) or new_amount <= 0:
                         logger.warning(
-                            f"Invalid ingredient amount: {new_amount} - must be non-negative numeric"
+                            f"Invalid ingredient amount: {new_amount} - must be positive numeric (use 'ingredient_removed' to remove ingredients)"
                         )
                         return
                     ingredient["amount"] = new_amount
