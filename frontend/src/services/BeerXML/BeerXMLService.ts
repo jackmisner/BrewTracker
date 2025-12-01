@@ -1,5 +1,6 @@
 import ApiService from "@/services/api";
 import { Recipe, RecipeIngredient, ID, UnitSystem } from "@/types";
+import type { IngredientMatchResult } from "@/types/beerxml";
 
 // Service-specific interfaces
 interface BeerXMLExportResult {
@@ -14,12 +15,7 @@ interface FileValidationResult {
 
 export interface BeerXMLRecipe extends Partial<Recipe> {
   ingredients: RecipeIngredient[];
-  matchingResults?: IngredientMatchingResult[];
-}
-
-interface IngredientMatchingResult {
-  bestMatch: any;
-  confidence: number;
+  matchingResults?: IngredientMatchResult[];
 }
 
 interface ImportSummary {
@@ -137,7 +133,7 @@ class BeerXMLService {
   async convertRecipeUnits(
     recipe: BeerXMLRecipe,
     targetUnitSystem: UnitSystem
-  ): Promise<any> {
+  ): Promise<BeerXMLRecipe> {
     try {
       // Prepare complete recipe for conversion
       const recipeForConversion = {
@@ -153,7 +149,9 @@ class BeerXMLService {
       });
 
       // Extract the optimized (converted) recipe
-      const convertedRecipe = (response.data as any).optimized_recipe;
+      const convertedRecipe = (
+        response.data as { optimized_recipe?: Partial<BeerXMLRecipe> }
+      ).optimized_recipe;
 
       if (!convertedRecipe) {
         console.warn("No converted recipe returned, using original");
@@ -186,7 +184,7 @@ class BeerXMLService {
    */
   async matchIngredients(
     ingredients: RecipeIngredient[]
-  ): Promise<IngredientMatchingResult[]> {
+  ): Promise<IngredientMatchResult[]> {
     try {
       const response = await ApiService.beerxml.matchIngredients({
         ingredients: ingredients.map(ing => ({

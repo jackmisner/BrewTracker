@@ -18,6 +18,15 @@ from .workflow_config_loader import load_workflow
 
 logger = logging.getLogger(__name__)
 
+# Temperature parameter to unit field mapping
+# IMPORTANT: Must stay in sync with mapping in recipe_context.py
+TEMP_UNIT_FIELDS = {
+    "mash_temperature": "mash_temp_unit",
+    "fermentation_temp": "fermentation_temp_unit",
+    "strike_temp": "strike_temp_unit",
+    "sparge_temp": "sparge_temp_unit",
+}
+
 
 class FlowchartAIService:
     """
@@ -363,30 +372,34 @@ class FlowchartAIService:
                         break
 
             elif change_type in ["batch_size_converted", "temperature_converted"]:
-                # Recipe-level unit conversions
+                # Recipe-level unit conversions with guards for missing values
                 if change_type == "batch_size_converted":
-                    modified_recipe["batch_size"] = change.get("new_value")
-                    modified_recipe["batch_size_unit"] = change.get("new_unit")
+                    new_value = change.get("new_value")
+                    new_unit = change.get("new_unit")
+                    if new_value is not None:
+                        modified_recipe["batch_size"] = new_value
+                    if new_unit is not None:
+                        modified_recipe["batch_size_unit"] = new_unit
                 elif change_type == "temperature_converted":
-                    # Use explicit mapping for temperature unit fields (matches recipe_context.py)
-                    TEMP_UNIT_FIELDS = {
-                        "mash_temperature": "mash_temp_unit",
-                        "fermentation_temp": "fermentation_temp_unit",
-                        "strike_temp": "strike_temp_unit",
-                        "sparge_temp": "sparge_temp_unit",
-                    }
+                    # Use module-level mapping for temperature unit fields
                     parameter = change.get("parameter", "mash_temperature")
-                    modified_recipe[parameter] = change.get("new_value")
+                    new_value = change.get("new_value")
+                    new_unit = change.get("new_unit")
+
+                    if new_value is not None:
+                        modified_recipe[parameter] = new_value
+
                     # Use explicit mapping or unit_field from change dict
-                    unit_field = change.get("unit_field") or TEMP_UNIT_FIELDS.get(
-                        parameter
-                    )
-                    if unit_field:
-                        modified_recipe[unit_field] = change.get("new_unit")
-                    else:
-                        logger.warning(
-                            f"Unknown temperature parameter '{parameter}' - cannot determine unit field"
+                    if new_unit is not None:
+                        unit_field = change.get("unit_field") or TEMP_UNIT_FIELDS.get(
+                            parameter
                         )
+                        if unit_field:
+                            modified_recipe[unit_field] = new_unit
+                        else:
+                            logger.warning(
+                                f"Unknown temperature parameter '{parameter}' - cannot determine unit field"
+                            )
 
             elif change_type == "ingredient_added":
                 new_ingredient = change.get("ingredient_data", {})

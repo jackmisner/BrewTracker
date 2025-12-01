@@ -1,9 +1,10 @@
 import React from "react";
+import { UnitSystem } from "@/types/units";
 import "@/styles/BeerXMLImportExport.css";
 
 interface UnitConversionChoiceProps {
-  recipeUnitSystem: string;
-  userUnitSystem: string;
+  recipeUnitSystem: UnitSystem | null;
+  userUnitSystem: UnitSystem | null;
   recipeName: string;
   onImportAsIs: () => void;
   onConvertAndImport: () => void;
@@ -20,6 +21,13 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
   onCancel,
   isConverting = false,
 }) => {
+  // Guard against null values (shouldn't happen, but be defensive)
+  if (!recipeUnitSystem || !userUnitSystem) {
+    console.error("UnitConversionChoice called with null unit systems");
+    onCancel();
+    return null;
+  }
+
   return (
     <div
       className="unit-conversion-choice-overlay"

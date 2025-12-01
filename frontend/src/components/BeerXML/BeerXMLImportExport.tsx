@@ -10,6 +10,7 @@ import {
 } from "@/types/beerxml";
 import { beerXMLReducer, createInitialBeerXMLState } from "@/reducers";
 import { useUnits } from "@/contexts/UnitContext";
+import type { BeerXMLRecipe } from "@/services/BeerXML/BeerXMLService";
 import "@/styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
@@ -126,10 +127,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     dispatch({ type: "IMPORT_START" });
 
     try {
-      // Convert recipe units
+      // Convert recipe units (both are guaranteed non-null by guard at line 124)
       const convertedRecipe = await Services.BeerXML.service.convertRecipeUnits(
-        importState.selectedRecipe,
-        importState.userUnitSystem as "metric" | "imperial"
+        importState.selectedRecipe as BeerXMLRecipe,
+        importState.userUnitSystem!
       );
 
       // Hide dialog
@@ -165,7 +166,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
    * Handle recipe selection change
    * Checks for unit mismatch when switching between recipes
    */
-  const handleRecipeSelection = (recipe: any): void => {
+  const handleRecipeSelection = (recipe: BeerXMLRecipe): void => {
     dispatch({
       type: "SELECT_RECIPE",
       payload: recipe,
@@ -195,8 +196,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
    * @param recipesOverride - Optional recipes list to use instead of importState.parsedRecipes
    */
   const startIngredientMatching = async (
-    recipeOverride?: any,
-    recipesOverride?: any[]
+    recipeOverride?: BeerXMLRecipe,
+    recipesOverride?: BeerXMLRecipe[]
   ): Promise<void> => {
     const recipe = recipeOverride ?? importState.selectedRecipe;
     const recipes = recipesOverride ?? importState.parsedRecipes;
@@ -214,9 +215,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         });
       }
 
-      const matchingResults: any[] =
+      const matchingResults =
         await Services.BeerXML.service.matchIngredients(
-          (recipe as any)?.ingredients || []
+          recipe.ingredients || []
         );
 
       dispatch({ type: "SET_MATCHING_RESULTS", payload: matchingResults });
@@ -332,8 +333,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   if (importState.showUnitConversionChoice) {
     return (
       <UnitConversionChoice
-        recipeUnitSystem={importState.recipeUnitSystem || ""}
-        userUnitSystem={importState.userUnitSystem || ""}
+        recipeUnitSystem={importState.recipeUnitSystem}
+        userUnitSystem={importState.userUnitSystem}
         recipeName={importState.selectedRecipe?.name || "Recipe"}
         onImportAsIs={handleImportAsIs}
         onConvertAndImport={handleConvertAndImport}
