@@ -348,6 +348,11 @@ class RecipeContext:
         for ingredient in ingredients:
             if ingredient.get("name") == ingredient_name:
                 if new_amount is not None:
+                    if not isinstance(new_amount, (int, float)) or new_amount < 0:
+                        logger.warning(
+                            f"Invalid ingredient amount: {new_amount} - must be non-negative numeric"
+                        )
+                        return
                     ingredient["amount"] = new_amount
                 if new_unit is not None:
                     ingredient["unit"] = new_unit
@@ -394,6 +399,14 @@ class RecipeContext:
             )
 
         if new_value is not None:
+            # Defensive check for reasonable brewing temperatures
+            # Covers both Celsius (-20 to 120°C) and Fahrenheit (0 to 250°F)
+            if isinstance(new_value, (int, float)) and (
+                new_value < -20 or new_value > 250
+            ):
+                logger.warning(
+                    f"Temperature value {new_value} for '{parameter}' seems out of reasonable brewing range"
+                )
             self.recipe[parameter] = new_value
         if new_unit is not None:
             # Allow explicit unit_field in change dict, or use shared mapping
