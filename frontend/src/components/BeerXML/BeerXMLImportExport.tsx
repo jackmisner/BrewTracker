@@ -215,10 +215,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         });
       }
 
-      const matchingResults =
-        await Services.BeerXML.service.matchIngredients(
-          recipe.ingredients || []
-        );
+      const matchingResults = await Services.BeerXML.service.matchIngredients(
+        recipe.ingredients || []
+      );
 
       dispatch({ type: "SET_MATCHING_RESULTS", payload: matchingResults });
       dispatch({ type: "SHOW_MATCHING_REVIEW", payload: true });
