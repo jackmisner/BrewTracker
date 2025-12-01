@@ -365,12 +365,11 @@ class RecipeContext:
         new_unit = change.get("new_unit")
 
         if new_value is not None:
-            if new_value is not None:
-                if not isinstance(new_value, (int, float)) or new_value <= 0:
-                    logger.warning(
-                        f"Invalid batch size value: {new_value} - must be numeric"
-                    )
-                    return
+            if not isinstance(new_value, (int, float)) or new_value <= 0:
+                logger.warning(
+                    f"Invalid batch size value: {new_value} - must be positive numeric"
+                )
+                return
             self.recipe["batch_size"] = new_value
         if new_unit is not None:
             self.recipe["batch_size_unit"] = new_unit
@@ -645,6 +644,22 @@ class RecipeContext:
             return True
         return metric_count > imperial_count
 
+    def _get_normalized_target_system(self) -> Optional[str]:
+        """
+        Get the normalized (lowercase) target unit system from recipe context.
+        Returns None if not specified, with a warning logged.
+        """
+        target_system = self.recipe.get("target_unit_system")
+        if target_system is None:
+            logger.warning(
+                "target_unit_system not specified in recipe - unit conversion may not work correctly"
+            )
+            return None
+        # Defensively normalize to lowercase for comparison
+        return (
+            target_system.lower() if isinstance(target_system, str) else target_system
+        )
+
     def _evaluate_target_system_is_metric(
         self, _config: Dict[str, Any] | None = None
     ) -> bool:
@@ -653,17 +668,8 @@ class RecipeContext:
         Target system should be stored in recipe context during workflow initialization.
         If not provided, this evaluates to False (no conversion needed).
         """
-        target_system = self.recipe.get("target_unit_system")
-        if target_system is None:
-            logger.warning(
-                "target_unit_system not specified in recipe - unit conversion may not work correctly"
-            )
-            return False
-        # Defensively normalize to lowercase for comparison
-        target_system = (
-            target_system.lower() if isinstance(target_system, str) else target_system
-        )
-        return target_system == "metric"
+        target_system = self._get_normalized_target_system()
+        return target_system == "metric" if target_system else False
 
     def _evaluate_target_system_is_imperial(
         self, _config: Dict[str, Any] | None = None
@@ -673,17 +679,8 @@ class RecipeContext:
         Target system should be stored in recipe context during workflow initialization.
         If not provided, this evaluates to False (no conversion needed).
         """
-        target_system = self.recipe.get("target_unit_system")
-        if target_system is None:
-            logger.warning(
-                "target_unit_system not specified in recipe - unit conversion may not work correctly"
-            )
-            return False
-        # Defensively normalize to lowercase for comparison
-        target_system = (
-            target_system.lower() if isinstance(target_system, str) else target_system
-        )
-        return target_system == "imperial"
+        target_system = self._get_normalized_target_system()
+        return target_system == "imperial" if target_system else False
 
     def _metric_in_range(self, metric_name: str, style_ranges: Dict[str, Any]) -> bool:
         """Check if a specific metric is within style range."""
