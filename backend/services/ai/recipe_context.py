@@ -9,6 +9,8 @@ import logging
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Union
 
+from .unit_mappings import TEMP_UNIT_FIELDS
+
 logger = logging.getLogger(__name__)
 
 
@@ -355,14 +357,6 @@ class RecipeContext:
 
     def _convert_temperature(self, change: Dict[str, Any]):
         """Convert temperature to new unit."""
-        # Mapping of temperature parameter names to their unit field names
-        TEMP_UNIT_FIELDS = {
-            "mash_temperature": "mash_temp_unit",
-            "fermentation_temp": "fermentation_temp_unit",
-            "strike_temp": "strike_temp_unit",
-            "sparge_temp": "sparge_temp_unit",
-        }
-
         parameter = change.get("parameter", "mash_temperature")
         new_value = change.get("new_value")
         new_unit = change.get("new_unit")
@@ -370,7 +364,7 @@ class RecipeContext:
         if new_value is not None:
             self.recipe[parameter] = new_value
         if new_unit is not None:
-            # Allow explicit unit_field in change dict, or use mapping
+            # Allow explicit unit_field in change dict, or use shared mapping
             unit_field = change.get("unit_field") or TEMP_UNIT_FIELDS.get(parameter)
             if unit_field:
                 self.recipe[unit_field] = new_unit

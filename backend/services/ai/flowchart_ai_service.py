@@ -14,18 +14,10 @@ from models.mongo_models import BeerStyleGuide
 from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 from .flowchart_engine import FlowchartEngine, WorkflowResult
+from .unit_mappings import TEMP_UNIT_FIELDS
 from .workflow_config_loader import load_workflow
 
 logger = logging.getLogger(__name__)
-
-# Temperature parameter to unit field mapping
-# IMPORTANT: Must stay in sync with mapping in recipe_context.py
-TEMP_UNIT_FIELDS = {
-    "mash_temperature": "mash_temp_unit",
-    "fermentation_temp": "fermentation_temp_unit",
-    "strike_temp": "strike_temp_unit",
-    "sparge_temp": "sparge_temp_unit",
-}
 
 
 class FlowchartAIService:
@@ -363,13 +355,20 @@ class FlowchartAIService:
                 new_unit = change.get("new_unit")
 
                 # Find and update the ingredient
+                found = False
                 for ingredient in ingredients:
                     if ingredient.get("name") == ingredient_name:
                         if new_amount is not None:
                             ingredient["amount"] = new_amount
                         if new_unit is not None:
                             ingredient["unit"] = new_unit
+                        found = True
                         break
+
+                if not found:
+                    logger.warning(
+                        f"Ingredient '{ingredient_name}' not found for {change_type}"
+                    )
 
             elif change_type in ["batch_size_converted", "temperature_converted"]:
                 # Recipe-level unit conversions with guards for missing values

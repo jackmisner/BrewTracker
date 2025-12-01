@@ -96,17 +96,17 @@ class BeerXMLService {
     let metricCount = 0;
     let imperialCount = 0;
 
-    // Check batch size unit
-    const batchUnit = recipe.batch_size_unit?.toLowerCase() || "";
+    // Check batch size unit (trim to handle whitespace)
+    const batchUnit = recipe.batch_size_unit?.toLowerCase().trim() || "";
     if (["l", "liter", "liters", "litre", "litres", "ml"].includes(batchUnit)) {
       metricCount++;
     } else if (["gal", "gallon", "gallons"].includes(batchUnit)) {
       imperialCount++;
     }
 
-    // Check ingredient units
+    // Check ingredient units (trim to handle whitespace)
     recipe.ingredients?.forEach(ingredient => {
-      const unit = ingredient.unit?.toLowerCase() || "";
+      const unit = ingredient.unit?.toLowerCase().trim() || "";
       if (
         ["g", "kg", "gram", "grams", "kilogram", "kilograms"].includes(unit)
       ) {

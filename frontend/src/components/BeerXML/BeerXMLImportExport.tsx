@@ -124,8 +124,6 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   const handleConvertAndImport = async (): Promise<void> => {
     if (!importState.selectedRecipe || !importState.userUnitSystem) return;
 
-    dispatch({ type: "IMPORT_START" });
-
     try {
       // Convert recipe units (both are guaranteed non-null by guard at line 124)
       const convertedRecipe = await Services.BeerXML.service.convertRecipeUnits(
