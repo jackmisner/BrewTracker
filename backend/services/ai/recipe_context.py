@@ -365,6 +365,12 @@ class RecipeContext:
         new_unit = change.get("new_unit")
 
         if new_value is not None:
+            if new_value is not None:
+                if not isinstance(new_value, (int, float)) or new_value <= 0:
+                    logger.warning(
+                        f"Invalid batch size value: {new_value} - must be numeric"
+                    )
+                    return
             self.recipe["batch_size"] = new_value
         if new_unit is not None:
             self.recipe["batch_size_unit"] = new_unit
