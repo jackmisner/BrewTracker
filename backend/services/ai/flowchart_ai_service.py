@@ -368,11 +368,25 @@ class FlowchartAIService:
                     modified_recipe["batch_size"] = change.get("new_value")
                     modified_recipe["batch_size_unit"] = change.get("new_unit")
                 elif change_type == "temperature_converted":
+                    # Use explicit mapping for temperature unit fields (matches recipe_context.py)
+                    TEMP_UNIT_FIELDS = {
+                        "mash_temperature": "mash_temp_unit",
+                        "fermentation_temp": "fermentation_temp_unit",
+                        "strike_temp": "strike_temp_unit",
+                        "sparge_temp": "sparge_temp_unit",
+                    }
                     parameter = change.get("parameter", "mash_temperature")
                     modified_recipe[parameter] = change.get("new_value")
-                    # Also update unit field
-                    unit_field = parameter.replace("_temperature", "_temp_unit")
-                    modified_recipe[unit_field] = change.get("new_unit")
+                    # Use explicit mapping or unit_field from change dict
+                    unit_field = change.get("unit_field") or TEMP_UNIT_FIELDS.get(
+                        parameter
+                    )
+                    if unit_field:
+                        modified_recipe[unit_field] = change.get("new_unit")
+                    else:
+                        logger.warning(
+                            f"Unknown temperature parameter '{parameter}' - cannot determine unit field"
+                        )
 
             elif change_type == "ingredient_added":
                 new_ingredient = change.get("ingredient_data", {})

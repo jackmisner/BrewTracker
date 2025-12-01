@@ -5,6 +5,8 @@ Tests the standalone unit conversion and normalization workflow that converts
 recipes between metric and imperial units with sensible normalization.
 """
 
+import os
+
 import pytest
 
 from services.ai.flowchart_engine import FlowchartEngine
@@ -47,10 +49,16 @@ class TestUnitConversionWorkflow:
             ],
         }
 
-        # Load unit conversion workflow
-        engine = FlowchartEngine.from_yaml_file(
-            "services/ai/workflows/unit_conversion.yaml"
+        # Load unit conversion workflow with absolute path
+        workflow_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "services",
+            "ai",
+            "workflows",
+            "unit_conversion.yaml",
         )
+        engine = FlowchartEngine.from_yaml_file(workflow_path)
 
         # Execute workflow
         result = engine.execute_workflow(imperial_recipe)
@@ -136,10 +144,16 @@ class TestUnitConversionWorkflow:
             ],
         }
 
-        # Load unit conversion workflow
-        engine = FlowchartEngine.from_yaml_file(
-            "services/ai/workflows/unit_conversion.yaml"
+        # Load unit conversion workflow with absolute path
+        workflow_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "services",
+            "ai",
+            "workflows",
+            "unit_conversion.yaml",
         )
+        engine = FlowchartEngine.from_yaml_file(workflow_path)
 
         # Execute workflow
         result = engine.execute_workflow(metric_recipe)

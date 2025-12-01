@@ -9,6 +9,11 @@ import {
   IngredientType,
   RecipeIngredient,
 } from "./recipe";
+import { UnitSystem } from "./units";
+import type { BeerXMLRecipe } from "@/services/BeerXML/BeerXMLService";
+
+// Re-export UnitSystem for convenience
+export type { UnitSystem };
 
 // Parsed BeerXML Recipe Data
 export interface ParsedBeerXMLRecipe {
@@ -229,13 +234,13 @@ export interface IngredientMatchingDecision {
 export interface BeerXMLImportState {
   isImporting: boolean;
   uploadedFile: File | null;
-  parsedRecipes: ParsedBeerXMLRecipe[];
-  selectedRecipe: ParsedBeerXMLRecipe | null;
+  parsedRecipes: BeerXMLRecipe[];
+  selectedRecipe: BeerXMLRecipe | null;
   matchingResults: IngredientMatchResult[];
   showMatchingReview: boolean;
   showUnitConversionChoice: boolean;
-  recipeUnitSystem: string | null;
-  userUnitSystem: string | null;
+  recipeUnitSystem: UnitSystem | null;
+  userUnitSystem: UnitSystem | null;
   importProgress: number;
   error: string | null;
   warnings: string[];

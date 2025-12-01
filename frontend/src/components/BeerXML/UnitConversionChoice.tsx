@@ -21,12 +21,23 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
   isConverting = false,
 }) => {
   return (
-    <div className="unit-conversion-choice-overlay">
+    <div
+      className="unit-conversion-choice-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unit-conversion-dialog-title"
+      aria-describedby="unit-conversion-dialog-description"
+    >
       <div className="unit-conversion-choice-dialog">
-        <h3>Unit System Mismatch</h3>
+        <h3 id="unit-conversion-dialog-title">Unit System Mismatch</h3>
 
-        <div className="unit-mismatch-info">
-          <div className="info-icon">⚠️</div>
+        <div
+          className="unit-mismatch-info"
+          id="unit-conversion-dialog-description"
+        >
+          <div className="info-icon" aria-hidden="true">
+            ⚠️
+          </div>
           <p>
             The recipe <strong>"{recipeName}"</strong> uses{" "}
             <strong>{recipeUnitSystem}</strong> units, but your preference is
@@ -37,7 +48,9 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
         <div className="conversion-choices">
           <div className="choice-card">
             <div className="choice-header">
-              <span className="choice-icon">📋</span>
+              <span className="choice-icon" aria-hidden="true">
+                📋
+              </span>
               <h4>Import as-is</h4>
             </div>
             <p className="choice-description">
@@ -48,6 +61,7 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
               onClick={onImportAsIs}
               className="btn btn-secondary"
               disabled={isConverting}
+              aria-label={`Import recipe as-is in ${recipeUnitSystem} units`}
             >
               Import as {recipeUnitSystem}
             </button>
@@ -55,7 +69,9 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
 
           <div className="choice-card recommended">
             <div className="choice-header">
-              <span className="choice-icon">✨</span>
+              <span className="choice-icon" aria-hidden="true">
+                ✨
+              </span>
               <h4>Convert + Normalize</h4>
               <span className="recommended-badge">Recommended</span>
             </div>
@@ -68,10 +84,11 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
               onClick={onConvertAndImport}
               className="btn btn-primary"
               disabled={isConverting}
+              aria-label={`Convert recipe to ${userUnitSystem} units and normalize`}
             >
               {isConverting ? (
                 <>
-                  <span className="button-spinner"></span>
+                  <span className="button-spinner" aria-hidden="true"></span>
                   Converting...
                 </>
               ) : (

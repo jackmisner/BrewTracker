@@ -3,10 +3,11 @@
 import {
   BeerXMLImportState,
   BeerXMLExportState,
-  ParsedBeerXMLRecipe,
   IngredientMatchResult,
   BeerXMLExportResult,
+  UnitSystem,
 } from "../types/beerxml";
+import type { BeerXMLRecipe } from "@/services/BeerXML/BeerXMLService";
 
 // Combined state interface
 export interface BeerXMLState {
@@ -23,17 +24,17 @@ export type BeerXMLAction =
   | { type: "IMPORT_START" }
   | {
       type: "IMPORT_SUCCESS";
-      payload: { recipes: ParsedBeerXMLRecipe[]; warnings: string[] };
+      payload: { recipes: BeerXMLRecipe[]; warnings: string[] };
     }
   | { type: "IMPORT_ERROR"; payload: string }
   | { type: "IMPORT_PROGRESS"; payload: number }
   | { type: "SET_UPLOADED_FILE"; payload: File | null }
-  | { type: "SELECT_RECIPE"; payload: ParsedBeerXMLRecipe | null }
+  | { type: "SELECT_RECIPE"; payload: BeerXMLRecipe | null }
   | { type: "SET_MATCHING_RESULTS"; payload: IngredientMatchResult[] }
   | { type: "SHOW_MATCHING_REVIEW"; payload: boolean }
   | {
       type: "SHOW_UNIT_CONVERSION_CHOICE";
-      payload: { recipeUnitSystem: string; userUnitSystem: string };
+      payload: { recipeUnitSystem: UnitSystem; userUnitSystem: UnitSystem };
     }
   | { type: "HIDE_UNIT_CONVERSION_CHOICE" }
   | { type: "CLEAR_IMPORT_ERROR" }

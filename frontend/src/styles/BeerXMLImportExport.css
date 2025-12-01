@@ -665,6 +665,17 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+.choice-card:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-card {
+    transition: none;
+  }
+}
+
 .choice-card.recommended {
   border-color: #3b82f6;
   background: #eff6ff;
@@ -740,6 +751,11 @@
 .btn-text:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-text:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 @media (max-width: 640px) {

@@ -1,5 +1,5 @@
 import ApiService from "@/services/api";
-import { Recipe, RecipeIngredient, ID } from "@/types";
+import { Recipe, RecipeIngredient, ID, UnitSystem } from "@/types";
 
 // Service-specific interfaces
 interface BeerXMLExportResult {
@@ -12,7 +12,7 @@ interface FileValidationResult {
   errors: string[];
 }
 
-interface BeerXMLRecipe extends Partial<Recipe> {
+export interface BeerXMLRecipe extends Partial<Recipe> {
   ingredients: RecipeIngredient[];
   matchingResults?: IngredientMatchingResult[];
 }
@@ -96,9 +96,7 @@ class BeerXMLService {
    * Detect if recipe uses different unit system than user preference
    * Returns the detected recipe unit system
    */
-  detectRecipeUnitSystem(
-    recipe: BeerXMLRecipe
-  ): "metric" | "imperial" | "mixed" {
+  detectRecipeUnitSystem(recipe: BeerXMLRecipe): UnitSystem | "mixed" {
     let metricCount = 0;
     let imperialCount = 0;
 
@@ -137,8 +135,8 @@ class BeerXMLService {
    * Uses the unit conversion workflow for intelligent conversion + normalization
    */
   async convertRecipeUnits(
-    recipe: any,
-    targetUnitSystem: "metric" | "imperial"
+    recipe: BeerXMLRecipe,
+    targetUnitSystem: UnitSystem
   ): Promise<any> {
     try {
       // Prepare complete recipe for conversion
@@ -163,16 +161,17 @@ class BeerXMLService {
       }
 
       // Merge converted data back into original recipe structure
+      // Use nullish coalescing to preserve falsy values like 0 or empty string
       return {
         ...recipe,
         ...convertedRecipe,
-        ingredients: convertedRecipe.ingredients || recipe.ingredients,
-        batch_size: convertedRecipe.batch_size || recipe.batch_size,
+        ingredients: convertedRecipe.ingredients ?? recipe.ingredients,
+        batch_size: convertedRecipe.batch_size ?? recipe.batch_size,
         batch_size_unit:
-          convertedRecipe.batch_size_unit || recipe.batch_size_unit,
+          convertedRecipe.batch_size_unit ?? recipe.batch_size_unit,
         mash_temperature:
-          convertedRecipe.mash_temperature || recipe.mash_temperature,
-        mash_temp_unit: convertedRecipe.mash_temp_unit || recipe.mash_temp_unit,
+          convertedRecipe.mash_temperature ?? recipe.mash_temperature,
+        mash_temp_unit: convertedRecipe.mash_temp_unit ?? recipe.mash_temp_unit,
       };
     } catch (error) {
       console.error("Error converting recipe units:", error);
