@@ -233,6 +233,9 @@ export interface BeerXMLImportState {
   selectedRecipe: ParsedBeerXMLRecipe | null;
   matchingResults: IngredientMatchResult[];
   showMatchingReview: boolean;
+  showUnitConversionChoice: boolean;
+  recipeUnitSystem: string | null;
+  userUnitSystem: string | null;
   importProgress: number;
   error: string | null;
   warnings: string[];

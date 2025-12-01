@@ -1517,6 +1517,316 @@ class MashTemperatureAdjustmentStrategy(OptimizationStrategy):
         return changes
 
 
+class ConvertMetricToImperialStrategy(OptimizationStrategy):
+    """Convert recipe from metric to imperial units (raw conversion)."""
+
+    def execute(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Convert all metric units to imperial."""
+        from utils.unit_conversions import UnitConverter
+
+        changes = []
+        parameters = parameters or {}
+
+        # Convert batch size
+        batch_size = self.recipe.get("batch_size")
+        batch_unit = self.recipe.get("batch_size_unit", "l")
+        if batch_size and batch_unit.lower() in [
+            "l",
+            "liter",
+            "liters",
+            "litre",
+            "litres",
+        ]:
+            new_size = UnitConverter.convert_volume(batch_size, batch_unit, "gal")
+            changes.append(
+                {
+                    "type": "batch_size_converted",
+                    "old_value": batch_size,
+                    "new_value": new_size,
+                    "old_unit": batch_unit,
+                    "new_unit": "gal",
+                    "reason": f"Converted batch size from {batch_size} {batch_unit} to {new_size:.2f} gal",
+                }
+            )
+
+        # Convert ingredients
+        ingredients = self.recipe.get("ingredients", [])
+        for ingredient in ingredients:
+            amount = ingredient.get("amount")
+            unit = ingredient.get("unit", "")
+            unit_lower = unit.lower()
+
+            # Convert weight units
+            if unit_lower in ["g", "kg", "gram", "grams", "kilogram", "kilograms"]:
+                new_unit = "oz"
+                new_amount = UnitConverter.convert_weight(amount, unit, new_unit)
+
+                changes.append(
+                    {
+                        "type": "ingredient_converted",
+                        "ingredient_name": ingredient.get("name"),
+                        "old_amount": amount,
+                        "new_amount": new_amount,
+                        "old_unit": unit,
+                        "new_unit": new_unit,
+                        "reason": f"Converted {ingredient.get('name')} from {amount} {unit} to {new_amount:.6f} {new_unit}",
+                    }
+                )
+
+        # Convert mash temperature
+        mash_temp = self.recipe.get("mash_temperature")
+        mash_unit = self.recipe.get("mash_temp_unit", "C")
+        if mash_temp and mash_unit.upper() == "C":
+            new_temp = UnitConverter.convert_temperature(mash_temp, "C", "F")
+            changes.append(
+                {
+                    "type": "temperature_converted",
+                    "parameter": "mash_temperature",
+                    "old_value": mash_temp,
+                    "new_value": new_temp,
+                    "old_unit": "C",
+                    "new_unit": "F",
+                    "reason": f"Converted mash temperature from {mash_temp}°C to {new_temp:.1f}°F",
+                }
+            )
+
+        return changes
+
+
+class ConvertImperialToMetricStrategy(OptimizationStrategy):
+    """Convert recipe from imperial to metric units (raw conversion)."""
+
+    def execute(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Convert all imperial units to metric."""
+        from utils.unit_conversions import UnitConverter
+
+        changes = []
+        parameters = parameters or {}
+
+        # Convert batch size
+        batch_size = self.recipe.get("batch_size")
+        batch_unit = self.recipe.get("batch_size_unit", "gal")
+        if batch_size and batch_unit.lower() in ["gal", "gallon", "gallons"]:
+            new_size = UnitConverter.convert_volume(batch_size, batch_unit, "l")
+            changes.append(
+                {
+                    "type": "batch_size_converted",
+                    "old_value": batch_size,
+                    "new_value": new_size,
+                    "old_unit": batch_unit,
+                    "new_unit": "l",
+                    "reason": f"Converted batch size from {batch_size} {batch_unit} to {new_size:.2f} l",
+                }
+            )
+
+        # Convert ingredients
+        ingredients = self.recipe.get("ingredients", [])
+        for ingredient in ingredients:
+            amount = ingredient.get("amount")
+            unit = ingredient.get("unit", "")
+            unit_lower = unit.lower()
+
+            # Convert weight units
+            if unit_lower in ["oz", "lb", "lbs", "ounce", "ounces", "pound", "pounds"]:
+                new_unit = "g"
+                new_amount = UnitConverter.convert_weight(amount, unit, new_unit)
+
+                changes.append(
+                    {
+                        "type": "ingredient_converted",
+                        "ingredient_name": ingredient.get("name"),
+                        "old_amount": amount,
+                        "new_amount": new_amount,
+                        "old_unit": unit,
+                        "new_unit": new_unit,
+                        "reason": f"Converted {ingredient.get('name')} from {amount} {unit} to {new_amount:.6f} {new_unit}",
+                    }
+                )
+
+        # Convert mash temperature
+        mash_temp = self.recipe.get("mash_temperature")
+        mash_unit = self.recipe.get("mash_temp_unit", "F")
+        if mash_temp and mash_unit.upper() == "F":
+            new_temp = UnitConverter.convert_temperature(mash_temp, "F", "C")
+            changes.append(
+                {
+                    "type": "temperature_converted",
+                    "parameter": "mash_temperature",
+                    "old_value": mash_temp,
+                    "new_value": new_temp,
+                    "old_unit": "F",
+                    "new_unit": "C",
+                    "reason": f"Converted mash temperature from {mash_temp}°F to {new_temp:.1f}°C",
+                }
+            )
+
+        return changes
+
+
+class NormalizeAmountsMetricStrategy(OptimizationStrategy):
+    """Normalize metric amounts to brewing-friendly increments."""
+
+    def execute(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """
+        Normalize metric amounts to sensible brewing values.
+
+        Example:
+        - 1587.57g -> 1600g (nearest 25g for grains)
+        - 28.3g -> 30g (nearest 5g for hops)
+        """
+        changes = []
+        parameters = parameters or {}
+
+        grain_increment = parameters.get("grain_increment", 25)  # 25g
+        hop_increment = parameters.get("hop_increment", 5)  # 5g
+
+        ingredients = self.recipe.get("ingredients", [])
+        for ingredient in ingredients:
+            amount = ingredient.get("amount")
+            unit = ingredient.get("unit", "")
+            unit_lower = unit.lower()
+            ingredient_type = ingredient.get("type", "")
+
+            # Only normalize metric weight units
+            if unit_lower not in ["g", "kg", "gram", "grams", "kilogram", "kilograms"]:
+                continue
+
+            # Convert to grams for normalization
+            amount_in_grams = amount
+            if unit_lower in ["kg", "kilogram", "kilograms"]:
+                amount_in_grams = amount * 1000
+
+            # Determine increment based on ingredient type
+            if ingredient_type == "grain":
+                increment = grain_increment
+            elif ingredient_type == "hop":
+                increment = hop_increment
+            else:
+                increment = 1  # Default to 1g for other types
+
+            # Normalize to increment
+            normalized_grams = round(amount_in_grams / increment) * increment
+
+            # Choose appropriate unit (kg for >= 1000g, otherwise g)
+            if normalized_grams >= 1000:
+                new_amount = normalized_grams / 1000
+                new_unit = "kg"
+            else:
+                new_amount = normalized_grams
+                new_unit = "g"
+
+            # Only create change if amount actually changed
+            # Compare in same unit (grams)
+            original_in_grams = amount_in_grams
+            new_in_grams = (
+                new_amount * 1000
+                if new_unit in ["kg", "kilogram", "kilograms"]
+                else new_amount
+            )
+            if abs(original_in_grams - new_in_grams) > 0.01 or unit != new_unit:
+                changes.append(
+                    {
+                        "type": "ingredient_normalized",
+                        "ingredient_name": ingredient.get("name"),
+                        "old_amount": amount,
+                        "new_amount": new_amount,
+                        "old_unit": unit,
+                        "new_unit": new_unit,
+                        "reason": f"Normalized {ingredient.get('name')} from {amount} {unit} to {new_amount} {new_unit}",
+                    }
+                )
+
+        return changes
+
+
+class NormalizeAmountsImperialStrategy(OptimizationStrategy):
+    """Normalize imperial amounts to brewing-friendly increments."""
+
+    def execute(self, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """
+        Normalize imperial amounts to sensible brewing values.
+
+        Example:
+        - 3.858 lbs -> 3.875 lbs (nearest 0.125 lb = nearest 2 oz)
+        - 1.058 oz -> 1.0 oz (nearest 0.25 oz)
+        """
+        changes = []
+        parameters = parameters or {}
+
+        grain_increment = parameters.get("grain_increment", 0.125)  # 1/8 lb = 2 oz
+        hop_increment = parameters.get("hop_increment", 0.25)  # 1/4 oz
+
+        ingredients = self.recipe.get("ingredients", [])
+        for ingredient in ingredients:
+            amount = ingredient.get("amount")
+            unit = ingredient.get("unit", "")
+            unit_lower = unit.lower()
+            ingredient_type = ingredient.get("type", "")
+
+            # Only normalize imperial weight units
+            if unit_lower not in [
+                "oz",
+                "lb",
+                "lbs",
+                "ounce",
+                "ounces",
+                "pound",
+                "pounds",
+            ]:
+                continue
+
+            # Convert to ounces for normalization
+            amount_in_oz = amount
+            if unit_lower in ["lb", "lbs", "pound", "pounds"]:
+                amount_in_oz = amount * 16
+
+            # Determine increment based on ingredient type
+            if ingredient_type == "grain":
+                # For grains: round to nearest 2 oz (0.125 lb)
+                increment_oz = 2.0
+            elif ingredient_type == "hop":
+                # For hops: round to nearest 0.25 oz
+                increment_oz = hop_increment
+            else:
+                increment_oz = 0.25  # Default to 0.25 oz
+
+            # Normalize to increment in oz
+            normalized_oz = round(amount_in_oz / increment_oz) * increment_oz
+
+            # Choose appropriate unit (lb for >= 8 oz, otherwise oz)
+            if normalized_oz >= 8 and ingredient_type == "grain":
+                new_amount = normalized_oz / 16
+                new_unit = "lb"
+                # For lb, round to nearest 0.125 (2 oz increments)
+                new_amount = round(new_amount / grain_increment) * grain_increment
+            else:
+                new_amount = normalized_oz
+                new_unit = "oz"
+
+            # Only create change if amount actually changed
+            # Compare in same unit (ounces)
+            original_in_oz = amount_in_oz
+            new_in_oz = (
+                new_amount * 16
+                if new_unit in ["lb", "lbs", "pound", "pounds"]
+                else new_amount
+            )
+            if abs(original_in_oz - new_in_oz) > 0.01 or unit != new_unit:
+                changes.append(
+                    {
+                        "type": "ingredient_normalized",
+                        "ingredient_name": ingredient.get("name"),
+                        "old_amount": amount,
+                        "new_amount": new_amount,
+                        "old_unit": unit,
+                        "new_unit": new_unit,
+                        "reason": f"Normalized {ingredient.get('name')} from {amount} {unit} to {new_amount} {new_unit}",
+                    }
+                )
+
+        return changes
+
+
 # Strategy registry for dynamic loading
 STRATEGY_REGISTRY = {
     # Base malt strategies
@@ -1538,6 +1848,11 @@ STRATEGY_REGISTRY = {
     "normalize_amounts": NormalizeAmountsStrategy,
     # Mash temperature strategy
     "mash_temperature_adjustment": MashTemperatureAdjustmentStrategy,
+    # Unit conversion strategies
+    "convert_units_metric_to_imperial": ConvertMetricToImperialStrategy,
+    "convert_units_imperial_to_metric": ConvertImperialToMetricStrategy,
+    "normalize_amounts_metric": NormalizeAmountsMetricStrategy,
+    "normalize_amounts_imperial": NormalizeAmountsImperialStrategy,
 }
 
 

@@ -1,6 +1,7 @@
 import React, { useReducer, useRef } from "react";
 import { Services } from "@/services";
 import IngredientMatchingReview from "@/components/BeerXML/IngredientMatchingReview";
+import UnitConversionChoice from "@/components/BeerXML/UnitConversionChoice";
 import { Recipe, Ingredient } from "@/types";
 import {
   BeerXMLImportData,
@@ -8,6 +9,7 @@ import {
   BeerXMLExportResult,
 } from "@/types/beerxml";
 import { beerXMLReducer, createInitialBeerXMLState } from "@/reducers";
+import { useUnits } from "@/contexts/UnitContext";
 import "@/styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
@@ -26,6 +28,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   mode = "both",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { unitSystem } = useUnits(); // Get user's unit preference
 
   // Initialize reducer
   const [state, dispatch] = useReducer(
@@ -78,14 +81,93 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         payload: { recipes: parsedRecipes, warnings: [] },
       });
 
+      const firstRecipe = parsedRecipes[0] || null;
       dispatch({
         type: "SELECT_RECIPE",
-        payload: parsedRecipes[0] || null,
+        payload: firstRecipe,
       });
+
+      // Check for unit system mismatch
+      if (firstRecipe) {
+        const recipeUnitSystem =
+          Services.BeerXML.service.detectRecipeUnitSystem(firstRecipe);
+
+        // Show conversion choice if there's a mismatch
+        if (recipeUnitSystem !== unitSystem && recipeUnitSystem !== "mixed") {
+          dispatch({
+            type: "SHOW_UNIT_CONVERSION_CHOICE",
+            payload: {
+              recipeUnitSystem,
+              userUnitSystem: unitSystem,
+            },
+          });
+        }
+      }
     } catch (error: any) {
       console.error("Error processing BeerXML file:", error);
       dispatch({ type: "IMPORT_ERROR", payload: error.message });
     }
+  };
+
+  /**
+   * Handle importing recipe as-is (without unit conversion)
+   */
+  const handleImportAsIs = async (): Promise<void> => {
+    dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+    await startIngredientMatching();
+  };
+
+  /**
+   * Handle converting recipe units before import
+   */
+  const handleConvertAndImport = async (): Promise<void> => {
+    if (!importState.selectedRecipe || !importState.userUnitSystem) return;
+
+    dispatch({ type: "IMPORT_START" });
+
+    try {
+      // Convert recipe units
+      const convertedRecipe = await Services.BeerXML.service.convertRecipeUnits(
+        importState.selectedRecipe,
+        importState.userUnitSystem as "metric" | "imperial"
+      );
+
+      // Update selected recipe with converted version
+      dispatch({
+        type: "SELECT_RECIPE",
+        payload: convertedRecipe,
+      });
+
+      // Hide dialog and proceed to ingredient matching
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+
+      // Find index of selected recipe
+      const selectedIndex = importState.parsedRecipes.findIndex(
+        r => r === importState.selectedRecipe
+      );
+
+      // Update selected recipe with converted version
+      const updatedRecipes = importState.parsedRecipes.map((r, idx) =>
+        idx === selectedIndex ? convertedRecipe : r
+      );
+      dispatch({
+        type: "IMPORT_SUCCESS",
+        payload: { recipes: updatedRecipes, warnings: [] },
+      });
+
+      await startIngredientMatching();
+    } catch (error: any) {
+      console.error("Error converting recipe units:", error);
+      dispatch({ type: "IMPORT_ERROR", payload: error.message });
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+    }
+  };
+
+  /**
+   * Handle canceling unit conversion choice
+   */
+  const handleCancelConversion = (): void => {
+    dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
   };
 
   /**
@@ -210,6 +292,21 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       fileInputRef.current.value = "";
     }
   };
+
+  // Show unit conversion choice dialog
+  if (importState.showUnitConversionChoice) {
+    return (
+      <UnitConversionChoice
+        recipeUnitSystem={importState.recipeUnitSystem || ""}
+        userUnitSystem={importState.userUnitSystem || ""}
+        recipeName={importState.selectedRecipe?.name || "Recipe"}
+        onImportAsIs={handleImportAsIs}
+        onConvertAndImport={handleConvertAndImport}
+        onCancel={handleCancelConversion}
+        isConverting={importState.isImporting}
+      />
+    );
+  }
 
   // Show ingredient matching review
   if (importState.showMatchingReview) {

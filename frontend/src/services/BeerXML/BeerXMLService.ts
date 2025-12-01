@@ -93,6 +93,89 @@ class BeerXMLService {
   }
 
   /**
+   * Detect if recipe uses different unit system than user preference
+   * Returns the detected recipe unit system
+   */
+  detectRecipeUnitSystem(recipe: BeerXMLRecipe): "metric" | "imperial" | "mixed" {
+    let metricCount = 0;
+    let imperialCount = 0;
+
+    // Check batch size unit
+    const batchUnit = recipe.batch_size_unit?.toLowerCase() || "";
+    if (["l", "liter", "liters", "litre", "litres", "ml"].includes(batchUnit)) {
+      metricCount++;
+    } else if (["gal", "gallon", "gallons"].includes(batchUnit)) {
+      imperialCount++;
+    }
+
+    // Check ingredient units
+    recipe.ingredients?.forEach(ingredient => {
+      const unit = ingredient.unit?.toLowerCase() || "";
+      if (["g", "kg", "gram", "grams", "kilogram", "kilograms"].includes(unit)) {
+        metricCount++;
+      } else if (["oz", "lb", "lbs", "ounce", "ounces", "pound", "pounds"].includes(unit)) {
+        imperialCount++;
+      }
+    });
+
+    // Determine predominant system
+    if (metricCount > 0 && imperialCount === 0) return "metric";
+    if (imperialCount > 0 && metricCount === 0) return "imperial";
+    if (metricCount > imperialCount) return "metric";
+    if (imperialCount > metricCount) return "imperial";
+    return "mixed"; // Equal or unknown
+  }
+
+  /**
+   * Convert recipe units to user's preferred unit system
+   * Uses the unit conversion workflow for intelligent conversion + normalization
+   */
+  async convertRecipeUnits(
+    recipe: any,
+    targetUnitSystem: "metric" | "imperial"
+  ): Promise<any> {
+    try {
+      // Prepare complete recipe for conversion
+      const recipeForConversion = {
+        ...recipe,
+        target_unit_system: targetUnitSystem,
+      };
+
+      // Call AI analyze endpoint with unit_conversion workflow
+      const response = await ApiService.ai.analyzeRecipe({
+        complete_recipe: recipeForConversion,
+        unit_system: targetUnitSystem,
+        workflow_name: "unit_conversion",
+      });
+
+      // Extract the optimized (converted) recipe
+      const convertedRecipe = (response.data as any).optimized_recipe;
+
+      if (!convertedRecipe) {
+        console.warn("No converted recipe returned, using original");
+        return recipe;
+      }
+
+      // Merge converted data back into original recipe structure
+      return {
+        ...recipe,
+        ...convertedRecipe,
+        ingredients: convertedRecipe.ingredients || recipe.ingredients,
+        batch_size: convertedRecipe.batch_size || recipe.batch_size,
+        batch_size_unit: convertedRecipe.batch_size_unit || recipe.batch_size_unit,
+        mash_temperature:
+          convertedRecipe.mash_temperature || recipe.mash_temperature,
+        mash_temp_unit: convertedRecipe.mash_temp_unit || recipe.mash_temp_unit,
+      };
+    } catch (error) {
+      console.error("Error converting recipe units:", error);
+      // Return original recipe if conversion fails - don't block import
+      console.warn("Unit conversion failed, continuing with original units");
+      return recipe;
+    }
+  }
+
+  /**
    * Match ingredients using backend service
    */
   async matchIngredients(

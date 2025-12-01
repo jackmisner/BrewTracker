@@ -6,6 +6,31 @@ import '@testing-library/jest-dom';
 import BeerXMLImportExport from '../../src/components/BeerXML/BeerXMLImportExport';
 import beerXMLService from '../../src/services/BeerXML/BeerXMLService';
 
+// Mock UnitContext
+jest.mock('../../src/contexts/UnitContext', () => {
+  const React = require('react');
+  return {
+    useUnits: () => ({
+      unitSystem: 'imperial',
+      loading: false,
+      error: null,
+      updateUnitSystem: jest.fn(),
+      setError: jest.fn(),
+      getPreferredUnit: jest.fn((type: string) => type === 'volume' ? 'gal' : 'lb'),
+      convertUnit: jest.fn((value: number, from: string, to: string) => ({ value, unit: to })),
+      convertForDisplay: jest.fn((value: number, unit: string) => ({ value, unit })),
+      convertForStorage: jest.fn((value: number, unit: string) => ({ value, unit })),
+      formatValue: jest.fn((value: number, unit: string) => `${value} ${unit}`),
+      getUnitSystemLabel: jest.fn(() => 'Imperial'),
+      getUnitSystemIcon: jest.fn(() => '🇺🇸'),
+      getCommonUnits: jest.fn(() => []),
+      convertBatch: jest.fn((ingredients: any[]) => ingredients),
+      getTypicalBatchSizes: jest.fn(() => []),
+    }),
+    UnitProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 // Mock the BeerXML service
 jest.mock('../../src/services/BeerXML/BeerXMLService', () => ({
   validateFile: jest.fn(),
@@ -14,7 +39,29 @@ jest.mock('../../src/services/BeerXML/BeerXMLService', () => ({
   matchIngredients: jest.fn(),
   exportRecipe: jest.fn(),
   downloadBeerXML: jest.fn(),
+  detectRecipeUnitSystem: jest.fn(() => 'imperial'), // Default to imperial to match user preference in tests
+  convertRecipeUnits: jest.fn((recipe) => Promise.resolve(recipe)), // Return recipe unchanged by default
 }));
+
+// Mock the UnitConversionChoice component
+jest.mock('../../src/components/BeerXML/UnitConversionChoice', () => {
+  return function MockUnitConversionChoice({ onImportAsIs, onConvertAndImport, onCancel }: any) {
+    return (
+      <div data-testid="unit-conversion-choice">
+        <h3>Unit Conversion Choice</h3>
+        <button onClick={onImportAsIs} data-testid="import-as-is">
+          Import As-Is
+        </button>
+        <button onClick={onConvertAndImport} data-testid="convert-and-import">
+          Convert and Import
+        </button>
+        <button onClick={onCancel} data-testid="cancel-conversion">
+          Cancel
+        </button>
+      </div>
+    );
+  };
+});
 
 // Mock the IngredientMatchingReview component
 jest.mock('../../src/components/BeerXML/IngredientMatchingReview', () => {

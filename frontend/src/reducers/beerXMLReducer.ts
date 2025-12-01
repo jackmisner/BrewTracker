@@ -31,6 +31,11 @@ export type BeerXMLAction =
   | { type: "SELECT_RECIPE"; payload: ParsedBeerXMLRecipe | null }
   | { type: "SET_MATCHING_RESULTS"; payload: IngredientMatchResult[] }
   | { type: "SHOW_MATCHING_REVIEW"; payload: boolean }
+  | {
+      type: "SHOW_UNIT_CONVERSION_CHOICE";
+      payload: { recipeUnitSystem: string; userUnitSystem: string };
+    }
+  | { type: "HIDE_UNIT_CONVERSION_CHOICE" }
   | { type: "CLEAR_IMPORT_ERROR" }
   | { type: "RESET_IMPORT_STATE" }
 
@@ -54,6 +59,9 @@ export const createInitialBeerXMLState = (): BeerXMLState => ({
     selectedRecipe: null,
     matchingResults: [],
     showMatchingReview: false,
+    showUnitConversionChoice: false,
+    recipeUnitSystem: null,
+    userUnitSystem: null,
     importProgress: 0,
     error: null,
     warnings: [],
@@ -153,6 +161,28 @@ export const beerXMLReducer = (
         },
       };
 
+    case "SHOW_UNIT_CONVERSION_CHOICE":
+      return {
+        ...state,
+        import: {
+          ...state.import,
+          showUnitConversionChoice: true,
+          recipeUnitSystem: action.payload.recipeUnitSystem,
+          userUnitSystem: action.payload.userUnitSystem,
+        },
+      };
+
+    case "HIDE_UNIT_CONVERSION_CHOICE":
+      return {
+        ...state,
+        import: {
+          ...state.import,
+          showUnitConversionChoice: false,
+          recipeUnitSystem: null,
+          userUnitSystem: null,
+        },
+      };
+
     case "CLEAR_IMPORT_ERROR":
       return {
         ...state,
@@ -172,6 +202,9 @@ export const beerXMLReducer = (
           selectedRecipe: null,
           matchingResults: [],
           showMatchingReview: false,
+          showUnitConversionChoice: false,
+          recipeUnitSystem: null,
+          userUnitSystem: null,
           importProgress: 0,
           error: null,
           warnings: [],
