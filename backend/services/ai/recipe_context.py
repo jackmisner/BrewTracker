@@ -7,7 +7,7 @@ throughout workflow execution and handles condition evaluation and strategy exec
 
 import logging
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .unit_mappings import TEMP_UNIT_FIELDS
 
@@ -336,14 +336,28 @@ class RecipeContext:
         new_amount = change.get("new_amount")
         new_unit = change.get("new_unit")
 
+        # Guard against missing ingredient_name
+        if not ingredient_name:
+            logger.warning(
+                "ingredient_name missing from change dict - cannot convert/normalize ingredient"
+            )
+            return
+
         ingredients = self.recipe.get("ingredients", [])
+        found = False
         for ingredient in ingredients:
             if ingredient.get("name") == ingredient_name:
                 if new_amount is not None:
                     ingredient["amount"] = new_amount
                 if new_unit is not None:
                     ingredient["unit"] = new_unit
+                found = True
                 break
+
+        if not found:
+            logger.warning(
+                f"Ingredient '{ingredient_name}' not found in recipe ingredients - cannot convert/normalize"
+            )
 
     def _convert_batch_size(self, change: Dict[str, Any]):
         """Convert batch size to new unit."""
@@ -360,6 +374,19 @@ class RecipeContext:
         parameter = change.get("parameter", "mash_temperature")
         new_value = change.get("new_value")
         new_unit = change.get("new_unit")
+
+        # Guard against missing/falsey parameter
+        if not parameter:
+            logger.warning(
+                "temperature parameter missing or empty - cannot convert temperature"
+            )
+            return
+
+        # Log if target parameter is not present in recipe (aids debugging)
+        if parameter not in self.recipe:
+            logger.debug(
+                f"Temperature parameter '{parameter}' not present in recipe - will be added"
+            )
 
         if new_value is not None:
             self.recipe[parameter] = new_value
@@ -544,7 +571,6 @@ class RecipeContext:
     ) -> bool:
         """Check if mash temperature is available and can be raised (currently low)."""
         mash_temp = self.recipe.get("mash_temperature")
-        recipe_info = self.recipe
         # Debug logging to understand why mash temp path isn't taken
         logger.info(
             f"🌡️ mash_temp_available_and_low check: mash_temp={mash_temp}, mash_temp_unit={self.recipe.get('mash_temp_unit')}"
@@ -580,7 +606,9 @@ class RecipeContext:
         ingredients = self.recipe.get("ingredients", [])
         return any(ingredient.get("type") == "yeast" for ingredient in ingredients)
 
-    def _evaluate_recipe_uses_metric(self, config: Dict[str, Any] = None) -> bool:
+    def _evaluate_recipe_uses_metric(
+        self, _config: Dict[str, Any] | None = None
+    ) -> bool:
         """
         Detect if recipe currently uses metric units.
         Checks ingredients and batch size unit to determine the predominant unit system.
@@ -611,7 +639,9 @@ class RecipeContext:
             return True
         return metric_count > imperial_count
 
-    def _evaluate_target_system_is_metric(self, config: Dict[str, Any] = None) -> bool:
+    def _evaluate_target_system_is_metric(
+        self, _config: Dict[str, Any] | None = None
+    ) -> bool:
         """
         Check if target unit system is metric.
         Target system should be stored in recipe context during workflow initialization.
@@ -623,10 +653,14 @@ class RecipeContext:
                 "target_unit_system not specified in recipe - unit conversion may not work correctly"
             )
             return False
+        # Defensively normalize to lowercase for comparison
+        target_system = (
+            target_system.lower() if isinstance(target_system, str) else target_system
+        )
         return target_system == "metric"
 
     def _evaluate_target_system_is_imperial(
-        self, config: Dict[str, Any] = None
+        self, _config: Dict[str, Any] | None = None
     ) -> bool:
         """
         Check if target unit system is imperial.
@@ -639,6 +673,10 @@ class RecipeContext:
                 "target_unit_system not specified in recipe - unit conversion may not work correctly"
             )
             return False
+        # Defensively normalize to lowercase for comparison
+        target_system = (
+            target_system.lower() if isinstance(target_system, str) else target_system
+        )
         return target_system == "imperial"
 
     def _metric_in_range(self, metric_name: str, style_ranges: Dict[str, Any]) -> bool:
