@@ -27,6 +27,9 @@ describe('beerXMLReducer', () => {
           selectedRecipe: null,
           matchingResults: [],
           showMatchingReview: false,
+          showUnitConversionChoice: false,
+          recipeUnitSystem: null,
+          userUnitSystem: null,
           importProgress: 0,
           error: null,
           warnings: [],
@@ -628,6 +631,62 @@ describe('beerXMLReducer', () => {
 
       expect(newState.export).not.toBe(initialState.export);
       expect(newState.import).toBe(initialState.import); // Unchanged section should share reference
+    });
+  });
+
+  describe('Unit Conversion Actions', () => {
+    it('should handle SHOW_UNIT_CONVERSION_CHOICE', () => {
+      const action: BeerXMLAction = {
+        type: 'SHOW_UNIT_CONVERSION_CHOICE',
+        payload: {
+          recipeUnitSystem: 'metric',
+          userUnitSystem: 'imperial',
+        },
+      };
+
+      const newState = beerXMLReducer(initialState, action);
+
+      expect(newState.import.showUnitConversionChoice).toBe(true);
+      expect(newState.import.recipeUnitSystem).toBe('metric');
+      expect(newState.import.userUnitSystem).toBe('imperial');
+    });
+
+    it('should handle HIDE_UNIT_CONVERSION_CHOICE', () => {
+      const stateWithChoice = {
+        ...initialState,
+        import: {
+          ...initialState.import,
+          showUnitConversionChoice: true,
+          recipeUnitSystem: 'metric',
+          userUnitSystem: 'imperial',
+        },
+      };
+
+      const action: BeerXMLAction = {
+        type: 'HIDE_UNIT_CONVERSION_CHOICE',
+      };
+
+      const newState = beerXMLReducer(stateWithChoice, action);
+
+      expect(newState.import.showUnitConversionChoice).toBe(false);
+      expect(newState.import.recipeUnitSystem).toBe(null);
+      expect(newState.import.userUnitSystem).toBe(null);
+    });
+
+    it('should preserve immutability for unit conversion actions', () => {
+      const action: BeerXMLAction = {
+        type: 'SHOW_UNIT_CONVERSION_CHOICE',
+        payload: {
+          recipeUnitSystem: 'metric',
+          userUnitSystem: 'imperial',
+        },
+      };
+
+      const newState = beerXMLReducer(initialState, action);
+
+      expect(newState).not.toBe(initialState);
+      expect(newState.import).not.toBe(initialState.import);
+      expect(newState.export).toBe(initialState.export); // Unchanged section should share reference
     });
   });
 

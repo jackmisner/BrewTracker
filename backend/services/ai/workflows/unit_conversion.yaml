@@ -1,0 +1,92 @@
+# Unit Conversion and Normalization Workflow
+# Converts recipes between metric and imperial units with sensible normalization
+# Main use case: BeerXML import in different unit system than user preference
+
+workflow_name: "Unit Conversion and Normalization"
+version: "1.0"
+description: "Convert recipe between metric/imperial units with intelligent normalization"
+start_node: "start"
+
+nodes:
+  # START - Entry point
+  start:
+    type: "start"
+    description: "Begin unit conversion workflow"
+    next_node: "detect_current_units"
+
+  # STEP 1: Detect current unit system
+  detect_current_units:
+    type: "decision"
+    condition: "recipe_uses_metric"
+    description: "Detect if recipe currently uses metric units"
+    yes_path: "check_target_system_metric"
+    no_path: "check_target_system_imperial"
+
+  # STEP 2A: Recipe is metric - check target
+  check_target_system_metric:
+    type: "decision"
+    condition: "target_system_is_imperial"
+    description: "Convert from metric to imperial?"
+    yes_path: "convert_metric_to_imperial"
+    no_path: "normalize_metric"  # Already metric, just normalize
+
+  # STEP 2B: Recipe is imperial - check target
+  check_target_system_imperial:
+    type: "decision"
+    condition: "target_system_is_metric"
+    description: "Convert from imperial to metric?"
+    yes_path: "convert_imperial_to_metric"
+    no_path: "normalize_imperial"  # Already imperial, just normalize
+
+  # CONVERSION ACTIONS
+
+  # Convert metric -> imperial (raw conversion)
+  convert_metric_to_imperial:
+    type: "action"
+    strategy: "convert_units_metric_to_imperial"
+    description: "Convert all ingredients/volumes from metric to imperial (raw)"
+    next_node: "normalize_imperial"
+
+  # Convert imperial -> metric (raw conversion)
+  convert_imperial_to_metric:
+    type: "action"
+    strategy: "convert_units_imperial_to_metric"
+    description: "Convert all ingredients/volumes from imperial to metric (raw)"
+    next_node: "normalize_metric"
+
+  # NORMALIZATION ACTIONS
+
+  # Normalize metric amounts to sensible brewing values
+  normalize_metric:
+    type: "action"
+    strategy: "normalize_amounts_metric"
+    description: "Normalize metric amounts to brewing-friendly increments"
+    parameters:
+      grain_increment: 25    # Round to nearest 25g (e.g., 1587.57g -> 1600g)
+      hop_increment: 5       # Round to nearest 5g (e.g., 28.3g -> 30g)
+      large_grain_unit: "kg" # Use kg for amounts >= 1000g
+      small_grain_unit: "g"  # Use g for amounts < 1000g
+      hop_unit: "g"          # Always use g for hops
+      volume_unit: "l"       # Use liters for batch size
+      temperature_unit: "C"  # Use Celsius
+    next_node: "finish"
+
+  # Normalize imperial amounts to sensible brewing values
+  normalize_imperial:
+    type: "action"
+    strategy: "normalize_amounts_imperial"
+    description: "Normalize imperial amounts to brewing-friendly increments"
+    parameters:
+      grain_increment: 0.125  # Round to nearest 1/8 lb = 2 oz (e.g., 3.858 lbs -> 3.875 lbs)
+      hop_increment: 0.25     # Round to nearest 0.25 oz (e.g., 1.058 oz -> 1.0 oz)
+      large_grain_unit: "lb"  # Use lb for amounts >= 8 oz
+      small_grain_unit: "oz"  # Use oz for amounts < 8 oz
+      hop_unit: "oz"          # Always use oz for hops
+      volume_unit: "gal"      # Use gallons for batch size
+      temperature_unit: "F"   # Use Fahrenheit
+    next_node: "finish"
+
+  # FINISH
+  finish:
+    type: "end"
+    description: "Unit conversion and normalization completed"

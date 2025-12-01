@@ -1,13 +1,16 @@
 import React, { useReducer, useRef } from "react";
 import { Services } from "@/services";
 import IngredientMatchingReview from "@/components/BeerXML/IngredientMatchingReview";
-import { Recipe, Ingredient } from "@/types";
+import UnitConversionChoice from "@/components/BeerXML/UnitConversionChoice";
+import { Recipe, Ingredient, UnitSystem } from "@/types";
 import {
   BeerXMLImportData,
   BeerXMLMetadata,
   BeerXMLExportResult,
 } from "@/types/beerxml";
 import { beerXMLReducer, createInitialBeerXMLState } from "@/reducers";
+import { useUnits } from "@/contexts/UnitContext";
+import type { BeerXMLRecipe } from "@/services/BeerXML/BeerXMLService";
 import "@/styles/BeerXMLImportExport.css";
 
 interface BeerXMLImportExportProps {
@@ -26,6 +29,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   mode = "both",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { unitSystem } = useUnits(); // Get user's unit preference
 
   // Initialize reducer
   const [state, dispatch] = useReducer(
@@ -78,10 +82,28 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         payload: { recipes: parsedRecipes, warnings: [] },
       });
 
+      const firstRecipe = parsedRecipes[0] || null;
       dispatch({
         type: "SELECT_RECIPE",
-        payload: parsedRecipes[0] || null,
+        payload: firstRecipe,
       });
+
+      // Check for unit system mismatch
+      if (firstRecipe) {
+        const recipeUnitSystem =
+          Services.BeerXML.service.detectRecipeUnitSystem(firstRecipe);
+
+        // Show conversion choice if there's a mismatch (and not mixed)
+        if (recipeUnitSystem !== unitSystem && recipeUnitSystem !== "mixed") {
+          dispatch({
+            type: "SHOW_UNIT_CONVERSION_CHOICE",
+            payload: {
+              recipeUnitSystem: recipeUnitSystem as UnitSystem,
+              userUnitSystem: unitSystem as UnitSystem,
+            },
+          });
+        }
+      }
     } catch (error: any) {
       console.error("Error processing BeerXML file:", error);
       dispatch({ type: "IMPORT_ERROR", payload: error.message });
@@ -89,24 +111,117 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   };
 
   /**
-   * Start ingredient matching process
+   * Handle importing recipe as-is (without unit conversion)
    */
-  const startIngredientMatching = async (): Promise<void> => {
-    if (!importState.selectedRecipe) return;
+  const handleImportAsIs = async (): Promise<void> => {
+    dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+    await startIngredientMatching();
+  };
+
+  /**
+   * Handle converting recipe units before import
+   */
+  const handleConvertAndImport = async (): Promise<void> => {
+    if (!importState.selectedRecipe || !importState.userUnitSystem) return;
+
+    try {
+      // Convert recipe units (both are guaranteed non-null by guard at line 124)
+      const convertedRecipe = await Services.BeerXML.service.convertRecipeUnits(
+        importState.selectedRecipe as BeerXMLRecipe,
+        importState.userUnitSystem!
+      );
+
+      // Hide dialog
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+
+      // Find index of selected recipe
+      const selectedIndex = importState.parsedRecipes.findIndex(
+        r => r === importState.selectedRecipe
+      );
+
+      // Update parsed recipes with converted version
+      const updatedRecipes = importState.parsedRecipes.map((r, idx) =>
+        idx === selectedIndex ? convertedRecipe : r
+      );
+
+      // Proceed to ingredient matching with converted recipe
+      await startIngredientMatching(convertedRecipe, updatedRecipes);
+    } catch (error: any) {
+      console.error("Error converting recipe units:", error);
+      dispatch({ type: "IMPORT_ERROR", payload: error.message });
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+    }
+  };
+
+  /**
+   * Handle canceling unit conversion choice
+   */
+  const handleCancelConversion = (): void => {
+    dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+  };
+
+  /**
+   * Handle recipe selection change
+   * Checks for unit mismatch when switching between recipes
+   */
+  const handleRecipeSelection = (recipe: BeerXMLRecipe): void => {
+    dispatch({
+      type: "SELECT_RECIPE",
+      payload: recipe,
+    });
+
+    // Check for unit system mismatch with newly selected recipe
+    if (recipe) {
+      const recipeUnitSystem =
+        Services.BeerXML.service.detectRecipeUnitSystem(recipe);
+
+      // Show conversion choice if there's a mismatch (and not mixed)
+      if (recipeUnitSystem !== unitSystem && recipeUnitSystem !== "mixed") {
+        dispatch({
+          type: "SHOW_UNIT_CONVERSION_CHOICE",
+          payload: {
+            recipeUnitSystem: recipeUnitSystem as UnitSystem,
+            userUnitSystem: unitSystem as UnitSystem,
+          },
+        });
+      }
+    }
+  };
+
+  /**
+   * Start ingredient matching process
+   * @param recipeOverride - Optional recipe to use instead of importState.selectedRecipe
+   * @param recipesOverride - Optional recipes list to use instead of importState.parsedRecipes
+   */
+  const startIngredientMatching = async (
+    recipeOverride?: BeerXMLRecipe,
+    recipesOverride?: BeerXMLRecipe[]
+  ): Promise<void> => {
+    const recipe = recipeOverride ?? importState.selectedRecipe;
+    const recipes = recipesOverride ?? importState.parsedRecipes;
+
+    if (!recipe) return;
 
     dispatch({ type: "IMPORT_START" });
 
     try {
-      const matchingResults: any[] =
-        await Services.BeerXML.service.matchIngredients(
-          (importState.selectedRecipe as any)?.ingredients || []
-        );
+      // Update selected recipe if override provided
+      if (recipeOverride) {
+        dispatch({
+          type: "SELECT_RECIPE",
+          payload: recipeOverride,
+        });
+      }
+
+      const matchingResults = await Services.BeerXML.service.matchIngredients(
+        recipe.ingredients || []
+      );
 
       dispatch({ type: "SET_MATCHING_RESULTS", payload: matchingResults });
       dispatch({ type: "SHOW_MATCHING_REVIEW", payload: true });
       dispatch({
         type: "IMPORT_SUCCESS",
-        payload: { recipes: importState.parsedRecipes, warnings: [] },
+        payload: { recipes, warnings: [] },
       });
     } catch (error: any) {
       console.error("Error matching ingredients:", error);
@@ -211,6 +326,21 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
     }
   };
 
+  // Show unit conversion choice dialog
+  if (importState.showUnitConversionChoice) {
+    return (
+      <UnitConversionChoice
+        recipeUnitSystem={importState.recipeUnitSystem}
+        userUnitSystem={importState.userUnitSystem}
+        recipeName={importState.selectedRecipe?.name || "Recipe"}
+        onImportAsIs={handleImportAsIs}
+        onConvertAndImport={handleConvertAndImport}
+        onCancel={handleCancelConversion}
+        isConverting={importState.isImporting}
+      />
+    );
+  }
+
   // Show ingredient matching review
   if (importState.showMatchingReview) {
     return (
@@ -310,11 +440,9 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                       importState.selectedRecipe || importState.parsedRecipes[0]
                     )}
                     onChange={e =>
-                      dispatch({
-                        type: "SELECT_RECIPE",
-                        payload:
-                          importState.parsedRecipes[parseInt(e.target.value)],
-                      })
+                      handleRecipeSelection(
+                        importState.parsedRecipes[parseInt(e.target.value)]
+                      )
                     }
                     className="form-select"
                   >
@@ -397,7 +525,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
                   {/* Import Button */}
                   <div className="import-recipe-actions">
                     <button
-                      onClick={startIngredientMatching}
+                      onClick={() => startIngredientMatching()}
                       disabled={importState.isImporting}
                       className="btn btn-primary"
                     >

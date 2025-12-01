@@ -188,11 +188,6 @@ class SecurityMonitor:
         allowlist = cls._get_allowlist_ips()
         is_allowed = ip_address in allowlist
 
-        if is_allowed:
-            security_logger.info(
-                f"Request from allowlisted IP bypassed security checks: {ip_address}"
-            )
-
         return is_allowed
 
     @classmethod

@@ -14,6 +14,7 @@ from models.mongo_models import BeerStyleGuide
 from utils.recipe_api_calculator import calculate_all_metrics_preview
 
 from .flowchart_engine import FlowchartEngine, WorkflowResult
+from .unit_mappings import TEMP_UNIT_FIELDS
 from .workflow_config_loader import load_workflow
 
 logger = logging.getLogger(__name__)
@@ -114,6 +115,10 @@ class FlowchartAIService:
                 ),
                 "mash_temp_unit": complete_recipe.get(
                     "mash_temp_unit", "F" if unit_system == "imperial" else "C"
+                ),
+                # For unit conversion workflow - use explicit target or default to unit_system
+                "target_unit_system": complete_recipe.get(
+                    "target_unit_system", unit_system
                 ),
             }
 
@@ -342,6 +347,58 @@ class FlowchartAIService:
                     if ingredient.get("name") == ingredient_name:
                         ingredient[field] = new_value
                         break
+
+            elif change_type in ["ingredient_converted", "ingredient_normalized"]:
+                # Unit conversion/normalization changes
+                ingredient_name = change.get("ingredient_name")
+                new_amount = change.get("new_amount")
+                new_unit = change.get("new_unit")
+
+                # Find and update the ingredient
+                found = False
+                for ingredient in ingredients:
+                    if ingredient.get("name") == ingredient_name:
+                        if new_amount is not None:
+                            ingredient["amount"] = new_amount
+                        if new_unit is not None:
+                            ingredient["unit"] = new_unit
+                        found = True
+                        break
+
+                if not found:
+                    logger.warning(
+                        f"Ingredient '{ingredient_name}' not found for {change_type}"
+                    )
+
+            elif change_type in ["batch_size_converted", "temperature_converted"]:
+                # Recipe-level unit conversions with guards for missing values
+                if change_type == "batch_size_converted":
+                    new_value = change.get("new_value")
+                    new_unit = change.get("new_unit")
+                    if new_value is not None:
+                        modified_recipe["batch_size"] = new_value
+                    if new_unit is not None:
+                        modified_recipe["batch_size_unit"] = new_unit
+                elif change_type == "temperature_converted":
+                    # Use module-level mapping for temperature unit fields
+                    parameter = change.get("parameter", "mash_temperature")
+                    new_value = change.get("new_value")
+                    new_unit = change.get("new_unit")
+
+                    if new_value is not None:
+                        modified_recipe[parameter] = new_value
+
+                    # Use explicit mapping or unit_field from change dict
+                    if new_unit is not None:
+                        unit_field = change.get("unit_field") or TEMP_UNIT_FIELDS.get(
+                            parameter
+                        )
+                        if unit_field:
+                            modified_recipe[unit_field] = new_unit
+                        else:
+                            logger.warning(
+                                f"Unknown temperature parameter '{parameter}' - cannot determine unit field"
+                            )
 
             elif change_type == "ingredient_added":
                 new_ingredient = change.get("ingredient_data", {})
