@@ -29,8 +29,8 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
           <div className="info-icon">⚠️</div>
           <p>
             The recipe <strong>"{recipeName}"</strong> uses{" "}
-            <strong>{recipeUnitSystem}</strong> units, but your preference is set
-            to <strong>{userUnitSystem}</strong> units.
+            <strong>{recipeUnitSystem}</strong> units, but your preference is
+            set to <strong>{userUnitSystem}</strong> units.
           </p>
         </div>
 

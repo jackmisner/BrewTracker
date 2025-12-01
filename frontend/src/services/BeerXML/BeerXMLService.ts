@@ -96,7 +96,9 @@ class BeerXMLService {
    * Detect if recipe uses different unit system than user preference
    * Returns the detected recipe unit system
    */
-  detectRecipeUnitSystem(recipe: BeerXMLRecipe): "metric" | "imperial" | "mixed" {
+  detectRecipeUnitSystem(
+    recipe: BeerXMLRecipe
+  ): "metric" | "imperial" | "mixed" {
     let metricCount = 0;
     let imperialCount = 0;
 
@@ -111,9 +113,13 @@ class BeerXMLService {
     // Check ingredient units
     recipe.ingredients?.forEach(ingredient => {
       const unit = ingredient.unit?.toLowerCase() || "";
-      if (["g", "kg", "gram", "grams", "kilogram", "kilograms"].includes(unit)) {
+      if (
+        ["g", "kg", "gram", "grams", "kilogram", "kilograms"].includes(unit)
+      ) {
         metricCount++;
-      } else if (["oz", "lb", "lbs", "ounce", "ounces", "pound", "pounds"].includes(unit)) {
+      } else if (
+        ["oz", "lb", "lbs", "ounce", "ounces", "pound", "pounds"].includes(unit)
+      ) {
         imperialCount++;
       }
     });
@@ -162,7 +168,8 @@ class BeerXMLService {
         ...convertedRecipe,
         ingredients: convertedRecipe.ingredients || recipe.ingredients,
         batch_size: convertedRecipe.batch_size || recipe.batch_size,
-        batch_size_unit: convertedRecipe.batch_size_unit || recipe.batch_size_unit,
+        batch_size_unit:
+          convertedRecipe.batch_size_unit || recipe.batch_size_unit,
         mash_temperature:
           convertedRecipe.mash_temperature || recipe.mash_temperature,
         mash_temp_unit: convertedRecipe.mash_temp_unit || recipe.mash_temp_unit,
