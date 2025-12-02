@@ -160,7 +160,7 @@ class BeerXMLService {
 
       // Merge converted data back into original recipe structure
       // Use nullish coalescing to preserve falsy values like 0 or empty string
-      return {
+      const mergedRecipe = {
         ...recipe,
         ...convertedRecipe,
         ingredients: convertedRecipe.ingredients ?? recipe.ingredients,
@@ -171,6 +171,7 @@ class BeerXMLService {
           convertedRecipe.mash_temperature ?? recipe.mash_temperature,
         mash_temp_unit: convertedRecipe.mash_temp_unit ?? recipe.mash_temp_unit,
       };
+      return mergedRecipe;
     } catch (error) {
       console.error("Error converting recipe units:", error);
       // Return original recipe if conversion fails - don't block import

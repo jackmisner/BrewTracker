@@ -385,6 +385,12 @@ def parse_recipe_element(recipe_elem):
         ingredients.extend(parse_yeasts(recipe_elem, detected_unit_system))
         ingredients.extend(parse_misc(recipe_elem, detected_unit_system))
 
+        # Prepare recipe data for validation
+        recipe_data_with_ingredients = {**recipe, "ingredients": ingredients}
+
+        # Validate ingredient amounts and flag suspicious values
+        validation_warnings = validate_ingredient_amounts(recipe_data_with_ingredients)
+
         return {
             "recipe": recipe,
             "ingredients": ingredients,
@@ -406,6 +412,7 @@ def parse_recipe_element(recipe_elem):
                         else None
                     ),
                 },
+                "validation_warnings": validation_warnings,  # Add validation warnings
             },
         }
 
@@ -1235,6 +1242,169 @@ def map_misc_use_to_xml(use):
         "whirlpool": "Boil",
     }
     return use_map.get(use, "Boil")
+
+
+def validate_ingredient_amounts(recipe_data):
+    """
+    Validate ingredient amounts for a recipe and flag suspicious values.
+
+    Returns a list of warnings for ingredients that seem unreasonable.
+    These are common issues from BeerXML exports with unit conversion problems.
+    """
+    warnings = []
+
+    # Get batch size in liters for normalization
+    batch_size = recipe_data.get("batch_size", 19)
+    batch_unit = recipe_data.get("batch_size_unit", "l")
+
+    # Convert to liters if needed
+    if batch_unit.lower() in ["gal", "gallon", "gallons"]:
+        batch_size_liters = batch_size * 3.78541
+    else:
+        batch_size_liters = batch_size
+
+    ingredients = recipe_data.get("ingredients", [])
+
+    for ing in ingredients:
+        ing_type = ing.get("type", "")
+        name = ing.get("name", "Unknown")
+        amount = ing.get("amount", 0)
+        unit = ing.get("unit", "")
+
+        # Convert to standard units for comparison (grams for weight)
+        amount_g = amount
+        if unit.lower() in ["kg", "kilogram", "kilograms"]:
+            amount_g = amount * 1000
+        elif unit.lower() in ["oz", "ounce", "ounces"]:
+            amount_g = amount * 28.3495
+        elif unit.lower() in ["lb", "lbs", "pound", "pounds"]:
+            amount_g = amount * 453.592
+
+        # Grain checks (typically 2-10 kg per 19L batch)
+        if ing_type == "grain":
+            # Expected range: 100-600 g per liter
+            expected_per_liter = amount_g / batch_size_liters
+            if expected_per_liter < 50:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_low",
+                        "message": f"Grain amount seems low ({amount_g:.0f}g for {batch_size_liters:.1f}L batch). Typical range: 2-10kg total.",
+                    }
+                )
+            elif expected_per_liter > 800:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_high",
+                        "message": f"Grain amount seems high ({amount_g:.0f}g for {batch_size_liters:.1f}L batch). Typical range: 2-10kg total.",
+                    }
+                )
+
+        # Hop checks (typically 5-100g per 19L batch)
+        elif ing_type == "hop":
+            # Expected range: 0.5-10 g per liter
+            expected_per_liter = amount_g / batch_size_liters
+            if expected_per_liter < 0.1:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_low",
+                        "message": f"Hop amount seems low ({amount_g:.1f}g for {batch_size_liters:.1f}L batch). Typical range: 10-200g total.",
+                    }
+                )
+            elif expected_per_liter > 15:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_high",
+                        "message": f"Hop amount seems high ({amount_g:.1f}g for {batch_size_liters:.1f}L batch). Double-check if correct.",
+                    }
+                )
+
+        # Yeast checks (typically 10-50g for dry, or 1-2 packages)
+        elif ing_type == "yeast":
+            # Dry yeast: 11g per package, typically 1-3 packages for 19L
+            # Liquid yeast: varies widely, but typically one vial/pack
+            if amount_g > 100:
+                # Likely a 10x multiplication error
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "possible_10x_error",
+                        "message": f"Yeast amount seems very high ({amount_g:.0f}g). May be incorrectly multiplied by 10. Typical dry yeast: 11-33g (1-3 packages).",
+                        "suggested_fix": amount_g / 10,
+                    }
+                )
+            elif amount_g < 5:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_low",
+                        "message": f"Yeast amount seems low ({amount_g:.1f}g). Typical dry yeast: 11-33g per batch.",
+                    }
+                )
+
+        # Other ingredient checks (water agents, finings, etc.)
+        elif ing_type == "other":
+            # Check for common issues
+            name_lower = name.lower()
+
+            # Whirlfloc/Irish Moss tablets: Should be 1-2 tablets (~1-2g), not 1kg
+            if (
+                "whirlfloc" in name_lower
+                or "irish moss" in name_lower
+                or "tablet" in name_lower
+            ):
+                if amount_g > 50:
+                    warnings.append(
+                        {
+                            "ingredient": name,
+                            "type": ing_type,
+                            "amount": amount,
+                            "unit": unit,
+                            "issue": "unit_conversion_error",
+                            "message": f"{name} shows as {amount_g:.0f}g, but should be 1-2 tablets (~1-2g). Likely a unit conversion error from 'each' to 'kg'.",
+                            "suggested_fix": 1.0,  # Assume 1 tablet
+                        }
+                    )
+
+            # Water salts: typically 0-10g per batch
+            elif any(
+                salt in name_lower
+                for salt in ["gypsum", "calcium", "sulfate", "chloride"]
+            ):
+                if amount_g > 20:
+                    warnings.append(
+                        {
+                            "ingredient": name,
+                            "type": ing_type,
+                            "amount": amount,
+                            "unit": unit,
+                            "issue": "unusually_high",
+                            "message": f"Water salt amount seems high ({amount_g:.1f}g). Typical range: 0-10g per batch.",
+                        }
+                    )
+
+    return warnings
 
 
 def map_xml_use_to_misc(xml_use):

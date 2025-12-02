@@ -124,32 +124,26 @@ class UnitConverter:
 
         # Imperial units (stored as oz for weight)
         if unit_system == "imperial":
-            if ingredient_type == "grain":
-                # Grains: Integer oz (no decimal places)
-                return float(round(amount))
-            elif ingredient_type == "hop":
-                # Hops: 2 decimal places, normalized to nearest 0.25 oz
-                return round(round(amount * 4) / 4, 2)
-            elif ingredient_type == "yeast":
-                # Yeast: Integer quantities (no decimal places)
-                return float(round(amount))
+            # Don't normalize here - let the unit conversion workflow handle normalization
+            # Just preserve precision to avoid floating point errors
+            if ingredient_type in ["grain", "hop", "yeast"]:
+                # Round to 6 decimal places to clean up floating point errors
+                # while preserving enough precision for the normalization workflow
+                return round(amount, 6)
             else:
                 # General: 2 decimal places
                 return round(amount, 2)
 
         # Metric units (stored as g for weight)
         else:  # metric
-            if ingredient_type == "grain":
-                # Grains: Integers rounded to nearest 25g
-                return float(round(amount / 25) * 25)
-            elif ingredient_type == "hop":
-                # Hops: Integers rounded to nearest 5g
-                return float(round(amount / 5) * 5)
-            elif ingredient_type == "yeast":
-                # Yeast: Integer quantities
-                return float(round(amount))
+            # Don't normalize here - let the unit conversion workflow handle normalization
+            # Just preserve precision to avoid floating point errors
+            if ingredient_type in ["grain", "hop", "yeast"]:
+                # Round to 6 decimal places to clean up floating point errors
+                # while preserving enough precision for the normalization workflow
+                return round(amount, 6)
             else:
-                # General: round to nearest gram
+                # General/other: round to nearest gram to clean up floating point errors
                 return float(round(amount))
 
     @classmethod

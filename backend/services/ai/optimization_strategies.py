@@ -1606,7 +1606,11 @@ class ConvertImperialToMetricStrategy(OptimizationStrategy):
         # Convert batch size
         batch_size = self.recipe.get("batch_size")
         batch_unit = self.recipe.get("batch_size_unit", "gal")
-        if batch_size and batch_unit.lower() in ["gal", "gallon", "gallons"]:
+        if batch_size is not None and batch_unit.lower() in [
+            "gal",
+            "gallon",
+            "gallons",
+        ]:
             new_size = UnitConverter.convert_volume(batch_size, batch_unit, "l")
             changes.append(
                 {
@@ -1681,11 +1685,20 @@ class NormalizeAmountsMetricStrategy(OptimizationStrategy):
         grain_increment = parameters.get("grain_increment", 25)  # 25g
         hop_increment = parameters.get("hop_increment", 5)  # 5g
         batch_size_increment = parameters.get("batch_size_increment", 0.5)  # 0.5L
+        if batch_size_increment <= 0:
+            logger.warning(
+                "Invalid batch_size_increment %s; falling back to 0.5L",
+                batch_size_increment,
+            )
+            batch_size_increment = 0.5
 
         # Normalize batch size if present
         batch_size = self.recipe.get("batch_size")
         batch_unit = self.recipe.get("batch_size_unit", "")
-        if batch_size and batch_unit.lower() in [
+        logger.info(
+            f"[BATCH_SIZE_NORMALIZATION] Input batch size: {batch_size} {batch_unit}, increment: {batch_size_increment}"
+        )
+        if batch_size is not None and batch_unit.lower() in [
             "l",
             "liter",
             "liters",
@@ -1696,8 +1709,14 @@ class NormalizeAmountsMetricStrategy(OptimizationStrategy):
             normalized_batch_size = (
                 round(batch_size / batch_size_increment) * batch_size_increment
             )
+            logger.info(
+                f"[BATCH_SIZE_NORMALIZATION] Calculated normalized batch size: {normalized_batch_size:.6f} l"
+            )
 
             if abs(batch_size - normalized_batch_size) > 0.01:
+                logger.info(
+                    f"[BATCH_SIZE_NORMALIZATION] Creating normalization change: {batch_size:.6f} -> {normalized_batch_size:.6f}"
+                )
                 changes.append(
                     {
                         "type": "batch_size_normalized",
@@ -1706,6 +1725,10 @@ class NormalizeAmountsMetricStrategy(OptimizationStrategy):
                         "unit": "l",
                         "reason": f"Normalized batch size from {batch_size:.3f}L to {normalized_batch_size:.1f}L",
                     }
+                )
+            else:
+                logger.info(
+                    f"[BATCH_SIZE_NORMALIZATION] No normalization needed (difference < 0.01)"
                 )
 
         ingredients = self.recipe.get("ingredients", [])
@@ -1785,11 +1808,21 @@ class NormalizeAmountsImperialStrategy(OptimizationStrategy):
         grain_increment = parameters.get("grain_increment", 0.125)  # 1/8 lb = 2 oz
         hop_increment = parameters.get("hop_increment", 0.25)  # 1/4 oz
         batch_size_increment = parameters.get("batch_size_increment", 0.5)  # 0.5 gal
+        if batch_size_increment <= 0:
+            logger.warning(
+                "Invalid batch_size_increment %s; falling back to 0.5 gal",
+                batch_size_increment,
+            )
+            batch_size_increment = 0.5
 
         # Normalize batch size if present
         batch_size = self.recipe.get("batch_size")
         batch_unit = self.recipe.get("batch_size_unit", "")
-        if batch_size and batch_unit.lower() in ["gal", "gallon", "gallons"]:
+        if batch_size is not None and batch_unit.lower() in [
+            "gal",
+            "gallon",
+            "gallons",
+        ]:
             # Round to nearest increment
             normalized_batch_size = (
                 round(batch_size / batch_size_increment) * batch_size_increment
