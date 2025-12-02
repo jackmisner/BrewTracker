@@ -64,6 +64,7 @@ nodes:
     parameters:
       grain_increment: 25    # Round to nearest 25g (e.g., 1587.57g -> 1600g)
       hop_increment: 5       # Round to nearest 5g (e.g., 28.3g -> 30g)
+      batch_size_increment: 0.5  # Round batch size to nearest 0.5L (e.g., 18.927L -> 19L)
       large_grain_unit: "kg" # Use kg for amounts >= 1000g
       small_grain_unit: "g"  # Use g for amounts < 1000g
       hop_unit: "g"          # Always use g for hops
@@ -79,6 +80,7 @@ nodes:
     parameters:
       grain_increment: 0.125  # Round to nearest 1/8 lb = 2 oz (e.g., 3.858 lbs -> 3.875 lbs)
       hop_increment: 0.25     # Round to nearest 0.25 oz (e.g., 1.058 oz -> 1.0 oz)
+      batch_size_increment: 0.5  # Round batch size to nearest 0.5 gal (e.g., 5.28 gal -> 5.5 gal)
       large_grain_unit: "lb"  # Use lb for amounts >= 8 oz
       small_grain_unit: "oz"  # Use oz for amounts < 8 oz
       hop_unit: "oz"          # Always use oz for hops
