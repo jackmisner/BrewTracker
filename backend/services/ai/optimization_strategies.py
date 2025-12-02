@@ -1673,12 +1673,40 @@ class NormalizeAmountsMetricStrategy(OptimizationStrategy):
         Example:
         - 1587.57g -> 1600g (nearest 25g for grains)
         - 28.3g -> 30g (nearest 5g for hops)
+        - 18.927L -> 19L (nearest 0.5L for batch size)
         """
         changes = []
         parameters = parameters or {}
 
         grain_increment = parameters.get("grain_increment", 25)  # 25g
         hop_increment = parameters.get("hop_increment", 5)  # 5g
+        batch_size_increment = parameters.get("batch_size_increment", 0.5)  # 0.5L
+
+        # Normalize batch size if present
+        batch_size = self.recipe.get("batch_size")
+        batch_unit = self.recipe.get("batch_size_unit", "")
+        if batch_size and batch_unit.lower() in [
+            "l",
+            "liter",
+            "liters",
+            "litre",
+            "litres",
+        ]:
+            # Round to nearest increment
+            normalized_batch_size = (
+                round(batch_size / batch_size_increment) * batch_size_increment
+            )
+
+            if abs(batch_size - normalized_batch_size) > 0.01:
+                changes.append(
+                    {
+                        "type": "batch_size_normalized",
+                        "old_value": batch_size,
+                        "new_value": normalized_batch_size,
+                        "unit": "l",
+                        "reason": f"Normalized batch size from {batch_size:.3f}L to {normalized_batch_size:.1f}L",
+                    }
+                )
 
         ingredients = self.recipe.get("ingredients", [])
         for ingredient in ingredients:
@@ -1749,12 +1777,34 @@ class NormalizeAmountsImperialStrategy(OptimizationStrategy):
         Example:
         - 3.858 lbs -> 3.875 lbs (nearest 0.125 lb = nearest 2 oz)
         - 1.058 oz -> 1.0 oz (nearest 0.25 oz)
+        - 5.28 gal -> 5.5 gal (nearest 0.5 gal for batch size)
         """
         changes = []
         parameters = parameters or {}
 
         grain_increment = parameters.get("grain_increment", 0.125)  # 1/8 lb = 2 oz
         hop_increment = parameters.get("hop_increment", 0.25)  # 1/4 oz
+        batch_size_increment = parameters.get("batch_size_increment", 0.5)  # 0.5 gal
+
+        # Normalize batch size if present
+        batch_size = self.recipe.get("batch_size")
+        batch_unit = self.recipe.get("batch_size_unit", "")
+        if batch_size and batch_unit.lower() in ["gal", "gallon", "gallons"]:
+            # Round to nearest increment
+            normalized_batch_size = (
+                round(batch_size / batch_size_increment) * batch_size_increment
+            )
+
+            if abs(batch_size - normalized_batch_size) > 0.01:
+                changes.append(
+                    {
+                        "type": "batch_size_normalized",
+                        "old_value": batch_size,
+                        "new_value": normalized_batch_size,
+                        "unit": "gal",
+                        "reason": f"Normalized batch size from {batch_size:.2f} gal to {normalized_batch_size:.1f} gal",
+                    }
+                )
 
         ingredients = self.recipe.get("ingredients", [])
         for ingredient in ingredients:
