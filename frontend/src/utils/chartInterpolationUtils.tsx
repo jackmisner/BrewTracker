@@ -165,7 +165,7 @@ export function interpolateChartData(data: ChartDataPoint[]): ChartDataPoint[] {
  * Get raw chart data without interpolation (original behavior)
  */
 export function getRawChartData(data: ChartDataPoint[]): ChartDataPoint[] {
-  return data.map((point) => ({
+  return data.map(point => ({
     ...point,
     isInterpolated: false,
   }));
@@ -175,7 +175,7 @@ export function getRawChartData(data: ChartDataPoint[]): ChartDataPoint[] {
  * Check if any data point in the dataset has interpolated values
  */
 export function hasInterpolatedData(data: ChartDataPoint[]): boolean {
-  return data.some((point) => point.isInterpolated === true);
+  return data.some(point => point.isInterpolated === true);
 }
 
 /**
