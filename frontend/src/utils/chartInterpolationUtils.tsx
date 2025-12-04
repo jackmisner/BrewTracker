@@ -18,7 +18,6 @@ interface PayloadEntry {
   color?: string;
   dataKey?: string;
   payload?: ChartDataPoint;
-  [key: string]: any; // Keep this only if truly needed
 }
 
 // Custom tooltip props type matching Recharts TooltipContentProps
@@ -166,7 +165,7 @@ export function interpolateChartData(data: ChartDataPoint[]): ChartDataPoint[] {
  * Get raw chart data without interpolation (original behavior)
  */
 export function getRawChartData(data: ChartDataPoint[]): ChartDataPoint[] {
-  return data.map(point => ({
+  return data.map((point) => ({
     ...point,
     isInterpolated: false,
   }));
@@ -176,7 +175,7 @@ export function getRawChartData(data: ChartDataPoint[]): ChartDataPoint[] {
  * Check if any data point in the dataset has interpolated values
  */
 export function hasInterpolatedData(data: ChartDataPoint[]): boolean {
-  return data.some(point => point.isInterpolated === true);
+  return data.some((point) => point.isInterpolated === true);
 }
 
 /**
@@ -243,7 +242,10 @@ export function createCustomDot(_metric: string) {
   return undefined;
 }
 
-function formatMetricValue(dataKey: string, value: number): string {
+function formatMetricValue(
+  dataKey: "gravity" | "temperature" | "ph" | string,
+  value: number
+): string {
   switch (dataKey) {
     case "gravity":
       return value.toFixed(3);
@@ -300,7 +302,7 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
         )}
       </p>
 
-      {payload.map((entry: any, index: number) => {
+      {payload.map((entry: PayloadEntry, index: number) => {
         // Safely extract properties from entry
         const value = entry?.value;
         const name = entry?.name || "";

@@ -1,4 +1,4 @@
-from typing import ClassVar, List
+from typing import ClassVar, Dict, List
 
 
 class UnitConverter:
@@ -53,7 +53,7 @@ class UnitConverter:
 
     # Default weight conversions for 'each'/'item' units (in grams and ounces)
     # These are used when exporting to BeerXML
-    EACH_TO_WEIGHT_DEFAULTS = {
+    EACH_TO_WEIGHT_DEFAULTS: ClassVar[dict[str, dict[str, float]]] = {
         # Default: 1 oz (28g) per item
         "default": {"g": 28, "oz": 1},
         # Specific items (future enhancement - common brewing additions)
@@ -73,7 +73,7 @@ class UnitConverter:
     }
 
     # Weight conversions (to grams as base unit)
-    WEIGHT_TO_GRAMS = {
+    WEIGHT_TO_GRAMS: ClassVar[Dict[str, float]] = {
         "g": 1.0,
         "gram": 1.0,
         "grams": 1.0,
@@ -90,7 +90,7 @@ class UnitConverter:
     }
 
     # Volume conversions (to liters as base unit)
-    VOLUME_TO_LITERS = {
+    VOLUME_TO_LITERS: ClassVar[Dict[str, float]] = {
         "ml": 0.001,
         "milliliter": 0.001,
         "milliliters": 0.001,
@@ -286,6 +286,11 @@ class UnitConverter:
         Returns:
             Weight equivalent in target unit
         """
+
+        # Validate target unit
+        if target_unit not in ["g", "oz"]:
+            target_unit = "g"  # Default to grams
+
         # Try specific item lookup (case-insensitive)
         if item_name:
             item_key = item_name.lower().strip()

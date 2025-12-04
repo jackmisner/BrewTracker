@@ -1,4 +1,5 @@
 import copy
+import logging
 import re
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
@@ -11,6 +12,8 @@ from rapidfuzz import fuzz, process
 from models.mongo_models import BeerStyleGuide, Ingredient, Recipe, User
 from services.mongodb_service import MongoDBService
 from utils.unit_conversions import UnitConverter
+
+logger = logging.getLogger(__name__)
 
 beerxml_bp = Blueprint("beerxml", __name__)
 
@@ -200,12 +203,13 @@ def convert_recipe():
             # Apply normalization to metric if requested
             converted_recipe = normalize_recipe_metric(recipe) if normalize else recipe
 
-        warnings = []  # Could add validation warnings here
+        # Add validation warnings for the converted recipe
+        warnings = validate_ingredient_amounts(converted_recipe)
 
         return jsonify({"recipe": converted_recipe, "warnings": warnings}), 200
 
     except Exception as e:
-        print(f"Recipe conversion error: {e}")
+        logger.exception("Recipe conversion error: %s", e)
         return jsonify({"error": f"Failed to convert recipe: {str(e)}"}), 500
 
 
@@ -305,7 +309,6 @@ def normalize_recipe_metric(recipe):
     Returns:
         Recipe dict with normalized values
     """
-    import copy
 
     normalized = copy.deepcopy(recipe)
 
@@ -1458,15 +1461,31 @@ def validate_ingredient_amounts(recipe_data):
     Returns a list of warnings for ingredients that seem unreasonable.
     These are common issues from BeerXML exports with unit conversion problems.
     """
+    from utils.unit_conversions import UnitConverter
+
     warnings = []
 
     # Get batch size in liters for normalization
     batch_size = recipe_data.get("batch_size", 19)
     batch_unit = recipe_data.get("batch_size_unit", "l")
 
-    # Convert to liters if needed
+    # Validate batch size
+    if batch_size <= 0:
+        warnings.append(
+            {
+                "ingredient": "batch_size",
+                "type": "recipe",
+                "amount": batch_size,
+                "unit": batch_unit,
+                "issue": "invalid_batch_size",
+                "message": "Batch size must be greater than zero",
+            }
+        )
+        return warnings  # Can't validate per-liter ratios without valid batch size
+
+    # Convert to liters using UnitConverter for consistency
     if batch_unit.lower() in ["gal", "gallon", "gallons"]:
-        batch_size_liters = batch_size * 3.78541
+        batch_size_liters = UnitConverter.convert_volume(batch_size, batch_unit, "l")
     else:
         batch_size_liters = batch_size
 
