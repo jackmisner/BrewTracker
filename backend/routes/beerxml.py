@@ -1,3 +1,4 @@
+import copy
 import re
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
@@ -174,7 +175,6 @@ def convert_recipe():
             "warnings": []     # Any conversion warnings
         }
     """
-    user_id = get_jwt_identity()
 
     try:
         data = request.get_json()
@@ -220,7 +220,6 @@ def convert_recipe_to_imperial(recipe, normalize=True):
     Returns:
         Recipe dict with imperial units
     """
-    import copy
 
     converted = copy.deepcopy(recipe)
 

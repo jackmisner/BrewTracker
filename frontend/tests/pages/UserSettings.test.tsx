@@ -740,6 +740,20 @@ describe("UserSettings", () => {
         new Error("Wrong password")
       );
 
+      const currentPasswordInput = screen.getByLabelText("Current Password");
+      const newPasswordInput = screen.getByLabelText("New Password");
+      const confirmPasswordInput = screen.getByLabelText(
+        "Confirm New Password"
+      );
+
+      fireEvent.change(currentPasswordInput, {
+        target: { value: "WrongPass123!" },
+      });
+      fireEvent.change(newPasswordInput, { target: { value: "NewPass123!" } });
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: "NewPass123!" },
+      });
+
       const changeButton = screen.getByRole("button", {
         name: "Change Password",
       });

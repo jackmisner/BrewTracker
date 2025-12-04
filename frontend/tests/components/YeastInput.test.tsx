@@ -1,5 +1,5 @@
 // @ts-ignore - React needed for JSX in test files
-import React from 'react';
+import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import YeastInput from "../../src/components/RecipeBuilder/IngredientInputs/YeastInput";
@@ -147,7 +147,7 @@ describe("YeastInput", () => {
   });
 
   test("renders yeast input form", () => {
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     expect(screen.getByText("Yeast")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("1")).toBeInTheDocument(); // Updated placeholder
@@ -157,25 +157,29 @@ describe("YeastInput", () => {
 
   test("shows validation error for missing amount", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     // First select an ingredient to enable the amount field pre-filling
-    const yeastInput = screen.getByTestId("searchable-select").querySelector("input");
+    const yeastInput = screen
+      .getByTestId("searchable-select")
+      .querySelector("input");
     await user.type(yeastInput!, "us-05");
-    
+
     // Wait for ingredient selection to complete and pre-fill amount
     await waitFor(() => {
       const amountInput = screen.getByPlaceholderText("Amount");
       expect((amountInput as HTMLInputElement).value).toBe("1");
     });
-    
+
     // Clear the pre-filled amount to test validation
     const amountInput = screen.getByPlaceholderText("Amount");
     await user.clear(amountInput);
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -186,7 +190,7 @@ describe("YeastInput", () => {
 
   test("shows validation error for missing ingredient selection", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     // Enter amount but don't select ingredient
     const amountInput = screen.getByPlaceholderText("1");
@@ -194,7 +198,9 @@ describe("YeastInput", () => {
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -205,7 +211,7 @@ describe("YeastInput", () => {
 
   test("shows validation error for excessive package amount", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "15");
@@ -216,7 +222,9 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -227,7 +235,7 @@ describe("YeastInput", () => {
 
   test("shows validation error for invalid gram amount", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "200");
@@ -241,7 +249,9 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -252,7 +262,7 @@ describe("YeastInput", () => {
 
   test("shows validation error for invalid ml amount", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "600");
@@ -266,7 +276,9 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -279,7 +291,9 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <YeastInput {...(defaultProps as any)} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
     const amountInput = screen.getByPlaceholderText("1");
@@ -292,7 +306,9 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalledWith({
@@ -307,7 +323,9 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <YeastInput {...(defaultProps as any)} onAdd={mockOnAdd} />
+    );
 
     const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "5");
@@ -318,7 +336,9 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockConfirm).toHaveBeenCalledWith(
@@ -336,7 +356,9 @@ describe("YeastInput", () => {
     const mockOnAdd = jest.fn().mockResolvedValue();
     mockConfirm.mockReturnValue(false); // User cancels
 
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <YeastInput {...(defaultProps as any)} onAdd={mockOnAdd} />
+    );
 
     const amountInput = screen.getByPlaceholderText("1");
     await user.type(amountInput, "5");
@@ -347,7 +369,9 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockConfirm).toHaveBeenCalled();
@@ -359,7 +383,7 @@ describe("YeastInput", () => {
 
   test("displays selected ingredient information", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -378,7 +402,7 @@ describe("YeastInput", () => {
 
   test("displays yeast specifications with imperial temperatures", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const searchableSelect = screen
       .getByTestId("searchable-select")
@@ -395,7 +419,7 @@ describe("YeastInput", () => {
 
   test("shows amount guidance for different units with imperial context", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     // Default pkg guidance should reference 5 gal
     expect(
@@ -420,7 +444,7 @@ describe("YeastInput", () => {
 
   test("changes unit selection", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     const unitSelect = screen.getByDisplayValue("pkg");
     await user.selectOptions(unitSelect, "g");
@@ -432,7 +456,9 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockResolvedValue();
 
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <YeastInput {...(defaultProps as any)} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
     const amountInput = screen.getByPlaceholderText("1");
@@ -445,7 +471,9 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalled();
@@ -459,11 +487,13 @@ describe("YeastInput", () => {
 
   test("clears errors when user starts typing", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -486,7 +516,9 @@ describe("YeastInput", () => {
     const user = userEvent.setup();
     const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
 
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} onAdd={mockOnAdd} />);
+    renderWithUnitProvider(
+      <YeastInput {...(defaultProps as any)} onAdd={mockOnAdd} />
+    );
 
     // Fill out form
     const amountInput = screen.getByPlaceholderText("1");
@@ -499,7 +531,9 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    const form = addButton.closest("form")!; fireEvent.submit(form);
+    const form = addButton.closest("form")!;
+    expect(form).not.toBeNull();
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -523,7 +557,7 @@ describe("YeastInput", () => {
   });
 
   test("shows help text with imperial batch size", () => {
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     expect(
       screen.getByText(/Most 5-gallon batches need 1-2 packages/)
@@ -532,7 +566,7 @@ describe("YeastInput", () => {
 
   test("updates placeholder based on unit selection", async () => {
     const user = userEvent.setup();
-    renderWithUnitProvider(<YeastInput {...defaultProps as any} />);
+    renderWithUnitProvider(<YeastInput {...(defaultProps as any)} />);
 
     // Default should be pkg placeholder
     expect(screen.getByPlaceholderText("1")).toBeInTheDocument();

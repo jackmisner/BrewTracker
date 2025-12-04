@@ -12,10 +12,19 @@ export interface ChartDataPoint {
   isInterpolated?: boolean; // Flag to indicate interpolated data points
 }
 
+interface PayloadEntry {
+  value: number | null | undefined;
+  name?: string;
+  color?: string;
+  dataKey?: string;
+  payload?: ChartDataPoint;
+  [key: string]: any; // Keep this only if truly needed
+}
+
 // Custom tooltip props type matching Recharts TooltipContentProps
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: readonly any[]; // Use any[] to match Recharts ReadonlyArray<any>
+  payload?: readonly PayloadEntry[]; // Use PayloadEntry[] to match Recharts ReadonlyArray<any>
   label?: string | number;
   coordinate?: { x: number; y: number };
   [key: string]: any; // Allow additional properties from Recharts
@@ -234,6 +243,19 @@ export function createCustomDot(_metric: string) {
   return undefined;
 }
 
+function formatMetricValue(dataKey: string, value: number): string {
+  switch (dataKey) {
+    case "gravity":
+      return value.toFixed(3);
+    case "temperature":
+      return Math.round(value).toString();
+    case "ph":
+      return value.toFixed(1);
+    default:
+      return value.toString();
+  }
+}
+
 /**
  * Enhanced tooltip component that shows interpolated data indicators
  */
@@ -247,8 +269,8 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
   // Type assertion for the payload data structure
   // Each entry in payload corresponds to a different series (gravity, temp, ph)
   // but they all share the same underlying data point
-  const data = (payload[0] as any)?.payload as ChartDataPoint;
-  const isInterpolated = data?.isInterpolated;
+  const data = payload[0]?.payload;
+  const isInterpolated = data?.isInterpolated ?? false;
 
   return (
     <div
@@ -290,19 +312,12 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
         }
 
         const isMetricInterpolated =
-          data.isInterpolated &&
+          data?.isInterpolated &&
           (dataKey === "gravity" ||
             dataKey === "temperature" ||
             dataKey === "ph");
 
-        const formattedValue =
-          dataKey === "gravity"
-            ? value.toFixed(3)
-            : dataKey === "temperature"
-              ? Math.round(value).toString()
-              : dataKey === "ph"
-                ? value.toFixed(1)
-                : value.toString();
+        const formattedValue = formatMetricValue(dataKey, value);
 
         return (
           <p

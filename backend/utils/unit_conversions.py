@@ -1,8 +1,11 @@
+from typing import ClassVar, List
+
+
 class UnitConverter:
     """Unified utility class for all unit conversions"""
 
     # Unit classification constants
-    WEIGHT_UNITS = [
+    WEIGHT_UNITS: ClassVar[List[str]] = [
         "g",
         "gram",
         "grams",
@@ -18,7 +21,7 @@ class UnitConverter:
         "pounds",
     ]
 
-    VOLUME_UNITS = [
+    VOLUME_UNITS: ClassVar[List[str]] = [
         "ml",
         "milliliter",
         "milliliters",
@@ -46,7 +49,7 @@ class UnitConverter:
         "tablespoon",
     ]
 
-    COUNT_UNITS = ["each", "item", "pkg", "package", "packages"]
+    COUNT_UNITS: ClassVar[List[str]] = ["each", "item", "pkg", "package", "packages"]
 
     # Default weight conversions for 'each'/'item' units (in grams and ounces)
     # These are used when exporting to BeerXML
