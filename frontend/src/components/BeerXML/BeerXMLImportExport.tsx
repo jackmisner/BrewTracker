@@ -88,21 +88,16 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         payload: firstRecipe,
       });
 
-      // Check for unit system mismatch
+      // BeerXML is always metric per spec
+      // Always show unit system choice screen
       if (firstRecipe) {
-        const recipeUnitSystem =
-          Services.BeerXML.service.detectRecipeUnitSystem(firstRecipe);
-
-        // Show conversion choice if there's a mismatch (and not mixed)
-        if (recipeUnitSystem !== unitSystem && recipeUnitSystem !== "mixed") {
-          dispatch({
-            type: "SHOW_UNIT_CONVERSION_CHOICE",
-            payload: {
-              recipeUnitSystem: recipeUnitSystem as UnitSystem,
-              userUnitSystem: unitSystem as UnitSystem,
-            },
-          });
-        }
+        dispatch({
+          type: "SHOW_UNIT_CONVERSION_CHOICE",
+          payload: {
+            recipeUnitSystem: "metric" as UnitSystem, // BeerXML is always metric
+            userUnitSystem: unitSystem as UnitSystem,
+          },
+        });
       }
     } catch (error: any) {
       console.error("Error processing BeerXML file:", error);
@@ -111,25 +106,64 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
   };
 
   /**
-   * Handle importing recipe as-is (without unit conversion)
+   * Handle importing recipe in metric units (no conversion needed)
    */
-  const handleImportAsIs = async (): Promise<void> => {
-    dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
-    await startIngredientMatching();
+  const handleImportAsMetric = async (): Promise<void> => {
+    if (!importState.selectedRecipe) return;
+
+    try {
+      // BeerXML is already in metric, just normalize
+      const { recipe: normalizedRecipe } =
+        await Services.BeerXML.service.convertRecipeUnits(
+          importState.selectedRecipe as BeerXMLRecipe,
+          "metric",
+          true // normalize
+        );
+
+      // Hide dialog
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+
+      // Find index of selected recipe
+      const selectedIndex = importState.parsedRecipes.findIndex(
+        r => r === importState.selectedRecipe
+      );
+
+      // Update parsed recipes with normalized version
+      const updatedRecipes = importState.parsedRecipes.map((r, idx) =>
+        idx === selectedIndex ? normalizedRecipe : r
+      );
+
+      // Proceed to ingredient matching
+      await startIngredientMatching(
+        normalizedRecipe as BeerXMLRecipe,
+        updatedRecipes
+      );
+    } catch (error: any) {
+      console.error("Error normalizing recipe:", error);
+      dispatch({ type: "IMPORT_ERROR", payload: error.message });
+      dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
+    }
   };
 
   /**
-   * Handle converting recipe units before import
+   * Handle converting recipe to imperial units before import
    */
-  const handleConvertAndImport = async (): Promise<void> => {
-    if (!importState.selectedRecipe || !importState.userUnitSystem) return;
+  const handleImportAsImperial = async (): Promise<void> => {
+    if (!importState.selectedRecipe) return;
 
     try {
-      // Convert recipe units (both are guaranteed non-null by guard at line 124)
-      const convertedRecipe = await Services.BeerXML.service.convertRecipeUnits(
-        importState.selectedRecipe as BeerXMLRecipe,
-        importState.userUnitSystem!
-      );
+      // Convert recipe from metric to imperial
+      const { recipe: convertedRecipe, warnings } =
+        await Services.BeerXML.service.convertRecipeUnits(
+          importState.selectedRecipe as BeerXMLRecipe,
+          "imperial",
+          true // normalize
+        );
+
+      // Log warnings if any
+      if (warnings && warnings.length > 0) {
+        console.warn("Recipe conversion warnings:", warnings);
+      }
 
       // Hide dialog
       dispatch({ type: "HIDE_UNIT_CONVERSION_CHOICE" });
@@ -145,7 +179,10 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       );
 
       // Proceed to ingredient matching with converted recipe
-      await startIngredientMatching(convertedRecipe, updatedRecipes);
+      await startIngredientMatching(
+        convertedRecipe as BeerXMLRecipe,
+        updatedRecipes
+      );
     } catch (error: any) {
       console.error("Error converting recipe units:", error);
       dispatch({ type: "IMPORT_ERROR", payload: error.message });
@@ -162,7 +199,7 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
 
   /**
    * Handle recipe selection change
-   * Checks for unit mismatch when switching between recipes
+   * All BeerXML recipes are in metric, always show unit choice
    */
   const handleRecipeSelection = (recipe: BeerXMLRecipe): void => {
     dispatch({
@@ -170,21 +207,16 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
       payload: recipe,
     });
 
-    // Check for unit system mismatch with newly selected recipe
+    // BeerXML is always metric per spec
+    // Always show unit system choice screen
     if (recipe) {
-      const recipeUnitSystem =
-        Services.BeerXML.service.detectRecipeUnitSystem(recipe);
-
-      // Show conversion choice if there's a mismatch (and not mixed)
-      if (recipeUnitSystem !== unitSystem && recipeUnitSystem !== "mixed") {
-        dispatch({
-          type: "SHOW_UNIT_CONVERSION_CHOICE",
-          payload: {
-            recipeUnitSystem: recipeUnitSystem as UnitSystem,
-            userUnitSystem: unitSystem as UnitSystem,
-          },
-        });
-      }
+      dispatch({
+        type: "SHOW_UNIT_CONVERSION_CHOICE",
+        payload: {
+          recipeUnitSystem: "metric" as UnitSystem, // BeerXML is always metric
+          userUnitSystem: unitSystem as UnitSystem,
+        },
+      });
     }
   };
 
@@ -333,8 +365,8 @@ const BeerXMLImportExport: React.FC<BeerXMLImportExportProps> = ({
         recipeUnitSystem={importState.recipeUnitSystem}
         userUnitSystem={importState.userUnitSystem}
         recipeName={importState.selectedRecipe?.name || "Recipe"}
-        onImportAsIs={handleImportAsIs}
-        onConvertAndImport={handleConvertAndImport}
+        onImportAsMetric={handleImportAsMetric}
+        onImportAsImperial={handleImportAsImperial}
         onCancel={handleCancelConversion}
         isConverting={importState.isImporting}
       />

@@ -99,8 +99,7 @@ export interface CreateBrewSessionFormData {
 }
 
 // Brew session update form data
-export interface UpdateBrewSessionFormData
-  extends Partial<CreateBrewSessionFormData> {
+export interface UpdateBrewSessionFormData extends Partial<CreateBrewSessionFormData> {
   actual_og?: number;
   actual_fg?: number;
   actual_abv?: number;

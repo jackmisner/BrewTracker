@@ -3,27 +3,26 @@ import { UnitSystem } from "@/types/units";
 import "@/styles/BeerXMLImportExport.css";
 
 interface UnitConversionChoiceProps {
-  recipeUnitSystem: UnitSystem | null;
   userUnitSystem: UnitSystem | null;
-  recipeName: string;
-  onImportAsIs: () => void;
-  onConvertAndImport: () => void;
+  onImportAsMetric: () => void;
+  onImportAsImperial: () => void;
   onCancel: () => void;
   isConverting?: boolean;
+  // Keep these for backwards compatibility but mark as optional
+  recipeUnitSystem?: UnitSystem | null;
+  recipeName?: string;
 }
 
 const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
-  recipeUnitSystem,
   userUnitSystem,
-  recipeName,
-  onImportAsIs,
-  onConvertAndImport,
+  onImportAsMetric,
+  onImportAsImperial,
   onCancel,
   isConverting = false,
 }) => {
   // Guard against null values (shouldn't happen, but be defensive)
-  if (!recipeUnitSystem || !userUnitSystem) {
-    console.error("UnitConversionChoice called with null unit systems");
+  if (!userUnitSystem) {
+    console.error("UnitConversionChoice called with null user unit system");
     onCancel();
     return null;
   }
@@ -37,62 +36,43 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
       aria-describedby="unit-conversion-dialog-description"
     >
       <div className="unit-conversion-choice-dialog">
-        <h3 id="unit-conversion-dialog-title">Unit System Mismatch</h3>
+        <h3 id="unit-conversion-dialog-title">Choose Import Units</h3>
 
         <div
           className="unit-mismatch-info"
           id="unit-conversion-dialog-description"
         >
           <div className="info-icon" aria-hidden="true">
-            ⚠️
+            📏
           </div>
           <p>
-            The recipe <strong>"{recipeName}"</strong> uses{" "}
-            <strong>{recipeUnitSystem}</strong> units, but your preference is
-            set to <strong>{userUnitSystem}</strong> units.
+            BeerXML files use metric units by default. Choose which system you'd
+            like to use in BrewTracker.
           </p>
         </div>
 
         <div className="conversion-choices">
-          <div className="choice-card">
+          <div
+            className={`choice-card ${userUnitSystem === "metric" ? "recommended" : ""}`}
+          >
             <div className="choice-header">
               <span className="choice-icon" aria-hidden="true">
-                📋
+                📐
               </span>
-              <h4>Import as-is</h4>
+              <h4>Metric (kg, L, °C)</h4>
+              {userUnitSystem === "metric" && (
+                <span className="recommended-badge">Your Preference</span>
+              )}
             </div>
             <p className="choice-description">
-              Keep the recipe in {recipeUnitSystem} units without any
-              modifications.
+              Import recipe using metric units. Recommended if you brew using
+              metric measurements.
             </p>
             <button
-              onClick={onImportAsIs}
-              className="btn btn-secondary"
+              onClick={onImportAsMetric}
+              className={`btn ${userUnitSystem === "metric" ? "btn-primary" : "btn-secondary"}`}
               disabled={isConverting}
-              aria-label={`Import recipe as-is in ${recipeUnitSystem} units`}
-            >
-              Import as {recipeUnitSystem}
-            </button>
-          </div>
-
-          <div className="choice-card recommended">
-            <div className="choice-header">
-              <span className="choice-icon" aria-hidden="true">
-                ✨
-              </span>
-              <h4>Convert + Normalize</h4>
-              <span className="recommended-badge">Recommended</span>
-            </div>
-            <p className="choice-description">
-              Convert to {userUnitSystem} units and normalize amounts to
-              brewing-friendly increments (e.g., 1587g → 1.6kg, 3.858 lbs →
-              3.875 lbs).
-            </p>
-            <button
-              onClick={onConvertAndImport}
-              className="btn btn-primary"
-              disabled={isConverting}
-              aria-label={`Convert recipe to ${userUnitSystem} units and normalize`}
+              aria-label="Import recipe in metric units"
             >
               {isConverting ? (
                 <>
@@ -100,7 +80,40 @@ const UnitConversionChoice: React.FC<UnitConversionChoiceProps> = ({
                   Converting...
                 </>
               ) : (
-                `Convert to ${userUnitSystem}`
+                "Import as Metric"
+              )}
+            </button>
+          </div>
+
+          <div
+            className={`choice-card ${userUnitSystem === "imperial" ? "recommended" : ""}`}
+          >
+            <div className="choice-header">
+              <span className="choice-icon" aria-hidden="true">
+                📊
+              </span>
+              <h4>Imperial (lbs, gal, °F)</h4>
+              {userUnitSystem === "imperial" && (
+                <span className="recommended-badge">Your Preference</span>
+              )}
+            </div>
+            <p className="choice-description">
+              Convert recipe to imperial units with brewing-friendly rounding.
+              Recommended if you brew using imperial measurements.
+            </p>
+            <button
+              onClick={onImportAsImperial}
+              className={`btn ${userUnitSystem === "imperial" ? "btn-primary" : "btn-secondary"}`}
+              disabled={isConverting}
+              aria-label="Convert recipe to imperial units"
+            >
+              {isConverting ? (
+                <>
+                  <span className="button-spinner" aria-hidden="true"></span>
+                  Converting...
+                </>
+              ) : (
+                "Import as Imperial"
               )}
             </button>
           </div>

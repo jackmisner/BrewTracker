@@ -1,10 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import UserSettings from "../../src/pages/UserSettings";
 import UserSettingsService from "../../src/services/User/UserSettingsService";
-import { UnitProvider } from "../../src/contexts/UnitContext";
-import { renderWithProviders, mockData, scenarios } from "../testUtils";
+
+import { renderWithProviders, scenarios } from "../testUtils";
 
 // Mock the UserSettingsService
 jest.mock("../../src/services/User/UserSettingsService", () => ({
@@ -25,7 +25,9 @@ const mockUseUnits = {
 
 jest.mock("../../src/contexts/UnitContext", () => ({
   useUnits: () => mockUseUnits,
-  UnitProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  UnitProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 // Mock useNavigate and useBlocker
@@ -39,7 +41,9 @@ jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useNavigate: () => mockNavigate,
   useBlocker: () => mockBlocker,
-  Outlet: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Outlet: ({ children }: { children?: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 // Mock window.confirm
@@ -87,7 +91,9 @@ describe("UserSettings", () => {
     mockBlocker.state = "unblocked";
 
     // Default successful API response
-    (UserSettingsService.getUserSettings as jest.Mock).mockResolvedValue(sampleUserSettings);
+    (UserSettingsService.getUserSettings as jest.Mock).mockResolvedValue(
+      sampleUserSettings
+    );
     (UserSettingsService.updateProfile as jest.Mock).mockResolvedValue({});
     (UserSettingsService.changePassword as jest.Mock).mockResolvedValue({});
     (UserSettingsService.updateSettings as jest.Mock).mockResolvedValue({});
@@ -103,8 +109,8 @@ describe("UserSettings", () => {
 
   describe("Initial render and loading", () => {
     it("shows loading state initially", () => {
-      (UserSettingsService.getUserSettings as jest.Mock).mockImplementation(() =>
-        scenarios.loading()
+      (UserSettingsService.getUserSettings as jest.Mock).mockImplementation(
+        () => scenarios.loading()
       );
 
       renderWithProviders(<UserSettings />);
@@ -449,7 +455,7 @@ describe("UserSettings", () => {
       // First switch to metric
       const metricButton = screen.getByText("Metric").closest("button");
       fireEvent.click(metricButton);
-      
+
       // Then switch back to imperial
       const imperialButton = screen.getByText("Imperial").closest("button");
       fireEvent.click(imperialButton);
@@ -479,7 +485,6 @@ describe("UserSettings", () => {
       ).toBeInTheDocument();
     });
   });
-
 
   describe("Preferences tab - Form submission", () => {
     beforeEach(async () => {
@@ -673,15 +678,21 @@ describe("UserSettings", () => {
         "Confirm New Password"
       );
 
-      fireEvent.change(currentPasswordInput, { target: { value: "OldPass123!" } });
+      fireEvent.change(currentPasswordInput, {
+        target: { value: "OldPass123!" },
+      });
       fireEvent.change(newPasswordInput, { target: { value: "NewPass123!" } });
       fireEvent.change(confirmPasswordInput, {
         target: { value: "NewPass123!" },
       });
 
-      expect((currentPasswordInput as HTMLInputElement).value).toBe("OldPass123!");
+      expect((currentPasswordInput as HTMLInputElement).value).toBe(
+        "OldPass123!"
+      );
       expect((newPasswordInput as HTMLInputElement).value).toBe("NewPass123!");
-      expect((confirmPasswordInput as HTMLInputElement).value).toBe("NewPass123!");
+      expect((confirmPasswordInput as HTMLInputElement).value).toBe(
+        "NewPass123!"
+      );
     });
 
     it("submits password change successfully", async () => {
@@ -691,7 +702,9 @@ describe("UserSettings", () => {
         "Confirm New Password"
       );
 
-      fireEvent.change(currentPasswordInput, { target: { value: "OldPass123!" } });
+      fireEvent.change(currentPasswordInput, {
+        target: { value: "OldPass123!" },
+      });
       fireEvent.change(newPasswordInput, { target: { value: "NewPass123!" } });
       fireEvent.change(confirmPasswordInput, {
         target: { value: "NewPass123!" },
@@ -915,7 +928,7 @@ describe("UserSettings", () => {
       });
 
       const dismissButtons = screen.getAllByText("×");
-      const successDismissButton = dismissButtons.find((button) =>
+      const successDismissButton = dismissButtons.find(button =>
         button.closest(".success-banner")
       );
 
@@ -994,7 +1007,7 @@ describe("UserSettings", () => {
 
     it("shows navigation warning when profile form has unsaved changes", async () => {
       mockBlocker.state = "blocked";
-      
+
       renderWithProviders(<UserSettings />);
 
       await waitFor(() => {
@@ -1010,13 +1023,15 @@ describe("UserSettings", () => {
 
       expect(screen.getByText("Unsaved Changes")).toBeInTheDocument();
       expect(
-        screen.getByText("You have unsaved changes that will be lost. Are you sure you want to leave this page?")
+        screen.getByText(
+          "You have unsaved changes that will be lost. Are you sure you want to leave this page?"
+        )
       ).toBeInTheDocument();
     });
 
     it("shows navigation warning when preferences form has unsaved changes", async () => {
       mockBlocker.state = "blocked";
-      
+
       renderWithProviders(<UserSettings />);
 
       await waitFor(() => {
@@ -1041,7 +1056,7 @@ describe("UserSettings", () => {
 
     it("allows staying on page when unsaved changes warning is shown", async () => {
       mockBlocker.state = "blocked";
-      
+
       renderWithProviders(<UserSettings />);
 
       await waitFor(() => {
@@ -1056,7 +1071,7 @@ describe("UserSettings", () => {
 
     it("allows leaving without saving when unsaved changes warning is shown", async () => {
       mockBlocker.state = "blocked";
-      
+
       renderWithProviders(<UserSettings />);
 
       await waitFor(() => {

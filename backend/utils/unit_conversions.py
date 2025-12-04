@@ -1,6 +1,74 @@
 class UnitConverter:
     """Unified utility class for all unit conversions"""
 
+    # Unit classification constants
+    WEIGHT_UNITS = [
+        "g",
+        "gram",
+        "grams",
+        "kg",
+        "kilogram",
+        "kilograms",
+        "oz",
+        "ounce",
+        "ounces",
+        "lb",
+        "lbs",
+        "pound",
+        "pounds",
+    ]
+
+    VOLUME_UNITS = [
+        "ml",
+        "milliliter",
+        "milliliters",
+        "l",
+        "liter",
+        "liters",
+        "L",
+        "floz",
+        "fl_oz",
+        "fluid_ounce",
+        "cup",
+        "cups",
+        "pint",
+        "pints",
+        "pt",
+        "quart",
+        "quarts",
+        "qt",
+        "gallon",
+        "gallons",
+        "gal",
+        "tsp",
+        "tbsp",
+        "teaspoon",
+        "tablespoon",
+    ]
+
+    COUNT_UNITS = ["each", "item", "pkg", "package", "packages"]
+
+    # Default weight conversions for 'each'/'item' units (in grams and ounces)
+    # These are used when exporting to BeerXML
+    EACH_TO_WEIGHT_DEFAULTS = {
+        # Default: 1 oz (28g) per item
+        "default": {"g": 28, "oz": 1},
+        # Specific items (future enhancement - common brewing additions)
+        "vanilla_bean": {"g": 5, "oz": 0.18},
+        "vanilla bean": {"g": 5, "oz": 0.18},
+        "cinnamon_stick": {"g": 5, "oz": 0.18},
+        "cinnamon stick": {"g": 5, "oz": 0.18},
+        "cacao_nib": {"g": 28, "oz": 1},  # Usually sold in oz
+        "cacao nibs": {"g": 28, "oz": 1},
+        "orange_peel": {"g": 14, "oz": 0.5},
+        "orange peel": {"g": 14, "oz": 0.5},
+        "lemon_peel": {"g": 14, "oz": 0.5},
+        "lemon peel": {"g": 14, "oz": 0.5},
+        "coriander_seed": {"g": 14, "oz": 0.5},
+        "coriander seed": {"g": 14, "oz": 0.5},
+        "coriander": {"g": 14, "oz": 0.5},
+    }
+
     # Weight conversions (to grams as base unit)
     WEIGHT_TO_GRAMS = {
         "g": 1.0,
@@ -41,6 +109,10 @@ class UnitConverter:
         "gallon": 3.78541,  # US gallon
         "gallons": 3.78541,
         "gal": 3.78541,
+        "tsp": 0.00492892,  # US teaspoon
+        "teaspoon": 0.00492892,
+        "tbsp": 0.0147868,  # US tablespoon
+        "tablespoon": 0.0147868,
     }
 
     @classmethod
@@ -199,6 +271,28 @@ class UnitConverter:
             return round(amount)
 
     @classmethod
+    def convert_each_to_weight(cls, amount, target_unit="g", item_name=None):
+        """
+        Convert 'each'/'item' count to weight for BeerXML export
+
+        Args:
+            amount: Number of items
+            target_unit: "g" or "oz" (default "g")
+            item_name: Optional name for specific conversion
+
+        Returns:
+            Weight equivalent in target unit
+        """
+        # Try specific item lookup (case-insensitive)
+        if item_name:
+            item_key = item_name.lower().strip()
+            if item_key in cls.EACH_TO_WEIGHT_DEFAULTS:
+                return amount * cls.EACH_TO_WEIGHT_DEFAULTS[item_key][target_unit]
+
+        # Default: 1 oz (28g) per item
+        return amount * cls.EACH_TO_WEIGHT_DEFAULTS["default"][target_unit]
+
+    @classmethod
     def convert_temperature(cls, temp, from_unit, to_unit):
         """Convert temperature between Fahrenheit and Celsius"""
         if from_unit == to_unit:
@@ -282,6 +376,12 @@ class UnitConverter:
         # Convert amount and unit
         if "amount" in converted and "unit" in converted:
             current_unit = converted["unit"]
+
+            # Handle 'each'/'item' units - keep as-is for internal storage
+            if current_unit.lower() in ["each", "item"]:
+                # Return as-is for internal storage
+                # Will be converted for BeerXML export
+                return converted
 
             # Determine if it's weight or volume
             if current_unit.lower() in [

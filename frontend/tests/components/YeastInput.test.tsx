@@ -175,7 +175,7 @@ describe("YeastInput", () => {
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -194,7 +194,7 @@ describe("YeastInput", () => {
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -216,7 +216,7 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -241,7 +241,7 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -266,7 +266,7 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -292,7 +292,7 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalledWith({
@@ -318,7 +318,7 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockConfirm).toHaveBeenCalledWith(
@@ -347,7 +347,7 @@ describe("YeastInput", () => {
     await user.type(searchableSelect!, "us-05");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockConfirm).toHaveBeenCalled();
@@ -445,7 +445,7 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalled();
@@ -463,7 +463,7 @@ describe("YeastInput", () => {
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -499,7 +499,7 @@ describe("YeastInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(

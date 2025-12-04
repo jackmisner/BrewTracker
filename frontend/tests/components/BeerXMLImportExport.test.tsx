@@ -39,21 +39,20 @@ jest.mock('../../src/services/BeerXML/BeerXMLService', () => ({
   matchIngredients: jest.fn(),
   exportRecipe: jest.fn(),
   downloadBeerXML: jest.fn(),
-  detectRecipeUnitSystem: jest.fn(() => 'imperial'), // Default to imperial to match user preference in tests
-  convertRecipeUnits: jest.fn((recipe) => Promise.resolve(recipe)), // Return recipe unchanged by default
+  convertRecipeUnits: jest.fn((recipe) => Promise.resolve({ recipe, warnings: [] })), // Return recipe with warnings array
 }));
 
 // Mock the UnitConversionChoice component
 jest.mock('../../src/components/BeerXML/UnitConversionChoice', () => {
-  return function MockUnitConversionChoice({ onImportAsIs, onConvertAndImport, onCancel }: any) {
+  return function MockUnitConversionChoice({ onImportAsMetric, onImportAsImperial, onCancel }: any) {
     return (
       <div data-testid="unit-conversion-choice">
-        <h3>Unit Conversion Choice</h3>
-        <button onClick={onImportAsIs} data-testid="import-as-is">
-          Import As-Is
+        <h3>Choose Import Units</h3>
+        <button onClick={onImportAsMetric} data-testid="import-as-metric">
+          Import as Metric
         </button>
-        <button onClick={onConvertAndImport} data-testid="convert-and-import">
-          Convert and Import
+        <button onClick={onImportAsImperial} data-testid="import-as-imperial">
+          Import as Imperial
         </button>
         <button onClick={onCancel} data-testid="cancel-conversion">
           Cancel
@@ -275,7 +274,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
   });
 
   describe('BeerXML Parsing', () => {
-    it('parses BeerXML file successfully', async () => {
+    it('parses BeerXML file successfully and shows unit conversion choice', async () => {
       const user = userEvent.setup();
       render(<BeerXMLImportExport mode="import" />);
 
@@ -292,7 +291,10 @@ const fileInput = screen.getByTestId('beerxml-file-input');
         expect(beerXMLService.parseBeerXML).toHaveBeenCalledWith('<xml>test</xml>');
       });
 
-      expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+      // New flow: should show unit conversion choice screen first
+      expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
+      expect(screen.getByTestId('import-as-metric')).toBeInTheDocument();
+      expect(screen.getByTestId('import-as-imperial')).toBeInTheDocument();
     });
 
     it('displays parsing loading state', async () => {
@@ -344,7 +346,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
   });
 
   describe('Recipe Selection and Preview', () => {
-    it('displays recipe preview', async () => {
+    it('proceeds to ingredient matching after unit selection', async () => {
       const user = userEvent.setup();
       render(<BeerXMLImportExport mode="import" />);
 
@@ -354,18 +356,22 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Wait for unit conversion choice
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Recipe Preview')).toBeInTheDocument();
-      expect(screen.getByText('Imported IPA')).toBeInTheDocument();
-      expect(screen.getByText('IPA')).toBeInTheDocument();
-      expect(screen.getByText('5 gal')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument(); // ingredient count
+      // Click to import as imperial - should proceed directly to ingredient matching
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
+
+      // Should go directly to ingredient matching (not recipe preview)
+      await waitFor(() => {
+        expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
+      });
     });
 
-    it('displays ingredient summary', async () => {
+    it('cancels unit selection and shows recipe preview', async () => {
       const user = userEvent.setup();
       render(<BeerXMLImportExport mode="import" />);
 
@@ -375,16 +381,23 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Wait for unit conversion choice
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Ingredients')).toBeInTheDocument();
-      expect(screen.getByText('1 grain')).toBeInTheDocument();
-      expect(screen.getByText('1 hop')).toBeInTheDocument();
+      // Click cancel
+      const cancelButton = screen.getByTestId('cancel-conversion');
+      await user.click(cancelButton);
+
+      // Should return to recipe preview (cancel just hides the dialog)
+      await waitFor(() => {
+        expect(screen.queryByText('Choose Import Units')).not.toBeInTheDocument();
+        expect(screen.getByText('Recipe Preview')).toBeInTheDocument();
+      });
     });
 
-    it('handles multiple recipes selection', async () => {
+    it('handles multiple recipes and proceeds to ingredient matching', async () => {
       const user = userEvent.setup();
       const multipleRecipes = [
         ...mockParsedRecipes,
@@ -407,20 +420,21 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Wait for unit conversion choice and select
       await waitFor(() => {
-        expect(screen.getByText('Found 2 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Select recipe to import:')).toBeInTheDocument();
-      const select = screen.getByRole('combobox');
-      expect(select).toBeInTheDocument();
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
 
-      // Change selection
-      await user.selectOptions(select, '1');
-      expect(screen.getByText('Second Recipe')).toBeInTheDocument();
+      // Should proceed to ingredient matching for first recipe
+      await waitFor(() => {
+        expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
+      });
     });
 
-    it('starts ingredient matching process', async () => {
+    it('calls ingredient matching after unit selection', async () => {
       const user = userEvent.setup();
       render(<BeerXMLImportExport mode="import" />);
 
@@ -430,14 +444,17 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - this should automatically trigger ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
-
-      expect(beerXMLService.matchIngredients).toHaveBeenCalledWith(mockParsedRecipes[0].ingredients);
+      // Wait for ingredient matching to be called
+      await waitFor(() => {
+        expect(beerXMLService.matchIngredients).toHaveBeenCalledWith(mockParsedRecipes[0].ingredients);
+      });
     });
 
     it('displays ingredient matching loading state', async () => {
@@ -451,15 +468,21 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - this should show loading during ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsMetric = screen.getByTestId('import-as-metric');
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      // Buttons should be enabled before clicking
+      expect(importAsMetric).not.toBeDisabled();
 
-      expect(screen.getByText('Matching Ingredients...')).toBeInTheDocument();
-      expect(importButton).toBeDisabled();
+      await user.click(importAsMetric);
+
+      // Should show loading state (matching ingredients happens automatically)
+      await waitFor(() => {
+        expect(beerXMLService.matchIngredients).toHaveBeenCalled();
+      });
     });
 
     it('handles ingredient matching errors', async () => {
@@ -473,12 +496,12 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - error should occur during automatic matching
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
-
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
 
       await waitFor(() => {
         expect(screen.getByText('Matching failed')).toBeInTheDocument();
@@ -497,13 +520,14 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - automatically proceeds to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Found 1 recipe(s)')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
-
+      // Wait for ingredient matching screen
       await waitFor(() => {
         expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
       });
@@ -518,10 +542,10 @@ const fileInput = screen.getByTestId('beerxml-file-input');
     it('completes import process', async () => {
       const user = userEvent.setup();
       const onImport = jest.fn();
-      
+
       render(<BeerXMLImportExport mode="import" onImport={onImport} />);
 
-      // Go through the full flow  
+      // Go through the full flow
       const fileInputs = screen.getAllByTestId('beerxml-file-input');
       const fileInput = fileInputs[fileInputs.length - 1]; // Use the last (most recent) one
       await user.upload(fileInput, mockFile);
@@ -529,13 +553,14 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - automatically proceeds to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Import Recipe')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsImperial = screen.getAllByTestId('import-as-imperial');
+      await user.click(importAsImperial[importAsImperial.length - 1]);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
-
+      // Wait for ingredient matching to complete
       await waitFor(() => {
         expect(screen.getAllByTestId('complete-matching')).toHaveLength(2); // Due to test isolation issues
       });
@@ -576,7 +601,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
     it('handles import completion errors', async () => {
       const user = userEvent.setup();
       const onImport = jest.fn().mockRejectedValue(new Error('Import failed'));
-      
+
       render(<BeerXMLImportExport mode="import" onImport={onImport} />);
 
       const fileInputs = screen.getAllByTestId('beerxml-file-input');
@@ -586,13 +611,14 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - automatically proceeds to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Import Recipe')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsMetric = screen.getAllByTestId('import-as-metric');
+      await user.click(importAsMetric[importAsMetric.length - 1]);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
-
+      // Wait for ingredient matching to complete
       await waitFor(() => {
         expect(screen.getAllByTestId('complete-matching')).toHaveLength(2); // Due to test isolation issues
       });
@@ -706,12 +732,12 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - automatically proceeds to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Import Recipe')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
-
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
 
       // Should not crash without onImport callback
       await waitFor(() => {
@@ -917,15 +943,14 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system - automatically proceeds to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Pickle Gose')).toBeInTheDocument();
-        expect(screen.getByText('Gose')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
 
-      // Import recipe
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
-
+      // Wait for ingredient matching to complete
       await waitFor(() => {
         expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
       });
@@ -959,12 +984,21 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       // Upload and parse file
       const fileInput = screen.getByTestId('beerxml-file-input');
       await user.upload(fileInput, mockFile);
-      
+
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      // Select unit system - this automatically proceeds to ingredient matching
+      await waitFor(() => {
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
+      });
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
+
+      // Wait for ingredient matching to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('complete-matching')).toBeInTheDocument();
+      });
 
       const completeButton = screen.getByTestId('complete-matching');
       await user.click(completeButton);
@@ -990,12 +1024,20 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       // Complete import flow
       const fileInput = screen.getByTestId('beerxml-file-input');
       await user.upload(fileInput, mockFile);
-      
+
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      // Select unit system - automatically proceeds to matching
+      await waitFor(() => {
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
+      });
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('complete-matching')).toBeInTheDocument();
+      });
 
       const completeButton = screen.getByTestId('complete-matching');
       await user.click(completeButton);
@@ -1039,12 +1081,20 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       // Complete import flow
       const fileInput = screen.getByTestId('beerxml-file-input');
       await user.upload(fileInput, mockFile);
-      
+
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      // Select unit system - automatically proceeds to matching
+      await waitFor(() => {
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
+      });
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('complete-matching')).toBeInTheDocument();
+      });
 
       const completeButton = screen.getByTestId('complete-matching');
       await user.click(completeButton);
@@ -1062,7 +1112,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       });
     });
 
-    it('displays recipe preview with correct values', async () => {
+    it('proceeds directly to ingredient matching after unit selection', async () => {
       const user = userEvent.setup();
 
       render(<BeerXMLImportExport mode="import" />);
@@ -1070,21 +1120,20 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       // Upload and parse file
       const fileInput = screen.getByTestId('beerxml-file-input');
       await user.upload(fileInput, mockFile);
-      
+
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
+      // Select unit system
       await waitFor(() => {
-        expect(screen.getByText('Pickle Gose')).toBeInTheDocument();
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
       });
+      const importAsImperial = screen.getByTestId('import-as-imperial');
+      await user.click(importAsImperial);
+
+      // Should proceed directly to ingredient matching
       await waitFor(() => {
-        expect(screen.getByText('Gose')).toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(screen.getByText('5 gal')).toBeInTheDocument(); // Should be rounded for display
-      });
-      await waitFor(() => {
-        expect(screen.getByText('3')).toBeInTheDocument(); // Number of ingredients
+        expect(screen.getByTestId('ingredient-matching-review')).toBeInTheDocument();
       });
     });
 
@@ -1118,12 +1167,16 @@ const fileInput = screen.getByTestId('beerxml-file-input');
       // Upload and parse file
       const fileInput = screen.getByTestId('beerxml-file-input');
       await user.upload(fileInput, mockFile);
-      
+
       const parseButton = screen.getByText('Parse BeerXML File');
       await user.click(parseButton);
 
-      const importButton = screen.getByText('Import Recipe');
-      await user.click(importButton);
+      // Select unit system - automatically attempts matching and should error
+      await waitFor(() => {
+        expect(screen.getByText('Choose Import Units')).toBeInTheDocument();
+      });
+      const importAsMetric = screen.getByTestId('import-as-metric');
+      await user.click(importAsMetric);
 
       await waitFor(() => {
         expect(screen.getByText('Ingredient matching failed')).toBeInTheDocument();

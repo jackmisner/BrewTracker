@@ -3,8 +3,6 @@
  * Provides functions to interpolate missing data points in fermentation tracking charts
  * for continuous line visualization while preserving data integrity.
  */
-import type { TooltipProps } from "recharts";
-
 export interface ChartDataPoint {
   date: string; // ISO date string for calculations
   displayDate: string; // Formatted date for chart display
@@ -14,8 +12,14 @@ export interface ChartDataPoint {
   isInterpolated?: boolean; // Flag to indicate interpolated data points
 }
 
-// Custom tooltip props type extending Recharts TooltipProps
-type CustomTooltipProps = TooltipProps<number, string>;
+// Custom tooltip props type matching Recharts TooltipContentProps
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: readonly any[]; // Use any[] to match Recharts ReadonlyArray<any>
+  label?: string | number;
+  coordinate?: { x: number; y: number };
+  [key: string]: any; // Allow additional properties from Recharts
+}
 
 /**
  * Linear interpolation between two values
@@ -233,114 +237,119 @@ export function createCustomDot(_metric: string) {
 /**
  * Enhanced tooltip component that shows interpolated data indicators
  */
-export function createCustomTooltip() {
-  return function CustomTooltip(props: CustomTooltipProps) {
-    const { active, payload, label } = props;
+export const CustomTooltip = (props: CustomTooltipProps) => {
+  const { active, payload, label } = props;
 
-    if (!active || !payload || !payload.length) {
-      return null;
-    }
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
 
-    // Type assertion for the payload data structure
-    const data = (payload[0] as any).payload as ChartDataPoint;
-    const isInterpolated = data.isInterpolated;
+  // Type assertion for the payload data structure
+  // Each entry in payload corresponds to a different series (gravity, temp, ph)
+  // but they all share the same underlying data point
+  const data = (payload[0] as any)?.payload as ChartDataPoint;
+  const isInterpolated = data?.isInterpolated;
 
-    return (
-      <div
-        className="custom-tooltip"
-        style={{
-          backgroundColor: "#fff",
-          border: "1px solid #ccc",
-          borderRadius: "4px",
-          padding: "10px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
-        <p
-          className="label"
-          style={{ marginBottom: "8px", fontWeight: "bold" }}
-        >
-          {label}
-          {isInterpolated && (
-            <span
-              style={{
-                color: "#888",
-                fontSize: "12px",
-                marginLeft: "8px",
-                fontStyle: "italic",
-              }}
-            >
-              {" "}
-              (Contains estimated values)
-            </span>
-          )}
-        </p>
-
-        {payload.map((entry, index) => {
-          const value = entry.value as number;
-          const name = entry.name || "";
-          const color = entry.color || "#000";
-          const dataKey = entry.dataKey || "";
-
-          if (value === null || value === undefined) {
-            return null;
-          }
-
-          const isMetricInterpolated =
-            data.isInterpolated &&
-            (dataKey === "gravity" ||
-              dataKey === "temperature" ||
-              dataKey === "ph");
-
-          const formattedValue =
-            dataKey === "gravity"
-              ? value.toFixed(3)
-              : dataKey === "temperature"
-                ? Math.round(value).toString()
-                : dataKey === "ph"
-                  ? value.toFixed(1)
-                  : value.toString();
-
-          return (
-            <p
-              key={index}
-              style={{
-                color: color,
-                margin: "4px 0",
-                fontSize: "14px",
-              }}
-            >
-              {`${name}: ${formattedValue}`}
-              {isMetricInterpolated && (
-                <span
-                  style={{
-                    color: "#888",
-                    fontSize: "11px",
-                    marginLeft: "4px",
-                    fontStyle: "italic",
-                  }}
-                >
-                  {" "}
-                  *
-                </span>
-              )}
-            </p>
-          );
-        })}
-
+  return (
+    <div
+      className="custom-tooltip"
+      style={{
+        backgroundColor: "#fff",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        padding: "10px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <p className="label" style={{ marginBottom: "8px", fontWeight: "bold" }}>
+        {label}
         {isInterpolated && (
-          <p
+          <span
             style={{
-              fontSize: "11px",
               color: "#888",
-              marginTop: "8px",
+              fontSize: "12px",
+              marginLeft: "8px",
               fontStyle: "italic",
             }}
           >
-            * Estimated value
-          </p>
+            {" "}
+            (Contains estimated values)
+          </span>
         )}
-      </div>
-    );
-  };
+      </p>
+
+      {payload.map((entry: any, index: number) => {
+        // Safely extract properties from entry
+        const value = entry?.value;
+        const name = entry?.name || "";
+        const color = entry?.color || "#000";
+        const dataKey = entry?.dataKey || "";
+
+        if (value === null || value === undefined) {
+          return null;
+        }
+
+        const isMetricInterpolated =
+          data.isInterpolated &&
+          (dataKey === "gravity" ||
+            dataKey === "temperature" ||
+            dataKey === "ph");
+
+        const formattedValue =
+          dataKey === "gravity"
+            ? value.toFixed(3)
+            : dataKey === "temperature"
+              ? Math.round(value).toString()
+              : dataKey === "ph"
+                ? value.toFixed(1)
+                : value.toString();
+
+        return (
+          <p
+            key={index}
+            style={{
+              color: color,
+              margin: "4px 0",
+              fontSize: "14px",
+            }}
+          >
+            {`${name}: ${formattedValue}`}
+            {isMetricInterpolated && (
+              <span
+                style={{
+                  color: "#888",
+                  fontSize: "11px",
+                  marginLeft: "4px",
+                  fontStyle: "italic",
+                }}
+              >
+                {" "}
+                *
+              </span>
+            )}
+          </p>
+        );
+      })}
+
+      {isInterpolated && (
+        <p
+          style={{
+            fontSize: "11px",
+            color: "#888",
+            marginTop: "8px",
+            fontStyle: "italic",
+          }}
+        >
+          * Estimated value
+        </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Legacy function wrapper for backward compatibility
+ */
+export function createCustomTooltip() {
+  return CustomTooltip;
 }
