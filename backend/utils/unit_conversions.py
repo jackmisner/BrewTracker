@@ -183,7 +183,13 @@ class UnitConverter:
         cls, amount, ingredient_type="general", unit_system="imperial", unit="oz"
     ):
         """
-        Round amounts to brewing-friendly precision to avoid floating point errors
+        Round amounts to brewing-friendly precision for practical brewing
+
+        Normalizes values to common brewing increments:
+        - Metric grains: 5g, 10g, 25g, 50g, 100g, 250g, 500g, 1kg increments
+        - Metric hops: 1g, 5g, 10g, 25g, 50g increments
+        - Imperial grains: 0.25oz, 0.5oz, 1oz, 4oz, 8oz, 1lb increments
+        - Imperial hops: 0.25oz, 0.5oz, 1oz increments
 
         Args:
             amount: The amount to round
@@ -192,33 +198,110 @@ class UnitConverter:
             unit: The unit of measurement
 
         Returns:
-            Rounded amount with appropriate precision for brewing
+            Normalized amount with brewing-friendly precision
         """
         if amount == 0:
             return 0.0
 
-        # Imperial units (stored as oz for weight)
+        # Imperial units
         if unit_system == "imperial":
-            # Don't normalize here - let the unit conversion workflow handle normalization
-            # Just preserve precision to avoid floating point errors
-            if ingredient_type in ["grain", "hop", "yeast"]:
-                # Round to 6 decimal places to clean up floating point errors
-                # while preserving enough precision for the normalization workflow
-                return round(amount, 6)
+            if ingredient_type == "grain":
+                # Grain amounts in oz - round to practical increments
+                if amount >= 256:  # >= 1 lb
+                    # Round to nearest pound (16 oz)
+                    return round(amount / 16) * 16
+                elif amount >= 128:  # >= 0.5 lb
+                    # Round to nearest 8 oz
+                    return round(amount / 8) * 8
+                elif amount >= 64:  # >= 4 oz
+                    # Round to nearest 4 oz
+                    return round(amount / 4) * 4
+                elif amount >= 16:  # >= 1 oz
+                    # Round to nearest oz
+                    return round(amount)
+                elif amount >= 4:
+                    # Round to nearest 0.5 oz
+                    return round(amount * 2) / 2
+                else:
+                    # Small amounts: round to nearest 0.25 oz
+                    return round(amount * 4) / 4
+
+            elif ingredient_type == "hop":
+                # Hop amounts in oz - finer precision
+                if amount >= 4:
+                    # Round to nearest oz
+                    return round(amount)
+                elif amount >= 1:
+                    # Round to nearest 0.5 oz
+                    return round(amount * 2) / 2
+                else:
+                    # Small amounts: round to nearest 0.25 oz
+                    return round(amount * 4) / 4
+
+            elif ingredient_type == "yeast":
+                # Yeast in grams - round to nearest gram
+                return round(amount)
+
             else:
-                # General: 2 decimal places
+                # Other ingredients: round to 2 decimal places
                 return round(amount, 2)
 
-        # Metric units (stored as g for weight)
+        # Metric units
         else:  # metric
-            # Don't normalize here - let the unit conversion workflow handle normalization
-            # Just preserve precision to avoid floating point errors
-            if ingredient_type in ["grain", "hop", "yeast"]:
-                # Round to 6 decimal places to clean up floating point errors
-                # while preserving enough precision for the normalization workflow
-                return round(amount, 6)
+            if ingredient_type == "grain":
+                # Grain amounts in grams - round to practical increments
+                if amount >= 5000:  # >= 5 kg
+                    # Round to nearest kg (1000g)
+                    return round(amount / 1000) * 1000
+                elif amount >= 1000:  # >= 1 kg
+                    # Round to nearest 500g
+                    return round(amount / 500) * 500
+                elif amount >= 500:
+                    # Round to nearest 250g
+                    return round(amount / 250) * 250
+                elif amount >= 100:
+                    # Round to nearest 100g
+                    return round(amount / 100) * 100
+                elif amount >= 50:
+                    # Round to nearest 50g
+                    return round(amount / 50) * 50
+                elif amount >= 25:
+                    # Round to nearest 25g
+                    return round(amount / 25) * 25
+                elif amount >= 10:
+                    # Round to nearest 10g
+                    return round(amount / 10) * 10
+                else:
+                    # Small amounts: round to nearest 5g
+                    return round(amount / 5) * 5
+
+            elif ingredient_type == "hop":
+                # Hop amounts in grams - finer precision
+                if amount >= 100:
+                    # Round to nearest 50g
+                    return round(amount / 50) * 50
+                elif amount >= 50:
+                    # Round to nearest 25g
+                    return round(amount / 25) * 25
+                elif amount >= 10:
+                    # Round to nearest 10g
+                    return round(amount / 10) * 10
+                elif amount >= 5:
+                    # Round to nearest 5g
+                    return round(amount / 5) * 5
+                else:
+                    # Small amounts: round to nearest gram
+                    return round(amount)
+
+            elif ingredient_type == "yeast":
+                # Yeast in grams - round to nearest 10g for packages
+                if amount >= 50:
+                    return round(amount / 10) * 10
+                else:
+                    return round(amount)
+
             else:
-                # General/other: round to nearest gram to clean up floating point errors
+                # Other ingredients: round to nearest gram
                 return float(round(amount))
 
     @classmethod
