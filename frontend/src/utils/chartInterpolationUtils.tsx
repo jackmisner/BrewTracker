@@ -243,7 +243,7 @@ export function createCustomDot(_metric: string) {
 }
 
 function formatMetricValue(
-  dataKey: "gravity" | "temperature" | "ph" | string,
+  dataKey: "gravity" | "temperature" | "ph",
   value: number
 ): string {
   switch (dataKey) {
@@ -307,7 +307,7 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
         const value = entry?.value;
         const name = entry?.name || "";
         const color = entry?.color || "#000";
-        const dataKey = entry?.dataKey || "";
+        const dataKey = entry?.dataKey as "gravity" | "temperature" | "ph";
 
         if (value === null || value === undefined) {
           return null;

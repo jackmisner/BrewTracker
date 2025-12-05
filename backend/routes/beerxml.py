@@ -209,8 +209,8 @@ def convert_recipe():
         return jsonify({"recipe": converted_recipe, "warnings": warnings}), 200
 
     except Exception as e:
-        logger.exception("Recipe conversion error: %s", e)
-        return jsonify({"error": f"Failed to convert recipe: {str(e)}"}), 500
+        logger.exception("Recipe conversion error")
+        return jsonify({"error": f"Failed to convert recipe: {e!s}"}), 500
 
 
 def convert_recipe_to_imperial(recipe, normalize=True):
@@ -538,8 +538,10 @@ def add_ingredients_to_xml(recipe_elem, ingredients):
 
             else:
                 # Unknown unit - default to weight (grams)
-                print(
-                    f"Warning: Unknown misc unit '{misc_ing.unit}' for {misc_ing.name} - treating as grams"
+                logger.warning(
+                    f"Unknown misc unit '%s' for %s - treating as grams",
+                    misc_ing.unit,
+                    misc_ing.name,
                 )
                 amount_kg = misc_ing.amount / 1000  # Assume grams
                 add_text_element(misc_elem, "AMOUNT", f"{amount_kg:.6f}")
@@ -1461,7 +1463,6 @@ def validate_ingredient_amounts(recipe_data):
     Returns a list of warnings for ingredients that seem unreasonable.
     These are common issues from BeerXML exports with unit conversion problems.
     """
-    from utils.unit_conversions import UnitConverter
 
     warnings = []
 
@@ -1498,13 +1499,10 @@ def validate_ingredient_amounts(recipe_data):
         unit = ing.get("unit", "")
 
         # Convert to standard units for comparison (grams for weight)
-        amount_g = amount
-        if unit.lower() in ["kg", "kilogram", "kilograms"]:
-            amount_g = amount * 1000
-        elif unit.lower() in ["oz", "ounce", "ounces"]:
-            amount_g = amount * 28.3495
-        elif unit.lower() in ["lb", "lbs", "pound", "pounds"]:
-            amount_g = amount * 453.592
+        try:
+            amount_g = UnitConverter.convert_weight(amount, unit, "g")
+        except (KeyError, ValueError):
+            amount_g = amount  # Assume grams if conversion fails
 
         # Grain checks (typically 2-10 kg per 19L batch)
         if ing_type == "grain":

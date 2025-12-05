@@ -58,17 +58,11 @@ class UnitConverter:
         "default": {"g": 28, "oz": 1},
         # Specific items (future enhancement - common brewing additions)
         "vanilla_bean": {"g": 5, "oz": 0.18},
-        "vanilla bean": {"g": 5, "oz": 0.18},
         "cinnamon_stick": {"g": 5, "oz": 0.18},
-        "cinnamon stick": {"g": 5, "oz": 0.18},
-        "cacao_nib": {"g": 28, "oz": 1},  # Usually sold in oz
-        "cacao nibs": {"g": 28, "oz": 1},
+        "cacao_nibs": {"g": 28, "oz": 1},  # Usually sold in oz
         "orange_peel": {"g": 14, "oz": 0.5},
-        "orange peel": {"g": 14, "oz": 0.5},
         "lemon_peel": {"g": 14, "oz": 0.5},
-        "lemon peel": {"g": 14, "oz": 0.5},
         "coriander_seed": {"g": 14, "oz": 0.5},
-        "coriander seed": {"g": 14, "oz": 0.5},
         "coriander": {"g": 14, "oz": 0.5},
     }
 
@@ -239,8 +233,11 @@ class UnitConverter:
                     return round(amount * 4) / 4
 
             elif ingredient_type == "yeast":
-                # Yeast in grams - round to nearest gram
-                return round(amount)
+                # Yeast amounts are typically small; keep 2-decimal precision
+                # so g→lb/oz conversions (e.g. 11.5g → 0.025lb) are not
+                # rounded down to zero
+                # TODO: Consider normalizing to packages as standard
+                return round(amount, 2)
 
             else:
                 # Other ingredients: round to 2 decimal places
@@ -370,13 +367,15 @@ class UnitConverter:
             Weight equivalent in target unit
         """
 
-        # Validate target unit
+        # Normalise and validate target unit
+        target_unit = str(target_unit).lower().strip()
         if target_unit not in ["g", "oz"]:
             target_unit = "g"  # Default to grams
 
         # Try specific item lookup (case-insensitive)
         if item_name:
-            item_key = item_name.lower().strip()
+            # Normalize: replace underscores and spaces with a single separator
+            item_key = item_name.lower().strip().replace(" ", "_")
             if item_key in cls.EACH_TO_WEIGHT_DEFAULTS:
                 return amount * cls.EACH_TO_WEIGHT_DEFAULTS[item_key][target_unit]
 
@@ -468,8 +467,8 @@ class UnitConverter:
         if "amount" in converted and "unit" in converted:
             current_unit = converted["unit"]
 
-            # Handle 'each'/'item' units - keep as-is for internal storage
-            if current_unit.lower() in ["each", "item"]:
+            # Handle count-like units - keep as-is for internal storage
+            if current_unit.lower() in [u.lower() for u in cls.COUNT_UNITS]:
                 # Return as-is for internal storage
                 # Will be converted for BeerXML export
                 return converted
@@ -560,7 +559,7 @@ class UnitConverter:
             return round(converted_amount, 2), target_unit
 
         else:
-            # Keep non-convertible units as-is (e.g., pkg, tsp, etc.)
+            # Keep non-convertible units as-is (e.g., pkg)
             return amount, current_unit
 
     @classmethod
