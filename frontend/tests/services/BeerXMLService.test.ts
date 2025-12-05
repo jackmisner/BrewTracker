@@ -42,21 +42,27 @@ const mockAppendChild = jest.fn();
 const mockRemoveChild = jest.fn();
 const mockClick = jest.fn();
 
-Object.defineProperty(global, 'document', {
-  writable: true,
-  value: {
-    createElement: jest.fn().mockReturnValue({
-      href: '',
-      download: '',
-      style: { display: '' },
-      click: mockClick,
-    }),
-    body: {
-      appendChild: mockAppendChild,
-      removeChild: mockRemoveChild,
-    },
-  },
+// Mock document methods instead of redefining the whole object
+const mockAnchorElement = {
+  href: '',
+  download: '',
+  style: { display: '' },
+  click: mockClick,
+};
+
+// Store original createElement
+const originalCreateElement = document.createElement.bind(document);
+
+// Mock createElement to return our mock anchor for 'a' elements
+document.createElement = jest.fn((tagName: string) => {
+  if (tagName === 'a') {
+    return mockAnchorElement as any;
+  }
+  return originalCreateElement(tagName);
 });
+
+document.body.appendChild = mockAppendChild as any;
+document.body.removeChild = mockRemoveChild as any;
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;

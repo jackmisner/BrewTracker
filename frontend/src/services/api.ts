@@ -32,6 +32,7 @@ import {
   UpdateProfileRequest,
 
   // Recipe types
+  Recipe,
   RecipeResponse,
   RecipesListResponse,
   CreateRecipeRequest,
@@ -86,6 +87,7 @@ import {
 
   // Common types
   ID,
+  UnitSystem,
 } from "@/types";
 
 // API Configuration
@@ -476,6 +478,14 @@ const ApiService = {
       data: BeerXMLCreateIngredientsRequest
     ): Promise<AxiosResponse<BeerXMLCreateIngredientsResponse>> =>
       api.post("/beerxml/create-ingredients", data),
+
+    convertRecipe: (data: {
+      recipe: Partial<Recipe>;
+      target_system: UnitSystem;
+      normalize?: boolean;
+    }): Promise<
+      AxiosResponse<{ recipe: Partial<Recipe>; warnings: string[] }>
+    > => api.post("/beerxml/convert-recipe", data),
   },
 
   // Dashboard and statistics

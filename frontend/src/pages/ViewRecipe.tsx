@@ -145,10 +145,10 @@ const ViewRecipe: React.FC = () => {
   // Only show edit/delete if we have both user and recipe data, and they match
   const isRecipeOwner = Boolean(
     currentUser &&
-      recipe &&
-      currentUser.user_id &&
-      recipe.user_id &&
-      String(currentUser.user_id) === String(recipe.user_id)
+    recipe &&
+    currentUser.user_id &&
+    recipe.user_id &&
+    String(currentUser.user_id) === String(recipe.user_id)
   );
 
   // For public recipes or when we can't determine ownership, treat as public

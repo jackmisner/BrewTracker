@@ -1,8 +1,78 @@
+from typing import ClassVar, Dict, List
+
+
 class UnitConverter:
     """Unified utility class for all unit conversions"""
 
+    # Unit classification constants
+    WEIGHT_UNITS: ClassVar[List[str]] = [
+        "g",
+        "gram",
+        "grams",
+        "kg",
+        "kilogram",
+        "kilograms",
+        "oz",
+        "ounce",
+        "ounces",
+        "lb",
+        "lbs",
+        "pound",
+        "pounds",
+    ]
+
+    VOLUME_UNITS: ClassVar[List[str]] = [
+        "ml",
+        "milliliter",
+        "milliliters",
+        "l",
+        "liter",
+        "liters",
+        "L",
+        "floz",
+        "fl_oz",
+        "fluid_ounce",
+        "cup",
+        "cups",
+        "pint",
+        "pints",
+        "pt",
+        "quart",
+        "quarts",
+        "qt",
+        "gallon",
+        "gallons",
+        "gal",
+        "tsp",
+        "tbsp",
+        "teaspoon",
+        "tablespoon",
+    ]
+
+    COUNT_UNITS: ClassVar[List[str]] = ["each", "item", "pkg", "package", "packages"]
+
+    # Precomputed lowercase sets for fast case-insensitive membership checks
+    WEIGHT_UNITS_LOWER: ClassVar[set[str]] = {u.lower() for u in WEIGHT_UNITS}
+    VOLUME_UNITS_LOWER: ClassVar[set[str]] = {u.lower() for u in VOLUME_UNITS}
+    COUNT_UNITS_LOWER: ClassVar[set[str]] = {u.lower() for u in COUNT_UNITS}
+
+    # Default weight conversions for 'each'/'item' units (in grams and ounces)
+    # These are used when exporting to BeerXML
+    EACH_TO_WEIGHT_DEFAULTS: ClassVar[dict[str, dict[str, float]]] = {
+        # Default: 1 oz (28g) per item
+        "default": {"g": 28, "oz": 1},
+        # Specific items (future enhancement - common brewing additions)
+        "vanilla_bean": {"g": 5, "oz": 0.18},
+        "cinnamon_stick": {"g": 5, "oz": 0.18},
+        "cacao_nibs": {"g": 28, "oz": 1},  # Usually sold in oz
+        "orange_peel": {"g": 14, "oz": 0.5},
+        "lemon_peel": {"g": 14, "oz": 0.5},
+        "coriander_seed": {"g": 14, "oz": 0.5},
+        "coriander": {"g": 14, "oz": 0.5},
+    }
+
     # Weight conversions (to grams as base unit)
-    WEIGHT_TO_GRAMS = {
+    WEIGHT_TO_GRAMS: ClassVar[Dict[str, float]] = {
         "g": 1.0,
         "gram": 1.0,
         "grams": 1.0,
@@ -19,7 +89,7 @@ class UnitConverter:
     }
 
     # Volume conversions (to liters as base unit)
-    VOLUME_TO_LITERS = {
+    VOLUME_TO_LITERS: ClassVar[Dict[str, float]] = {
         "ml": 0.001,
         "milliliter": 0.001,
         "milliliters": 0.001,
@@ -41,6 +111,10 @@ class UnitConverter:
         "gallon": 3.78541,  # US gallon
         "gallons": 3.78541,
         "gal": 3.78541,
+        "tsp": 0.00492892,  # US teaspoon
+        "teaspoon": 0.00492892,
+        "tbsp": 0.0147868,  # US tablespoon
+        "tablespoon": 0.0147868,
     }
 
     @classmethod
@@ -104,52 +178,199 @@ class UnitConverter:
         return cls.convert_volume(amount, unit, "l")
 
     @classmethod
+    def normalize_batch_volume(cls, volume, unit="gal"):
+        """
+        Normalize batch size or boil size to brewing-friendly increments
+
+        Uses piecewise rounding rules by volume range:
+        - Imperial (gallons):
+          - ≥10 gal: Round to nearest 1 gallon
+          - ≥5 gal: Round to nearest 0.5 gallon
+          - ≥1 gal: Round to nearest 0.25 gallon
+          - <1 gal: Round to nearest 0.1 gallon
+        - Metric (liters):
+          - ≥50L: Round to nearest 5 liters
+          - ≥20L: Round to nearest 1 liter
+          - ≥10L: Round to nearest 0.5 liter
+          - ≥1L: Round to nearest 0.5 liter
+          - <1L: Round to nearest 0.1 liter
+
+        Args:
+            volume: The volume to normalize
+            unit: The unit of measurement ("gal", "l", etc.)
+
+        Returns:
+            Normalized volume with brewing-friendly precision
+        """
+        if volume == 0:
+            return 0.0
+
+        unit_lower = unit.lower()
+
+        # Imperial gallons
+        if unit_lower in ["gal", "gallon", "gallons"]:
+            if volume >= 10:
+                # Round to nearest gallon
+                return round(volume)
+            elif volume >= 5:
+                # Round to nearest 0.5 gallon
+                return round(volume * 2) / 2
+            elif volume >= 1:
+                # Round to nearest 0.25 gallon
+                return round(volume * 4) / 4
+            else:
+                # Small volumes: round to nearest 0.1 gallon
+                return round(volume, 1)
+
+        # Metric liters
+        elif unit_lower in ["l", "liter", "liters"]:
+            if volume >= 50:
+                # Round to nearest 5 liters
+                return round(volume / 5) * 5
+            elif volume >= 20:
+                # Round to nearest liter
+                return round(volume)
+            elif volume >= 10:
+                # Round to nearest 0.5 liter
+                return round(volume * 2) / 2
+            elif volume >= 1:
+                # Round to nearest 0.5 liter
+                return round(volume * 2) / 2
+            else:
+                # Small volumes: round to nearest 0.1 liter
+                return round(volume, 1)
+
+        # Unknown unit - apply generic 2-decimal rounding
+        return round(volume, 2)
+
+    @classmethod
     def round_to_brewing_precision(
         cls, amount, ingredient_type="general", unit_system="imperial", unit="oz"
     ):
         """
-        Round amounts to brewing-friendly precision to avoid floating point errors
+        Round amounts to brewing-friendly precision for practical brewing
+
+        Normalizes values to common brewing increments:
+        - Metric grains: 5g, 10g, 25g, 50g, 100g, 250g, 500g, 1kg increments
+        - Metric hops: 1g, 5g, 10g, 25g, 50g increments
+        - Imperial grains: 0.25oz, 0.5oz, 1oz, 4oz, 8oz, 1lb increments
+        - Imperial hops: 0.25oz, 0.5oz, 1oz increments
 
         Args:
             amount: The amount to round
             ingredient_type: Type of ingredient (hop, grain, yeast, etc.)
             unit_system: "imperial" or "metric"
-            unit: The unit of measurement
+            unit: The unit of measurement (kept for API consistency, not used
+                  in logic as precision is determined by unit_system)
 
         Returns:
-            Rounded amount with appropriate precision for brewing
+            Normalized amount with brewing-friendly precision
         """
         if amount == 0:
             return 0.0
 
-        # Imperial units (stored as oz for weight)
+        # Imperial units
         if unit_system == "imperial":
             if ingredient_type == "grain":
-                # Grains: Integer oz (no decimal places)
-                return float(round(amount))
+                # Grain amounts in oz - round to practical increments
+                if amount >= 256:  # >= 16 lb
+                    # Round to nearest pound (16 oz)
+                    return round(amount / 16) * 16
+                elif amount >= 128:  # >= 8 lb
+                    # Round to nearest 8 oz
+                    return round(amount / 8) * 8
+                elif amount >= 64:  # >= 4 lb
+                    # Round to nearest 4 oz
+                    return round(amount / 4) * 4
+                elif amount >= 16:  # >= 1 lb
+                    # Round to nearest oz
+                    return round(amount)
+                elif amount >= 4:  # >= 0.25 lb
+                    # Round to nearest 0.5 oz
+                    return round(amount * 2) / 2
+                else:
+                    # Small amounts: round to nearest 0.25 oz
+                    return round(amount * 4) / 4
+
             elif ingredient_type == "hop":
-                # Hops: 2 decimal places, normalized to nearest 0.25 oz
-                return round(round(amount * 4) / 4, 2)
+                # Hop amounts in oz - finer precision
+                if amount >= 4:
+                    # Round to nearest oz
+                    return round(amount)
+                elif amount >= 1:
+                    # Round to nearest 0.5 oz
+                    return round(amount * 2) / 2
+                else:
+                    # Small amounts: round to nearest 0.25 oz
+                    return round(amount * 4) / 4
+
             elif ingredient_type == "yeast":
-                # Yeast: Integer quantities (no decimal places)
-                return float(round(amount))
-            else:
-                # General: 2 decimal places
+                # Yeast amounts are typically small; keep 2-decimal precision
+                # so g→lb/oz conversions (e.g. 11.5g → 0.025lb) are not
+                # rounded down to zero
+                # TODO: Consider normalizing to packages as standard
                 return round(amount, 2)
 
-        # Metric units (stored as g for weight)
+            else:
+                # Other ingredients: round to 2 decimal places
+                return round(amount, 2)
+
+        # Metric units
         else:  # metric
             if ingredient_type == "grain":
-                # Grains: Integers rounded to nearest 25g
-                return float(round(amount / 25) * 25)
+                # Grain amounts in grams - round to practical increments
+                if amount >= 5000:  # >= 5 kg
+                    # Round to nearest kg (1000g)
+                    return round(amount / 1000) * 1000
+                elif amount >= 1000:  # >= 1 kg
+                    # Round to nearest 500g
+                    return round(amount / 500) * 500
+                elif amount >= 500:
+                    # Round to nearest 250g
+                    return round(amount / 250) * 250
+                elif amount >= 100:
+                    # Round to nearest 100g
+                    return round(amount / 100) * 100
+                elif amount >= 50:
+                    # Round to nearest 50g
+                    return round(amount / 50) * 50
+                elif amount >= 25:
+                    # Round to nearest 25g
+                    return round(amount / 25) * 25
+                elif amount >= 10:
+                    # Round to nearest 10g
+                    return round(amount / 10) * 10
+                else:
+                    # Small amounts: round to nearest 5g
+                    return round(amount / 5) * 5
+
             elif ingredient_type == "hop":
-                # Hops: Integers rounded to nearest 5g
-                return float(round(amount / 5) * 5)
+                # Hop amounts in grams - finer precision
+                if amount >= 100:
+                    # Round to nearest 50g
+                    return round(amount / 50) * 50
+                elif amount >= 50:
+                    # Round to nearest 25g
+                    return round(amount / 25) * 25
+                elif amount >= 10:
+                    # Round to nearest 10g
+                    return round(amount / 10) * 10
+                elif amount >= 5:
+                    # Round to nearest 5g
+                    return round(amount / 5) * 5
+                else:
+                    # Small amounts: round to nearest gram
+                    return round(amount)
+
             elif ingredient_type == "yeast":
-                # Yeast: Integer quantities
-                return float(round(amount))
+                # Yeast in grams - round to nearest 10g for packages
+                if amount >= 50:
+                    return round(amount / 10) * 10
+                else:
+                    return round(amount)
+
             else:
-                # General: round to nearest gram
+                # Other ingredients: round to nearest gram
                 return float(round(amount))
 
     @classmethod
@@ -203,6 +424,35 @@ class UnitConverter:
         else:
             # For larger amounts, round to nearest whole number
             return round(amount)
+
+    @classmethod
+    def convert_each_to_weight(cls, amount, target_unit="g", item_name=None):
+        """
+        Convert 'each'/'item' count to weight for BeerXML export
+
+        Args:
+            amount: Number of items
+            target_unit: "g" or "oz" (default "g")
+            item_name: Optional name for specific conversion
+
+        Returns:
+            Weight equivalent in target unit
+        """
+
+        # Normalise and validate target unit
+        target_unit = str(target_unit).lower().strip()
+        if target_unit not in ["g", "oz"]:
+            target_unit = "g"  # Default to grams
+
+        # Try specific item lookup (case-insensitive)
+        if item_name:
+            # Normalize: replace hyphens, underscores, spaces with a separator
+            item_key = item_name.lower().strip().replace("-", "_").replace(" ", "_")
+            if item_key in cls.EACH_TO_WEIGHT_DEFAULTS:
+                return amount * cls.EACH_TO_WEIGHT_DEFAULTS[item_key][target_unit]
+
+        # Default: 1 oz (28g) per item
+        return amount * cls.EACH_TO_WEIGHT_DEFAULTS["default"][target_unit]
 
     @classmethod
     def convert_temperature(cls, temp, from_unit, to_unit):
@@ -289,10 +539,14 @@ class UnitConverter:
         if "amount" in converted and "unit" in converted:
             current_unit = converted["unit"]
 
-            # Determine if it's weight or volume
-            if current_unit.lower() in [
-                key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()
-            ]:
+            # Handle count-like units - keep as-is for internal storage
+            if current_unit.lower() in cls.COUNT_UNITS_LOWER:
+                # Return as-is for internal storage
+                # Will be converted for BeerXML export
+                return converted
+
+            # Determine if it's weight or volume using classification constants
+            if current_unit.lower() in cls.WEIGHT_UNITS_LOWER:
                 # It's a weight unit
                 target_unit = cls.get_appropriate_unit(
                     target_unit_system, "weight", converted["amount"]
@@ -311,9 +565,7 @@ class UnitConverter:
                     target_unit,
                 )
 
-            elif current_unit.lower() in [
-                key.lower() for key in cls.VOLUME_TO_LITERS.keys()
-            ]:
+            elif current_unit.lower() in cls.VOLUME_UNITS_LOWER:
                 # It's a volume unit
                 target_unit = cls.get_appropriate_unit(target_unit_system, "volume")
                 converted["amount"] = cls.convert_volume(
@@ -325,15 +577,28 @@ class UnitConverter:
 
     @classmethod
     def validate_unit(cls, unit, unit_type="weight"):
-        """Validate if a unit is recognized"""
-        unit_lower = unit.lower()
+        """
+        Validate if a unit is recognized using classification constants
+
+        Args:
+            unit: The unit to validate (coerced to string and stripped)
+            unit_type: Type of unit to check
+                       ("weight", "volume", "temperature", "count")
+
+        Returns:
+            True if the unit is valid for the given type, False otherwise
+        """
+        # Normalize and type-guard unit for robustness
+        unit_lower = str(unit).strip().lower()
 
         if unit_type == "weight":
-            return unit_lower in [key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()]
+            return unit_lower in cls.WEIGHT_UNITS_LOWER
         elif unit_type == "volume":
-            return unit_lower in [key.lower() for key in cls.VOLUME_TO_LITERS.keys()]
+            return unit_lower in cls.VOLUME_UNITS_LOWER
         elif unit_type == "temperature":
             return unit_lower in ["c", "f", "celsius", "fahrenheit"]
+        elif unit_type == "count":
+            return unit_lower in cls.COUNT_UNITS_LOWER
 
         return False
 
@@ -361,21 +626,21 @@ class UnitConverter:
         base_units = cls.get_base_units(unit_system)
         current_unit_lower = current_unit.lower()
 
-        # Determine if it's weight or volume based
-        if current_unit_lower in [key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()]:
+        # Determine if it's weight or volume based using classification constants
+        if current_unit_lower in cls.WEIGHT_UNITS_LOWER:
             # It's a weight unit
             target_unit = base_units["weight"]
             converted_amount = cls.convert_weight(amount, current_unit, target_unit)
             return round(converted_amount, 2), target_unit
 
-        elif current_unit_lower in [key.lower() for key in cls.VOLUME_TO_LITERS.keys()]:
+        elif current_unit_lower in cls.VOLUME_UNITS_LOWER:
             # It's a volume unit
             target_unit = base_units["volume"]
             converted_amount = cls.convert_volume(amount, current_unit, target_unit)
             return round(converted_amount, 2), target_unit
 
         else:
-            # Keep non-convertible units as-is (e.g., pkg, tsp, etc.)
+            # Keep non-convertible units as-is (e.g., pkg)
             return amount, current_unit
 
     @classmethod

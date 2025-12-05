@@ -393,3 +393,81 @@ class TestUnitConversionWorkflow:
         assert "convert_metric_to_imperial" in path_node_ids
         assert "normalize_imperial" in path_node_ids
         assert "finish" in path_node_ids
+
+    def test_batch_size_normalization_metric(self):
+        """Test that batch sizes are normalized to nearest 0.5L increment."""
+        # Imperial 5 gal = 18.927 L -> should normalize to 19L
+        recipe = {
+            "name": "Test Recipe",
+            "batch_size": 5.0,
+            "batch_size_unit": "gal",
+            "efficiency": 75,
+            "target_unit_system": "metric",
+            "ingredients": [
+                {"name": "Pale Malt", "type": "grain", "amount": 10, "unit": "lb"}
+            ],
+        }
+
+        workflow_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "services",
+            "ai",
+            "workflows",
+            "unit_conversion.yaml",
+        )
+        engine = FlowchartEngine.from_yaml_file(workflow_path)
+        result = engine.execute_workflow(recipe)
+
+        assert result.success is True
+
+        # Find batch size normalized change
+        batch_normalized = [
+            c for c in result.changes if c.get("type") == "batch_size_normalized"
+        ]
+
+        # Should have exactly one batch size normalization
+        assert len(batch_normalized) == 1
+        assert batch_normalized[0]["unit"] == "l"
+        # 18.927L should round to 19.0L (nearest 0.5L)
+        assert abs(batch_normalized[0]["new_value"] - 19.0) < 0.01
+        assert 18.9 < batch_normalized[0]["old_value"] < 19.0
+
+    def test_batch_size_normalization_imperial(self):
+        """Test that batch sizes are normalized to nearest 0.5 gal increment."""
+        # Metric 20L = 5.283 gal -> should normalize to 5.5 gal
+        recipe = {
+            "name": "Test Recipe",
+            "batch_size": 20.0,
+            "batch_size_unit": "l",
+            "efficiency": 75,
+            "target_unit_system": "imperial",
+            "ingredients": [
+                {"name": "Pilsner Malt", "type": "grain", "amount": 4000, "unit": "g"}
+            ],
+        }
+
+        workflow_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "services",
+            "ai",
+            "workflows",
+            "unit_conversion.yaml",
+        )
+        engine = FlowchartEngine.from_yaml_file(workflow_path)
+        result = engine.execute_workflow(recipe)
+
+        assert result.success is True
+
+        # Find batch size normalized change
+        batch_normalized = [
+            c for c in result.changes if c.get("type") == "batch_size_normalized"
+        ]
+
+        # Should have exactly one batch size normalization
+        assert len(batch_normalized) == 1
+        assert batch_normalized[0]["unit"] == "gal"
+        # 5.283 gal should round to 5.5 gal (nearest 0.5 gal)
+        assert abs(batch_normalized[0]["new_value"] - 5.5) < 0.01
+        assert 5.2 < batch_normalized[0]["old_value"] < 5.4

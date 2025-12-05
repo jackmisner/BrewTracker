@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import ReportBug from "../../src/pages/ReportBug";
 
 // Mock window.open
-Object.defineProperty(window, 'open', {
+Object.defineProperty(window, "open", {
   writable: true,
   value: jest.fn(),
 });
@@ -12,11 +12,12 @@ Object.defineProperty(window, 'open', {
 describe("ReportBug", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock navigator.userAgent
-    Object.defineProperty(navigator, 'userAgent', {
+    Object.defineProperty(navigator, "userAgent", {
       writable: true,
-      value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      value:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     });
 
     render(<ReportBug />);
@@ -25,7 +26,11 @@ describe("ReportBug", () => {
   describe("Page Structure", () => {
     test("renders page header with title and subtitle", () => {
       expect(screen.getByText("Report a Bug")).toBeInTheDocument();
-      expect(screen.getByText("Help us improve BrewTracker by reporting any issues you encounter.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Help us improve BrewTracker by reporting any issues you encounter."
+        )
+      ).toBeInTheDocument();
     });
 
     test("renders form card with title", () => {
@@ -36,8 +41,12 @@ describe("ReportBug", () => {
 
     test("renders GitHub account note", () => {
       expect(screen.getByText("Note:")).toBeInTheDocument();
-      expect(screen.getByText(/This form will redirect you to GitHub/)).toBeInTheDocument();
-      expect(screen.getByText(/You'll need a GitHub account/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/This form will redirect you to GitHub/)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/You'll need a GitHub account/)
+      ).toBeInTheDocument();
     });
   });
 
@@ -59,7 +68,10 @@ describe("ReportBug", () => {
       const titleInput = screen.getByLabelText("Bug Title *");
       expect(titleInput).toHaveAttribute("type", "text");
       expect(titleInput).toHaveAttribute("required");
-      expect(titleInput).toHaveAttribute("placeholder", "Brief description of the issue");
+      expect(titleInput).toHaveAttribute(
+        "placeholder",
+        "Brief description of the issue"
+      );
 
       const descriptionTextarea = screen.getByLabelText("Description *");
       expect(descriptionTextarea.tagName).toBe("TEXTAREA");
@@ -78,21 +90,27 @@ describe("ReportBug", () => {
     test("severity select has correct options", () => {
       const severitySelect = screen.getByLabelText("Severity");
       expect(severitySelect).toHaveValue("medium");
-      
+
       const options = screen.getAllByRole("option");
-      const severityOptions = options.filter(option => 
-        option.closest("select") === severitySelect
+      const severityOptions = options.filter(
+        option => option.closest("select") === severitySelect
       );
-      
+
       expect(severityOptions).toHaveLength(4);
       expect(severityOptions[0]).toHaveTextContent("Low - Minor inconvenience");
-      expect(severityOptions[1]).toHaveTextContent("Medium - Affects functionality");
-      expect(severityOptions[2]).toHaveTextContent("High - Major feature broken");
+      expect(severityOptions[1]).toHaveTextContent(
+        "Medium - Affects functionality"
+      );
+      expect(severityOptions[2]).toHaveTextContent(
+        "High - Major feature broken"
+      );
       expect(severityOptions[3]).toHaveTextContent("Critical - App unusable");
     });
 
     test("submit button has correct initial state", () => {
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       expect(submitButton).toBeInTheDocument();
       expect(submitButton).not.toBeDisabled();
       expect(submitButton).toHaveClass("primary-button");
@@ -135,10 +153,10 @@ describe("ReportBug", () => {
 
     test("allows updating browser info field despite being readonly", async () => {
       const browserInfoInput = screen.getByLabelText("Browser Information");
-      
+
       // Simulate changing the browser info value programmatically
-      fireEvent.change(browserInfoInput, { 
-        target: { value: "Custom browser info" } 
+      fireEvent.change(browserInfoInput, {
+        target: { value: "Custom browser info" },
       });
 
       expect(browserInfoInput).toHaveValue("Custom browser info");
@@ -147,34 +165,48 @@ describe("ReportBug", () => {
 
   describe("Form Validation", () => {
     test("prevents submission when required fields are empty", async () => {
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
-      
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
+
       // Try to submit without filling required fields
       await userEvent.click(submitButton);
-      
-      // The form submission will still go through since we're not actually using HTML5 validation in tests
-      // But we can check that it creates a URL with empty values
-      expect(window.open).toHaveBeenCalledWith(
-        expect.stringContaining("title=Bug%20Report%3A%20"),
-        "_blank"
-      );
+
+      // Should not open GitHub URL
+      expect(window.open).not.toHaveBeenCalled();
     });
 
     test("allows submission when all required fields are filled", async () => {
       // Fill in all required fields
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Bug");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test description");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test expected");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test actual");
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test description"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test expected"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test actual"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       // Should open GitHub URL
       expect(window.open).toHaveBeenCalledTimes(1);
       expect(window.open).toHaveBeenCalledWith(
-        expect.stringContaining("https://github.com/jackmisner/BrewTracker/issues/new"),
+        expect.stringContaining(
+          "https://github.com/jackmisner/BrewTracker/issues/new"
+        ),
         "_blank"
       );
     });
@@ -183,25 +215,44 @@ describe("ReportBug", () => {
   describe("Form Submission", () => {
     beforeEach(async () => {
       // Fill in all required fields
-      await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Bug Title");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test bug description");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test reproduction steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test expected behavior");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test actual behavior");
+      await userEvent.type(
+        screen.getByLabelText("Bug Title *"),
+        "Test Bug Title"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test bug description"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test reproduction steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test expected behavior"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test actual behavior"
+      );
       await userEvent.selectOptions(screen.getByLabelText("Severity"), "high");
     });
 
     test("creates GitHub URL with correct parameters", async () => {
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       expect(window.open).toHaveBeenCalledWith(
-        expect.stringContaining("https://github.com/jackmisner/BrewTracker/issues/new"),
+        expect.stringContaining(
+          "https://github.com/jackmisner/BrewTracker/issues/new"
+        ),
         "_blank"
       );
 
       const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
-      
+
       // Check that URL contains expected parameters
       expect(githubUrl).toContain("title=Bug%20Report%3A%20Test%20Bug%20Title");
       expect(githubUrl).toContain("labels=bug,high-priority");
@@ -212,26 +263,34 @@ describe("ReportBug", () => {
     });
 
     test("shows success message during submission", async () => {
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Redirecting to GitHub to create your bug report...")).toBeInTheDocument();
+        expect(
+          screen.getByText("Redirecting to GitHub to create your bug report...")
+        ).toBeInTheDocument();
       });
 
-      const alert = screen.getByText("Redirecting to GitHub to create your bug report...").closest(".alert");
+      const alert = screen
+        .getByText("Redirecting to GitHub to create your bug report...")
+        .closest(".alert");
       expect(alert).toHaveClass("alert-success");
     });
 
     test("button text changes during submission", async () => {
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
-      
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
+
       // Click the button
       await userEvent.click(submitButton);
 
       // Check that window.open was called (which means submission completed)
       expect(window.open).toHaveBeenCalled();
-      
+
       // Verify the button is back to normal state after submission
       await waitFor(() => {
         expect(screen.getByRole("button")).not.toBeDisabled();
@@ -242,19 +301,26 @@ describe("ReportBug", () => {
       const titleInput = screen.getByLabelText("Bug Title *");
       const descriptionTextarea = screen.getByLabelText("Description *");
       const severitySelect = screen.getByLabelText("Severity");
-      
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       // Wait for form reset (should happen after 3 seconds)
-      await waitFor(() => {
-        expect(titleInput).toHaveValue("");
-        expect(descriptionTextarea).toHaveValue("");
-        expect(severitySelect).toHaveValue("medium");
-      }, { timeout: 4000 });
+      await waitFor(
+        () => {
+          expect(titleInput).toHaveValue("");
+          expect(descriptionTextarea).toHaveValue("");
+          expect(severitySelect).toHaveValue("medium");
+        },
+        { timeout: 4000 }
+      );
 
       // Success message should also be cleared
-      expect(screen.queryByText("Redirecting to GitHub to create your bug report...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Redirecting to GitHub to create your bug report...")
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -267,23 +333,43 @@ describe("ReportBug", () => {
 
       // Fill required fields
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Bug");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test description");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test expected");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test actual");
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test description"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test expected"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test actual"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Error creating bug report. Please try again.")).toBeInTheDocument();
+        expect(
+          screen.getByText("Error creating bug report. Please try again.")
+        ).toBeInTheDocument();
       });
 
-      const alert = screen.getByText("Error creating bug report. Please try again.").closest(".alert");
+      const alert = screen
+        .getByText("Error creating bug report. Please try again.")
+        .closest(".alert");
       expect(alert).toHaveClass("alert-error");
 
       // Button should be re-enabled
-      expect(screen.getByRole("button", { name: "Create Bug Report" })).not.toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Create Bug Report" })
+      ).not.toBeDisabled();
     });
 
     test("recovers from error state on subsequent submission", async () => {
@@ -294,16 +380,32 @@ describe("ReportBug", () => {
 
       // Fill required fields
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Bug");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test description");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test expected");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test actual");
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test description"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test expected"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test actual"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Error creating bug report. Please try again.")).toBeInTheDocument();
+        expect(
+          screen.getByText("Error creating bug report. Please try again.")
+        ).toBeInTheDocument();
       });
 
       // Second submission succeeds
@@ -311,27 +413,48 @@ describe("ReportBug", () => {
       await userEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Redirecting to GitHub to create your bug report...")).toBeInTheDocument();
+        expect(
+          screen.getByText("Redirecting to GitHub to create your bug report...")
+        ).toBeInTheDocument();
       });
 
       // Error message should be cleared
-      expect(screen.queryByText("Error creating bug report. Please try again.")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Error creating bug report. Please try again.")
+      ).not.toBeInTheDocument();
     });
   });
 
   describe("GitHub URL Generation", () => {
     test("properly encodes special characters in form data", async () => {
-      await userEvent.type(screen.getByLabelText("Bug Title *"), "Bug with & special chars!");
-      await userEvent.type(screen.getByLabelText("Description *"), "Description with <html> & \"quotes\"");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Steps with %20 encoding");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Expected with newlines\nand tabs\t");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Actual behavior");
+      await userEvent.type(
+        screen.getByLabelText("Bug Title *"),
+        "Bug with & special chars!"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        'Description with <html> & "quotes"'
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Steps with %20 encoding"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Expected with newlines\nand tabs\t"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Actual behavior"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
-      
+
       // Check that special characters are properly encoded
       expect(githubUrl).toContain("Bug%20with%20%26%20special%20chars!");
       expect(githubUrl).toContain("%3Chtml%3E");
@@ -343,13 +466,30 @@ describe("ReportBug", () => {
 
     test("includes all form fields in GitHub issue body", async () => {
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Title");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test Description");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test Steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test Expected");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test Actual");
-      await userEvent.selectOptions(screen.getByLabelText("Severity"), "critical");
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test Description"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test Steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test Expected"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test Actual"
+      );
+      await userEvent.selectOptions(
+        screen.getByLabelText("Severity"),
+        "critical"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
@@ -368,12 +508,20 @@ describe("ReportBug", () => {
       // Test with different severity levels
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test");
       await userEvent.type(screen.getByLabelText("Description *"), "Test");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test");
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test"
+      );
       await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test");
       await userEvent.selectOptions(screen.getByLabelText("Severity"), "low");
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
@@ -400,20 +548,34 @@ describe("ReportBug", () => {
     });
 
     test("applies correct CSS classes to alert messages", async () => {
-      // Test success alert by checking if alert classes exist after submission  
+      // Test success alert by checking if alert classes exist after submission
       await userEvent.type(screen.getByLabelText("Bug Title *"), "Test Alert");
-      await userEvent.type(screen.getByLabelText("Description *"), "Test Alert Desc");
-      await userEvent.type(screen.getByLabelText("Steps to Reproduce *"), "Test Alert Steps");
-      await userEvent.type(screen.getByLabelText("Expected Behavior *"), "Test Alert Expected");
-      await userEvent.type(screen.getByLabelText("Actual Behavior *"), "Test Alert Actual");
+      await userEvent.type(
+        screen.getByLabelText("Description *"),
+        "Test Alert Desc"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Steps to Reproduce *"),
+        "Test Alert Steps"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Expected Behavior *"),
+        "Test Alert Expected"
+      );
+      await userEvent.type(
+        screen.getByLabelText("Actual Behavior *"),
+        "Test Alert Actual"
+      );
 
-      const submitButton = screen.getByRole("button", { name: "Create Bug Report" });
+      const submitButton = screen.getByRole("button", {
+        name: "Create Bug Report",
+      });
       await userEvent.click(submitButton);
 
       // The success message appears very quickly and may be cleared before we can check
       // So let's verify that the submission happened by checking window.open was called
       expect(window.open).toHaveBeenCalled();
-      
+
       // We can verify the CSS classes are present even if the message disappeared
       // by checking if the document has the correct alert structure
       const alertElements = document.querySelectorAll(".alert");
@@ -422,7 +584,9 @@ describe("ReportBug", () => {
 
     test("form help text has correct class", () => {
       expect(document.querySelector(".form-help")).toBeInTheDocument();
-      expect(document.querySelector(".form-help")).toHaveTextContent("This information helps us debug browser-specific issues");
+      expect(document.querySelector(".form-help")).toHaveTextContent(
+        "This information helps us debug browser-specific issues"
+      );
     });
   });
 
@@ -468,15 +632,34 @@ describe("ReportBug", () => {
 
   describe("Placeholders and Help Text", () => {
     test("has appropriate placeholders for all fields", () => {
-      expect(screen.getByLabelText("Bug Title *")).toHaveAttribute("placeholder", "Brief description of the issue");
-      expect(screen.getByLabelText("Description *")).toHaveAttribute("placeholder", "Detailed description of the bug");
-      expect(screen.getByLabelText("Steps to Reproduce *")).toHaveAttribute("placeholder", "1. Go to...\n2. Click on...\n3. See error...");
-      expect(screen.getByLabelText("Expected Behavior *")).toHaveAttribute("placeholder", "What you expected to happen");
-      expect(screen.getByLabelText("Actual Behavior *")).toHaveAttribute("placeholder", "What actually happened");
+      expect(screen.getByLabelText("Bug Title *")).toHaveAttribute(
+        "placeholder",
+        "Brief description of the issue"
+      );
+      expect(screen.getByLabelText("Description *")).toHaveAttribute(
+        "placeholder",
+        "Detailed description of the bug"
+      );
+      expect(screen.getByLabelText("Steps to Reproduce *")).toHaveAttribute(
+        "placeholder",
+        "1. Go to...\n2. Click on...\n3. See error..."
+      );
+      expect(screen.getByLabelText("Expected Behavior *")).toHaveAttribute(
+        "placeholder",
+        "What you expected to happen"
+      );
+      expect(screen.getByLabelText("Actual Behavior *")).toHaveAttribute(
+        "placeholder",
+        "What actually happened"
+      );
     });
 
     test("displays helpful browser information text", () => {
-      expect(screen.getByText("This information helps us debug browser-specific issues.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "This information helps us debug browser-specific issues."
+        )
+      ).toBeInTheDocument();
     });
   });
 
@@ -488,7 +671,9 @@ describe("ReportBug", () => {
       expect(screen.getByLabelText("Expected Behavior *")).toHaveValue("");
       expect(screen.getByLabelText("Actual Behavior *")).toHaveValue("");
       expect(screen.getByLabelText("Severity")).toHaveValue("medium");
-      expect(screen.getByLabelText("Browser Information")).toHaveValue(navigator.userAgent);
+      expect(screen.getByLabelText("Browser Information")).toHaveValue(
+        navigator.userAgent
+      );
     });
   });
 });

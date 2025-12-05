@@ -270,7 +270,7 @@ class RecipeContext:
             self._modify_recipe_parameter(change)
         elif change_type in ["ingredient_converted", "ingredient_normalized"]:
             self._convert_or_normalize_ingredient(change)
-        elif change_type == "batch_size_converted":
+        elif change_type in ["batch_size_converted", "batch_size_normalized"]:
             self._convert_batch_size(change)
         elif change_type == "temperature_converted":
             self._convert_temperature(change)
@@ -367,6 +367,13 @@ class RecipeContext:
 
     def _convert_batch_size(self, change: Dict[str, Any]):
         """Convert batch size to new unit."""
+        change_type = change.get("type", "unknown")
+        old_batch_size = self.recipe.get("batch_size")
+        old_batch_unit = self.recipe.get("batch_size_unit")
+        logger.info(
+            f"[BATCH_SIZE_APPLY] Applying {change_type}: current recipe batch_size={old_batch_size} {old_batch_unit}"
+        )
+
         new_value = change.get("new_value")
         new_unit = change.get("new_unit")
 
@@ -376,9 +383,15 @@ class RecipeContext:
                     f"Invalid batch size value: {new_value} - must be positive numeric"
                 )
                 return
+            logger.info(f"[BATCH_SIZE_APPLY] Setting batch_size to {new_value}")
             self.recipe["batch_size"] = new_value
         if new_unit is not None:
+            logger.info(f"[BATCH_SIZE_APPLY] Setting batch_size_unit to {new_unit}")
             self.recipe["batch_size_unit"] = new_unit
+
+        logger.info(
+            f"[BATCH_SIZE_APPLY] After apply: batch_size={self.recipe.get('batch_size')} {self.recipe.get('batch_size_unit')}"
+        )
 
     def _convert_temperature(self, change: Dict[str, Any]):
         """Convert temperature to new unit."""

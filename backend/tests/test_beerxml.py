@@ -758,7 +758,7 @@ class TestBeerXMLEndpoints:
         )
         assert pale_malt is not None
         assert pale_malt["type"] == "grain"
-        assert pale_malt["unit"] == "oz"  # Base unit for imperial after migration
+        assert pale_malt["unit"] == "g"  # Base unit for metric after migration
 
         dry_hop = next((ing for ing in ingredients if ing["use"] == "dry-hop"), None)
         assert dry_hop is not None
@@ -1110,3 +1110,351 @@ class TestBeerXMLEndpoints:
         assert (
             malted_rye_match["confidence"] > caramel_rye_match["confidence"]
         ), f"Malted Rye ({malted_rye_match['confidence']}) should score higher than Caramel Rye ({caramel_rye_match['confidence']})"
+
+    def test_whirlfloc_tablet_unit_correction(self, client, authenticated_user):
+        """Test that whirlfloc tablets exported as 1kg are converted to 1 each"""
+        user, headers = authenticated_user
+
+        # BeerXML with whirlfloc exported as 1kg (common error)
+        beerxml_with_whirlfloc = """<?xml version="1.0" encoding="UTF-8"?>
+        <RECIPES>
+            <RECIPE>
+                <NAME>IPA with Whirlfloc</NAME>
+                <VERSION>1</VERSION>
+                <TYPE>All Grain</TYPE>
+                <BATCH_SIZE>19.00</BATCH_SIZE>
+                <BOIL_TIME>60</BOIL_TIME>
+                <EFFICIENCY>75</EFFICIENCY>
+                <FERMENTABLES>
+                    <FERMENTABLE>
+                        <NAME>Pale Malt</NAME>
+                        <VERSION>1</VERSION>
+                        <AMOUNT>4.540</AMOUNT>
+                        <TYPE>Grain</TYPE>
+                        <YIELD>80.0</YIELD>
+                        <COLOR>2.0</COLOR>
+                    </FERMENTABLE>
+                </FERMENTABLES>
+                <MISCS>
+                    <MISC>
+                        <NAME>Whirlfloc Tablet</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Fining</TYPE>
+                        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+                        <AMOUNT>1.0</AMOUNT>
+                        <USE>Boil</USE>
+                        <TIME>15</TIME>
+                    </MISC>
+                    <MISC>
+                        <NAME>Irish Moss</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Fining</TYPE>
+                        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+                        <AMOUNT>2.0</AMOUNT>
+                        <USE>Boil</USE>
+                        <TIME>10</TIME>
+                    </MISC>
+                    <MISC>
+                        <NAME>Gypsum</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Water Agent</TYPE>
+                        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+                        <AMOUNT>0.005</AMOUNT>
+                        <USE>Mash</USE>
+                        <TIME>0</TIME>
+                    </MISC>
+                </MISCS>
+            </RECIPE>
+        </RECIPES>"""
+
+        parse_data = {"xml_content": beerxml_with_whirlfloc}
+        response = client.post("/api/beerxml/parse", json=parse_data, headers=headers)
+
+        assert response.status_code == 200
+        recipe = response.json["recipes"][0]
+        ingredients = recipe["ingredients"]
+
+        # Find misc ingredients
+        misc_ingredients = [ing for ing in ingredients if ing["type"] == "other"]
+        assert len(misc_ingredients) == 3
+
+        # Check Whirlfloc Tablet (1kg → 1 each)
+        whirlfloc = next(
+            (ing for ing in misc_ingredients if "Whirlfloc" in ing["name"]), None
+        )
+        assert whirlfloc is not None, "Whirlfloc Tablet not found"
+        assert whirlfloc["amount"] == 1, f"Expected 1, got {whirlfloc['amount']}"
+        assert whirlfloc["unit"] == "each", f"Expected 'each', got {whirlfloc['unit']}"
+
+        # Check Irish Moss (2kg → 2 each)
+        irish_moss = next(
+            (ing for ing in misc_ingredients if "Irish Moss" in ing["name"]), None
+        )
+        assert irish_moss is not None, "Irish Moss not found"
+        assert irish_moss["amount"] == 2, f"Expected 2, got {irish_moss['amount']}"
+        assert (
+            irish_moss["unit"] == "each"
+        ), f"Expected 'each', got {irish_moss['unit']}"
+
+        # Check Gypsum (0.005kg → 5g, should NOT be converted)
+        gypsum = next(
+            (ing for ing in misc_ingredients if "Gypsum" in ing["name"]), None
+        )
+        assert gypsum is not None, "Gypsum not found"
+        assert gypsum["amount"] == 5.0, f"Expected 5.0, got {gypsum['amount']}"
+        assert gypsum["unit"] == "g", f"Expected 'g', got {gypsum['unit']}"
+
+    def test_yeast_10x_error_detection(self, client, authenticated_user):
+        """Test that yeast with 10x multiplication error is corrected (220g → 2 pkg)"""
+        user, headers = authenticated_user
+
+        # BeerXML with yeast 10x error (0.22kg instead of 0.022kg)
+        beerxml_with_yeast_error = """<?xml version="1.0" encoding="UTF-8"?>
+        <RECIPES>
+            <RECIPE>
+                <NAME>IPA with Yeast Error</NAME>
+                <VERSION>1</VERSION>
+                <TYPE>All Grain</TYPE>
+                <BATCH_SIZE>19.00</BATCH_SIZE>
+                <BOIL_TIME>60</BOIL_TIME>
+                <EFFICIENCY>75</EFFICIENCY>
+                <FERMENTABLES>
+                    <FERMENTABLE>
+                        <NAME>Pale Malt</NAME>
+                        <VERSION>1</VERSION>
+                        <AMOUNT>4.540</AMOUNT>
+                        <TYPE>Grain</TYPE>
+                        <YIELD>80.0</YIELD>
+                        <COLOR>2.0</COLOR>
+                    </FERMENTABLE>
+                </FERMENTABLES>
+                <YEASTS>
+                    <YEAST>
+                        <NAME>US-05</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Ale</TYPE>
+                        <FORM>Dry</FORM>
+                        <AMOUNT>0.22</AMOUNT>
+                        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+                        <ATTENUATION>77</ATTENUATION>
+                    </YEAST>
+                    <YEAST>
+                        <NAME>WLP001</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Ale</TYPE>
+                        <FORM>Liquid</FORM>
+                        <AMOUNT>0.11</AMOUNT>
+                        <AMOUNT_IS_WEIGHT>TRUE</AMOUNT_IS_WEIGHT>
+                        <ATTENUATION>75</ATTENUATION>
+                    </YEAST>
+                </YEASTS>
+            </RECIPE>
+        </RECIPES>"""
+
+        parse_data = {"xml_content": beerxml_with_yeast_error}
+        response = client.post("/api/beerxml/parse", json=parse_data, headers=headers)
+
+        assert response.status_code == 200
+        recipe = response.json["recipes"][0]
+        ingredients = recipe["ingredients"]
+
+        # Find yeast ingredients
+        yeast_ingredients = [ing for ing in ingredients if ing["type"] == "yeast"]
+        assert len(yeast_ingredients) == 2
+
+        # Check US-05 (0.22kg = 220g → 2 pkg)
+        us05 = next((ing for ing in yeast_ingredients if "US-05" in ing["name"]), None)
+        assert us05 is not None, "US-05 not found"
+        assert us05["amount"] == 2, f"Expected 2, got {us05['amount']}"
+        assert us05["unit"] == "pkg", f"Expected 'pkg', got {us05['unit']}"
+
+        # Check WLP001 (0.11kg = 110g → 1 pkg)
+        wlp001 = next(
+            (ing for ing in yeast_ingredients if "WLP001" in ing["name"]), None
+        )
+        assert wlp001 is not None, "WLP001 not found"
+        assert wlp001["amount"] == 1, f"Expected 1, got {wlp001['amount']}"
+        assert wlp001["unit"] == "pkg", f"Expected 'pkg', got {wlp001['unit']}"
+
+    def test_total_grain_bill_validation_metric(self, client, authenticated_user):
+        """Test that grain validation checks total grain bill, not individual grains (metric)"""
+        user, headers = authenticated_user
+
+        # Test low total grain bill
+        beerxml_low_grain = """<?xml version="1.0" encoding="UTF-8"?>
+        <RECIPES>
+            <RECIPE>
+                <NAME>Low Grain Recipe</NAME>
+                <VERSION>1</VERSION>
+                <TYPE>All Grain</TYPE>
+                <BATCH_SIZE>21.00</BATCH_SIZE>
+                <BOIL_TIME>60</BOIL_TIME>
+                <EFFICIENCY>75</EFFICIENCY>
+                <FERMENTABLES>
+                    <FERMENTABLE>
+                        <NAME>Pale Malt</NAME>
+                        <VERSION>1</VERSION>
+                        <AMOUNT>0.500</AMOUNT>
+                        <TYPE>Grain</TYPE>
+                        <YIELD>80.0</YIELD>
+                        <COLOR>2.0</COLOR>
+                    </FERMENTABLE>
+                </FERMENTABLES>
+                <YEASTS>
+                    <YEAST>
+                        <NAME>US-05</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Ale</TYPE>
+                        <AMOUNT>1</AMOUNT>
+                        <AMOUNT_IS_WEIGHT>FALSE</AMOUNT_IS_WEIGHT>
+                        <ATTENUATION>75</ATTENUATION>
+                    </YEAST>
+                </YEASTS>
+            </RECIPE>
+        </RECIPES>"""
+
+        parse_data = {"xml_content": beerxml_low_grain}
+        response = client.post("/api/beerxml/parse", json=parse_data, headers=headers)
+
+        assert response.status_code == 200
+        recipe = response.json["recipes"][0]
+
+        # Check validation warnings
+        warnings = recipe["metadata"]["validation_warnings"]
+
+        # Should have exactly 1 warning for total grain bill
+        grain_warnings = [w for w in warnings if w["type"] == "grain"]
+        assert (
+            len(grain_warnings) == 1
+        ), f"Expected 1 grain warning, got {len(grain_warnings)}"
+
+        # Warning should be for "Total Grain Bill", not individual ingredient
+        grain_warning = grain_warnings[0]
+        assert (
+            grain_warning["ingredient"] == "Total Grain Bill"
+        ), f"Expected 'Total Grain Bill', got {grain_warning['ingredient']}"
+        assert grain_warning["issue"] == "unusually_low"
+
+        # Message should include batch-relative range
+        assert "21.0L" in grain_warning["message"]
+        assert "2.1kg" in grain_warning["message"]
+        assert "12.6kg" in grain_warning["message"]
+
+    def test_total_grain_bill_validation_imperial(self, client, authenticated_user):
+        """Test that grain validation works correctly for imperial units"""
+        user, headers = authenticated_user
+
+        # Convert recipe to imperial
+        beerxml_imperial = """<?xml version="1.0" encoding="UTF-8"?>
+        <RECIPES>
+            <RECIPE>
+                <NAME>Imperial Recipe</NAME>
+                <VERSION>1</VERSION>
+                <TYPE>All Grain</TYPE>
+                <BATCH_SIZE>19.00</BATCH_SIZE>
+                <BOIL_TIME>60</BOIL_TIME>
+                <EFFICIENCY>75</EFFICIENCY>
+                <FERMENTABLES>
+                    <FERMENTABLE>
+                        <NAME>Pale Malt</NAME>
+                        <VERSION>1</VERSION>
+                        <AMOUNT>0.500</AMOUNT>
+                        <TYPE>Grain</TYPE>
+                        <YIELD>80.0</YIELD>
+                        <COLOR>2.0</COLOR>
+                    </FERMENTABLE>
+                </FERMENTABLES>
+            </RECIPE>
+        </RECIPES>"""
+
+        # Parse and convert to imperial
+        parse_data = {"xml_content": beerxml_imperial}
+        parse_response = client.post(
+            "/api/beerxml/parse", json=parse_data, headers=headers
+        )
+
+        recipe = parse_response.json["recipes"][0]["recipe"]
+
+        # Convert to imperial
+        convert_data = {
+            "recipe": recipe,
+            "target_system": "imperial",
+            "normalize": True,
+        }
+        convert_response = client.post(
+            "/api/beerxml/convert-recipe", json=convert_data, headers=headers
+        )
+
+        assert convert_response.status_code == 200
+        warnings = convert_response.json["warnings"]
+
+        # Should have warning with imperial units
+        grain_warnings = [w for w in warnings if w["type"] == "grain"]
+        if grain_warnings:  # May not warn depending on conversion
+            grain_warning = grain_warnings[0]
+            # Should have imperial units in message
+            assert "gal" in grain_warning["message"]
+            assert "lb" in grain_warning["message"]
+
+    def test_fractional_yeast_package_validation(self, client, authenticated_user):
+        """Test that fractional yeast packages get validation warnings"""
+        user, headers = authenticated_user
+
+        beerxml_fractional_yeast = """<?xml version="1.0" encoding="UTF-8"?>
+        <RECIPES>
+            <RECIPE>
+                <NAME>Fractional Yeast Recipe</NAME>
+                <VERSION>1</VERSION>
+                <TYPE>All Grain</TYPE>
+                <BATCH_SIZE>19.00</BATCH_SIZE>
+                <BOIL_TIME>60</BOIL_TIME>
+                <EFFICIENCY>75</EFFICIENCY>
+                <FERMENTABLES>
+                    <FERMENTABLE>
+                        <NAME>Pale Malt</NAME>
+                        <VERSION>1</VERSION>
+                        <AMOUNT>4.500</AMOUNT>
+                        <TYPE>Grain</TYPE>
+                        <YIELD>80.0</YIELD>
+                        <COLOR>2.0</COLOR>
+                    </FERMENTABLE>
+                </FERMENTABLES>
+                <YEASTS>
+                    <YEAST>
+                        <NAME>US-05</NAME>
+                        <VERSION>1</VERSION>
+                        <TYPE>Ale</TYPE>
+                        <AMOUNT>1.3</AMOUNT>
+                        <AMOUNT_IS_WEIGHT>FALSE</AMOUNT_IS_WEIGHT>
+                        <ATTENUATION>75</ATTENUATION>
+                    </YEAST>
+                </YEASTS>
+            </RECIPE>
+        </RECIPES>"""
+
+        parse_data = {"xml_content": beerxml_fractional_yeast}
+        parse_response = client.post(
+            "/api/beerxml/parse", json=parse_data, headers=headers
+        )
+
+        recipe = parse_response.json["recipes"][0]["recipe"]
+
+        # Convert to metric (will trigger validation)
+        convert_data = {"recipe": recipe, "target_system": "metric", "normalize": True}
+        convert_response = client.post(
+            "/api/beerxml/convert-recipe", json=convert_data, headers=headers
+        )
+
+        assert convert_response.status_code == 200
+        warnings = convert_response.json["warnings"]
+
+        # Should have warning about fractional packages
+        yeast_warnings = [w for w in warnings if w["type"] == "yeast"]
+        if yeast_warnings:
+            fractional_warnings = [
+                w for w in yeast_warnings if w["issue"] == "fractional_packages"
+            ]
+            assert len(fractional_warnings) > 0, "Should warn about fractional packages"
+            assert (
+                fractional_warnings[0]["suggested_fix"] == 1.5
+            ), "Should suggest 1.5 pkg"

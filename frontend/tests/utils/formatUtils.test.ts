@@ -354,8 +354,8 @@ describe("formatUtils", () => {
 
     test("formats grain weight in metric system", () => {
       // Adjusted expectations based on actual conversion behavior
-      expect(formatGrainWeight(2.2, "lb", "metric")).toBe("997.9 g"); // 2.2 lb converts to ~998g, not 1kg
-      expect(formatGrainWeight(16, "oz", "metric")).toBe("453.59 g"); // 16 oz converts to ~454g
+      expect(formatGrainWeight(2.2, "lb", "metric")).toBe("998 g"); // 2.2 lb converts to ~998g, not 1kg
+      expect(formatGrainWeight(16, "oz", "metric")).toBe("454 g"); // 16 oz converts to ~454g
     });
 
     test("handles edge cases", () => {

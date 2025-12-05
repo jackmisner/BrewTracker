@@ -160,7 +160,7 @@ describe("FermentableInput", () => {
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -179,7 +179,7 @@ describe("FermentableInput", () => {
 
     // Try to submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -201,7 +201,7 @@ describe("FermentableInput", () => {
     await user.type(searchableSelect!, "pale malt");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -232,7 +232,7 @@ describe("FermentableInput", () => {
     await user.type(colorInput, "700");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -264,7 +264,7 @@ describe("FermentableInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalledWith({
@@ -295,7 +295,7 @@ describe("FermentableInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalled();
@@ -408,7 +408,7 @@ describe("FermentableInput", () => {
 
     // Trigger validation error
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -446,7 +446,7 @@ describe("FermentableInput", () => {
 
     // Submit
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(
@@ -488,7 +488,7 @@ describe("FermentableInput", () => {
 
     // Submit without color
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalledWith({
@@ -534,7 +534,7 @@ describe("FermentableInput", () => {
     await user.type(searchableSelect!, "pale malt");
 
     const addButton = screen.getByText("Add");
-    fireEvent.click(addButton);
+    const form = addButton.closest("form")!; fireEvent.submit(form);
 
     await waitFor(() => {
       expect(

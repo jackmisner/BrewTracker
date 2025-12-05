@@ -13,6 +13,7 @@ import {
   RecipeIngredient,
   IngredientUnit,
 } from "@/types";
+import { getDisplayPrecision } from "@/utils/formatUtils";
 
 // Unit option interface for common units
 interface UnitOption {
@@ -285,25 +286,13 @@ export const UnitProvider: React.FC<UnitProviderProps> = ({ children }) => {
     const numValue = parseFloat(value.toString());
     if (isNaN(numValue)) return "0 " + unit;
 
-    // Determine appropriate precision based on value and unit
-    let displayPrecision = precision;
-
-    if (measurementType === "volume") {
-      displayPrecision = numValue < 1 ? 2 : 1;
-    } else if (
-      measurementType === "weight" ||
-      measurementType === "hop_weight"
-    ) {
-      if (unit === "g" && numValue < 10) {
-        displayPrecision = 1;
-      } else if (unit === "oz" && numValue < 1) {
-        displayPrecision = 2;
-      } else if (unit === "kg" || unit === "lb") {
-        displayPrecision = numValue < 1 ? 2 : 1;
-      }
-    } else if (measurementType === "temperature") {
-      displayPrecision = 0; // Whole degrees
-    }
+    // Use centralized precision logic from formatUtils
+    const displayPrecision = getDisplayPrecision(
+      numValue,
+      unit,
+      measurementType,
+      precision
+    );
 
     const formattedValue = numValue.toFixed(displayPrecision);
 

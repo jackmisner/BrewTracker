@@ -175,6 +175,42 @@ export const getAppropriateUnit = (
   }
 };
 
+/**
+ * Determine appropriate display precision based on measurement type, unit, and value.
+ * This centralizes rounding logic to avoid duplicating across formatters.
+ */
+export const getDisplayPrecision = (
+  value: number,
+  unit: string,
+  measurementType: MeasurementType,
+  defaultPrecision: number = 2
+): number => {
+  if (measurementType === "volume") {
+    return value < 1 ? 2 : 1;
+  }
+
+  if (measurementType === "weight" || measurementType === "hop_weight") {
+    // Grams: 1 decimal for small amounts, whole numbers for large
+    if (unit === "g") {
+      return value < 10 ? 1 : 0;
+    }
+    // Ounces: 2 decimals for small amounts, 1 decimal for larger
+    if (unit === "oz") {
+      return value < 1 ? 2 : 1;
+    }
+    // Pounds and kilograms: 2 decimals for small amounts, 1 for larger
+    if (unit === "kg" || unit === "lb") {
+      return value < 1 ? 2 : 1;
+    }
+  }
+
+  if (measurementType === "temperature") {
+    return 0; // Whole degrees
+  }
+
+  return defaultPrecision;
+};
+
 // Standalone formatting function with precision control
 export const formatValueStandalone = (
   value: number | string,
@@ -185,22 +221,13 @@ export const formatValueStandalone = (
   const numValue = parseFloat(value.toString());
   if (isNaN(numValue)) return "0 " + unit;
 
-  // Determine appropriate precision based on value and unit
-  let displayPrecision = precision;
-
-  if (measurementType === "volume") {
-    displayPrecision = numValue < 1 ? 2 : 1;
-  } else if (measurementType === "weight" || measurementType === "hop_weight") {
-    if (unit === "g" && numValue < 10) {
-      displayPrecision = 1;
-    } else if (unit === "oz" && numValue < 1) {
-      displayPrecision = 2;
-    } else if (unit === "kg" || unit === "lb") {
-      displayPrecision = numValue < 1 ? 2 : 1;
-    }
-  } else if (measurementType === "temperature") {
-    displayPrecision = 0; // Whole degrees
-  }
+  // Use centralized precision logic
+  const displayPrecision = getDisplayPrecision(
+    numValue,
+    unit,
+    measurementType,
+    precision
+  );
 
   const formattedValue = numValue.toFixed(displayPrecision);
 

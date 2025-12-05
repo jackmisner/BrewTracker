@@ -370,9 +370,13 @@ class FlowchartAIService:
                         f"Ingredient '{ingredient_name}' not found for {change_type}"
                     )
 
-            elif change_type in ["batch_size_converted", "temperature_converted"]:
+            elif change_type in [
+                "batch_size_converted",
+                "batch_size_normalized",
+                "temperature_converted",
+            ]:
                 # Recipe-level unit conversions with guards for missing values
-                if change_type == "batch_size_converted":
+                if change_type in ["batch_size_converted", "batch_size_normalized"]:
                     new_value = change.get("new_value")
                     new_unit = change.get("new_unit")
                     if new_value is not None:

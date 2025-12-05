@@ -1,3 +1,5 @@
+import copy
+import logging
 import re
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
@@ -10,6 +12,8 @@ from rapidfuzz import fuzz, process
 from models.mongo_models import BeerStyleGuide, Ingredient, Recipe, User
 from services.mongodb_service import MongoDBService
 from utils.unit_conversions import UnitConverter
+
+logger = logging.getLogger(__name__)
 
 beerxml_bp = Blueprint("beerxml", __name__)
 
@@ -44,7 +48,7 @@ def export_recipe_beerxml(recipe_id):
         )
 
     except Exception as e:
-        print(f"Error exporting BeerXML: {e}")
+        logger.exception("Error exporting BeerXML")
         return jsonify({"error": "Failed to export recipe"}), 500
 
 
@@ -70,7 +74,7 @@ def parse_beerxml():
         return jsonify({"recipes": parsed_recipes}), 200
 
     except Exception as e:
-        print(f"Error parsing BeerXML: {e}")
+        logger.exception("Error parsing BeerXML")
         return jsonify({"error": f"Failed to parse BeerXML: {str(e)}"}), 400
 
 
@@ -110,7 +114,7 @@ def match_ingredients():
         return jsonify({"matching_results": matching_results}), 200
 
     except Exception as e:
-        print(f"Error matching ingredients: {e}")
+        logger.exception("Error matching ingredients")
         return jsonify({"error": "Failed to match ingredients"}), 500
 
 
@@ -151,8 +155,205 @@ def create_missing_ingredients():
         return jsonify({"created_ingredients": created_ingredients}), 201
 
     except Exception as e:
-        print(f"Error creating ingredients: {e}")
+        logger.exception("Error creating ingredients")
         return jsonify({"error": "Failed to create ingredients"}), 500
+
+
+@beerxml_bp.route("/convert-recipe", methods=["POST"])
+@jwt_required()
+def convert_recipe():
+    """
+    Convert a parsed recipe from metric to target unit system
+
+    Expects:
+        {
+            "recipe": {...},  # Parsed recipe in metric
+            "target_system": "imperial" | "metric",
+            "normalize": true  # Optional, default true
+        }
+
+    Returns:
+        {
+            "recipe": {...},  # Converted recipe
+            "warnings": []     # Any conversion warnings
+        }
+    """
+
+    try:
+        data = request.get_json()
+        recipe = data.get("recipe")
+        target_system = data.get("target_system", "metric")
+        normalize = data.get("normalize", True)
+
+        if not recipe:
+            return jsonify({"error": "No recipe provided"}), 400
+
+        if target_system not in ["metric", "imperial"]:
+            return (
+                jsonify(
+                    {"error": "Invalid target_system. Must be 'metric' or 'imperial'"}
+                ),
+                400,
+            )
+
+        # Convert based on target system
+        if target_system == "imperial":
+            converted_recipe = convert_recipe_to_imperial(recipe, normalize)
+        else:  # metric
+            # Apply normalization to metric if requested
+            converted_recipe = normalize_recipe_metric(recipe) if normalize else recipe
+
+        # Add validation warnings for the converted recipe
+        warnings = validate_ingredient_amounts(converted_recipe)
+
+        return jsonify({"recipe": converted_recipe, "warnings": warnings}), 200
+
+    except Exception as e:
+        logger.exception("Recipe conversion error")
+        return jsonify({"error": f"Failed to convert recipe: {e!s}"}), 500
+
+
+def convert_recipe_to_imperial(recipe, normalize=True):
+    """
+    Convert a metric recipe to imperial units
+
+    Args:
+        recipe: Parsed recipe dict (in metric)
+        normalize: Apply brewing-friendly rounding
+
+    Returns:
+        Recipe dict with imperial units
+    """
+
+    converted = copy.deepcopy(recipe)
+
+    # Convert batch size: L → gal
+    if converted.get("batch_size_unit") == "l":
+        converted["batch_size"] = UnitConverter.convert_volume(
+            converted["batch_size"], "l", "gal"
+        )
+        converted["batch_size_unit"] = "gal"
+
+        if normalize:
+            # Round to brewing-friendly volume increments (e.g., 5.283 gal → 5.25 gal)
+            converted["batch_size"] = UnitConverter.normalize_batch_volume(
+                converted["batch_size"], "gal"
+            )
+
+    # Convert boil size: L → gal (if present)
+    if converted.get("boil_size") and converted.get("boil_size_unit") == "l":
+        converted["boil_size"] = UnitConverter.convert_volume(
+            converted["boil_size"], "l", "gal"
+        )
+        converted["boil_size_unit"] = "gal"
+
+        if normalize:
+            converted["boil_size"] = UnitConverter.normalize_batch_volume(
+                converted["boil_size"], "gal"
+            )
+
+    # Convert ingredients if present
+    if "ingredients" in converted:
+        for ingredient in converted["ingredients"]:
+            ing_type = ingredient.get("type")
+            unit = ingredient.get("unit")
+
+            # Convert fermentables and hops: g → oz
+            if ing_type in ["grain", "hop"] and unit == "g":
+                ingredient["amount"] = UnitConverter.convert_weight(
+                    ingredient["amount"], "g", "oz"
+                )
+                ingredient["unit"] = "oz"
+
+                if normalize:
+                    ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                        ingredient["amount"], ing_type, "imperial", "oz"
+                    )
+
+            # Convert misc ingredients: g → oz or ml → floz
+            elif ing_type == "other":
+                if unit == "g":
+                    ingredient["amount"] = UnitConverter.convert_weight(
+                        ingredient["amount"], "g", "oz"
+                    )
+                    ingredient["unit"] = "oz"
+
+                    if normalize:
+                        ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                            ingredient["amount"], "other", "imperial", "oz"
+                        )
+
+                elif unit == "ml":
+                    ingredient["amount"] = UnitConverter.convert_volume(
+                        ingredient["amount"], "ml", "floz"
+                    )
+                    ingredient["unit"] = "floz"
+
+                    if normalize:
+                        ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                            ingredient["amount"], "other", "imperial", "floz"
+                        )
+
+            # Yeasts: leave as-is (g or pkg - packages don't need conversion)
+
+    return converted
+
+
+def normalize_recipe_metric(recipe):
+    """
+    Apply brewing-friendly rounding to metric recipe
+
+    Args:
+        recipe: Parsed recipe dict (in metric)
+
+    Returns:
+        Recipe dict with normalized values
+    """
+
+    normalized = copy.deepcopy(recipe)
+
+    # Normalize batch size (already in liters)
+    if normalized.get("batch_size"):
+        normalized["batch_size"] = UnitConverter.normalize_batch_volume(
+            normalized["batch_size"], "l"
+        )
+
+    # Normalize boil size (if present)
+    if normalized.get("boil_size"):
+        normalized["boil_size"] = UnitConverter.normalize_batch_volume(
+            normalized["boil_size"], "l"
+        )
+
+    # Normalize ingredients if present
+    if "ingredients" in normalized:
+        for ingredient in normalized["ingredients"]:
+            ing_type = ingredient.get("type")
+            unit = ingredient.get("unit")
+
+            # Normalize fermentables and hops (already in grams)
+            if ing_type in ["grain", "hop"] and unit == "g":
+                ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                    ingredient["amount"], ing_type, "metric", "g"
+                )
+
+            # Normalize misc ingredients (already in g or ml)
+            elif ing_type == "other":
+                if unit == "g":
+                    ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                        ingredient["amount"], "other", "metric", "g"
+                    )
+                elif unit == "ml":
+                    ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                        ingredient["amount"], "other", "metric", "ml"
+                    )
+
+            # Yeasts: normalize if in grams
+            elif ing_type == "yeast" and unit == "g":
+                ingredient["amount"] = UnitConverter.round_to_brewing_precision(
+                    ingredient["amount"], "yeast", "metric", "g"
+                )
+
+    return normalized
 
 
 def generate_beerxml(recipe):
@@ -290,22 +491,62 @@ def add_ingredients_to_xml(recipe_elem, ingredients):
             add_text_element(misc_elem, "VERSION", "1")
             add_text_element(misc_elem, "TYPE", "Other")
 
-            # Determine if weight or volume
-            is_weight = misc_ing.unit in ["g", "kg", "oz", "lb", "tsp", "tbsp"]
-            add_text_element(
-                misc_elem, "AMOUNT_IS_WEIGHT", "TRUE" if is_weight else "FALSE"
-            )
+            # Determine unit type
+            unit = misc_ing.unit.lower()
 
-            if is_weight:
-                amount = UnitConverter.convert_weight(
+            # Handle 'each'/'item' units - convert to weight for export
+            if unit in ["each", "item"]:
+                # Convert to grams (BeerXML standard)
+                amount_g = UnitConverter.convert_each_to_weight(
+                    misc_ing.amount, target_unit="g", item_name=misc_ing.name
+                )
+                amount_kg = amount_g / 1000  # BeerXML uses kg
+                add_text_element(misc_elem, "AMOUNT", f"{amount_kg:.6f}")
+                add_text_element(misc_elem, "AMOUNT_IS_WEIGHT", "TRUE")
+
+                # Add note about original unit
+                notes = f"Originally {misc_ing.amount} {misc_ing.unit} (converted to {amount_g:.1f}g for BeerXML)"
+                add_text_element(misc_elem, "NOTES", notes)
+
+            # Handle standard weight units (FIXED: removed tsp/tbsp from weight list)
+            elif unit in ["g", "kg", "oz", "lb"]:
+                amount_kg = UnitConverter.convert_weight(
                     misc_ing.amount, misc_ing.unit, "kg"
                 )
-            else:
-                amount = UnitConverter.convert_volume(
+                add_text_element(misc_elem, "AMOUNT", f"{amount_kg:.6f}")
+                add_text_element(misc_elem, "AMOUNT_IS_WEIGHT", "TRUE")
+
+            # Handle volume units (FIXED: tsp/tbsp are volume, not weight)
+            elif unit in [
+                "ml",
+                "l",
+                "floz",
+                "gal",
+                "tsp",
+                "tbsp",
+                "teaspoon",
+                "tablespoon",
+                "cup",
+                "pt",
+                "qt",
+            ]:
+                amount_l = UnitConverter.convert_volume(
                     misc_ing.amount, misc_ing.unit, "l"
                 )
+                add_text_element(misc_elem, "AMOUNT", f"{amount_l:.6f}")
+                add_text_element(misc_elem, "AMOUNT_IS_WEIGHT", "FALSE")
 
-            add_text_element(misc_elem, "AMOUNT", f"{amount:.3f}")
+            else:
+                # Unknown unit - default to weight (grams)
+                logger.warning(
+                    "Unknown misc unit '%s' for %s - treating as grams",
+                    misc_ing.unit,
+                    misc_ing.name,
+                )
+                amount_kg = misc_ing.amount / 1000  # Assume grams
+                add_text_element(misc_elem, "AMOUNT", f"{amount_kg:.6f}")
+                add_text_element(misc_elem, "AMOUNT_IS_WEIGHT", "TRUE")
+
             add_text_element(misc_elem, "USE", map_misc_use_to_xml(misc_ing.use))
             add_text_element(misc_elem, "TIME", str(misc_ing.time or 0))
 
@@ -357,33 +598,34 @@ def parse_recipe_element(recipe_elem):
             "is_public": False,
         }
 
-        # Detect original unit system from DISPLAY_BATCH_SIZE
+        # BeerXML spec: all volumes are in liters
+        # Store DISPLAY_BATCH_SIZE for reference only
         display_batch_size = get_text_content(recipe_elem, "DISPLAY_BATCH_SIZE")
-        detected_unit_system = UnitConverter.detect_unit_system_from_display_batch_size(
-            display_batch_size
-        )
 
         # Get batch size in liters (BeerXML standard)
         batch_size_l = float(get_text_content(recipe_elem, "BATCH_SIZE") or 19)
 
-        # Convert batch size based on detected original unit system
-        if detected_unit_system == "metric":
-            # Recipe was originally in metric - keep as liters
-            recipe["batch_size"] = batch_size_l
-            recipe["batch_size_unit"] = "l"
-        else:
-            # Recipe was originally imperial or detection failed - convert to gallons (default behavior)
-            recipe["batch_size"] = UnitConverter.convert_volume(
-                batch_size_l, "l", "gal"
-            )
-            recipe["batch_size_unit"] = "gal"
+        # Always store as liters initially (per BeerXML spec)
+        # Will be converted to user's preferred system by conversion endpoint
+        recipe["batch_size"] = batch_size_l
+        recipe["batch_size_unit"] = "l"
 
-        # Parse ingredients with detected unit system
+        # Store display batch size in metadata for reference
+        if display_batch_size:
+            recipe["beerxml_display_batch_size"] = display_batch_size
+
+        # Parse ingredients (all in metric per BeerXML spec)
         ingredients = []
-        ingredients.extend(parse_fermentables(recipe_elem, detected_unit_system))
-        ingredients.extend(parse_hops(recipe_elem, detected_unit_system))
-        ingredients.extend(parse_yeasts(recipe_elem, detected_unit_system))
-        ingredients.extend(parse_misc(recipe_elem, detected_unit_system))
+        ingredients.extend(parse_fermentables(recipe_elem))
+        ingredients.extend(parse_hops(recipe_elem))
+        ingredients.extend(parse_yeasts(recipe_elem))
+        ingredients.extend(parse_misc(recipe_elem))
+
+        # Prepare recipe data for validation
+        recipe_data_with_ingredients = {**recipe, "ingredients": ingredients}
+
+        # Validate ingredient amounts and flag suspicious values
+        validation_warnings = validate_ingredient_amounts(recipe_data_with_ingredients)
 
         return {
             "recipe": recipe,
@@ -406,15 +648,16 @@ def parse_recipe_element(recipe_elem):
                         else None
                     ),
                 },
+                "validation_warnings": validation_warnings,  # Add validation warnings
             },
         }
 
     except Exception as e:
-        print(f"Error parsing recipe element: {e}")
+        logger.exception("Error parsing recipe element")
         return None
 
 
-def parse_fermentables(recipe_elem, detected_unit_system=None):
+def parse_fermentables(recipe_elem):
     """Parse fermentable ingredients from recipe"""
     fermentables = []
     fermentable_elements = recipe_elem.findall(".//FERMENTABLES/FERMENTABLE")
@@ -424,21 +667,13 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
             # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
 
-            # Convert to appropriate unit based on detected system
-            if detected_unit_system == "metric":
-                # Convert to grams for metric system
-                amount = UnitConverter.round_to_brewing_precision(
-                    amount_kg * 1000, "grain", "metric"
-                )
-                unit = "g"
-            else:
-                # Convert to ounces for imperial system (base unit consistency)
-                amount = UnitConverter.round_to_brewing_precision(
-                    UnitConverter.convert_weight(amount_kg, "kg", "oz"),
-                    "grain",
-                    "imperial",
-                )
-                unit = "oz"
+            # BeerXML spec: all weights are in kg
+            # Store in grams (metric standard)
+            # Will be converted to user's preferred system by conversion endpoint
+            amount = UnitConverter.round_to_brewing_precision(
+                amount_kg * 1000, "grain", "metric"
+            )
+            unit = "g"
 
             # Calculate potential from yield
             yield_pct = float(get_text_content(elem, "YIELD") or 80)
@@ -473,13 +708,13 @@ def parse_fermentables(recipe_elem, detected_unit_system=None):
             fermentables.append(fermentable)
 
         except Exception as e:
-            print(f"Error parsing fermentable: {e}")
+            logger.exception("Error parsing fermentable")
             continue
 
     return fermentables
 
 
-def parse_hops(recipe_elem, detected_unit_system=None):
+def parse_hops(recipe_elem):
     """Parse hop ingredients from recipe"""
     hops = []
     hop_elements = recipe_elem.findall(".//HOPS/HOP")
@@ -489,21 +724,13 @@ def parse_hops(recipe_elem, detected_unit_system=None):
             # Amount in kg (BeerXML standard)
             amount_kg = float(get_text_content(elem, "AMOUNT") or 0)
 
-            # Convert to appropriate unit based on detected system
-            if detected_unit_system == "metric":
-                # Convert to grams for metric system
-                amount = UnitConverter.round_to_brewing_precision(
-                    amount_kg * 1000, "hop", "metric"
-                )
-                unit = "g"
-            else:
-                # Convert to ounces for imperial system (default)
-                amount = UnitConverter.round_to_brewing_precision(
-                    UnitConverter.convert_weight(amount_kg, "kg", "oz"),
-                    "hop",
-                    "imperial",
-                )
-                unit = "oz"
+            # BeerXML spec: all weights are in kg
+            # Store in grams (metric standard)
+            # Will be converted to user's preferred system by conversion endpoint
+            amount = UnitConverter.round_to_brewing_precision(
+                amount_kg * 1000, "hop", "metric"
+            )
+            unit = "g"
 
             hop_name = get_text_content(elem, "NAME") or "Unknown Hop"
             hop_use = map_xml_use_to_hop(get_text_content(elem, "USE"))
@@ -534,13 +761,13 @@ def parse_hops(recipe_elem, detected_unit_system=None):
             hops.append(hop)
 
         except Exception as e:
-            print(f"Error parsing hop: {e}")
+            logger.exception("Error parsing hop")
             continue
 
     return hops
 
 
-def parse_yeasts(recipe_elem, detected_unit_system=None):
+def parse_yeasts(recipe_elem):
     """Parse yeast ingredients from recipe"""
     yeasts = []
     yeast_elements = recipe_elem.findall(".//YEASTS/YEAST")
@@ -549,19 +776,41 @@ def parse_yeasts(recipe_elem, detected_unit_system=None):
         try:
             amount = float(get_text_content(elem, "AMOUNT") or 1)
             amount_is_weight = get_text_content(elem, "AMOUNT_IS_WEIGHT") == "TRUE"
+            yeast_name = get_text_content(elem, "NAME") or "Unknown Yeast"
 
             if amount_is_weight:
                 # Amount is in kg, convert to grams
                 final_amount = amount * 1000
-                unit = "g"
+
+                # Defensive handling for 10x error in BeerXML export
+                # Common error: 2 packages exported as 0.22kg instead of 0.022kg
+                # Results in 220g instead of 22g (or 110g instead of 11g)
+                if final_amount >= 100:
+                    # Likely a 10x multiplication error
+                    # Typical dry yeast package is 11g, so 110g = 10 packages (wrong!)
+                    # Should be 11g = 1 package
+                    suspected_packages = round(final_amount / 110)
+                    if suspected_packages > 0:
+                        logger.warning(
+                            "Yeast '%s' has suspicious amount %.0fg - "
+                            "likely 10x error. Converting to %d package(s)",
+                            yeast_name,
+                            final_amount,
+                            suspected_packages,
+                        )
+                        final_amount = suspected_packages
+                        unit = "pkg"
+                    else:
+                        # Still seems wrong, but keep as grams
+                        unit = "g"
+                else:
+                    unit = "g"
             else:
                 # Amount is in packages - normalize to practical amounts
                 final_amount = UnitConverter.normalize_yeast_amount_to_packages(
                     amount, "pkg"
                 )
                 unit = "pkg"
-
-            yeast_name = get_text_content(elem, "NAME") or "Unknown Yeast"
 
             # Generate unique compound ID for recipe ingredient
             # Format: yeastname_type_uniqueid
@@ -592,13 +841,13 @@ def parse_yeasts(recipe_elem, detected_unit_system=None):
             yeasts.append(yeast)
 
         except Exception as e:
-            print(f"Error parsing yeast: {e}")
+            logger.exception("Error parsing yeast")
             continue
 
     return yeasts
 
 
-def parse_misc(recipe_elem, detected_unit_system=None):
+def parse_misc(recipe_elem):
     """Parse miscellaneous ingredients from recipe"""
     misc_ingredients = []
     misc_elements = recipe_elem.findall(".//MISCS/MISC")
@@ -607,29 +856,40 @@ def parse_misc(recipe_elem, detected_unit_system=None):
         try:
             amount = float(get_text_content(elem, "AMOUNT") or 0)
             amount_is_weight = get_text_content(elem, "AMOUNT_IS_WEIGHT") == "TRUE"
-
-            if amount_is_weight:
-                # Weight-based misc ingredient
-                if detected_unit_system == "metric":
-                    # Convert kg to grams for metric
-                    final_amount = amount * 1000
-                    unit = "g"
-                else:
-                    # Convert kg to ounces for imperial
-                    final_amount = UnitConverter.convert_weight(amount, "kg", "oz")
-                    unit = "oz"
-            else:
-                # Volume-based misc ingredient
-                if detected_unit_system == "metric":
-                    # Convert liters to ml for metric
-                    final_amount = amount * 1000
-                    unit = "ml"
-                else:
-                    # Convert liters to fluid ounces for imperial
-                    final_amount = UnitConverter.convert_volume(amount, "l", "floz")
-                    unit = "floz"
-
             misc_name = get_text_content(elem, "NAME") or "Unknown Misc"
+            misc_name_lower = misc_name.lower()
+
+            # Special handling for whirlfloc/tablets that are often exported as 1kg
+            # These should be "each" units, not weight
+            is_tablet = any(
+                keyword in misc_name_lower
+                for keyword in ["whirlfloc", "tablet", "irish moss"]
+            )
+
+            if is_tablet and amount_is_weight and amount >= 0.5:
+                # Likely a BeerXML export error: 1kg = 1 tablet
+                # Convert back to "each" units
+                final_amount = round(amount)  # 1kg -> 1 each, 2kg -> 2 each
+                unit = "each"
+                logger.info(
+                    "Converted %s from %.3fkg to %d tablet(s)",
+                    misc_name,
+                    amount,
+                    final_amount,
+                )
+            elif amount_is_weight:
+                # BeerXML spec: weight in kg
+                # Store in grams (metric standard)
+                # Will be converted to user's preferred system by conversion endpoint
+                final_amount = amount * 1000  # kg to grams
+                unit = "g"
+            else:
+                # BeerXML spec: volume in liters
+                # Store in ml (metric standard)
+                # Will be converted to user's preferred system by conversion endpoint
+                final_amount = amount * 1000  # liters to ml
+                unit = "ml"
+
             misc_use = map_xml_use_to_misc(get_text_content(elem, "USE"))
             misc_time = int(get_text_content(elem, "TIME") or 0)
 
@@ -654,7 +914,7 @@ def parse_misc(recipe_elem, detected_unit_system=None):
             misc_ingredients.append(misc)
 
         except Exception as e:
-            print(f"Error parsing misc ingredient: {e}")
+            logger.exception("Error parsing misc ingredient")
             continue
 
     return misc_ingredients
@@ -1235,6 +1495,267 @@ def map_misc_use_to_xml(use):
         "whirlpool": "Boil",
     }
     return use_map.get(use, "Boil")
+
+
+def validate_ingredient_amounts(recipe_data):
+    """
+    Validate ingredient amounts for a recipe and flag suspicious values.
+
+    Returns a list of warnings for ingredients that seem unreasonable.
+    These are common issues from BeerXML exports with unit conversion problems.
+    """
+
+    warnings = []
+
+    # Get batch size in liters for normalization
+    batch_size = recipe_data.get("batch_size", 19)
+    batch_unit = recipe_data.get("batch_size_unit", "l")
+
+    # Validate batch size
+    if batch_size <= 0:
+        warnings.append(
+            {
+                "ingredient": "batch_size",
+                "type": "recipe",
+                "amount": batch_size,
+                "unit": batch_unit,
+                "issue": "invalid_batch_size",
+                "message": "Batch size must be greater than zero",
+            }
+        )
+        return warnings  # Can't validate per-liter ratios without valid batch size
+
+    # Normalize batch unit aliases to standard form before conversion
+    batch_unit_normalized = batch_unit.lower()
+    if batch_unit_normalized in ["gallon", "gallons"]:
+        batch_unit_normalized = "gal"
+    elif batch_unit_normalized in ["liter", "liters"]:
+        batch_unit_normalized = "l"
+
+    # Convert to liters using UnitConverter for consistency
+    if batch_unit_normalized in ["gal"]:
+        batch_size_liters = UnitConverter.convert_volume(
+            batch_size, batch_unit_normalized, "l"
+        )
+    else:
+        # Assume liters if not gallons
+        batch_size_liters = batch_size
+
+    ingredients = recipe_data.get("ingredients", [])
+
+    # First pass: calculate total grain bill for aggregate validation
+    total_grain_g = 0
+    grain_ingredients = []
+
+    for ing in ingredients:
+        ing_type = ing.get("type", "")
+        if ing_type == "grain":
+            amount = ing.get("amount", 0)
+            unit = ing.get("unit", "")
+
+            # Convert to grams for comparison
+            if unit.lower() in UnitConverter.WEIGHT_TO_GRAMS:
+                amount_g = UnitConverter.convert_weight(amount, unit, "g")
+            else:
+                logger.warning(
+                    "Unknown weight unit '%s' for grain '%s' - assuming grams",
+                    unit,
+                    ing.get("name", "Unknown"),
+                )
+                amount_g = amount
+
+            total_grain_g += amount_g
+            grain_ingredients.append((ing, amount_g))
+
+    # Validate total grain bill (not individual ingredients)
+    if total_grain_g > 0:
+        total_grain_per_liter = total_grain_g / batch_size_liters
+        # Expected range: 100-600 g per liter (conservative brewing range)
+
+        # Calculate expected range based on actual batch size
+        min_expected_g = batch_size_liters * 100  # Low gravity beer
+        max_expected_g = batch_size_liters * 600  # High gravity beer
+
+        # Format message based on whether units are metric or imperial
+        if batch_unit_normalized == "l":
+            # Metric units
+            min_expected_display = f"{min_expected_g / 1000:.1f}kg"
+            max_expected_display = f"{max_expected_g / 1000:.1f}kg"
+            batch_display = f"{batch_size_liters:.1f}L"
+            total_display = f"{total_grain_g:.0f}g"
+        else:
+            # Imperial units - convert for display
+            min_expected_lb = UnitConverter.convert_weight(min_expected_g, "g", "lb")
+            max_expected_lb = UnitConverter.convert_weight(max_expected_g, "g", "lb")
+            batch_display = f"{batch_size:.1f} gal"
+            total_display_lb = UnitConverter.convert_weight(total_grain_g, "g", "lb")
+            min_expected_display = f"{min_expected_lb:.1f}lb"
+            max_expected_display = f"{max_expected_lb:.1f}lb"
+            total_display = f"{total_display_lb:.1f}lb"
+
+        if total_grain_per_liter < 50:
+            warnings.append(
+                {
+                    "ingredient": "Total Grain Bill",
+                    "type": "grain",
+                    "amount": total_grain_g,
+                    "unit": "g",
+                    "issue": "unusually_low",
+                    "message": f"Total grain bill seems low ({total_display} for {batch_display} batch). Typical range: {min_expected_display}-{max_expected_display}.",
+                }
+            )
+        elif total_grain_per_liter > 800:
+            warnings.append(
+                {
+                    "ingredient": "Total Grain Bill",
+                    "type": "grain",
+                    "amount": total_grain_g,
+                    "unit": "g",
+                    "issue": "unusually_high",
+                    "message": f"Total grain bill seems high ({total_display} for {batch_display} batch). Typical range: {min_expected_display}-{max_expected_display}.",
+                }
+            )
+
+    # Second pass: validate non-grain ingredients individually
+    for ing in ingredients:
+        ing_type = ing.get("type", "")
+        name = ing.get("name", "Unknown")
+        amount = ing.get("amount", 0)
+        unit = ing.get("unit", "")
+
+        # Skip grains - already validated as total
+        if ing_type == "grain":
+            continue
+
+        # Convert to standard units for comparison (grams for weight)
+        # Check if unit is a recognized weight unit before attempting conversion
+        if unit.lower() in UnitConverter.WEIGHT_TO_GRAMS:
+            amount_g = UnitConverter.convert_weight(amount, unit, "g")
+        else:
+            # Unknown weight unit - log warning and assume grams
+            logger.warning(
+                "Unknown weight unit '%s' for ingredient '%s' - assuming grams",
+                unit,
+                name,
+            )
+            amount_g = amount  # Assume grams if unit not recognized
+
+        # Hop checks (typically 5-100g per 19L batch)
+        if ing_type == "hop":
+            # Expected range: 0.5-10 g per liter
+            expected_per_liter = amount_g / batch_size_liters
+            if expected_per_liter < 0.1:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_low",
+                        "message": f"Hop amount seems low ({amount_g:.1f}g for {batch_size_liters:.1f}L batch). Typical range: 10-200g total.",
+                    }
+                )
+            elif expected_per_liter > 15:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_high",
+                        "message": f"Hop amount seems high ({amount_g:.1f}g for {batch_size_liters:.1f}L batch). Double-check if correct.",
+                    }
+                )
+
+        # Yeast checks (typically 10-50g for dry, or 1-2 packages)
+        elif ing_type == "yeast":
+            # Package units - validate and suggest normalization to 0.5 increments
+            if unit.lower() in ["pkg", "package", "packages"]:
+                # Normalize to nearest 0.5 package for practical use
+                normalized_amount = round(amount * 2) / 2
+                if abs(normalized_amount - amount) > 0.1:
+                    warnings.append(
+                        {
+                            "ingredient": name,
+                            "type": ing_type,
+                            "amount": amount,
+                            "unit": unit,
+                            "issue": "fractional_packages",
+                            "message": f"Yeast amount ({amount} pkg) should be rounded to practical increments. Suggested: {normalized_amount} pkg.",
+                            "suggested_fix": normalized_amount,
+                        }
+                    )
+                continue
+
+            # Dry yeast: 11g per package, typically 1-3 packages for 19L
+            # Liquid yeast: varies widely, but typically one vial/pack
+            if amount_g > 100:
+                # Likely a 10x multiplication error
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "possible_10x_error",
+                        "message": f"Yeast amount seems very high ({amount_g:.0f}g). May be incorrectly multiplied by 10. Typical dry yeast: 11-33g (1-3 packages).",
+                        "suggested_fix": amount_g / 10,
+                    }
+                )
+            elif amount_g < 5:
+                warnings.append(
+                    {
+                        "ingredient": name,
+                        "type": ing_type,
+                        "amount": amount,
+                        "unit": unit,
+                        "issue": "unusually_low",
+                        "message": f"Yeast amount seems low ({amount_g:.1f}g). Typical dry yeast: 11-33g per batch.",
+                    }
+                )
+
+        # Other ingredient checks (water agents, finings, etc.)
+        elif ing_type == "other":
+            # Check for common issues
+            name_lower = name.lower()
+
+            # Whirlfloc/Irish Moss tablets: Should be 1-2 tablets (~1-2g), not 1kg
+            if (
+                "whirlfloc" in name_lower
+                or "irish moss" in name_lower
+                or "tablet" in name_lower
+            ):
+                if amount_g > 50:
+                    warnings.append(
+                        {
+                            "ingredient": name,
+                            "type": ing_type,
+                            "amount": amount,
+                            "unit": unit,
+                            "issue": "unit_conversion_error",
+                            "message": f"{name} shows as {amount_g:.0f}g, but should be 1-2 tablets (~1-2g). Likely a unit conversion error from 'each' to 'kg'.",
+                            "suggested_fix": 1.0,  # Assume 1 tablet
+                        }
+                    )
+
+            # Water salts: typically 0-10g per batch
+            elif any(
+                salt in name_lower
+                for salt in ["gypsum", "calcium", "sulfate", "chloride"]
+            ):
+                if amount_g > 20:
+                    warnings.append(
+                        {
+                            "ingredient": name,
+                            "type": ing_type,
+                            "amount": amount,
+                            "unit": unit,
+                            "issue": "unusually_high",
+                            "message": f"Water salt amount seems high ({amount_g:.1f}g). Typical range: 0-10g per batch.",
+                        }
+                    )
+
+    return warnings
 
 
 def map_xml_use_to_misc(xml_use):
