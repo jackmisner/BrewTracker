@@ -248,7 +248,8 @@ class UnitConverter:
             amount: The amount to round
             ingredient_type: Type of ingredient (hop, grain, yeast, etc.)
             unit_system: "imperial" or "metric"
-            unit: The unit of measurement
+            unit: The unit of measurement (kept for API consistency, not used
+                  in logic as precision is determined by unit_system)
 
         Returns:
             Normalized amount with brewing-friendly precision
@@ -532,10 +533,8 @@ class UnitConverter:
                 # Will be converted for BeerXML export
                 return converted
 
-            # Determine if it's weight or volume
-            if current_unit.lower() in [
-                key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()
-            ]:
+            # Determine if it's weight or volume using classification constants
+            if current_unit.lower() in [u.lower() for u in cls.WEIGHT_UNITS]:
                 # It's a weight unit
                 target_unit = cls.get_appropriate_unit(
                     target_unit_system, "weight", converted["amount"]
@@ -554,9 +553,7 @@ class UnitConverter:
                     target_unit,
                 )
 
-            elif current_unit.lower() in [
-                key.lower() for key in cls.VOLUME_TO_LITERS.keys()
-            ]:
+            elif current_unit.lower() in [u.lower() for u in cls.VOLUME_UNITS]:
                 # It's a volume unit
                 target_unit = cls.get_appropriate_unit(target_unit_system, "volume")
                 converted["amount"] = cls.convert_volume(
@@ -568,15 +565,17 @@ class UnitConverter:
 
     @classmethod
     def validate_unit(cls, unit, unit_type="weight"):
-        """Validate if a unit is recognized"""
+        """Validate if a unit is recognized using classification constants"""
         unit_lower = unit.lower()
 
         if unit_type == "weight":
-            return unit_lower in [key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()]
+            return unit_lower in [u.lower() for u in cls.WEIGHT_UNITS]
         elif unit_type == "volume":
-            return unit_lower in [key.lower() for key in cls.VOLUME_TO_LITERS.keys()]
+            return unit_lower in [u.lower() for u in cls.VOLUME_UNITS]
         elif unit_type == "temperature":
             return unit_lower in ["c", "f", "celsius", "fahrenheit"]
+        elif unit_type == "count":
+            return unit_lower in [u.lower() for u in cls.COUNT_UNITS]
 
         return False
 
@@ -604,14 +603,14 @@ class UnitConverter:
         base_units = cls.get_base_units(unit_system)
         current_unit_lower = current_unit.lower()
 
-        # Determine if it's weight or volume based
-        if current_unit_lower in [key.lower() for key in cls.WEIGHT_TO_GRAMS.keys()]:
+        # Determine if it's weight or volume based using classification constants
+        if current_unit_lower in [u.lower() for u in cls.WEIGHT_UNITS]:
             # It's a weight unit
             target_unit = base_units["weight"]
             converted_amount = cls.convert_weight(amount, current_unit, target_unit)
             return round(converted_amount, 2), target_unit
 
-        elif current_unit_lower in [key.lower() for key in cls.VOLUME_TO_LITERS.keys()]:
+        elif current_unit_lower in [u.lower() for u in cls.VOLUME_UNITS]:
             # It's a volume unit
             target_unit = base_units["volume"]
             converted_amount = cls.convert_volume(amount, current_unit, target_unit)
