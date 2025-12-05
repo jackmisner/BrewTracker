@@ -173,6 +173,65 @@ class UnitConverter:
         return cls.convert_volume(amount, unit, "l")
 
     @classmethod
+    def normalize_batch_volume(cls, volume, unit="gal"):
+        """
+        Normalize batch size or boil size to brewing-friendly increments
+
+        Normalizes volumes to common brewing batch sizes:
+        - Metric (liters): 0.5L, 1L, 5L, 10L, 15L, 19L, 20L, 23L, 25L,
+          30L, 40L, 50L increments
+        - Imperial (gallons): 0.25 gal, 0.5 gal, 1 gal, 2.5 gal,
+          3 gal, 5 gal, 6 gal, 10 gal increments
+
+        Args:
+            volume: The volume to normalize
+            unit: The unit of measurement ("gal", "l", etc.)
+
+        Returns:
+            Normalized volume with brewing-friendly precision
+        """
+        if volume == 0:
+            return 0.0
+
+        unit_lower = unit.lower()
+
+        # Imperial gallons
+        if unit_lower in ["gal", "gallon", "gallons"]:
+            if volume >= 10:
+                # Round to nearest gallon
+                return round(volume)
+            elif volume >= 5:
+                # Round to nearest 0.5 gallon
+                return round(volume * 2) / 2
+            elif volume >= 1:
+                # Round to nearest 0.25 gallon
+                return round(volume * 4) / 4
+            else:
+                # Small volumes: round to nearest 0.1 gallon
+                return round(volume, 1)
+
+        # Metric liters
+        elif unit_lower in ["l", "liter", "liters"]:
+            if volume >= 50:
+                # Round to nearest 5 liters
+                return round(volume / 5) * 5
+            elif volume >= 20:
+                # Round to nearest liter
+                return round(volume)
+            elif volume >= 10:
+                # Round to nearest 0.5 liter
+                return round(volume * 2) / 2
+            elif volume >= 1:
+                # Round to nearest 0.5 liter
+                return round(volume * 2) / 2
+            else:
+                # Small volumes: round to nearest 0.1 liter
+                return round(volume, 1)
+
+        # Unknown unit - apply generic 2-decimal rounding
+        return round(volume, 2)
+
+    @classmethod
     def round_to_brewing_precision(
         cls, amount, ingredient_type="general", unit_system="imperial", unit="oz"
     ):
