@@ -539,7 +539,7 @@ def add_ingredients_to_xml(recipe_elem, ingredients):
             else:
                 # Unknown unit - default to weight (grams)
                 logger.warning(
-                    f"Unknown misc unit '%s' for %s - treating as grams",
+                    "Unknown misc unit '%s' for %s - treating as grams",
                     misc_ing.unit,
                     misc_ing.name,
                 )

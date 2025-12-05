@@ -242,6 +242,10 @@ export function createCustomDot(_metric: string) {
   return undefined;
 }
 
+function isValidMetric(key: unknown): key is "gravity" | "temperature" | "ph" {
+  return key === "gravity" || key === "temperature" || key === "ph";
+}
+
 function formatMetricValue(
   dataKey: "gravity" | "temperature" | "ph",
   value: number
@@ -253,8 +257,6 @@ function formatMetricValue(
       return Math.round(value).toString();
     case "ph":
       return value.toFixed(1);
-    default:
-      return value.toString();
   }
 }
 
@@ -307,7 +309,12 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
         const value = entry?.value;
         const name = entry?.name || "";
         const color = entry?.color || "#000";
-        const dataKey = entry?.dataKey as "gravity" | "temperature" | "ph";
+        const dataKey = entry?.dataKey;
+
+        // Only process known metrics
+        if (!isValidMetric(dataKey)) {
+          return null;
+        }
 
         if (value === null || value === undefined) {
           return null;
