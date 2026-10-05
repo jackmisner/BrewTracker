@@ -10,29 +10,11 @@ export type GrainType =
   | "adjunct_grain"
   | "specialty_malt";
 export type HopUse =
-  | "mash"
-  | "first_wort"
-  | "boil"
-  | "whirlpool"
-  | "dry_hop"
-  | "hop_back";
+  "mash" | "first_wort" | "boil" | "whirlpool" | "dry_hop" | "hop_back";
 export type YeastType =
-  | "lager"
-  | "belgian_ale"
-  | "english_ale"
-  | "american_ale"
-  | "wheat"
-  | "wild";
+  "lager" | "belgian_ale" | "english_ale" | "american_ale" | "wheat" | "wild";
 export type IngredientUnit =
-  | "oz"
-  | "lb"
-  | "g"
-  | "kg"
-  | "pkg"
-  | "tsp"
-  | "tbsp"
-  | "ml"
-  | "l";
+  "oz" | "lb" | "g" | "kg" | "pkg" | "tsp" | "tbsp" | "ml" | "l";
 export type BatchSizeUnit = "gal" | "l";
 
 // Ingredient creation data interface
