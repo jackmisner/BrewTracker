@@ -18,7 +18,7 @@ MarkupSafe==3.0.3
 marshmallow==4.3.1
 mongoengine==0.29.3
 numpy==2.5.3
-packaging==25.0
+packaging==26.3
 pandas==2.3.3
 PyJWT==2.15.1
 pymongo==4.18.2
