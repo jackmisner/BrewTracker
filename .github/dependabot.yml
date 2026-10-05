@@ -58,6 +58,22 @@ updates:
       - "semver:patch"
       - "dependencies"
     groups:
+      # Lint/format tools pin each other's versions (flake8 7.4 needs
+      # pyflakes >= 4, black needs pathspec >= 1, ...). Group them across ALL
+      # update types so a dependent major (pyflakes 3 -> 4) always travels in
+      # the same PR as the tool that needs it, instead of failing `pip install`.
+      # Dependabot assigns a dependency to the FIRST group that matches, so
+      # this must stay above pip-minor-patch.
+      python-lint-tools:
+        patterns:
+          - "flake8"
+          - "pyflakes"
+          - "pycodestyle"
+          - "mccabe"
+          - "black"
+          - "isort"
+          - "pathspec"
+          - "pytokens"
       pip-minor-patch:
         patterns:
           - "*"
