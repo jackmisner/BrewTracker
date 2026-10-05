@@ -1,3 +1,5 @@
+import Fuse from "fuse.js";
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { screen, fireEvent, waitFor } from "@testing-library/react";
@@ -9,37 +11,37 @@ import ApiService from "../../src/services/api";
 import { ingredientServiceInstance } from "../../src/services";
 
 // Mock the API service
-jest.mock("../../src/services/api", () => ({
+vi.mock("../../src/services/api", () => { const mod = {
   ingredients: {
-    getAll: jest.fn(),
-    create: jest.fn(),
+    getAll: vi.fn(),
+    create: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock the ingredient service
-jest.mock("../../src/services", () => ({
+vi.mock("../../src/services", () => ({
   ingredientServiceInstance: {
-    groupIngredientsByType: jest.fn(),
+    groupIngredientsByType: vi.fn(),
   },
 }));
 
 // Mock Fuse.js for fuzzy search
-jest.mock("fuse.js", () => {
-  return jest.fn().mockImplementation(() => ({
-    search: jest.fn().mockReturnValue([]),
-  }));
-});
+vi.mock("fuse.js", () => ({
+  default: vi.fn().mockImplementation(function () {
+    return { search: vi.fn().mockReturnValue([]) };
+  }),
+}));
 
 // Mock CSS import
-jest.mock("../../src/styles/IngredientManager.css", () => ({}));
+vi.mock("../../src/styles/IngredientManager.css", () => ({}));
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
+  console.error = vi.fn();
+  console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -86,14 +88,14 @@ describe("IngredientManager", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default API mocks
-    (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+    (ApiService.ingredients.getAll as Mock).mockResolvedValue({
       data: mockIngredients,
     });
 
-    (ingredientServiceInstance.groupIngredientsByType as jest.Mock).mockReturnValue(
+    (ingredientServiceInstance.groupIngredientsByType as Mock).mockReturnValue(
       mockGroupedIngredients
     );
   });
@@ -133,7 +135,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles API error during initial load", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.ingredients.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       renderWithProviders(<IngredientManager />);
 
@@ -145,10 +147,10 @@ describe("IngredientManager", () => {
     });
 
     it("handles empty ingredient response", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({
         data: { ingredients: [] },
       });
-      (ingredientServiceInstance.groupIngredientsByType as jest.Mock).mockReturnValue({
+      (ingredientServiceInstance.groupIngredientsByType as Mock).mockReturnValue({
         grain: [],
         hop: [],
         yeast: [],
@@ -482,8 +484,8 @@ describe("IngredientManager", () => {
 
   describe("Form submission", () => {
     it("submits valid grain ingredient successfully", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({
         data: [...mockIngredients, { ingredient_id: 4, name: "New Grain" }],
       });
 
@@ -522,7 +524,7 @@ describe("IngredientManager", () => {
     });
 
     it("submits valid hop ingredient successfully", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
 
       renderWithProviders(<IngredientManager />);
 
@@ -550,7 +552,7 @@ describe("IngredientManager", () => {
     });
 
     it("submits valid yeast ingredient successfully", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
 
       renderWithProviders(<IngredientManager />);
 
@@ -584,7 +586,7 @@ describe("IngredientManager", () => {
 
     it("shows loading state during submission", async () => {
       // Make the API call hang to test loading state
-      (ApiService.ingredients.create as jest.Mock).mockImplementation(
+      (ApiService.ingredients.create as Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -603,7 +605,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles submission error", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockRejectedValue(
+      (ApiService.ingredients.create as Mock).mockRejectedValue(
         new Error("Server error")
       );
 
@@ -623,7 +625,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles submission error with fallback message", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockRejectedValue(
+      (ApiService.ingredients.create as Mock).mockRejectedValue(
         new Error() // Error without message
       );
 
@@ -645,7 +647,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles API error response", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockRejectedValue({
+      (ApiService.ingredients.create as Mock).mockRejectedValue({
         response: {
           data: {
             error: "Ingredient already exists",
@@ -673,7 +675,7 @@ describe("IngredientManager", () => {
     });
 
     it("resets form after successful submission", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
 
       renderWithProviders(<IngredientManager />);
 
@@ -705,8 +707,8 @@ describe("IngredientManager", () => {
         { ingredient_id: 4, name: "New Ingredient", type: "grain" },
       ];
 
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
-      (ApiService.ingredients.getAll as jest.Mock)
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
+      (ApiService.ingredients.getAll as Mock)
         .mockResolvedValueOnce({
           data: mockIngredients,
         })
@@ -734,7 +736,7 @@ describe("IngredientManager", () => {
     });
 
     it("filters out empty fields from submission data", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
 
       renderWithProviders(<IngredientManager />);
 
@@ -761,11 +763,9 @@ describe("IngredientManager", () => {
   });
 
   describe("Search functionality", () => {
-    const Fuse = require("fuse.js");
-
     beforeEach(() => {
       // Reset the Fuse mock
-      Fuse.mockClear();
+      (Fuse as Mock).mockClear();
     });
 
     it("initializes search input", async () => {
@@ -866,7 +866,7 @@ describe("IngredientManager", () => {
 
     it("shows filtered count when searching", async () => {
       const mockFuseInstance = {
-        search: jest.fn().mockReturnValue([
+        search: vi.fn().mockReturnValue([
           {
             item: mockIngredients[1], // Cascade hop
             score: 0.1,
@@ -874,7 +874,7 @@ describe("IngredientManager", () => {
           },
         ]),
       };
-      Fuse.mockImplementation(() => mockFuseInstance);
+      (Fuse as Mock).mockImplementation(function () { return mockFuseInstance; });
 
       const user = userEvent.setup();
       renderWithProviders(<IngredientManager />);
@@ -900,9 +900,9 @@ describe("IngredientManager", () => {
 
     it("shows no results message when search yields no results", async () => {
       const mockFuseInstance = {
-        search: jest.fn().mockReturnValue([]),
+        search: vi.fn().mockReturnValue([]),
       };
-      Fuse.mockImplementation(() => mockFuseInstance);
+      (Fuse as Mock).mockImplementation(function () { return mockFuseInstance; });
 
       const user = userEvent.setup();
       renderWithProviders(<IngredientManager />);
@@ -1036,8 +1036,8 @@ describe("IngredientManager", () => {
     });
 
     it("shows empty state when no ingredients exist", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({ data: [] });
-      (ingredientServiceInstance.groupIngredientsByType as jest.Mock).mockReturnValue({
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({ data: [] });
+      (ingredientServiceInstance.groupIngredientsByType as Mock).mockReturnValue({
         grain: [],
         hop: [],
         yeast: [],
@@ -1141,7 +1141,7 @@ describe("IngredientManager", () => {
 
   describe("Edge cases and error scenarios", () => {
     it("handles malformed API response", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({
         data: "invalid data structure",
       });
 
@@ -1156,7 +1156,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles null API response", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({
         data: null,
       });
 
@@ -1170,7 +1170,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles missing ingredient service", async () => {
-      (ingredientServiceInstance.groupIngredientsByType as jest.Mock).mockImplementation(
+      (ingredientServiceInstance.groupIngredientsByType as Mock).mockImplementation(
         () => {
           throw new Error("Service unavailable");
         }
@@ -1216,7 +1216,7 @@ describe("IngredientManager", () => {
     });
 
     it("displays success messages with proper styling", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockResolvedValue({});
+      (ApiService.ingredients.create as Mock).mockResolvedValue({});
 
       renderWithProviders(<IngredientManager />);
 
@@ -1237,7 +1237,7 @@ describe("IngredientManager", () => {
     });
 
     it("handles network timeout during submission", async () => {
-      (ApiService.ingredients.create as jest.Mock).mockRejectedValue(
+      (ApiService.ingredients.create as Mock).mockRejectedValue(
         new Error("Network timeout")
       );
 

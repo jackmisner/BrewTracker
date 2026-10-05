@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import FermentationTracker from "../../src/components/BrewSessions/FermentationTracker";
@@ -5,51 +6,51 @@ import { Services } from "../../src/services";
 import { renderWithProviders } from "../testUtils";
 
 // Mock the CSS import
-jest.mock("../../src/styles/BrewSessions.css", () => ({}));
+vi.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock DryHopTracker component
-jest.mock("../../src/components/BrewSessions/DryHopTracker", () => {
-  return function MockDryHopTracker({ sessionId, recipeData, onSessionUpdate }: any) {
+vi.mock("../../src/components/BrewSessions/DryHopTracker", () => {
+  return { default: function MockDryHopTracker({ sessionId, recipeData, onSessionUpdate }: any) {
     return (
       <div data-testid="dry-hop-tracker">
         <h3>Dry Hop Schedule</h3>
         <p>No dry hops found in this recipe.</p>
       </div>
     );
-  };
+  } };
 });
 
 // Mock GravityStabilizationAnalysis component
-jest.mock("../../src/components/BrewSessions/GravityStabilizationAnalysis", () => {
-  return function MockGravityStabilizationAnalysis({ sessionId, onSuggestCompletion }: any) {
+vi.mock("../../src/components/BrewSessions/GravityStabilizationAnalysis", () => {
+  return { default: function MockGravityStabilizationAnalysis({ sessionId, onSuggestCompletion }: any) {
     return (
       <div data-testid="gravity-stabilization-analysis">
         <p>Gravity analysis component</p>
       </div>
     );
-  };
+  } };
 });
 
 // Mock Services
-jest.mock("../../src/services", () => ({
+vi.mock("../../src/services", () => ({
   Services: {
     brewSession: {
-      getFermentationData: jest.fn(),
-      getFermentationStats: jest.fn(),
-      addFermentationEntry: jest.fn(),
-      deleteFermentationEntry: jest.fn(),
-      updateBrewSession: jest.fn(),
-      analyzeFermentationCompletion: jest.fn(),
-      getDryHopAdditions: jest.fn(),
-      addDryHopAddition: jest.fn(),
-      updateDryHopAddition: jest.fn(),
-      deleteDryHopAddition: jest.fn(),
+      getFermentationData: vi.fn(),
+      getFermentationStats: vi.fn(),
+      addFermentationEntry: vi.fn(),
+      deleteFermentationEntry: vi.fn(),
+      updateBrewSession: vi.fn(),
+      analyzeFermentationCompletion: vi.fn(),
+      getDryHopAdditions: vi.fn(),
+      addDryHopAddition: vi.fn(),
+      updateDryHopAddition: vi.fn(),
+      deleteDryHopAddition: vi.fn(),
     },
   },
 }));
 
 // Mock recharts to avoid canvas issues in tests
-jest.mock("recharts", () => ({
+vi.mock("recharts", () => ({
   LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
   Line: () => <div data-testid="line" />,
   XAxis: () => <div data-testid="x-axis" />,
@@ -64,7 +65,7 @@ jest.mock("recharts", () => ({
 }));
 
 // Mock window.confirm
-const mockConfirm = jest.fn();
+const mockConfirm = vi.fn();
 Object.defineProperty(window, "confirm", {
   value: mockConfirm,
   writable: true,
@@ -153,7 +154,7 @@ const defaultProps = {
   sessionId: "test-session-id",
   recipeData: mockRecipeData,
   sessionData: mockSessionData,
-  onUpdateSession: jest.fn(),
+  onUpdateSession: vi.fn(),
 };
 
 describe("FermentationTracker", () => {
@@ -168,22 +169,22 @@ describe("FermentationTracker", () => {
    */
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
-    console.warn = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
+    console.warn = vi.fn();
     mockConfirm.mockReturnValue(true);
 
     // Default successful BrewSessionService responses - return raw data, not wrapped responses
-    (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue(mockFermentationData);
-    (Services.brewSession.getFermentationStats as jest.Mock).mockResolvedValue(mockStats);
-    (Services.brewSession.addFermentationEntry as jest.Mock).mockResolvedValue(undefined);
-    (Services.brewSession.deleteFermentationEntry as jest.Mock).mockResolvedValue(undefined);
-    (Services.brewSession.updateBrewSession as jest.Mock).mockResolvedValue(undefined);
-    (Services.brewSession.analyzeFermentationCompletion as jest.Mock).mockResolvedValue(null);
-    (Services.brewSession.getDryHopAdditions as jest.Mock).mockResolvedValue({ data: { dry_hop_additions: [] } });
-    (Services.brewSession.addDryHopAddition as jest.Mock).mockResolvedValue(undefined);
-    (Services.brewSession.updateDryHopAddition as jest.Mock).mockResolvedValue(undefined);
-    (Services.brewSession.deleteDryHopAddition as jest.Mock).mockResolvedValue(undefined);
+    (Services.brewSession.getFermentationData as Mock).mockResolvedValue(mockFermentationData);
+    (Services.brewSession.getFermentationStats as Mock).mockResolvedValue(mockStats);
+    (Services.brewSession.addFermentationEntry as Mock).mockResolvedValue(undefined);
+    (Services.brewSession.deleteFermentationEntry as Mock).mockResolvedValue(undefined);
+    (Services.brewSession.updateBrewSession as Mock).mockResolvedValue(undefined);
+    (Services.brewSession.analyzeFermentationCompletion as Mock).mockResolvedValue(null);
+    (Services.brewSession.getDryHopAdditions as Mock).mockResolvedValue({ data: { dry_hop_additions: [] } });
+    (Services.brewSession.addDryHopAddition as Mock).mockResolvedValue(undefined);
+    (Services.brewSession.updateDryHopAddition as Mock).mockResolvedValue(undefined);
+    (Services.brewSession.deleteDryHopAddition as Mock).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -193,10 +194,10 @@ describe("FermentationTracker", () => {
 
   describe("Loading State", () => {
     it("should show loading message initially", () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockReturnValue(
+      (Services.brewSession.getFermentationData as Mock).mockReturnValue(
         new Promise(() => {}) // Never resolves
       );
-      (Services.brewSession.getFermentationStats as jest.Mock).mockReturnValue(
+      (Services.brewSession.getFermentationStats as Mock).mockReturnValue(
         new Promise(() => {}) // Never resolves
       );
 
@@ -210,7 +211,7 @@ describe("FermentationTracker", () => {
 
   describe("Error Handling", () => {
     it("should handle generic error gracefully without blocking UI", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationData as Mock).mockRejectedValue(
         new Error("Failed to fetch data")
       );
 
@@ -232,7 +233,7 @@ describe("FermentationTracker", () => {
     it("should show specific error message for 404 errors", async () => {
       const notFoundError = new Error("Not found") as any;
       notFoundError.response = { status: 404 };
-      (Services.brewSession.getFermentationData as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationData as Mock).mockRejectedValue(
         notFoundError
       );
 
@@ -251,7 +252,7 @@ describe("FermentationTracker", () => {
     it("should show access denied for 403 errors", async () => {
       const accessDeniedError = new Error("Access denied") as any;
       accessDeniedError.response = { status: 403 };
-      (Services.brewSession.getFermentationData as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationData as Mock).mockRejectedValue(
         accessDeniedError
       );
 
@@ -272,7 +273,7 @@ describe("FermentationTracker", () => {
     it("should handle backend error gracefully without blocking UI", async () => {
       const backendError = new Error("Backend error") as any;
       backendError.response = { data: { error: "Database connection failed" } };
-      (Services.brewSession.getFermentationData as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationData as Mock).mockRejectedValue(
         backendError
       );
 
@@ -292,7 +293,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show error message when adding entry fails", async () => {
-      (Services.brewSession.addFermentationEntry as jest.Mock).mockRejectedValue(
+      (Services.brewSession.addFermentationEntry as Mock).mockRejectedValue(
         new Error("Failed to add entry")
       );
 
@@ -327,7 +328,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show error message when delete fails", async () => {
-      (Services.brewSession.deleteFermentationEntry as jest.Mock).mockRejectedValue(
+      (Services.brewSession.deleteFermentationEntry as Mock).mockRejectedValue(
         new Error("Failed to delete entry")
       );
 
@@ -355,7 +356,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should gracefully handle stats fetch errors", async () => {
-      (Services.brewSession.getFermentationStats as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationStats as Mock).mockRejectedValue(
         new Error("Stats error")
       );
 
@@ -488,7 +489,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show empty message when no fermentation data exists", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue([]);
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]);
 
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
@@ -505,7 +506,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should handle network error gracefully and still allow adding data", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockRejectedValue(
+      (Services.brewSession.getFermentationData as Mock).mockRejectedValue(
         new Error("Network error")
       );
 
@@ -722,7 +723,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should show submitting state during form submission", async () => {
-      (Services.brewSession.addFermentationEntry as jest.Mock).mockReturnValue(
+      (Services.brewSession.addFermentationEntry as Mock).mockReturnValue(
         new Promise((resolve) => setTimeout(() => resolve([]), 100))
       );
 
@@ -794,7 +795,7 @@ describe("FermentationTracker", () => {
 
   describe("Auto OG Setting", () => {
     it("should auto-populate gravity and show form when session has actual_og but no fermentation data", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue([]); // No fermentation data
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]); // No fermentation data
 
       const propsWithOG = {
         ...defaultProps,
@@ -817,7 +818,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should not auto-show form if not in fermenting status", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue({
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue({
         data: [], // No fermentation data
       });
 
@@ -869,7 +870,7 @@ describe("FermentationTracker", () => {
 
   describe("Session Updates", () => {
     it("should update session with actual_og if first entry and session has no OG", async () => {
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue([]); // No existing fermentation data
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]); // No existing fermentation data
 
       const propsWithoutOG = {
         ...defaultProps,
@@ -908,7 +909,7 @@ describe("FermentationTracker", () => {
 
     it("should add fermentation entry without automatic FG calculation", async () => {
       // Mock data with two entries where the last one is close to what we'll add
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue([
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([
         {
           entry_date: "2024-06-01T10:00:00Z",
           gravity: 1.055, // Initial OG
@@ -926,7 +927,7 @@ describe("FermentationTracker", () => {
       ]);
 
       // Mock a successful add that returns updated data
-      (Services.brewSession.addFermentationEntry as jest.Mock).mockResolvedValue([]);
+      (Services.brewSession.addFermentationEntry as Mock).mockResolvedValue([]);
 
       const propsForFG = {
         ...defaultProps,
@@ -990,7 +991,7 @@ describe("FermentationTracker", () => {
 
   describe("Edge Cases", () => {
     it("should handle missing stats data gracefully", async () => {
-      (Services.brewSession.getFermentationStats as jest.Mock).mockResolvedValue({
+      (Services.brewSession.getFermentationStats as Mock).mockResolvedValue({
         data: null,
       });
 
@@ -1036,7 +1037,7 @@ describe("FermentationTracker", () => {
         },
       ];
 
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue(sparseData);
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue(sparseData);
 
       renderWithProviders(<FermentationTracker {...defaultProps as any} />);
 
@@ -1176,10 +1177,10 @@ describe("FermentationTracker", () => {
 
     it("should refresh data after successful deletion", async () => {
       // Reset mocks specifically for this test
-      jest.clearAllMocks();
-      (Services.brewSession.getFermentationData as jest.Mock).mockResolvedValue(mockFermentationData);
-      (Services.brewSession.getFermentationStats as jest.Mock).mockResolvedValue(mockStats);
-      (Services.brewSession.deleteFermentationEntry as jest.Mock).mockResolvedValue({
+      vi.clearAllMocks();
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue(mockFermentationData);
+      (Services.brewSession.getFermentationStats as Mock).mockResolvedValue(mockStats);
+      (Services.brewSession.deleteFermentationEntry as Mock).mockResolvedValue({
         data: { success: true },
       });
       

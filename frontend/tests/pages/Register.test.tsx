@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -6,13 +7,13 @@ import Register from "../../src/pages/Register";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("Register Page", () => {
-  const mockOnLogin = jest.fn();
+  const mockOnLogin = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders the registration form", () => {
@@ -106,10 +107,10 @@ describe("Register Page", () => {
 
   test("successfully submits the form with valid data and shows verification message", async () => {
     // Mock successful API responses
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
-    (ApiService.auth.register as jest.Mock).mockResolvedValue({
+    (ApiService.auth.register as Mock).mockResolvedValue({
       data: { 
         message: "User created successfully. Please check your email to verify your account.",
         verification_email_sent: true
@@ -164,10 +165,10 @@ describe("Register Page", () => {
     const user = userEvent.setup();
     
     // Mock successful API responses
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
-    (ApiService.auth.register as jest.Mock).mockResolvedValue({
+    (ApiService.auth.register as Mock).mockResolvedValue({
       data: { 
         message: "User created successfully. Please check your email to verify your account.",
         verification_email_sent: true
@@ -217,7 +218,7 @@ describe("Register Page", () => {
     const user = userEvent.setup();
     
     // Mock username validation responses - first call will be for "abc" (valid)
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
 
@@ -385,12 +386,12 @@ describe("Register Page", () => {
     const user = userEvent.setup();
     
     // Mock username validation to pass
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
     
     // Mock registration to fail
-    (ApiService.auth.register as jest.Mock).mockRejectedValue({
+    (ApiService.auth.register as Mock).mockRejectedValue({
       response: { data: { error: "Username already exists" } },
     });
 
@@ -429,12 +430,12 @@ describe("Register Page", () => {
     const user = userEvent.setup();
     
     // Mock username validation to pass
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
     
     // Mock registration to fail with network error
-    (ApiService.auth.register as jest.Mock).mockRejectedValue(new Error("Network error"));
+    (ApiService.auth.register as Mock).mockRejectedValue(new Error("Network error"));
 
     render(<Register onLogin={mockOnLogin} />);
 
@@ -489,12 +490,12 @@ describe("Register Page", () => {
     const user = userEvent.setup();
 
     // Mock username validation to pass quickly
-    (ApiService.auth.validateUsername as jest.Mock).mockResolvedValue({
+    (ApiService.auth.validateUsername as Mock).mockResolvedValue({
       data: { valid: true, suggestions: [] }
     });
 
     // Mock a slow API response for registration
-    (ApiService.auth.register as jest.Mock).mockImplementation(
+    (ApiService.auth.register as Mock).mockImplementation(
       () =>
         new Promise((resolve) => setTimeout(() => resolve({ 
           data: {

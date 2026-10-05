@@ -4,12 +4,12 @@ import CacheManager, {
 import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 
 // Mock the BrewSessionService
-jest.mock("../../src/services/Brewing/BrewSessionService", () => ({
-  clearRecipeCache: jest.fn(),
-  clearSessionCache: jest.fn(),
-  clearAllRecipeCaches: jest.fn(),
-  clearCache: jest.fn(),
-}));
+vi.mock("../../src/services/Brewing/BrewSessionService", () => { const mod = {
+  clearRecipeCache: vi.fn(),
+  clearSessionCache: vi.fn(),
+  clearAllRecipeCaches: vi.fn(),
+  clearCache: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 describe("CacheManager", () => {
   let cacheManager: any;
@@ -21,14 +21,14 @@ describe("CacheManager", () => {
   beforeEach(() => {
     cacheManager = CacheManager;
     // Clear any existing event listeners
-    console.warn = jest.fn();
-    console.error = jest.fn();
+    console.warn = vi.fn();
+    console.error = vi.fn();
     cacheManager.eventListeners.clear();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -42,7 +42,7 @@ describe("CacheManager", () => {
   describe("Event Listener Management", () => {
     describe("addEventListener", () => {
       test("adds event listener successfully", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, callback);
@@ -52,8 +52,8 @@ describe("CacheManager", () => {
       });
 
       test("adds multiple listeners for the same event", () => {
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
+        const callback1 = vi.fn();
+        const callback2 = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, callback1);
@@ -66,7 +66,7 @@ describe("CacheManager", () => {
       });
 
       test("creates new event array if event doesn't exist", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const event = "new-event";
 
         expect(cacheManager.eventListeners.has(event)).toBe(false);
@@ -80,8 +80,8 @@ describe("CacheManager", () => {
 
     describe("removeEventListener", () => {
       test("removes event listener successfully", () => {
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
+        const callback1 = vi.fn();
+        const callback2 = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, callback1);
@@ -96,8 +96,8 @@ describe("CacheManager", () => {
       });
 
       test("handles removing non-existent listener gracefully", () => {
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
+        const callback1 = vi.fn();
+        const callback2 = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, callback1);
@@ -112,7 +112,7 @@ describe("CacheManager", () => {
       });
 
       test("handles removing listener from non-existent event", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
 
         expect(() => {
           cacheManager.removeEventListener("non-existent-event", callback);
@@ -120,7 +120,7 @@ describe("CacheManager", () => {
       });
 
       test("removes all instances of a callback", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const event = "test-event";
 
         // Add the same callback multiple times (edge case)
@@ -136,8 +136,8 @@ describe("CacheManager", () => {
 
     describe("emit", () => {
       test("calls all registered listeners with provided data", () => {
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
+        const callback1 = vi.fn();
+        const callback2 = vi.fn();
         const event = "test-event";
         const testData = { test: "data" };
 
@@ -159,10 +159,10 @@ describe("CacheManager", () => {
       });
 
       test("handles errors in callback execution", () => {
-        const errorCallback = jest.fn().mockImplementation(() => {
+        const errorCallback = vi.fn().mockImplementation(() => {
           throw new Error("Callback error");
         });
-        const successCallback = jest.fn();
+        const successCallback = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, errorCallback);
@@ -179,11 +179,11 @@ describe("CacheManager", () => {
       });
 
       test("continues executing remaining callbacks after error", () => {
-        const callback1 = jest.fn();
-        const errorCallback = jest.fn().mockImplementation(() => {
+        const callback1 = vi.fn();
+        const errorCallback = vi.fn().mockImplementation(() => {
           throw new Error("Test error");
         });
-        const callback3 = jest.fn();
+        const callback3 = vi.fn();
         const event = "test-event";
 
         cacheManager.addEventListener(event, callback1);
@@ -207,7 +207,7 @@ describe("CacheManager", () => {
           recipe_id: "recipe-456",
           name: "Test Brew Session",
         };
-        const eventListener = jest.fn();
+        const eventListener = vi.fn();
 
         cacheManager.addEventListener("brew-session-created", eventListener);
         cacheManager.onBrewSessionCreated(sessionData);
@@ -239,7 +239,7 @@ describe("CacheManager", () => {
           recipe_id: "recipe-456",
           name: "Updated Brew Session",
         };
-        const eventListener = jest.fn();
+        const eventListener = vi.fn();
 
         cacheManager.addEventListener("brew-session-updated", eventListener);
         cacheManager.onBrewSessionUpdated(sessionData);
@@ -266,7 +266,7 @@ describe("CacheManager", () => {
           "session-123"
         );
 
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         const sessionDataNoSession = {
           recipe_id: "recipe-456",
@@ -289,7 +289,7 @@ describe("CacheManager", () => {
           recipe_id: "recipe-456",
           name: "Deleted Brew Session",
         };
-        const eventListener = jest.fn();
+        const eventListener = vi.fn();
 
         cacheManager.addEventListener("brew-session-deleted", eventListener);
         cacheManager.onBrewSessionDeleted(sessionData);
@@ -320,7 +320,7 @@ describe("CacheManager", () => {
   describe("General Cache Management", () => {
     describe("clearAllCaches", () => {
       test("clears all caches and emits event", () => {
-        const eventListener = jest.fn();
+        const eventListener = vi.fn();
 
         cacheManager.addEventListener("cache-cleared", eventListener);
         cacheManager.clearAllCaches();
@@ -332,7 +332,7 @@ describe("CacheManager", () => {
     describe("forceRefreshRecipe", () => {
       test("clears recipe cache and emits event", () => {
         const recipeId = "recipe-123";
-        const eventListener = jest.fn();
+        const eventListener = vi.fn();
 
         cacheManager.addEventListener("recipe-refresh", eventListener);
         cacheManager.forceRefreshRecipe(recipeId);
@@ -351,7 +351,7 @@ describe("CacheManager", () => {
         const sessionData = { session_id: "123", recipe_id: "456" };
 
         // Spy on the cacheManager method
-        const spy = jest.spyOn(cacheManager, "onBrewSessionCreated");
+        const spy = vi.spyOn(cacheManager, "onBrewSessionCreated");
 
         invalidateBrewSessionCaches.onCreated(sessionData);
 
@@ -363,7 +363,7 @@ describe("CacheManager", () => {
       test("onUpdated calls cacheManager.onBrewSessionUpdated", () => {
         const sessionData = { session_id: "123", recipe_id: "456" };
 
-        const spy = jest.spyOn(cacheManager, "onBrewSessionUpdated");
+        const spy = vi.spyOn(cacheManager, "onBrewSessionUpdated");
 
         invalidateBrewSessionCaches.onUpdated(sessionData);
 
@@ -375,7 +375,7 @@ describe("CacheManager", () => {
       test("onDeleted calls cacheManager.onBrewSessionDeleted", () => {
         const sessionData = { session_id: "123", recipe_id: "456" };
 
-        const spy = jest.spyOn(cacheManager, "onBrewSessionDeleted");
+        const spy = vi.spyOn(cacheManager, "onBrewSessionDeleted");
 
         invalidateBrewSessionCaches.onDeleted(sessionData);
 
@@ -387,7 +387,7 @@ describe("CacheManager", () => {
       test("forceRefreshRecipe calls cacheManager.forceRefreshRecipe", () => {
         const recipeId = "recipe-123";
 
-        const spy = jest.spyOn(cacheManager, "forceRefreshRecipe");
+        const spy = vi.spyOn(cacheManager, "forceRefreshRecipe");
 
         invalidateBrewSessionCaches.forceRefreshRecipe(recipeId);
 
@@ -400,9 +400,9 @@ describe("CacheManager", () => {
 
   describe("Integration Scenarios", () => {
     test("handles complex workflow with multiple events", () => {
-      const createdListener = jest.fn();
-      const updatedListener = jest.fn();
-      const deletedListener = jest.fn();
+      const createdListener = vi.fn();
+      const updatedListener = vi.fn();
+      const deletedListener = vi.fn();
 
       cacheManager.addEventListener("brew-session-created", createdListener);
       cacheManager.addEventListener("brew-session-updated", updatedListener);
@@ -433,11 +433,11 @@ describe("CacheManager", () => {
     });
 
     test("handles multiple listeners for same event with errors", () => {
-      const successListener1 = jest.fn();
-      const errorListener = jest.fn().mockImplementation(() => {
+      const successListener1 = vi.fn();
+      const errorListener = vi.fn().mockImplementation(() => {
         throw new Error("Listener error");
       });
-      const successListener2 = jest.fn();
+      const successListener2 = vi.fn();
 
       cacheManager.addEventListener("brew-session-created", successListener1);
       cacheManager.addEventListener("brew-session-created", errorListener);
@@ -457,21 +457,21 @@ describe("CacheManager", () => {
   });
 
   describe("Singleton Behavior", () => {
-    test("exports same instance", () => {
+    test("exports same instance", async () => {
       // Import the module again to test singleton
-      const CacheManager2 = require("../../src/services/CacheManager").default;
+      const CacheManager2 = (await import("../../src/services/CacheManager")).default;
 
       expect(CacheManager).toBe(CacheManager2);
     });
 
-    test("maintains state across imports", () => {
-      const callback = jest.fn();
+    test("maintains state across imports", async () => {
+      const callback = vi.fn();
       cacheManager.addEventListener("test-event", callback);
 
       // Import and use the module again
       const {
         default: CacheManager2,
-      } = require("../../src/services/CacheManager");
+      } = (await import("../../src/services/CacheManager"));
       CacheManager2.emit("test-event", { test: "data" });
 
       expect(callback).toHaveBeenCalledWith({ test: "data" });
@@ -512,7 +512,7 @@ describe("CacheManager", () => {
 
       // Add many listeners
       for (let i = 0; i < 1000; i++) {
-        const callback = jest.fn();
+        const callback = vi.fn();
         callbacks.push(callback);
         cacheManager.addEventListener(event, callback);
       }

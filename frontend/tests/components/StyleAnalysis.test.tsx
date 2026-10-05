@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -7,18 +8,18 @@ import StyleAnalysis from '../../src/components/RecipeBuilder/BeerStyles/StyleAn
 import BeerStyleService from '../../src/services/Data/BeerStyleService';
 
 // Mock the BeerStyleService
-jest.mock('../../src/services/Data/BeerStyleService', () => ({
-  getAllStylesList: jest.fn(),
-  calculateStyleMatch: jest.fn(),
-  findMatchingStyles: jest.fn(),
-}));
+vi.mock('../../src/services/Data/BeerStyleService', () => { const mod = {
+  getAllStylesList: vi.fn(),
+  calculateStyleMatch: vi.fn(),
+  findMatchingStyles: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Note: StyleRangeIndicator is no longer used in the component
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -130,15 +131,15 @@ describe('StyleAnalysis', () => {
     },
   ];
 
-  const mockOnStyleSuggestionSelect = jest.fn();
+  const mockOnStyleSuggestionSelect = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default service mocks
-    (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue([mockBeerStyle]);
-    (BeerStyleService.calculateStyleMatch as jest.Mock).mockReturnValue(mockStyleMatch);
-    (BeerStyleService.findMatchingStyles as jest.Mock).mockResolvedValue(mockStyleSuggestions);
+    (BeerStyleService.getAllStylesList as Mock).mockResolvedValue([mockBeerStyle]);
+    (BeerStyleService.calculateStyleMatch as Mock).mockReturnValue(mockStyleMatch);
+    (BeerStyleService.findMatchingStyles as Mock).mockResolvedValue(mockStyleSuggestions);
   });
 
   describe('Initial Rendering', () => {
@@ -169,7 +170,7 @@ describe('StyleAnalysis', () => {
 
     it('shows loading state', async () => {
       // Mock a promise that never resolves to show loading state
-      (BeerStyleService.findMatchingStyles as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      (BeerStyleService.findMatchingStyles as Mock).mockImplementation(() => new Promise(() => {}));
 
       render(
         <StyleAnalysis 
@@ -349,7 +350,7 @@ describe('StyleAnalysis', () => {
         percentage: 40,
       };
 
-      (BeerStyleService.calculateStyleMatch as jest.Mock).mockReturnValue(partialMatch);
+      (BeerStyleService.calculateStyleMatch as Mock).mockReturnValue(partialMatch);
       
       render(
         <StyleAnalysis 
@@ -400,7 +401,7 @@ describe('StyleAnalysis', () => {
     });
 
     it('shows style not found message for unknown styles', async () => {
-      (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue([]);
+      (BeerStyleService.getAllStylesList as Mock).mockResolvedValue([]);
 
       const recipeWithUnknownStyle = { ...mockRecipe, style: 'Unknown Style' };
       
@@ -425,7 +426,7 @@ describe('StyleAnalysis', () => {
         percentage: 40,
       };
 
-      (BeerStyleService.calculateStyleMatch as jest.Mock).mockReturnValue(partialMatch);
+      (BeerStyleService.calculateStyleMatch as Mock).mockReturnValue(partialMatch);
 
       render(
         <StyleAnalysis 
@@ -464,7 +465,7 @@ describe('StyleAnalysis', () => {
 
   describe('Error Handling', () => {
     it('displays error message when style analysis fails', async () => {
-      (BeerStyleService.getAllStylesList as jest.Mock).mockRejectedValue(new Error('Service error'));
+      (BeerStyleService.getAllStylesList as Mock).mockRejectedValue(new Error('Service error'));
 
       render(
         <StyleAnalysis 
@@ -480,7 +481,7 @@ describe('StyleAnalysis', () => {
     });
 
     it('displays error message when style suggestions fail', async () => {
-      (BeerStyleService.findMatchingStyles as jest.Mock).mockRejectedValue(new Error('Suggestions error'));
+      (BeerStyleService.findMatchingStyles as Mock).mockRejectedValue(new Error('Suggestions error'));
 
       render(
         <StyleAnalysis 
@@ -496,7 +497,7 @@ describe('StyleAnalysis', () => {
     });
 
     it('shows no suggestions message when no matches found', async () => {
-      (BeerStyleService.findMatchingStyles as jest.Mock).mockResolvedValue([]);
+      (BeerStyleService.findMatchingStyles as Mock).mockResolvedValue([]);
 
       render(
         <StyleAnalysis 
@@ -532,7 +533,7 @@ describe('StyleAnalysis', () => {
 
     it('handles case-insensitive style matching', async () => {
       const styleWithDifferentCase = { ...mockBeerStyle, name: 'american ipa' };
-      (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue([styleWithDifferentCase]);
+      (BeerStyleService.getAllStylesList as Mock).mockResolvedValue([styleWithDifferentCase]);
 
       render(
         <StyleAnalysis 
@@ -553,7 +554,7 @@ describe('StyleAnalysis', () => {
         name: 'Different Name',
         display_name: 'American IPA'
       };
-      (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue([styleWithDisplayName]);
+      (BeerStyleService.getAllStylesList as Mock).mockResolvedValue([styleWithDisplayName]);
 
       render(
         <StyleAnalysis 
@@ -584,7 +585,7 @@ describe('StyleAnalysis', () => {
       });
 
       // Clear mocks and change recipe style
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       const updatedRecipe = { ...mockRecipe, style: 'Stout' };
 
       rerender(
@@ -614,7 +615,7 @@ describe('StyleAnalysis', () => {
       });
 
       // Clear mocks and change metrics
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       const updatedMetrics = { ...mockMetrics, og: 1.080 };
 
       rerender(
@@ -668,7 +669,7 @@ describe('StyleAnalysis', () => {
         matches: { og: true, fg: true, abv: true, ibu: true, srm: true },
       }));
 
-      (BeerStyleService.findMatchingStyles as jest.Mock).mockResolvedValue(manyMockSuggestions);
+      (BeerStyleService.findMatchingStyles as Mock).mockResolvedValue(manyMockSuggestions);
 
       render(
         <StyleAnalysis 

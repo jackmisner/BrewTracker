@@ -25,7 +25,7 @@ describe("Header", () => {
   });
 
   test("calls onLogout when logout button is clicked", () => {
-    const onLogout = jest.fn();
+    const onLogout = vi.fn();
     const user = { username: "testuser" } as any;
     renderWithRouter(<Header user={user} onLogout={onLogout} />);
 

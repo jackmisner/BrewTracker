@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
@@ -7,44 +8,44 @@ import BeerXMLImportExport from '../../src/components/BeerXML/BeerXMLImportExpor
 import beerXMLService from '../../src/services/BeerXML/BeerXMLService';
 
 // Mock UnitContext
-jest.mock('../../src/contexts/UnitContext', () => {
-  const React = require('react');
+vi.mock('../../src/contexts/UnitContext', async () => {
+  const React = (await vi.importActual('react'));
   return {
     useUnits: () => ({
       unitSystem: 'imperial',
       loading: false,
       error: null,
-      updateUnitSystem: jest.fn(),
-      setError: jest.fn(),
-      getPreferredUnit: jest.fn((type: string) => type === 'volume' ? 'gal' : 'lb'),
-      convertUnit: jest.fn((value: number, from: string, to: string) => ({ value, unit: to })),
-      convertForDisplay: jest.fn((value: number, unit: string) => ({ value, unit })),
-      convertForStorage: jest.fn((value: number, unit: string) => ({ value, unit })),
-      formatValue: jest.fn((value: number, unit: string) => `${value} ${unit}`),
-      getUnitSystemLabel: jest.fn(() => 'Imperial'),
-      getUnitSystemIcon: jest.fn(() => '🇺🇸'),
-      getCommonUnits: jest.fn(() => []),
-      convertBatch: jest.fn((ingredients: any[]) => ingredients),
-      getTypicalBatchSizes: jest.fn(() => []),
+      updateUnitSystem: vi.fn(),
+      setError: vi.fn(),
+      getPreferredUnit: vi.fn((type: string) => type === 'volume' ? 'gal' : 'lb'),
+      convertUnit: vi.fn((value: number, from: string, to: string) => ({ value, unit: to })),
+      convertForDisplay: vi.fn((value: number, unit: string) => ({ value, unit })),
+      convertForStorage: vi.fn((value: number, unit: string) => ({ value, unit })),
+      formatValue: vi.fn((value: number, unit: string) => `${value} ${unit}`),
+      getUnitSystemLabel: vi.fn(() => 'Imperial'),
+      getUnitSystemIcon: vi.fn(() => '🇺🇸'),
+      getCommonUnits: vi.fn(() => []),
+      convertBatch: vi.fn((ingredients: any[]) => ingredients),
+      getTypicalBatchSizes: vi.fn(() => []),
     }),
     UnitProvider: ({ children }: { children: React.ReactNode }) => children,
   };
 });
 
 // Mock the BeerXML service
-jest.mock('../../src/services/BeerXML/BeerXMLService', () => ({
-  validateFile: jest.fn(),
-  readFileContent: jest.fn(),
-  parseBeerXML: jest.fn(),
-  matchIngredients: jest.fn(),
-  exportRecipe: jest.fn(),
-  downloadBeerXML: jest.fn(),
-  convertRecipeUnits: jest.fn((recipe) => Promise.resolve({ recipe, warnings: [] })), // Return recipe with warnings array
-}));
+vi.mock('../../src/services/BeerXML/BeerXMLService', () => { const mod = {
+  validateFile: vi.fn(),
+  readFileContent: vi.fn(),
+  parseBeerXML: vi.fn(),
+  matchIngredients: vi.fn(),
+  exportRecipe: vi.fn(),
+  downloadBeerXML: vi.fn(),
+  convertRecipeUnits: vi.fn((recipe) => Promise.resolve({ recipe, warnings: [] })), // Return recipe with warnings array
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock the UnitConversionChoice component
-jest.mock('../../src/components/BeerXML/UnitConversionChoice', () => {
-  return function MockUnitConversionChoice({ onImportAsMetric, onImportAsImperial, onCancel }: any) {
+vi.mock('../../src/components/BeerXML/UnitConversionChoice', () => {
+  return { default: function MockUnitConversionChoice({ onImportAsMetric, onImportAsImperial, onCancel }: any) {
     return (
       <div data-testid="unit-conversion-choice">
         <h3>Choose Import Units</h3>
@@ -59,12 +60,12 @@ jest.mock('../../src/components/BeerXML/UnitConversionChoice', () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
 // Mock the IngredientMatchingReview component
-jest.mock('../../src/components/BeerXML/IngredientMatchingReview', () => {
-  return function MockIngredientMatchingReview({ onComplete, onCancel, matchingResults }: any) {
+vi.mock('../../src/components/BeerXML/IngredientMatchingReview', () => {
+  return { default: function MockIngredientMatchingReview({ onComplete, onCancel, matchingResults }: any) {
     // Create a realistic mock response based on the matching results
     let mockIngredients;
     
@@ -107,20 +108,20 @@ jest.mock('../../src/components/BeerXML/IngredientMatchingReview', () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
 // Mock CSS import
-jest.mock('../../src/styles/BeerXMLImportExport.css', () => ({}));
+vi.mock('../../src/styles/BeerXMLImportExport.css', () => ({}));
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
@@ -171,16 +172,16 @@ describe('BeerXMLImportExport', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default service mocks
-    (beerXMLService.validateFile as jest.Mock).mockReturnValue({ valid: true, errors: [] });
-    (beerXMLService.readFileContent as jest.Mock).mockResolvedValue('<xml>test</xml>');
-    (beerXMLService.parseBeerXML as jest.Mock).mockResolvedValue(mockParsedRecipes);
-    (beerXMLService.matchIngredients as jest.Mock).mockResolvedValue([
+    (beerXMLService.validateFile as Mock).mockReturnValue({ valid: true, errors: [] });
+    (beerXMLService.readFileContent as Mock).mockResolvedValue('<xml>test</xml>');
+    (beerXMLService.parseBeerXML as Mock).mockResolvedValue(mockParsedRecipes);
+    (beerXMLService.matchIngredients as Mock).mockResolvedValue([
       { ingredient: { id: '1', name: 'Match 1' }, confidence: 0.9 },
     ]);
-    (beerXMLService.exportRecipe as jest.Mock).mockResolvedValue({
+    (beerXMLService.exportRecipe as Mock).mockResolvedValue({
       xmlContent: '<xml>exported</xml>',
       filename: 'test-recipe.xml',
     });
@@ -237,7 +238,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('displays file validation errors', async () => {
       const user = userEvent.setup();
-      (beerXMLService.validateFile as jest.Mock).mockReturnValue({
+      (beerXMLService.validateFile as Mock).mockReturnValue({
         valid: false,
         errors: ['Invalid file format', 'File too large'],
       });
@@ -299,7 +300,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('displays parsing loading state', async () => {
       const user = userEvent.setup();
-      (beerXMLService.parseBeerXML as jest.Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
+      (beerXMLService.parseBeerXML as Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
 
       render(<BeerXMLImportExport mode="import" />);
 
@@ -315,7 +316,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles parsing errors', async () => {
       const user = userEvent.setup();
-      (beerXMLService.parseBeerXML as jest.Mock).mockRejectedValue(new Error('Parse failed'));
+      (beerXMLService.parseBeerXML as Mock).mockRejectedValue(new Error('Parse failed'));
 
       render(<BeerXMLImportExport mode="import" />);
 
@@ -408,7 +409,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
         },
       ];
 
-      (beerXMLService.parseBeerXML as jest.Mock).mockResolvedValue(multipleRecipes);
+      (beerXMLService.parseBeerXML as Mock).mockResolvedValue(multipleRecipes);
 
       render(<BeerXMLImportExport mode="import" />);
 
@@ -459,7 +460,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('displays ingredient matching loading state', async () => {
       const user = userEvent.setup();
-      (beerXMLService.matchIngredients as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      (beerXMLService.matchIngredients as Mock).mockImplementation(() => new Promise(() => {}));
       render(<BeerXMLImportExport mode="import" />);
 
       const fileInput = screen.getByTestId('beerxml-file-input');
@@ -487,7 +488,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles ingredient matching errors', async () => {
       const user = userEvent.setup();
-      (beerXMLService.matchIngredients as jest.Mock).mockRejectedValue(new Error('Matching failed'));
+      (beerXMLService.matchIngredients as Mock).mockRejectedValue(new Error('Matching failed'));
       render(<BeerXMLImportExport mode="import" />);
 
       const fileInput = screen.getByTestId('beerxml-file-input');
@@ -541,7 +542,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('completes import process', async () => {
       const user = userEvent.setup();
-      const onImport = jest.fn();
+      const onImport = vi.fn();
 
       render(<BeerXMLImportExport mode="import" onImport={onImport} />);
 
@@ -600,7 +601,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles import completion errors', async () => {
       const user = userEvent.setup();
-      const onImport = jest.fn().mockRejectedValue(new Error('Import failed'));
+      const onImport = vi.fn().mockRejectedValue(new Error('Import failed'));
 
       render(<BeerXMLImportExport mode="import" onImport={onImport} />);
 
@@ -636,7 +637,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
   describe('BeerXML Export', () => {
     it('exports recipe successfully', async () => {
       const user = userEvent.setup();
-      const onExport = jest.fn();
+      const onExport = vi.fn();
 
       render(
         <BeerXMLImportExport
@@ -665,8 +666,8 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('displays export loading state', async () => {
       const user = userEvent.setup();
-      const mockOnExport = jest.fn();
-      (beerXMLService.exportRecipe as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      const mockOnExport = vi.fn();
+      (beerXMLService.exportRecipe as Mock).mockImplementation(() => new Promise(() => {}));
 
       render(
         <BeerXMLImportExport
@@ -686,8 +687,8 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles export errors', async () => {
       const user = userEvent.setup();
-      const mockOnExport = jest.fn();
-      (beerXMLService.exportRecipe as jest.Mock).mockRejectedValue(new Error('Export failed'));
+      const mockOnExport = vi.fn();
+      (beerXMLService.exportRecipe as Mock).mockRejectedValue(new Error('Export failed'));
 
       render(
         <BeerXMLImportExport
@@ -829,7 +830,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('has proper error message structure', async () => {
       const user = userEvent.setup();
-      (beerXMLService.validateFile as jest.Mock).mockReturnValue({
+      (beerXMLService.validateFile as Mock).mockReturnValue({
         valid: false,
         errors: ['Test error'],
       });
@@ -920,18 +921,18 @@ const fileInput = screen.getByTestId('beerxml-file-input');
     ];
 
     beforeEach(() => {
-      (beerXMLService.validateFile as jest.Mock).mockReturnValue({
+      (beerXMLService.validateFile as Mock).mockReturnValue({
         valid: true,
         errors: [],
       });
-      (beerXMLService.readFileContent as jest.Mock).mockResolvedValue('<xml>mock content</xml>');
-      (beerXMLService.parseBeerXML as jest.Mock).mockResolvedValue([mockParsedRecipe]);
-      (beerXMLService.matchIngredients as jest.Mock).mockResolvedValue(mockMatchingResults);
+      (beerXMLService.readFileContent as Mock).mockResolvedValue('<xml>mock content</xml>');
+      (beerXMLService.parseBeerXML as Mock).mockResolvedValue([mockParsedRecipe]);
+      (beerXMLService.matchIngredients as Mock).mockResolvedValue(mockMatchingResults);
     });
 
     it('imports recipe with correct name and style', async () => {
       const user = userEvent.setup();
-      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+      const mockOnImport = vi.fn().mockResolvedValue(undefined);
 
       render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
 
@@ -977,7 +978,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles batch size precision correctly in recipe data', async () => {
       const user = userEvent.setup();
-      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+      const mockOnImport = vi.fn().mockResolvedValue(undefined);
 
       render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
 
@@ -1017,7 +1018,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('preserves ingredient amounts and units correctly', async () => {
       const user = userEvent.setup();
-      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+      const mockOnImport = vi.fn().mockResolvedValue(undefined);
 
       render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
 
@@ -1074,7 +1075,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('does not duplicate description in notes field', async () => {
       const user = userEvent.setup();
-      const mockOnImport = jest.fn().mockResolvedValue(undefined);
+      const mockOnImport = vi.fn().mockResolvedValue(undefined);
 
       render(<BeerXMLImportExport mode="import" onImport={mockOnImport} />);
 
@@ -1139,7 +1140,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles parsing errors gracefully', async () => {
       const user = userEvent.setup();
-      (beerXMLService.parseBeerXML as jest.Mock).mockRejectedValue(
+      (beerXMLService.parseBeerXML as Mock).mockRejectedValue(
         new Error('Invalid BeerXML format')
       );
 
@@ -1158,7 +1159,7 @@ const fileInput = screen.getByTestId('beerxml-file-input');
 
     it('handles ingredient matching errors gracefully', async () => {
       const user = userEvent.setup();
-      (beerXMLService.matchIngredients as jest.Mock).mockRejectedValue(
+      (beerXMLService.matchIngredients as Mock).mockRejectedValue(
         new Error('Ingredient matching failed')
       );
 

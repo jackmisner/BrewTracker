@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React is used for JSX
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -9,20 +10,20 @@ import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
 import { Services } from "../../src/services";
 
 // Mock the useRecipeBuilder hook
-jest.mock("../../src/hooks/useRecipeBuilder");
+vi.mock("../../src/hooks/useRecipeBuilder");
 
 // Mock UserSettingsService to prevent network calls
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
-  updateUserSettings: jest.fn(() => Promise.resolve()),
-}));
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn(() => Promise.resolve({ unit_system: "imperial" })),
+  updateUserSettings: vi.fn(() => Promise.resolve()),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock Services object with current organized structure
-jest.mock("../../src/services", () => ({
+vi.mock("../../src/services", () => ({
   Services: {
     AI: {
       service: {
-        analyzeRecipe: jest.fn().mockResolvedValue({
+        analyzeRecipe: vi.fn().mockResolvedValue({
           suggestions: [],
           current_metrics: {},
           optimization_performed: false,
@@ -31,26 +32,26 @@ jest.mock("../../src/services", () => ({
     },
     BeerXML: {
       service: {
-        exportRecipe: jest.fn(),
-        downloadBeerXML: jest.fn(),
+        exportRecipe: vi.fn(),
+        downloadBeerXML: vi.fn(),
       },
     },
     ingredient: {
-      clearCache: jest.fn(),
+      clearCache: vi.fn(),
     },
     beerStyle: {
-      getAllStylesList: jest.fn().mockResolvedValue([]),
+      getAllStylesList: vi.fn().mockResolvedValue([]),
     },
   },
   // Legacy flat access for backward compatibility
   ingredient: {
-    clearCache: jest.fn(),
+    clearCache: vi.fn(),
   },
 }));
 
 // Mock BeerXML components and services
-jest.mock("../../src/components/BeerXML/BeerXMLImportExport", () => {
-  return function MockBeerXMLImportExport({ onImport, onExport, mode }: any) {
+vi.mock("../../src/components/BeerXML/BeerXMLImportExport", () => {
+  return { default: function MockBeerXMLImportExport({ onImport, onExport, mode }: any) {
     return (
       <div data-testid="beerxml-import-export">
         <h3>BeerXML Import/Export ({mode})</h3>
@@ -72,17 +73,17 @@ jest.mock("../../src/components/BeerXML/BeerXMLImportExport", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../../src/services/BeerXML/BeerXMLService", () => ({
-  exportRecipe: jest.fn(),
-  downloadBeerXML: jest.fn(),
-}));
+vi.mock("../../src/services/BeerXML/BeerXMLService", () => { const mod = {
+  exportRecipe: vi.fn(),
+  downloadBeerXML: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 
-jest.mock("../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis", () => {
-  return function MockStyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }: any) {
+vi.mock("../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis", () => {
+  return { default: function MockStyleAnalysis({ recipe, metrics, onStyleSuggestionSelect }: any) {
     return (
       <div data-testid="style-analysis">
         <h3>Style Analysis</h3>
@@ -95,27 +96,27 @@ jest.mock("../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
 // Mock react-router with controllable return values
-const mockNavigate = jest.fn();
-const mockUseParams = jest.fn();
+const mockNavigate = vi.fn();
+const mockUseParams = vi.fn();
 
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
   useParams: () => mockUseParams(),
 }));
 
 // Mock form submission to prevent JSDOM errors
 beforeAll(() => {
-  HTMLFormElement.prototype.submit = jest.fn();
+  HTMLFormElement.prototype.submit = vi.fn();
 });
 
 // Mock child components to focus on RecipeBuilder logic
-jest.mock("../../src/components/RecipeBuilder/RecipeDetails", () => {
-  return function MockRecipeDetails({
+vi.mock("../../src/components/RecipeBuilder/RecipeDetails", () => {
+  return { default: function MockRecipeDetails({
     recipe,
     onChange,
     onSubmit,
@@ -159,11 +160,11 @@ jest.mock("../../src/components/RecipeBuilder/RecipeDetails", () => {
         {hasUnsavedChanges && <span data-testid="unsaved-indicator">*</span>}
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
-  return function MockRecipeMetrics({ metrics, onScale, calculating }: any) {
+vi.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
+  return { default: function MockRecipeMetrics({ metrics, onScale, calculating }: any) {
     return (
       <div data-testid="recipe-metrics">
         <h2>Recipe Metrics</h2>
@@ -178,11 +179,11 @@ jest.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../../src/components/RecipeBuilder/IngredientsList", () => {
-  return function MockIngredientsList({ ingredients, onRemove, isEditing }: any) {
+vi.mock("../../src/components/RecipeBuilder/IngredientsList", () => {
+  return { default: function MockIngredientsList({ ingredients, onRemove, isEditing }: any) {
     return (
       <div data-testid="ingredients-list">
         <h2>Ingredients List</h2>
@@ -201,13 +202,13 @@ jest.mock("../../src/components/RecipeBuilder/IngredientsList", () => {
         ))}
       </div>
     );
-  };
+  } };
 });
 
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/IngredientInputs/IngredientInputsContainer",
   () => {
-    return function MockIngredientInputsContainer({
+    return { default: function MockIngredientInputsContainer({
       addIngredient,
       disabled,
     }: any) {
@@ -242,7 +243,7 @@ jest.mock(
           </button>
         </div>
       );
-    };
+    } };
   }
 );
 
@@ -260,7 +261,7 @@ describe("RecipeBuilder", () => {
   let mockHookReturn: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset useParams to return no recipeId by default
     mockUseParams.mockReturnValue({});
@@ -302,12 +303,12 @@ describe("RecipeBuilder", () => {
       addingIngredient: false,
 
       // Actions
-      updateRecipe: jest.fn(),
-      addIngredient: jest.fn(),
-      removeIngredient: jest.fn(),
-      scaleRecipe: jest.fn(),
-      saveRecipe: jest.fn(),
-      clearError: jest.fn(),
+      updateRecipe: vi.fn(),
+      addIngredient: vi.fn(),
+      removeIngredient: vi.fn(),
+      scaleRecipe: vi.fn(),
+      saveRecipe: vi.fn(),
+      clearError: vi.fn(),
 
       // Computed properties
       isEditing: false,
@@ -315,7 +316,7 @@ describe("RecipeBuilder", () => {
       recipeDisplayName: "New Recipe",
     };
 
-    (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+    (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
   });
 
   describe("New Recipe Creation", () => {
@@ -349,7 +350,7 @@ describe("RecipeBuilder", () => {
       mockHookReturn.isEditing = true;
       mockHookReturn.recipeDisplayName = "Test IPA";
       mockHookReturn.recipe.name = "Test IPA";
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
     });
 
     test("renders edit recipe builder correctly", () => {
@@ -368,7 +369,7 @@ describe("RecipeBuilder", () => {
   describe("Loading States", () => {
     test("shows loading state when loading is true", () => {
       mockHookReturn.loading = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -378,7 +379,7 @@ describe("RecipeBuilder", () => {
 
     test("shows calculating metrics indicator", () => {
       mockHookReturn.calculatingMetrics = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -388,7 +389,7 @@ describe("RecipeBuilder", () => {
 
     test("shows adding ingredient indicator", () => {
       mockHookReturn.addingIngredient = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -397,7 +398,7 @@ describe("RecipeBuilder", () => {
 
     test("shows saving indicator", () => {
       mockHookReturn.saving = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -408,7 +409,7 @@ describe("RecipeBuilder", () => {
   describe("Error Handling", () => {
     test("displays error message when error exists", () => {
       mockHookReturn.error = "Failed to load ingredients";
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -420,7 +421,7 @@ describe("RecipeBuilder", () => {
     test("error can be dismissed", async () => {
       const user = userEvent.setup();
       mockHookReturn.error = "Test error";
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -434,7 +435,7 @@ describe("RecipeBuilder", () => {
   describe("Recipe Operations", () => {
     test("handles recipe field updates", async () => {
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -453,7 +454,7 @@ describe("RecipeBuilder", () => {
     test("handles recipe saving", async () => {
       const user = userEvent.setup();
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -465,7 +466,7 @@ describe("RecipeBuilder", () => {
 
     test("save button is disabled when cannot save", () => {
       mockHookReturn.canSave = false;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -476,7 +477,7 @@ describe("RecipeBuilder", () => {
     test("save button is disabled when saving", () => {
       mockHookReturn.saving = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -504,7 +505,7 @@ describe("RecipeBuilder", () => {
           unit: "pkg",
         },
       ];
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
     });
 
     test("displays ingredients correctly", () => {
@@ -540,7 +541,7 @@ describe("RecipeBuilder", () => {
 
     test("ingredient inputs are disabled when adding ingredient", () => {
       mockHookReturn.addingIngredient = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -565,7 +566,7 @@ describe("RecipeBuilder", () => {
     test("handles cancel without unsaved changes", async () => {
       const user = userEvent.setup();
       mockHookReturn.hasUnsavedChanges = false;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -578,11 +579,11 @@ describe("RecipeBuilder", () => {
     test("handles cancel with unsaved changes - confirm leave", async () => {
       const user = userEvent.setup();
       mockHookReturn.hasUnsavedChanges = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       // Mock window.confirm
       const originalConfirm = window.confirm;
-      window.confirm = jest.fn(() => true);
+      window.confirm = vi.fn(() => true);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -601,11 +602,11 @@ describe("RecipeBuilder", () => {
     test("handles cancel with unsaved changes - stay on page", async () => {
       const user = userEvent.setup();
       mockHookReturn.hasUnsavedChanges = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       // Mock window.confirm to return false
       const originalConfirm = window.confirm;
-      window.confirm = jest.fn(() => false);
+      window.confirm = vi.fn(() => false);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -623,7 +624,7 @@ describe("RecipeBuilder", () => {
   describe("Unsaved Changes Detection", () => {
     test("shows unsaved changes indicator", () => {
       mockHookReturn.hasUnsavedChanges = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -635,7 +636,7 @@ describe("RecipeBuilder", () => {
       const user = userEvent.setup();
       mockHookReturn.hasUnsavedChanges = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -652,10 +653,10 @@ describe("RecipeBuilder", () => {
   describe("BeforeUnload Event Handling", () => {
     test("sets up beforeunload event when hasUnsavedChanges is true", () => {
       mockHookReturn.hasUnsavedChanges = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
-      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-      const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
+      const addEventListenerSpy = vi.spyOn(window, "addEventListener");
+      const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
 
       const { unmount } = renderWithRouter(<RecipeBuilder />);
 
@@ -677,9 +678,9 @@ describe("RecipeBuilder", () => {
 
     test("does not set up beforeunload event when no unsaved changes", () => {
       mockHookReturn.hasUnsavedChanges = false;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
-      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+      const addEventListenerSpy = vi.spyOn(window, "addEventListener");
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -698,7 +699,7 @@ describe("RecipeBuilder", () => {
       mockHookReturn.saving = true;
       mockHookReturn.canSave = false;
       mockHookReturn.isEditing = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -720,7 +721,7 @@ describe("RecipeBuilder", () => {
         ibu: 65,
         srm: 6.5,
       };
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -733,7 +734,7 @@ describe("RecipeBuilder", () => {
       mockHookReturn.ingredients = [
         { id: "1", name: "Test Ingredient", type: "grain" },
       ];
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -743,7 +744,7 @@ describe("RecipeBuilder", () => {
 
     test("passes correct props to IngredientInputsContainer", () => {
       mockHookReturn.addingIngredient = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -757,7 +758,7 @@ describe("RecipeBuilder", () => {
       mockHookReturn.calculatingMetrics = true;
       mockHookReturn.addingIngredient = true;
       mockHookReturn.saving = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -778,7 +779,7 @@ describe("RecipeBuilder", () => {
 
     test("error message has proper role", () => {
       mockHookReturn.error = "Test error";
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -791,7 +792,7 @@ describe("RecipeBuilder", () => {
 
   describe("BeerXML Import/Export", () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       mockHookReturn.recipe = {
         recipe_id: "test-recipe-123",
         name: "Test Recipe",
@@ -840,7 +841,7 @@ describe("RecipeBuilder", () => {
     test("shows export button for existing recipes", () => {
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
       expect(screen.getByText("📤 Export")).toBeInTheDocument();
@@ -849,10 +850,10 @@ describe("RecipeBuilder", () => {
     test("handles BeerXML import for new recipe", async () => {
       const user = userEvent.setup();
       mockHookReturn.isEditing = false;
-      mockHookReturn.refreshAvailableIngredients = jest.fn();
-      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
-      mockHookReturn.importRecipeData = jest.fn().mockResolvedValue(undefined);
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.refreshAvailableIngredients = vi.fn();
+      mockHookReturn.importIngredients = vi.fn().mockResolvedValue(undefined);
+      mockHookReturn.importRecipeData = vi.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -876,14 +877,14 @@ describe("RecipeBuilder", () => {
 
     test("handles BeerXML import with created ingredients", async () => {
       const user = userEvent.setup();
-      const Services = require("../../src/services");
+      const Services = (await import("../../src/services"));
       mockHookReturn.isEditing = false;
-      mockHookReturn.refreshAvailableIngredients = jest.fn();
-      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.refreshAvailableIngredients = vi.fn();
+      mockHookReturn.importIngredients = vi.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       // Mock the import with created ingredients
-      jest.doMock("../../src/components/BeerXML/BeerXMLImportExport", () => {
+      vi.doMock("../../src/components/BeerXML/BeerXMLImportExport", () => {
         return function MockBeerXMLImportExport({ onImport }: any) {
           return (
             <button
@@ -914,7 +915,7 @@ describe("RecipeBuilder", () => {
     test("handles BeerXML import for existing recipe (navigates to new)", async () => {
       const user = userEvent.setup();
       mockHookReturn.isEditing = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -938,7 +939,7 @@ describe("RecipeBuilder", () => {
 
     test("handles BeerXML export", async () => {
       const user = userEvent.setup();
-      const { Services } = require("../../src/services");
+      const { Services } = (await import("../../src/services"));
       
       Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
@@ -947,7 +948,7 @@ describe("RecipeBuilder", () => {
 
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -963,10 +964,10 @@ describe("RecipeBuilder", () => {
 
     test("handles BeerXML export without recipe_id (saves first)", async () => {
       const user = userEvent.setup();
-      const { Services } = require("../../src/services");
+      const { Services } = (await import("../../src/services"));
       
       mockHookReturn.recipe.recipe_id = null;
-      mockHookReturn.saveRecipe = jest.fn().mockResolvedValue({ recipe_id: "new-recipe-123" });
+      mockHookReturn.saveRecipe = vi.fn().mockResolvedValue({ recipe_id: "new-recipe-123" });
       Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
         filename: "test-recipe.xml"
@@ -986,9 +987,9 @@ describe("RecipeBuilder", () => {
     test("shows importing status", async () => {
       const user = userEvent.setup();
       // Mock the import function to return a never-resolving promise to simulate loading state
-      mockHookReturn.importIngredients = jest.fn(() => new Promise(() => {}));
-      mockHookReturn.importRecipeData = jest.fn(() => new Promise(() => {}));
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.importIngredients = vi.fn(() => new Promise(() => {}));
+      mockHookReturn.importRecipeData = vi.fn(() => new Promise(() => {}));
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       const { rerender } = renderWithRouter(<RecipeBuilder />);
 
@@ -1002,7 +1003,7 @@ describe("RecipeBuilder", () => {
 
       // Since the actual import flow is complex, we'll simulate the importing state
       // by testing with a mock that sets the importing state to true
-      mockHookReturn.importIngredients = jest.fn().mockImplementation(async () => {
+      mockHookReturn.importIngredients = vi.fn().mockImplementation(async () => {
         // This would normally set importing state to true in the component
         await new Promise(resolve => setTimeout(resolve, 10));
       });
@@ -1014,12 +1015,12 @@ describe("RecipeBuilder", () => {
 
     test("shows exporting status", async () => {
       const user = userEvent.setup();
-      const { Services } = require("../../src/services");
+      const { Services } = (await import("../../src/services"));
       
       Services.BeerXML.service.exportRecipe.mockImplementation(() => new Promise(() => {})); // Never resolves
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1033,10 +1034,10 @@ describe("RecipeBuilder", () => {
       const user = userEvent.setup({ delay: null });
       
       mockHookReturn.isEditing = false;
-      mockHookReturn.importIngredients = jest.fn().mockResolvedValue(undefined);
-      mockHookReturn.importRecipeData = jest.fn().mockResolvedValue(undefined);
-      mockHookReturn.refreshAvailableIngredients = jest.fn().mockResolvedValue(undefined);
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.importIngredients = vi.fn().mockResolvedValue(undefined);
+      mockHookReturn.importRecipeData = vi.fn().mockResolvedValue(undefined);
+      mockHookReturn.refreshAvailableIngredients = vi.fn().mockResolvedValue(undefined);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1059,7 +1060,7 @@ describe("RecipeBuilder", () => {
 
     test("shows success message after export", async () => {
       const user = userEvent.setup({ delay: null });
-      const { Services } = require("../../src/services");
+      const { Services } = (await import("../../src/services"));
       
       Services.BeerXML.service.exportRecipe.mockResolvedValue({
         xmlContent: "<xml>test</xml>",
@@ -1068,7 +1069,7 @@ describe("RecipeBuilder", () => {
 
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1083,7 +1084,7 @@ describe("RecipeBuilder", () => {
 
     test("disables buttons during operations", () => {
       mockHookReturn.saving = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1093,16 +1094,16 @@ describe("RecipeBuilder", () => {
 
     test("handles export error gracefully", async () => {
       const user = userEvent.setup({ delay: null });
-      const { Services } = require("../../src/services");
+      const { Services } = (await import("../../src/services"));
       const originalAlert = window.alert;
       const originalConsoleError = console.error;
-      window.alert = jest.fn();
-      console.error = jest.fn();
+      window.alert = vi.fn();
+      console.error = vi.fn();
       
       Services.BeerXML.service.exportRecipe.mockRejectedValue(new Error("Export failed"));
       mockHookReturn.isEditing = true;
       mockHookReturn.canSave = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1121,11 +1122,11 @@ describe("RecipeBuilder", () => {
     test("prevents export if no ingredients", async () => {
       const user = userEvent.setup({ delay: null });
       const originalAlert = window.alert;
-      window.alert = jest.fn();
+      window.alert = vi.fn();
       
       mockHookReturn.ingredients = [];
       mockHookReturn.isEditing = true;
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1160,7 +1161,7 @@ describe("RecipeBuilder", () => {
     test("passes correct props to style analysis", () => {
       mockHookReturn.recipe.style = "IPA";
       mockHookReturn.metrics = { og: 1.065, fg: 1.012, abv: 6.9, ibu: 65, srm: 6.5 };
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1188,7 +1189,7 @@ describe("RecipeBuilder", () => {
         ibu: 0,
         srm: 0,
       };
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       // Should not crash when recipe has empty/default values
       expect(() => renderWithRouter(<RecipeBuilder />)).not.toThrow();
@@ -1196,7 +1197,7 @@ describe("RecipeBuilder", () => {
 
     test("handles empty ingredients array", () => {
       mockHookReturn.ingredients = [];
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1211,7 +1212,7 @@ describe("RecipeBuilder", () => {
         ibu: 0,
         srm: 0,
       };
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       expect(() => renderWithRouter(<RecipeBuilder />)).not.toThrow();
     });
@@ -1219,10 +1220,10 @@ describe("RecipeBuilder", () => {
     test("handles BeerXML import error gracefully", async () => {
       const user = userEvent.setup({ delay: null });
       const originalConsoleError = console.error;
-      console.error = jest.fn();
+      console.error = vi.fn();
       
-      mockHookReturn.importIngredients = jest.fn().mockRejectedValue(new Error("Import failed"));
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.importIngredients = vi.fn().mockRejectedValue(new Error("Import failed"));
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 
@@ -1247,13 +1248,13 @@ describe("RecipeBuilder", () => {
       const user = userEvent.setup({ delay: null });
       const originalAlert = window.alert;
       const originalConsoleError = console.error;
-      window.alert = jest.fn();
-      console.error = jest.fn();
+      window.alert = vi.fn();
+      console.error = vi.fn();
       
       mockHookReturn.recipe.recipe_id = null;
       mockHookReturn.ingredients = [{ id: "1", name: "Test Grain", type: "grain" }]; // Must have ingredients
-      mockHookReturn.saveRecipe = jest.fn().mockResolvedValue(null); // Save fails
-      (useRecipeBuilder as jest.Mock).mockReturnValue(mockHookReturn);
+      mockHookReturn.saveRecipe = vi.fn().mockResolvedValue(null); // Save fails
+      (useRecipeBuilder as Mock).mockReturnValue(mockHookReturn);
 
       renderWithRouter(<RecipeBuilder />);
 

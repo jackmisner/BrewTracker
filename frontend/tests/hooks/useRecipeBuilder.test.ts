@@ -1,41 +1,42 @@
+import type { Mock } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useRecipeBuilder } from "../../src/hooks/useRecipeBuilder";
 import { Services } from "../../src/services";
 
 // Mock the services
-jest.mock("../../src/services", () => ({
+vi.mock("../../src/services", () => ({
   Services: {
     ingredient: {
-      fetchIngredients: jest.fn(),
-      sortIngredients: jest.fn(),
-      validateIngredientData: jest.fn(),
-      createRecipeIngredient: jest.fn(),
-      scaleIngredients: jest.fn(),
+      fetchIngredients: vi.fn(),
+      sortIngredients: vi.fn(),
+      validateIngredientData: vi.fn(),
+      createRecipeIngredient: vi.fn(),
+      scaleIngredients: vi.fn(),
     },
     recipe: {
-      fetchRecipe: jest.fn(),
-      scaleRecipe: jest.fn(),
-      saveRecipe: jest.fn(),
-      hasUnsavedChanges: jest.fn(),
-      getRecipeDisplayName: jest.fn(),
+      fetchRecipe: vi.fn(),
+      scaleRecipe: vi.fn(),
+      saveRecipe: vi.fn(),
+      hasUnsavedChanges: vi.fn(),
+      getRecipeDisplayName: vi.fn(),
     },
     metrics: {
-      calculateMetrics: jest.fn(),
-      calculateMetricsDebounced: jest.fn(),
-      cancelCalculation: jest.fn(),
-      getRecipeAnalysis: jest.fn(),
+      calculateMetrics: vi.fn(),
+      calculateMetricsDebounced: vi.fn(),
+      cancelCalculation: vi.fn(),
+      getRecipeAnalysis: vi.fn(),
     },
   },
 }));
 
 // Mock react-router
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
+const mockNavigate = vi.fn();
+vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
 // Mock UnitContext
-jest.mock("../../src/contexts/UnitContext", () => ({
+vi.mock("../../src/contexts/UnitContext", () => ({
   useUnits: () => ({
     unitSystem: "imperial", // Default to imperial for tests
   }),
@@ -84,7 +85,7 @@ describe("useRecipeBuilder", () => {
   const originalConsoleError = console.error;
 
   beforeAll(() => {
-    console.error = jest.fn();
+    console.error = vi.fn();
   });
 
   afterAll(() => {
@@ -92,20 +93,20 @@ describe("useRecipeBuilder", () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default mock implementations
-    (Services.ingredient.fetchIngredients as jest.Mock).mockResolvedValue(
+    (Services.ingredient.fetchIngredients as Mock).mockResolvedValue(
       mockAvailableIngredients
     );
-    (Services.ingredient.sortIngredients as jest.Mock).mockImplementation(
+    (Services.ingredient.sortIngredients as Mock).mockImplementation(
       (ingredients) => ingredients
     );
-    (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-    (Services.metrics.calculateMetrics as jest.Mock).mockResolvedValue(mockMetrics);
-    (Services.metrics.calculateMetricsDebounced as jest.Mock).mockResolvedValue(mockMetrics);
-    (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true); // Default to true for unsaved changes
-    (Services.recipe.getRecipeDisplayName as jest.Mock).mockReturnValue("Test Recipe");
+    (Services.recipe.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+    (Services.metrics.calculateMetrics as Mock).mockResolvedValue(mockMetrics);
+    (Services.metrics.calculateMetricsDebounced as Mock).mockResolvedValue(mockMetrics);
+    (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true); // Default to true for unsaved changes
+    (Services.recipe.getRecipeDisplayName as Mock).mockReturnValue("Test Recipe");
   });
 
   describe("initialization", () => {
@@ -149,7 +150,7 @@ describe("useRecipeBuilder", () => {
         ...mockRecipe,
         ingredients: mockIngredients,
       };
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithIngredients);
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue(recipeWithIngredients);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -168,7 +169,7 @@ describe("useRecipeBuilder", () => {
 
     it("should handle initialization errors", async () => {
       const error = new Error("Failed to load ingredients");
-      (Services.ingredient.fetchIngredients as jest.Mock).mockRejectedValue(error);
+      (Services.ingredient.fetchIngredients as Mock).mockRejectedValue(error);
 
       const { result } = renderHook(() => useRecipeBuilder());
 
@@ -185,7 +186,7 @@ describe("useRecipeBuilder", () => {
         ...mockRecipe,
         ingredients: mockIngredients,
       };
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithIngredients);
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue(recipeWithIngredients);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -201,7 +202,7 @@ describe("useRecipeBuilder", () => {
     });
 
     it("should use default metrics for recipes without ingredients", async () => {
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: [],
       });
@@ -224,13 +225,13 @@ describe("useRecipeBuilder", () => {
 
     it("should handle metrics calculation timeout", async () => {
       // Setup recipe with ingredients to trigger metrics calculation
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
 
       // Mock a long-running promise that will exceed the timeout
-      (Services.metrics.calculateMetrics as jest.Mock).mockRejectedValue(
+      (Services.metrics.calculateMetrics as Mock).mockRejectedValue(
         new Error("Metrics calculation timeout")
       );
 
@@ -265,7 +266,7 @@ describe("useRecipeBuilder", () => {
         estimated_ibu: 25,
         estimated_srm: 6.5,
       };
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithEstimatedMetrics);
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue(recipeWithEstimatedMetrics);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -296,7 +297,7 @@ describe("useRecipeBuilder", () => {
         estimated_abv: 5.8,
         // estimated_fg, estimated_ibu, estimated_srm are missing
       };
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithPartialMetrics);
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue(recipeWithPartialMetrics);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -327,7 +328,7 @@ describe("useRecipeBuilder", () => {
       });
 
       // Mock hasUnsavedChanges to return true after update
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.updateRecipe("name", "New Recipe Name");
@@ -359,7 +360,7 @@ describe("useRecipeBuilder", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockClear();
+      (Services.metrics.calculateMetricsDebounced as Mock).mockClear();
 
       await act(async () => {
         await result.current.updateRecipe("name", "New Name");
@@ -369,7 +370,7 @@ describe("useRecipeBuilder", () => {
     });
 
     it("should handle metrics calculation errors", async () => {
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockRejectedValue(
+      (Services.metrics.calculateMetricsDebounced as Mock).mockRejectedValue(
         new Error("Calculation failed")
       );
 
@@ -395,11 +396,11 @@ describe("useRecipeBuilder", () => {
     };
 
     beforeEach(() => {
-      (Services.ingredient.validateIngredientData as jest.Mock).mockReturnValue({
+      (Services.ingredient.validateIngredientData as Mock).mockReturnValue({
         isValid: true,
         errors: [],
       });
-      (Services.ingredient.createRecipeIngredient as jest.Mock).mockReturnValue({
+      (Services.ingredient.createRecipeIngredient as Mock).mockReturnValue({
         id: "new-ing",
         name: "New Ingredient",
         type: "grain",
@@ -415,7 +416,7 @@ describe("useRecipeBuilder", () => {
       });
 
       // Mock hasUnsavedChanges to return true after adding
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.addIngredient("grain", mockIngredientData);
@@ -431,7 +432,7 @@ describe("useRecipeBuilder", () => {
     });
 
     it("should handle validation errors", async () => {
-      (Services.ingredient.validateIngredientData as jest.Mock).mockReturnValue({
+      (Services.ingredient.validateIngredientData as Mock).mockReturnValue({
         isValid: false,
         errors: ["Amount is required", "Invalid type"],
       });
@@ -483,7 +484,7 @@ describe("useRecipeBuilder", () => {
   describe("removeIngredient", () => {
     it("should remove ingredient successfully", async () => {
       // Setup recipe with ingredients first
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
@@ -498,7 +499,7 @@ describe("useRecipeBuilder", () => {
       expect(result.current.ingredients).toEqual(mockIngredients);
 
       // Mock hasUnsavedChanges to return true after removal
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.removeIngredient("ing-1");
@@ -515,7 +516,7 @@ describe("useRecipeBuilder", () => {
         ...mockRecipe,
         ingredients: mockIngredients,
       };
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue(recipeWithIngredients);
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue(recipeWithIngredients);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -526,7 +527,7 @@ describe("useRecipeBuilder", () => {
       // Ensure we have ingredients to remove
       expect(result.current.ingredients).toEqual(mockIngredients);
 
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockClear();
+      (Services.metrics.calculateMetricsDebounced as Mock).mockClear();
 
       await act(async () => {
         await result.current.removeIngredient("ing-1");
@@ -538,12 +539,12 @@ describe("useRecipeBuilder", () => {
     it("should handle removal errors", async () => {
       // Mock metrics calculation to fail with an error that has no message
       const errorWithoutMessage = { name: "CustomError" };
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockRejectedValue(
+      (Services.metrics.calculateMetricsDebounced as Mock).mockRejectedValue(
         errorWithoutMessage
       );
 
       // Setup recipe with ingredients first
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
@@ -565,18 +566,18 @@ describe("useRecipeBuilder", () => {
 
   describe("scaleRecipe", () => {
     beforeEach(() => {
-      (Services.recipe.scaleRecipe as jest.Mock).mockReturnValue({
+      (Services.recipe.scaleRecipe as Mock).mockReturnValue({
         scaledRecipe: { ...mockRecipe, batch_size: 10 },
         scalingFactor: 2,
       });
-      (Services.ingredient.scaleIngredients as jest.Mock).mockReturnValue([
+      (Services.ingredient.scaleIngredients as Mock).mockReturnValue([
         { ...mockIngredients[0], amount: 10 },
       ]);
     });
 
     it("should scale recipe successfully", async () => {
       // Setup recipe with ingredients first
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
@@ -588,7 +589,7 @@ describe("useRecipeBuilder", () => {
       });
 
       // Mock hasUnsavedChanges to return true after scaling
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.scaleRecipe(10);
@@ -621,7 +622,7 @@ describe("useRecipeBuilder", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockClear();
+      (Services.metrics.calculateMetricsDebounced as Mock).mockClear();
 
       await act(async () => {
         await result.current.scaleRecipe(10);
@@ -635,7 +636,7 @@ describe("useRecipeBuilder", () => {
     const mockSavedRecipe = { ...mockRecipe, recipe_id: "saved-recipe-id" };
 
     beforeEach(() => {
-      (Services.recipe.saveRecipe as jest.Mock).mockResolvedValue(mockSavedRecipe);
+      (Services.recipe.saveRecipe as Mock).mockResolvedValue(mockSavedRecipe);
     });
 
     it("should save recipe successfully", async () => {
@@ -646,7 +647,7 @@ describe("useRecipeBuilder", () => {
       });
 
       // Mock hasUnsavedChanges to return false after save
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(false);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(false);
 
       let savedRecipe: any;
       await act(async () => {
@@ -681,7 +682,7 @@ describe("useRecipeBuilder", () => {
     it("should handle save errors", async () => {
       // Mock error without message to test fallback
       const errorWithoutMessage = { name: "SaveError" };
-      (Services.recipe.saveRecipe as jest.Mock).mockRejectedValue(errorWithoutMessage);
+      (Services.recipe.saveRecipe as Mock).mockRejectedValue(errorWithoutMessage);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -712,7 +713,7 @@ describe("useRecipeBuilder", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      const mockEvent = { preventDefault: jest.fn() };
+      const mockEvent = { preventDefault: vi.fn() };
 
       await act(async () => {
         await result.current.saveRecipe(mockEvent);
@@ -725,7 +726,7 @@ describe("useRecipeBuilder", () => {
   describe("recalculateMetrics", () => {
     it("should recalculate metrics manually", async () => {
       // Setup with existing recipe and ingredients
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
@@ -736,7 +737,7 @@ describe("useRecipeBuilder", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      (Services.metrics.calculateMetrics as jest.Mock).mockClear();
+      (Services.metrics.calculateMetrics as Mock).mockClear();
 
       await act(async () => {
         await result.current.recalculateMetrics();
@@ -754,9 +755,9 @@ describe("useRecipeBuilder", () => {
       });
 
       // Clear the initial successful call and make subsequent calls fail
-      (Services.metrics.calculateMetrics as jest.Mock).mockClear();
+      (Services.metrics.calculateMetrics as Mock).mockClear();
       const errorWithoutMessage = { name: "CalculationError" };
-      (Services.metrics.calculateMetrics as jest.Mock).mockRejectedValue(errorWithoutMessage);
+      (Services.metrics.calculateMetrics as Mock).mockRejectedValue(errorWithoutMessage);
 
       await act(async () => {
         await result.current.recalculateMetrics();
@@ -771,7 +772,7 @@ describe("useRecipeBuilder", () => {
   describe("utility functions", () => {
     it("should clear errors", async () => {
       // Start with a service that will cause an error during initialization
-      (Services.ingredient.fetchIngredients as jest.Mock).mockRejectedValue(
+      (Services.ingredient.fetchIngredients as Mock).mockRejectedValue(
         new Error("Test error")
       );
 
@@ -812,7 +813,7 @@ describe("useRecipeBuilder", () => {
 
     it("should get recipe analysis", async () => {
       const mockAnalysis = { type: "IPA", strength: "Medium" };
-      (Services.metrics.getRecipeAnalysis as jest.Mock).mockReturnValue(mockAnalysis);
+      (Services.metrics.getRecipeAnalysis as Mock).mockReturnValue(mockAnalysis);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -833,7 +834,7 @@ describe("useRecipeBuilder", () => {
   describe("computed properties", () => {
     it("should compute canSave correctly", async () => {
       // Setup recipe with ingredients so canSave can be true
-      (Services.recipe.fetchRecipe as jest.Mock).mockResolvedValue({
+      (Services.recipe.fetchRecipe as Mock).mockResolvedValue({
         ...mockRecipe,
         ingredients: mockIngredients,
       });
@@ -876,7 +877,7 @@ describe("useRecipeBuilder", () => {
   describe("unsaved changes detection", () => {
     it("should detect unsaved changes", async () => {
       // Start with no unsaved changes, then make a change
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(false);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(false);
 
       const { result } = renderHook(() => useRecipeBuilder("test-recipe-id"));
 
@@ -887,7 +888,7 @@ describe("useRecipeBuilder", () => {
       expect(result.current.hasUnsavedChanges).toBe(false);
 
       // Mock the service to return true for unsaved changes after update
-      (Services.recipe.hasUnsavedChanges as jest.Mock).mockReturnValue(true);
+      (Services.recipe.hasUnsavedChanges as Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.updateRecipe("name", "Changed Name");
@@ -919,7 +920,7 @@ describe("useRecipeBuilder", () => {
         resolveIngredients = resolve;
       });
 
-      (Services.ingredient.fetchIngredients as jest.Mock).mockReturnValue(ingredientsPromise);
+      (Services.ingredient.fetchIngredients as Mock).mockReturnValue(ingredientsPromise);
 
       const { result, unmount } = renderHook(() => useRecipeBuilder());
 
@@ -942,10 +943,10 @@ describe("useRecipeBuilder", () => {
   describe("importRecipeData", () => {
     beforeEach(() => {
       // Set up default mocks
-      (Services.ingredient.fetchIngredients as jest.Mock).mockResolvedValue(
+      (Services.ingredient.fetchIngredients as Mock).mockResolvedValue(
         mockAvailableIngredients
       );
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockResolvedValue({
+      (Services.metrics.calculateMetricsDebounced as Mock).mockResolvedValue({
         og: 1.050,
         fg: 1.010,
         abv: 5.2,
@@ -1076,7 +1077,7 @@ describe("useRecipeBuilder", () => {
         await result.current.importIngredients(mockIngredients);
       });
 
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       const importData = {
         batch_size: 5.5,
@@ -1106,7 +1107,7 @@ describe("useRecipeBuilder", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       const importData = {
         name: "Test Recipe",
@@ -1145,7 +1146,7 @@ describe("useRecipeBuilder", () => {
       });
 
       // Mock metrics calculation to throw an error
-      (Services.metrics.calculateMetricsDebounced as jest.Mock).mockRejectedValue(
+      (Services.metrics.calculateMetricsDebounced as Mock).mockRejectedValue(
         new Error("Metrics calculation failed")
       );
 

@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router";
 import Footer from "../../src/components/Layout/Footer";
 
 // Mock the version constant
-jest.mock("@/constants/version", () => ({
+vi.mock("@/constants/version", () => ({
   APP_VERSION: "1.2.3",
 }));
 
@@ -20,12 +20,12 @@ const renderFooter = () => {
 describe("Footer", () => {
   beforeEach(() => {
     // Mock Date to ensure consistent year testing
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2024-01-15"));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-15"));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("Component Structure", () => {
@@ -229,7 +229,7 @@ describe("Footer", () => {
 
     test("dynamically updates year based on current date", () => {
       // Test with different year
-      jest.setSystemTime(new Date("2025-06-15"));
+      vi.setSystemTime(new Date("2025-06-15"));
       
       renderFooter();
       

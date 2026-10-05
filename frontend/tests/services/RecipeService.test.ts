@@ -1,8 +1,9 @@
+import type { Mock } from "vitest";
 import RecipeService from "../../src/services/Data/RecipeService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("RecipeService", () => {
   let recipeService: any;
@@ -10,10 +11,10 @@ describe("RecipeService", () => {
 
   beforeEach(() => {
     recipeService = RecipeService;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console.error
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -41,7 +42,7 @@ describe("RecipeService", () => {
     };
 
     test("fetches and processes recipe successfully", async () => {
-      (ApiService.recipes.getById as jest.Mock).mockResolvedValue(mockRecipeResponse);
+      (ApiService.recipes.getById as Mock).mockResolvedValue(mockRecipeResponse);
 
       const result = await recipeService.fetchRecipe("recipe-1");
 
@@ -53,7 +54,7 @@ describe("RecipeService", () => {
     });
 
     test("handles API errors", async () => {
-      (ApiService.recipes.getById as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.recipes.getById as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(recipeService.fetchRecipe("recipe-1")).rejects.toThrow(
         "Failed to load recipe"
@@ -110,7 +111,7 @@ describe("RecipeService", () => {
           ingredients: validIngredients,
         },
       };
-      (ApiService.recipes.create as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.recipes.create as Mock).mockResolvedValue(mockResponse);
 
       const result = await recipeService.saveRecipe(
         null,
@@ -143,7 +144,7 @@ describe("RecipeService", () => {
           ingredients: validIngredients,
         },
       };
-      (ApiService.recipes.update as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.recipes.update as Mock).mockResolvedValue(mockResponse);
 
       const result = await recipeService.saveRecipe(
         "recipe-1",
@@ -174,7 +175,7 @@ describe("RecipeService", () => {
     });
 
     test("handles API errors during save", async () => {
-      (ApiService.recipes.create as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.recipes.create as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(
         recipeService.saveRecipe(null, validRecipeData, validIngredients)
@@ -182,7 +183,7 @@ describe("RecipeService", () => {
     });
 
     test("handles invalid server response", async () => {
-      (ApiService.recipes.create as jest.Mock).mockResolvedValue({}); // No data property
+      (ApiService.recipes.create as Mock).mockResolvedValue({}); // No data property
 
       await expect(
         recipeService.saveRecipe(null, validRecipeData, validIngredients)
@@ -199,7 +200,7 @@ describe("RecipeService", () => {
           style: "IPA",
         },
       };
-      (ApiService.recipes.clone as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.recipes.clone as Mock).mockResolvedValue(mockResponse);
 
       const result = await recipeService.cloneRecipe("recipe-1");
 
@@ -209,7 +210,7 @@ describe("RecipeService", () => {
     });
 
     test("handles API errors during clone", async () => {
-      (ApiService.recipes.clone as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.recipes.clone as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(recipeService.cloneRecipe("recipe-1")).rejects.toThrow(
         "Failed to clone recipe"
@@ -246,7 +247,7 @@ describe("RecipeService", () => {
         ibu: 35,
         srm: 4,
       };
-      (ApiService.recipes.calculateMetrics as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.calculateMetrics as Mock).mockResolvedValue({
         data: mockStats,
       });
 
@@ -259,7 +260,7 @@ describe("RecipeService", () => {
     });
 
     test("returns default stats on API error", async () => {
-      (ApiService.recipes.calculateMetrics as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.calculateMetrics as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -281,7 +282,7 @@ describe("RecipeService", () => {
         { version: 1, created_at: "2024-01-01" },
         { version: 2, created_at: "2024-01-02" },
       ];
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockHistory,
       });
 
@@ -294,7 +295,7 @@ describe("RecipeService", () => {
     });
 
     test("returns null on API error", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.getVersionHistory as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -716,7 +717,7 @@ describe("RecipeService", () => {
 
   describe("edge cases and error handling", () => {
     test("handles malformed API responses gracefully", async () => {
-      (ApiService.recipes.getById as jest.Mock).mockResolvedValue({ data: null });
+      (ApiService.recipes.getById as Mock).mockResolvedValue({ data: null });
 
       await expect(recipeService.fetchRecipe("recipe-1")).rejects.toThrow(
         "Failed to load recipe: No recipe data provided"

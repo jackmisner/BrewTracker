@@ -11,14 +11,13 @@
     "react-dom": "^19.2.0",
     "react-router": "^8.4.0",
     "recharts": "^3.5.1",
-    "util": "^0.12.5",
     "web-vitals": "^6.2.3"
   },
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "test": "npx jest",
-    "coverage": "npx jest --coverage --watchAll=false",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
@@ -27,64 +26,8 @@
     "version:major": "npm version major --no-git-tag-version && node scripts/sync-version.js",
     "sync-version": "node scripts/sync-version.js",
     "preview": "vite preview",
-    "lint": "oxlint src tests"
-  },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.(js|jsx|mjs|ts|tsx)$": "babel-jest"
-    },
-    "transformIgnorePatterns": [
-      "/node_modules/(?!(axios|react-router|@remix-run|cookie-es)/)"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-      "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/fileMock.ts",
-      "^@/(.*)$": "<rootDir>/src/$1"
-    },
-    "testMatch": [
-      "<rootDir>/tests/**/*.test.{js,ts,tsx}"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/tests/setupTests.ts"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "jsx",
-      "ts",
-      "tsx",
-      "json",
-      "node"
-    ],
-    "moduleDirectories": [
-      "node_modules",
-      "src"
-    ],
-    "extensionsToTreatAsEsm": [],
-    "resolver": null,
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.test.{js,jsx,ts,tsx}",
-      "!src/**/*.spec.{js,jsx,ts,tsx}",
-      "!src/index.{js,ts,tsx}",
-      "!src/reportWebVitals.{js,ts}",
-      "!src/**/*.d.ts",
-      "!src/types/**/*"
-    ],
-    "coverageReporters": [
-      "text",
-      "lcov",
-      "html"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageThreshold": {
-      "global": {
-        "branches": 65,
-        "functions": 70,
-        "lines": 70,
-        "statements": 70
-      }
-    }
+    "lint": "oxlint src tests",
+    "test:watch": "vitest"
   },
   "browserslist": {
     "production": [
@@ -99,29 +42,21 @@
     ]
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.7",
-    "@babel/preset-react": "^7.28.5",
-    "@babel/preset-typescript": "^7.28.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@types/testing-library__react": "^10.2.0",
-    "@types/testing-library__user-event": "^4.2.0",
     "@vitejs/plugin-react": "^5.2.0",
-    "babel-plugin-transform-vite-meta-env": "^1.0.3",
-    "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0",
+    "@vitest/coverage-v8": "^5.0.3",
     "jsdom": "^27.2.0",
     "oxlint": "^1.87.0",
     "prettier": "^3.7.3",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=22.22.0"

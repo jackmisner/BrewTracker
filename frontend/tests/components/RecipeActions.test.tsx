@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -6,12 +7,12 @@ import RecipeActions from "../../src/components/RecipeActions";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 // Mock react-router
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
 }));
 
@@ -29,28 +30,28 @@ describe("RecipeActions", () => {
 
   const defaultProps = {
     recipe: mockRecipe,
-    onDelete: jest.fn(),
+    onDelete: vi.fn(),
     showViewButton: true,
     compact: false,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
     // Reset API mocks
     ApiService.recipes = {
-      clone: jest.fn(),
-      clonePublic: jest.fn(),
-      delete: jest.fn(),
-      getAll: jest.fn(),
-      getById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      calculateMetrics: jest.fn(),
-      getPublic: jest.fn(),
-      search: jest.fn(),
-      importBeerXML: jest.fn(),
-      exportBeerXML: jest.fn(),
+      clone: vi.fn(),
+      clonePublic: vi.fn(),
+      delete: vi.fn(),
+      getAll: vi.fn(),
+      getById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      calculateMetrics: vi.fn(),
+      getPublic: vi.fn(),
+      search: vi.fn(),
+      importBeerXML: vi.fn(),
+      exportBeerXML: vi.fn(),
     } as any;
   });
   afterEach(() => {
@@ -116,10 +117,10 @@ describe("RecipeActions", () => {
       status: 201,
       data: { recipe_id: "cloned-recipe-456" },
     };
-    (ApiService.recipes.clone as jest.Mock).mockResolvedValue(mockCloneResponse);
+    (ApiService.recipes.clone as Mock).mockResolvedValue(mockCloneResponse);
 
     // Mock alert
-    window.alert = jest.fn();
+    window.alert = vi.fn();
 
     renderWithRouter(<RecipeActions {...defaultProps} />);
 
@@ -139,10 +140,10 @@ describe("RecipeActions", () => {
     const mockError = {
       response: { data: { error: "Clone failed" } },
     };
-    (ApiService.recipes.clone as jest.Mock).mockRejectedValue(mockError);
+    (ApiService.recipes.clone as Mock).mockRejectedValue(mockError);
 
     // Mock alert
-    window.alert = jest.fn();
+    window.alert = vi.fn();
 
     renderWithRouter(<RecipeActions {...defaultProps} />);
 
@@ -159,7 +160,7 @@ describe("RecipeActions", () => {
 
   test("shows loading state during cloning", async () => {
     // Make the clone request hang
-    (ApiService.recipes.clone as jest.Mock).mockImplementation(
+    (ApiService.recipes.clone as Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
@@ -176,10 +177,10 @@ describe("RecipeActions", () => {
 
   test("handles recipe deletion with confirmation", async () => {
     // Mock window.confirm
-    window.confirm = jest.fn().mockReturnValue(true);
-    (ApiService.recipes.delete as jest.Mock).mockResolvedValue({});
+    window.confirm = vi.fn().mockReturnValue(true);
+    (ApiService.recipes.delete as Mock).mockResolvedValue({});
 
-    const onDeleteMock = jest.fn();
+    const onDeleteMock = vi.fn();
 
     renderWithRouter(
       <RecipeActions {...defaultProps} onDelete={onDeleteMock} />
@@ -200,9 +201,9 @@ describe("RecipeActions", () => {
 
   test("cancels deletion when user cancels confirmation", () => {
     // Mock window.confirm to return false
-    window.confirm = jest.fn().mockReturnValue(false);
+    window.confirm = vi.fn().mockReturnValue(false);
 
-    const onDeleteMock = jest.fn();
+    const onDeleteMock = vi.fn();
 
     renderWithRouter(
       <RecipeActions {...defaultProps} onDelete={onDeleteMock} />
@@ -216,13 +217,13 @@ describe("RecipeActions", () => {
   });
 
   test("handles delete error", async () => {
-    window.confirm = jest.fn().mockReturnValue(true);
-    window.alert = jest.fn();
+    window.confirm = vi.fn().mockReturnValue(true);
+    window.alert = vi.fn();
 
     const mockError = {
       response: { data: { error: "Delete failed" } },
     };
-    (ApiService.recipes.delete as jest.Mock).mockRejectedValue(mockError);
+    (ApiService.recipes.delete as Mock).mockRejectedValue(mockError);
 
     renderWithRouter(<RecipeActions {...defaultProps} />);
 
@@ -238,9 +239,9 @@ describe("RecipeActions", () => {
   });
 
   test("shows loading state during deletion", async () => {
-    window.confirm = jest.fn().mockReturnValue(true);
+    window.confirm = vi.fn().mockReturnValue(true);
     // Make the delete request hang
-    (ApiService.recipes.delete as jest.Mock).mockImplementation(
+    (ApiService.recipes.delete as Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
@@ -256,8 +257,8 @@ describe("RecipeActions", () => {
   });
 
   test("navigates back to recipes list after deletion in non-compact mode", async () => {
-    window.confirm = jest.fn().mockReturnValue(true);
-    (ApiService.recipes.delete as jest.Mock).mockResolvedValue({});
+    window.confirm = vi.fn().mockReturnValue(true);
+    (ApiService.recipes.delete as Mock).mockResolvedValue({});
 
     renderWithRouter(<RecipeActions {...defaultProps} compact={false} />);
 
@@ -275,10 +276,10 @@ describe("RecipeActions", () => {
       status: 201,
       data: { recipe_id: "cloned-recipe-456" },
     };
-    (ApiService.recipes.clone as jest.Mock).mockResolvedValue(mockCloneResponse);
+    (ApiService.recipes.clone as Mock).mockResolvedValue(mockCloneResponse);
 
-    const refreshTriggerMock = jest.fn();
-    window.alert = jest.fn();
+    const refreshTriggerMock = vi.fn();
+    window.alert = vi.fn();
 
     renderWithRouter(
       <RecipeActions {...defaultProps} refreshTrigger={refreshTriggerMock} />
@@ -293,7 +294,7 @@ describe("RecipeActions", () => {
 
   test("disables all buttons during operations", async () => {
     // Mock a hanging clone operation
-    (ApiService.recipes.clone as jest.Mock).mockImplementation(
+    (ApiService.recipes.clone as Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
@@ -329,8 +330,8 @@ describe("RecipeActions", () => {
     });
 
     test("uses clonePublic API for public recipe cloning", async () => {
-      window.alert = jest.fn();
-      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
+      window.alert = vi.fn();
+      (ApiService.recipes.clonePublic as Mock).mockResolvedValue({
         status: 201,
         data: { recipe_id: "new-recipe-456" },
       });
@@ -369,11 +370,11 @@ describe("RecipeActions", () => {
     });
 
     test("handles clonePublic API error", async () => {
-      window.alert = jest.fn();
+      window.alert = vi.fn();
       const mockError = {
         response: { data: { error: "Clone failed" } },
       };
-      (ApiService.recipes.clonePublic as jest.Mock).mockRejectedValue(mockError);
+      (ApiService.recipes.clonePublic as Mock).mockRejectedValue(mockError);
 
       renderWithRouter(<RecipeActions {...publicRecipeProps} />);
 
@@ -392,8 +393,8 @@ describe("RecipeActions", () => {
     });
 
     test("falls back to regular clone when originalAuthor is not provided", async () => {
-      window.alert = jest.fn();
-      (ApiService.recipes.clone as jest.Mock).mockResolvedValue({
+      window.alert = vi.fn();
+      (ApiService.recipes.clone as Mock).mockResolvedValue({
         status: 201,
         data: { recipe_id: "new-recipe-789" },
       });

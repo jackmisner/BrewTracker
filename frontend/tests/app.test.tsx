@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12,9 +13,9 @@ const originalConsoleTrace = console.trace;
 const originalConsoleWarn = console.warn;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.trace = jest.fn();
-  console.warn = jest.fn();
+  console.error = vi.fn();
+  console.trace = vi.fn();
+  console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -24,11 +25,11 @@ afterAll(() => {
 });
 
 // Mock the API service
-jest.mock("../src/services/api");
+vi.mock("../src/services/api");
 
 // Mock all page components to avoid rendering complexity
-jest.mock("../src/pages/Login", () => {
-  return function MockLogin({ onLogin }: { onLogin: (user: any, token: string) => void }) {
+vi.mock("../src/pages/Login", () => {
+  return { default: function MockLogin({ onLogin }: { onLogin: (user: any, token: string) => void }) {
     return (
       <div data-testid="login-page">
         <button
@@ -39,11 +40,11 @@ jest.mock("../src/pages/Login", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../src/pages/Register", () => {
-  return function MockRegister({ onLogin }: { onLogin: (user: any, token: string) => void }) {
+vi.mock("../src/pages/Register", () => {
+  return { default: function MockRegister({ onLogin }: { onLogin: (user: any, token: string) => void }) {
     return (
       <div data-testid="register-page">
         <button
@@ -54,17 +55,17 @@ jest.mock("../src/pages/Register", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../src/pages/Dashboard", () => {
-  return function MockDashboard() {
+vi.mock("../src/pages/Dashboard", () => {
+  return { default: function MockDashboard() {
     return <div data-testid="dashboard-page">Dashboard</div>;
-  };
+  } };
 });
 
-jest.mock("../src/components/Layout/Layout", () => {
-  return function MockLayout({ user, onLogout, children }: { user: any; onLogout: () => void; children: React.ReactNode }) {
+vi.mock("../src/components/Layout/Layout", () => {
+  return { default: function MockLayout({ user, onLogout, children }: { user: any; onLogout: () => void; children: React.ReactNode }) {
     return (
       <div data-testid="layout">
         <div data-testid="layout-header">
@@ -82,7 +83,7 @@ jest.mock("../src/components/Layout/Layout", () => {
         <div data-testid="layout-content">{children}</div>
       </div>
     );
-  };
+  } };
 });
 
 // Custom render function that wraps with necessary providers
@@ -107,7 +108,7 @@ function renderApp(options = {}) {
 
 describe("App", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Use the global mock from setupTests.js
     (global as any).mockLocalStorage.clear();
     (global as any).mockLocalStorage._setStore({});
@@ -116,7 +117,7 @@ describe("App", () => {
   describe("Initial Loading and Authentication", () => {
     it("shows loading state initially when token exists", () => {
       (global as any).mockLocalStorage.getItem.mockReturnValue("mock-token");
-      (ApiService.auth.getProfile as jest.Mock).mockReturnValue(new Promise(() => {})); // Never resolves
+      (ApiService.auth.getProfile as Mock).mockReturnValue(new Promise(() => {})); // Never resolves
 
       renderApp();
 
@@ -141,7 +142,7 @@ describe("App", () => {
     it("fetches user profile when token exists and sets user", async () => {
       const mockUser = { username: "testuser", email: "test@example.com" };
       (global as any).mockLocalStorage.getItem.mockReturnValue("existing-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: mockUser },
       });
 
@@ -163,7 +164,7 @@ describe("App", () => {
       (global as any).mockLocalStorage.getItem.mockReturnValue("invalid-token");
       const authError = new Error("Unauthorized");
       (authError as any).response = { status: 401 };
-      (ApiService.auth.getProfile as jest.Mock).mockRejectedValue(authError);
+      (ApiService.auth.getProfile as Mock).mockRejectedValue(authError);
 
       renderApp();
 
@@ -216,7 +217,7 @@ describe("App", () => {
       const user = userEvent.setup();
       const mockUser = { username: "testuser" };
       (global as any).mockLocalStorage.getItem.mockReturnValue("existing-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: mockUser },
       });
 
@@ -261,7 +262,7 @@ describe("App", () => {
     it("allows authenticated users to access protected routes", async () => {
       const mockUser = { username: "testuser" };
       (global as any).mockLocalStorage.getItem.mockReturnValue("valid-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: mockUser },
       });
 
@@ -280,7 +281,7 @@ describe("App", () => {
   describe("Error Handling", () => {
     it("handles network error during profile fetch", async () => {
       (global as any).mockLocalStorage.getItem.mockReturnValue("valid-token");
-      (ApiService.auth.getProfile as jest.Mock).mockRejectedValue(new Error("Network Error"));
+      (ApiService.auth.getProfile as Mock).mockRejectedValue(new Error("Network Error"));
 
       renderApp();
 
@@ -306,7 +307,7 @@ describe("App", () => {
     it("passes user and onLogout to Layout", async () => {
       const mockUser = { username: "testuser", email: "test@example.com" };
       (global as any).mockLocalStorage.getItem.mockReturnValue("valid-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: mockUser },
       });
 
@@ -339,7 +340,7 @@ describe("App", () => {
   describe("Token Management", () => {
     it("checks localStorage for token on mount", async () => {
       (global as any).mockLocalStorage.getItem.mockReturnValue("existing-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: { username: "testuser" } },
       });
 
@@ -392,7 +393,7 @@ describe("App", () => {
       const user = userEvent.setup();
       const mockUser = { username: "testuser" };
       (global as any).mockLocalStorage.getItem.mockReturnValue("existing-token");
-      (ApiService.auth.getProfile as jest.Mock).mockResolvedValue({
+      (ApiService.auth.getProfile as Mock).mockResolvedValue({
         data: { user: mockUser },
       });
 

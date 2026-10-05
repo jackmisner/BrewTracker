@@ -7,10 +7,10 @@ import IngredientInputsContainer from "../../src/components/RecipeBuilder/Ingred
 // These mocks display the props they receive so tests can verify correct prop passing
 
 // Mock FermentableInput
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/IngredientInputs/FermentableInput",
   () => {
-    return function MockFermentableInput({ grains, onAdd, disabled }: { grains: any[]; onAdd: (data: any) => void; disabled: boolean }) {
+    return { default: function MockFermentableInput({ grains, onAdd, disabled }: { grains: any[]; onAdd: (data: any) => void; disabled: boolean }) {
       return (
         <div data-testid="fermentable-input">
           <span>FermentableInput</span>
@@ -25,15 +25,15 @@ jest.mock(
           </button>
         </div>
       );
-    };
+    } };
   }
 );
 
 // Mock HopInput
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/IngredientInputs/HopInput",
   () => {
-    return function MockHopInput({ hops, onAdd, disabled }: { hops: any[]; onAdd: (data: any) => void; disabled: boolean }) {
+    return { default: function MockHopInput({ hops, onAdd, disabled }: { hops: any[]; onAdd: (data: any) => void; disabled: boolean }) {
       return (
         <div data-testid="hop-input">
           <span>HopInput</span>
@@ -48,15 +48,15 @@ jest.mock(
           </button>
         </div>
       );
-    };
+    } };
   }
 );
 
 // Mock YeastInput
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/IngredientInputs/YeastInput",
   () => {
-    return function MockYeastInput({ yeasts, onAdd, disabled }: { yeasts: any[]; onAdd: (data: any) => void; disabled: boolean }) {
+    return { default: function MockYeastInput({ yeasts, onAdd, disabled }: { yeasts: any[]; onAdd: (data: any) => void; disabled: boolean }) {
       return (
         <div data-testid="yeast-input">
           <span>YeastInput</span>
@@ -71,15 +71,15 @@ jest.mock(
           </button>
         </div>
       );
-    };
+    } };
   }
 );
 
 // Mock OtherInput
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/IngredientInputs/OtherInput",
   () => {
-    return function MockOtherInput({ others, onAdd, disabled }: { others: any[]; onAdd: (data: any) => void; disabled: boolean }) {
+    return { default: function MockOtherInput({ others, onAdd, disabled }: { others: any[]; onAdd: (data: any) => void; disabled: boolean }) {
       return (
         <div data-testid="other-input">
           <span>OtherInput</span>
@@ -94,7 +94,7 @@ jest.mock(
           </button>
         </div>
       );
-    };
+    } };
   }
 );
 
@@ -114,12 +114,12 @@ describe("IngredientInputsContainer", () => {
 
   const defaultProps = {
     ingredients: mockIngredients,
-    addIngredient: jest.fn(),
+    addIngredient: vi.fn(),
     disabled: false,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders all ingredient input components", () => {

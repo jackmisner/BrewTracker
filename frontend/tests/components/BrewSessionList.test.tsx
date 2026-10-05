@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { screen, waitFor, fireEvent } from "@testing-library/react";
 import BrewSessionList from "../../src/components/BrewSessions/BrewSessionList";
@@ -5,18 +6,18 @@ import ApiService from "../../src/services/api";
 import { renderWithProviders, mockData, scenarios } from "../testUtils";
 
 // Mock the CSS import
-jest.mock("../../src/styles/BrewSessions.css", () => ({}));
+vi.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock the ApiService
-jest.mock("../../src/services/api", () => ({
+vi.mock("../../src/services/api", () => { const mod = {
   brewSessions: {
-    getAll: jest.fn(),
+    getAll: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock react-router Link component
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   Link: ({ to, children, className }: { to: string; children: React.ReactNode; className?: string }) => (
     <a href={to} className={className}>
       {children}
@@ -98,8 +99,8 @@ describe("BrewSessionList", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
   });
 
   afterEach(() => {
@@ -109,7 +110,7 @@ describe("BrewSessionList", () => {
   describe("Loading State", () => {
     it("should show loading message initially", () => {
       // Use scenarios.loading() from existing testUtils
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(scenarios.loading());
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(scenarios.loading());
 
       renderWithProviders(<BrewSessionList />);
 
@@ -119,7 +120,7 @@ describe("BrewSessionList", () => {
 
   describe("Error State", () => {
     it("should show error message when API call fails", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.error("Network error")
       );
 
@@ -135,7 +136,7 @@ describe("BrewSessionList", () => {
 
   describe("Successful Data Loading", () => {
     beforeEach(() => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
     });
@@ -251,7 +252,7 @@ describe("BrewSessionList", () => {
 
   describe("Filtering", () => {
     beforeEach(() => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
     });
@@ -280,7 +281,7 @@ describe("BrewSessionList", () => {
 
   describe("Search and Sort", () => {
     beforeEach(() => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
     });
@@ -360,7 +361,7 @@ describe("BrewSessionList", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no sessions exist", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockEmptyResponse.data)
       );
 
@@ -372,7 +373,7 @@ describe("BrewSessionList", () => {
     });
 
     it("should show empty state when filter results in no sessions", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
 
@@ -393,7 +394,7 @@ describe("BrewSessionList", () => {
     });
 
     it("should show no search results message when search returns no matches", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
 
@@ -418,7 +419,7 @@ describe("BrewSessionList", () => {
 
   describe("API Integration", () => {
     it("should call API with correct parameters on mount", () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
 
@@ -428,7 +429,7 @@ describe("BrewSessionList", () => {
     });
 
     it("should handle API call failure gracefully", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.error("API Error")
       );
 
@@ -449,7 +450,7 @@ describe("BrewSessionList", () => {
 
   describe("Navigation Links", () => {
     beforeEach(() => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockReturnValue(
+      (ApiService.brewSessions.getAll as Mock).mockReturnValue(
         scenarios.success(mockBrewSessionsResponse.data)
       );
     });

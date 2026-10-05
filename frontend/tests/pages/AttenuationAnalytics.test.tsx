@@ -1,27 +1,28 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import AttenuationAnalyticsPage from "../../src/pages/AttenuationAnalytics";
 import { attenuationAnalyticsServiceInstance } from "../../src/services";
 
 // Mock the attenuation analytics service
-jest.mock("../../src/services", () => ({
+vi.mock("../../src/services", () => ({
   attenuationAnalyticsServiceInstance: {
-    getAllYeastAnalytics: jest.fn(),
-    getSystemStats: jest.fn(),
-    hasSignificantData: jest.fn(),
-    getConfidenceLevel: jest.fn(),
-    formatConfidence: jest.fn(),
-    formatAttenuationDifference: jest.fn(),
+    getAllYeastAnalytics: vi.fn(),
+    getSystemStats: vi.fn(),
+    hasSignificantData: vi.fn(),
+    getConfidenceLevel: vi.fn(),
+    formatConfidence: vi.fn(),
+    formatAttenuationDifference: vi.fn(),
   },
 }));
 
 // Mock the formatUtils
-jest.mock("../../src/utils/formatUtils", () => ({
-  formatAttenuation: jest.fn((value: number) => `${value}%`),
+vi.mock("../../src/utils/formatUtils", () => ({
+  formatAttenuation: vi.fn((value: number) => `${value}%`),
 }));
 
 // Mock the CSS import
-jest.mock("../../src/styles/AttenuationAnalytics.css", () => ({}));
+vi.mock("../../src/styles/AttenuationAnalytics.css", () => ({}));
 
 describe("AttenuationAnalyticsPage", () => {
   const mockAnalyticsData = [
@@ -66,15 +67,15 @@ describe("AttenuationAnalyticsPage", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default mock implementations
     (
-      attenuationAnalyticsServiceInstance.hasSignificantData as jest.Mock
+      attenuationAnalyticsServiceInstance.hasSignificantData as Mock
     ).mockImplementation((yeast: any) => yeast.actual_attenuation_count >= 5);
 
     (
-      attenuationAnalyticsServiceInstance.getConfidenceLevel as jest.Mock
+      attenuationAnalyticsServiceInstance.getConfidenceLevel as Mock
     ).mockImplementation((confidence: number) => {
       if (confidence >= 0.7) {
         return {
@@ -98,13 +99,13 @@ describe("AttenuationAnalyticsPage", () => {
     });
 
     (
-      attenuationAnalyticsServiceInstance.formatConfidence as jest.Mock
+      attenuationAnalyticsServiceInstance.formatConfidence as Mock
     ).mockImplementation(
       (confidence: number) => `${Math.round(confidence * 100)}%`
     );
 
     (
-      attenuationAnalyticsServiceInstance.formatAttenuationDifference as jest.Mock
+      attenuationAnalyticsServiceInstance.formatAttenuationDifference as Mock
     ).mockImplementation((theoretical?: number, actual?: number) => {
       if (!theoretical || !actual) {
         return { difference: 0, direction: "same", formatted: "0%" };
@@ -121,12 +122,12 @@ describe("AttenuationAnalyticsPage", () => {
   describe("Loading State", () => {
     test("displays loading state initially", () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
@@ -141,15 +142,15 @@ describe("AttenuationAnalyticsPage", () => {
 
   describe("Error State", () => {
     test("displays error state when data fetching fails", async () => {
-      const consoleErrorSpy = jest
+      const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockRejectedValue(new Error("API Error"));
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockRejectedValue(new Error("API Error"));
 
       render(<AttenuationAnalyticsPage />);
@@ -170,15 +171,15 @@ describe("AttenuationAnalyticsPage", () => {
     });
 
     test("handles retry button click", async () => {
-      const consoleErrorSpy = jest
+      const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockRejectedValue(new Error("API Error"));
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockRejectedValue(new Error("API Error"));
 
       render(<AttenuationAnalyticsPage />);
@@ -202,10 +203,10 @@ describe("AttenuationAnalyticsPage", () => {
   describe("Successful Data Load", () => {
     beforeEach(() => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
     });
 
@@ -353,10 +354,10 @@ describe("AttenuationAnalyticsPage", () => {
   describe("No Data State", () => {
     test("displays no data message when analytics array is empty", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue([]);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -377,13 +378,13 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("does not show top performers section when no significant data", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
       (
-        attenuationAnalyticsServiceInstance.hasSignificantData as jest.Mock
+        attenuationAnalyticsServiceInstance.hasSignificantData as Mock
       ).mockReturnValue(false);
 
       render(<AttenuationAnalyticsPage />);
@@ -397,13 +398,13 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("does not show improvements section when no significant data", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
       (
-        attenuationAnalyticsServiceInstance.hasSignificantData as jest.Mock
+        attenuationAnalyticsServiceInstance.hasSignificantData as Mock
       ).mockReturnValue(false);
 
       render(<AttenuationAnalyticsPage />);
@@ -419,10 +420,10 @@ describe("AttenuationAnalyticsPage", () => {
   describe("Service Method Calls", () => {
     test("calls getAllYeastAnalytics and getSystemStats on mount", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -438,10 +439,10 @@ describe("AttenuationAnalyticsPage", () => {
     });
 
     test("calls service methods in parallel using Promise.all", async () => {
-      const getAllYeastAnalyticsSpy = jest
+      const getAllYeastAnalyticsSpy = vi
         .spyOn(attenuationAnalyticsServiceInstance, "getAllYeastAnalytics")
         .mockResolvedValue(mockAnalyticsData);
-      const getSystemStatsSpy = jest
+      const getSystemStatsSpy = vi
         .spyOn(attenuationAnalyticsServiceInstance, "getSystemStats")
         .mockResolvedValue(mockSystemStats);
 
@@ -455,10 +456,10 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("calls formatConfidence for each yeast strain", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -478,10 +479,10 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("calls getConfidenceLevel for each yeast strain", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -501,10 +502,10 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("calls formatAttenuationDifference for improvement calculations", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -526,10 +527,10 @@ describe("AttenuationAnalyticsPage", () => {
   describe("Data Processing", () => {
     test("sorts top performers by data point count", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -556,10 +557,10 @@ describe("AttenuationAnalyticsPage", () => {
         }));
 
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(manyYeast);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -584,10 +585,10 @@ describe("AttenuationAnalyticsPage", () => {
         }));
 
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(manyYeast);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -602,10 +603,10 @@ describe("AttenuationAnalyticsPage", () => {
   describe("CSS Classes and Structure", () => {
     test("applies correct CSS classes", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);
@@ -622,10 +623,10 @@ describe("AttenuationAnalyticsPage", () => {
 
     test("applies stat card classes correctly", async () => {
       (
-        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as jest.Mock
+        attenuationAnalyticsServiceInstance.getAllYeastAnalytics as Mock
       ).mockResolvedValue(mockAnalyticsData);
       (
-        attenuationAnalyticsServiceInstance.getSystemStats as jest.Mock
+        attenuationAnalyticsServiceInstance.getSystemStats as Mock
       ).mockResolvedValue(mockSystemStats);
 
       render(<AttenuationAnalyticsPage />);

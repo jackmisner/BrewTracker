@@ -1,12 +1,13 @@
+import type { Mock } from "vitest";
 import IngredientMatchingService from "../../src/services/BeerXML/IngredientMatchingService";
 import Fuse from "fuse.js";
 
 // Mock Fuse.js
-jest.mock("fuse.js", () => {
-  return jest.fn().mockImplementation(() => ({
-    search: jest.fn(),
-  }));
-});
+vi.mock("fuse.js", () => ({
+  default: vi.fn().mockImplementation(function () {
+    return { search: vi.fn() };
+  }),
+}));
 
 describe("IngredientMatchingService", () => {
   let service: any;
@@ -122,15 +123,15 @@ describe("IngredientMatchingService", () => {
 
     // Create mock Fuse instance
     mockFuseInstance = {
-      search: jest.fn(),
+      search: vi.fn(),
     };
-    Fuse.mockImplementation(() => mockFuseInstance);
+    (Fuse as any).mockImplementation(function () { return mockFuseInstance; });
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -230,7 +231,7 @@ describe("IngredientMatchingService", () => {
     });
 
     test("finds high confidence match", async () => {
-      (mockFuseInstance.search as jest.Mock).mockReturnValue([
+      (mockFuseInstance.search as Mock).mockReturnValue([
         { item: mockAvailableIngredients.grain[0], score: 0.1 },
       ]);
 
@@ -247,7 +248,7 @@ describe("IngredientMatchingService", () => {
     });
 
     test("suggests new ingredient for low confidence match", async () => {
-      (mockFuseInstance.search as jest.Mock).mockReturnValue([
+      (mockFuseInstance.search as Mock).mockReturnValue([
         { item: mockAvailableIngredients.grain[0], score: 0.9 }, // Very high score = very low similarity
       ]);
 
@@ -283,7 +284,7 @@ describe("IngredientMatchingService", () => {
     });
 
     test("uses cache for repeated matches", async () => {
-      (mockFuseInstance.search as jest.Mock).mockReturnValue([
+      (mockFuseInstance.search as Mock).mockReturnValue([
         { item: mockAvailableIngredients.grain[0], score: 0.1 },
       ]);
 
@@ -304,7 +305,7 @@ describe("IngredientMatchingService", () => {
     });
 
     test("handles search errors gracefully", async () => {
-      (mockFuseInstance.search as jest.Mock).mockImplementation(() => {
+      (mockFuseInstance.search as Mock).mockImplementation(() => {
         throw new Error("Search failed");
       });
 
@@ -756,7 +757,7 @@ describe("IngredientMatchingService", () => {
     test("caches and retrieves results", async () => {
       service.initializeFuseInstances(mockAvailableIngredients);
 
-      (mockFuseInstance.search as jest.Mock).mockReturnValue([
+      (mockFuseInstance.search as Mock).mockReturnValue([
         { item: mockAvailableIngredients.grain[0], score: 0.1 },
       ]);
 
@@ -778,7 +779,7 @@ describe("IngredientMatchingService", () => {
     test("clears cache properly", async () => {
       service.initializeFuseInstances(mockAvailableIngredients);
 
-      (mockFuseInstance.search as jest.Mock).mockReturnValue([
+      (mockFuseInstance.search as Mock).mockReturnValue([
         { item: mockAvailableIngredients.grain[0], score: 0.1 },
       ]);
 

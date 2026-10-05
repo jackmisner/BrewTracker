@@ -6,10 +6,10 @@ import OtherInput from "../../src/components/RecipeBuilder/IngredientInputs/Othe
 import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
-jest.mock("../../src/components/SearchableSelect", () => {
-  const mockReact = require("react");
+vi.mock("../../src/components/SearchableSelect", async () => {
+  const mockReact = (await vi.importActual("react"));
 
-  return function MockSearchableSelect({
+  return { default: function MockSearchableSelect({
     onSelect,
     placeholder,
     disabled,
@@ -71,18 +71,18 @@ jest.mock("../../src/components/SearchableSelect", () => {
         },
       })
     );
-  };
+  } };
 });
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Helper function to render with UnitProvider
 const renderWithUnitProvider = (component: any) => {
@@ -116,7 +116,7 @@ describe("OtherInput", () => {
 
   const defaultProps = {
     others: mockOthers as any,
-    onAdd: jest.fn(),
+    onAdd: vi.fn(),
     disabled: false,
   };
 
@@ -124,8 +124,8 @@ describe("OtherInput", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
   });
 
   afterEach(() => {
@@ -292,7 +292,7 @@ describe("OtherInput", () => {
 
   test("successfully adds other ingredient with valid data", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue({});
+    const mockOnAdd = vi.fn().mockResolvedValue({});
 
     renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
@@ -325,7 +325,7 @@ describe("OtherInput", () => {
 
   test("successfully adds ingredient without time", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue({});
+    const mockOnAdd = vi.fn().mockResolvedValue({});
 
     renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
@@ -486,7 +486,7 @@ describe("OtherInput", () => {
 
   test("resets form after successful submission", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue({});
+    const mockOnAdd = vi.fn().mockResolvedValue({});
 
     renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 
@@ -540,7 +540,7 @@ describe("OtherInput", () => {
 
   test("handles submission error gracefully", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
+    const mockOnAdd = vi.fn().mockRejectedValue(new Error("Network error"));
 
     renderWithUnitProvider(<OtherInput {...defaultProps} onAdd={mockOnAdd} />);
 

@@ -5,11 +5,11 @@ import '@testing-library/jest-dom';
 import StyleRangeIndicator from '../../src/components/RecipeBuilder/BeerStyles/StyleRangeIndicator';
 
 // Mock the formatUtils
-jest.mock('../../src/utils/formatUtils', () => ({
-  formatGravity: jest.fn((value) => value.toFixed(3)),
-  formatAbv: jest.fn((value) => `${value.toFixed(1)}%`),
-  formatIbu: jest.fn((value) => Math.round(value).toString()),
-  formatSrm: jest.fn((value) => value.toFixed(1)),
+vi.mock('../../src/utils/formatUtils', () => ({
+  formatGravity: vi.fn((value) => value.toFixed(3)),
+  formatAbv: vi.fn((value) => `${value.toFixed(1)}%`),
+  formatIbu: vi.fn((value) => Math.round(value).toString()),
+  formatSrm: vi.fn((value) => value.toFixed(1)),
 }));
 
 describe('StyleRangeIndicator', () => {

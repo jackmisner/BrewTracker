@@ -9,7 +9,7 @@ React + TypeScript single-page app built with [Vite](https://vite.dev).
 | `npm start`                       | Dev server on http://localhost:3000                      |
 | `npm run build`                   | Production build to `build/` (assets in `build/static/`) |
 | `npm run preview`                 | Serve the production build locally                       |
-| `npm test` / `npm run coverage`   | Jest tests (jsdom)                                       |
+| `npm test` / `npm run coverage`   | Vitest tests (jsdom)                                     |
 | `npm run type-check`              | `tsc --noEmit`                                           |
 | `npm run lint`                    | [Oxlint](https://oxc.rs/docs/guide/usage/linter)         |
 | `npm run format` / `format:check` | Prettier                                                 |
@@ -18,7 +18,7 @@ React + TypeScript single-page app built with [Vite](https://vite.dev).
 
 `REACT_APP_API_URL` and `REACT_APP_GOOGLE_CLIENT_ID` (see the root README).
 Both `REACT_APP_` and `VITE_` prefixes are exposed to the client via
-`envPrefix` in `vite.config.ts`; read them with `import.meta.env`.
+`envPrefix` in `vite.config.mts`; read them with `import.meta.env`.
 
 ## Requirements
 

@@ -1,8 +1,9 @@
+import type { Mock } from "vitest";
 import BeerStyleService from "../../src/services/Data/BeerStyleService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("BeerStyleService", () => {
   let service: any;
@@ -127,14 +128,14 @@ describe("BeerStyleService", () => {
   beforeEach(() => {
     service = BeerStyleService;
     service.clearCache();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Mock Date.now for cache testing
-    dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(1000000);
+    dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1000000);
   });
 
   afterEach(() => {
@@ -145,7 +146,7 @@ describe("BeerStyleService", () => {
 
   describe("fetchBeerStyles", () => {
     test("fetches and caches beer styles", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: mockBeerStyles },
       });
 
@@ -175,7 +176,7 @@ describe("BeerStyleService", () => {
       service.cacheTimestamp = 1000000;
       dateNowSpy.mockReturnValue(1000000 + 15 * 60 * 1000); // 15 minutes later
 
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: mockBeerStyles },
       });
 
@@ -186,7 +187,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles API errors gracefully", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.beerStyles.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       const result = await service.fetchBeerStyles();
 
@@ -198,7 +199,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles missing categories in response", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: {},
       });
 
@@ -211,7 +212,7 @@ describe("BeerStyleService", () => {
   describe("searchBeerStyles", () => {
     test("searches beer styles successfully", async () => {
       const mockSearchResults = [mockSingleStyle];
-      (ApiService.beerStyles.search as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.search as Mock).mockResolvedValue({
         data: { styles: mockSearchResults },
       });
 
@@ -222,7 +223,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles search errors gracefully", async () => {
-      (ApiService.beerStyles.search as jest.Mock).mockRejectedValue(new Error("Search Error"));
+      (ApiService.beerStyles.search as Mock).mockRejectedValue(new Error("Search Error"));
 
       const result = await service.searchBeerStyles("lager");
 
@@ -234,7 +235,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles missing styles in search response", async () => {
-      (ApiService.beerStyles.search as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.search as Mock).mockResolvedValue({
         data: {},
       });
 
@@ -246,7 +247,7 @@ describe("BeerStyleService", () => {
 
   describe("getBeerStyle", () => {
     test("fetches a specific beer style", async () => {
-      (ApiService.beerStyles.getById as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getById as Mock).mockResolvedValue({
         data: mockSingleStyle,
       });
 
@@ -257,7 +258,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles errors when fetching specific style", async () => {
-      (ApiService.beerStyles.getById as jest.Mock).mockRejectedValue(new Error("Not Found"));
+      (ApiService.beerStyles.getById as Mock).mockRejectedValue(new Error("Not Found"));
 
       const result = await service.getBeerStyle("INVALID");
 
@@ -271,7 +272,7 @@ describe("BeerStyleService", () => {
 
   describe("getStyleSuggestions", () => {
     test("fetches style suggestions for a recipe", async () => {
-      (ApiService.beerStyles.getStyleSuggestions as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getStyleSuggestions as Mock).mockResolvedValue({
         data: { suggestions: mockStyleSuggestions },
       });
 
@@ -284,7 +285,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles errors when fetching style suggestions", async () => {
-      (ApiService.beerStyles.getStyleSuggestions as jest.Mock).mockRejectedValue(
+      (ApiService.beerStyles.getStyleSuggestions as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -298,7 +299,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles missing suggestions in response", async () => {
-      (ApiService.beerStyles.getStyleSuggestions as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getStyleSuggestions as Mock).mockResolvedValue({
         data: {},
       });
 
@@ -310,7 +311,7 @@ describe("BeerStyleService", () => {
 
   describe("getRecipeStyleAnalysis", () => {
     test("fetches recipe style analysis", async () => {
-      (ApiService.beerStyles.getRecipeStyleAnalysis as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getRecipeStyleAnalysis as Mock).mockResolvedValue({
         data: { analysis: mockStyleAnalysis },
       });
 
@@ -323,7 +324,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles errors when fetching style analysis", async () => {
-      (ApiService.beerStyles.getRecipeStyleAnalysis as jest.Mock).mockRejectedValue(
+      (ApiService.beerStyles.getRecipeStyleAnalysis as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -339,7 +340,7 @@ describe("BeerStyleService", () => {
 
   describe("getAllStylesList", () => {
     test("flattens categorized styles into a sorted list", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: mockBeerStyles },
       });
 
@@ -368,7 +369,7 @@ describe("BeerStyleService", () => {
         },
       };
 
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: malformedStyles },
       });
 
@@ -378,7 +379,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles errors when fetching styles list", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.beerStyles.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       const result = await service.getAllStylesList();
 
@@ -392,7 +393,7 @@ describe("BeerStyleService", () => {
 
   describe("findMatchingStyles", () => {
     beforeEach(() => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: mockBeerStyles },
       });
     });
@@ -456,7 +457,7 @@ describe("BeerStyleService", () => {
         },
       };
 
-      (ApiService.beerStyles.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.beerStyles.getAll as Mock).mockResolvedValue({
         data: { categories: modifiedStyles },
       });
 
@@ -481,7 +482,7 @@ describe("BeerStyleService", () => {
     });
 
     test("handles errors when finding matching styles", async () => {
-      (ApiService.beerStyles.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.beerStyles.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       const result = await service.findMatchingStyles(mockRecipeMetrics);
 

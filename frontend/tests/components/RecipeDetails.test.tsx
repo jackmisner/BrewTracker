@@ -11,8 +11,8 @@ const originalConsoleError = console.error;
 const originalConsoleTrace = console.trace;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.trace = jest.fn();
+  console.error = vi.fn();
+  console.trace = vi.fn();
 });
 
 afterAll(() => {
@@ -21,17 +21,17 @@ afterAll(() => {
 });
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock react-router Link component
-jest.mock("react-router", () => ({
+vi.mock("react-router", () => ({
   Link: ({ to, children, className }: { to: string; children: React.ReactNode; className?: string }) => (
     <a href={to} className={className}>
       {children}
@@ -40,10 +40,10 @@ jest.mock("react-router", () => ({
 }));
 
 // Mock BeerStyleSelector component
-jest.mock(
+vi.mock(
   "../../src/components/RecipeBuilder/BeerStyles/BeerStyleSelector",
   () => {
-    return function MockBeerStyleSelector({
+    return { default: function MockBeerStyleSelector({
       value,
       onChange,
       placeholder,
@@ -67,7 +67,7 @@ jest.mock(
           aria-label="Beer Style"
         />
       );
-    };
+    } };
   }
 );
 
@@ -77,9 +77,9 @@ const renderWithUnitProvider = (component: React.ReactElement) => {
 };
 
 describe("RecipeDetails", () => {
-  const mockOnChange = jest.fn();
-  const mockOnSubmit = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnChange = vi.fn();
+  const mockOnSubmit = vi.fn();
+  const mockOnCancel = vi.fn();
 
   const defaultRecipe: Recipe = {
     id: "test-recipe-1",

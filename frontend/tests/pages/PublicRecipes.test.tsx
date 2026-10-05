@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -8,18 +9,18 @@ import ApiService from "../../src/services/api";
 import { renderWithProviders, mockData, scenarios } from "../testUtils";
 
 // Mock the ApiService
-jest.mock("../../src/services/api", () => ({
+vi.mock("../../src/services/api", () => { const mod = {
   recipes: {
-    getPublic: jest.fn(),
-    clone: jest.fn(),
-    clonePublic: jest.fn(),
+    getPublic: vi.fn(),
+    clone: vi.fn(),
+    clonePublic: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock useNavigate first
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
 }));
 
@@ -28,7 +29,7 @@ jest.mock("react-router", () => ({
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -85,11 +86,11 @@ describe("PublicRecipes", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockNavigate.mockClear();
 
     // Default successful API response
-    (ApiService.recipes.getPublic as jest.Mock).mockResolvedValue({
+    (ApiService.recipes.getPublic as Mock).mockResolvedValue({
       data: {
         recipes: sampleRecipes,
         pagination: samplePagination,
@@ -114,7 +115,7 @@ describe("PublicRecipes", () => {
     });
 
     it("shows loading state initially", () => {
-      (ApiService.recipes.getPublic as jest.Mock).mockImplementation(() =>
+      (ApiService.recipes.getPublic as Mock).mockImplementation(() =>
         scenarios.loading()
       );
 
@@ -233,7 +234,7 @@ describe("PublicRecipes", () => {
 
   describe("Error handling", () => {
     it("displays error message when API fails", async () => {
-      (ApiService.recipes.getPublic as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.recipes.getPublic as Mock).mockRejectedValue(new Error("API Error"));
 
       renderWithProviders(<PublicRecipes />);
 
@@ -248,8 +249,8 @@ describe("PublicRecipes", () => {
     });
 
     it("logs error to console when API fails", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      (ApiService.recipes.getPublic as jest.Mock).mockRejectedValue(
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation();
+      (ApiService.recipes.getPublic as Mock).mockRejectedValue(
         new Error("Network Error")
       );
 
@@ -395,7 +396,7 @@ describe("PublicRecipes", () => {
 
   describe("Recipe cloning", () => {
     it("calls clonePublic API when clone button is clicked", async () => {
-      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.clonePublic as Mock).mockResolvedValue({
         data: { recipe_id: "cloned-recipe-id" },
       });
 
@@ -414,7 +415,7 @@ describe("PublicRecipes", () => {
     });
 
     it("navigates to edit page after successful clone", async () => {
-      (ApiService.recipes.clonePublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.clonePublic as Mock).mockResolvedValue({
         status: 201,
         data: { recipe_id: "cloned-recipe-id" },
       });
@@ -436,8 +437,8 @@ describe("PublicRecipes", () => {
     });
 
     it("shows alert when clone fails", async () => {
-      const alertSpy = jest.spyOn(window, "alert").mockImplementation();
-      (ApiService.recipes.clonePublic as jest.Mock).mockRejectedValue(new Error("Clone failed"));
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation();
+      (ApiService.recipes.clonePublic as Mock).mockRejectedValue(new Error("Clone failed"));
 
       renderWithProviders(<PublicRecipes />);
 
@@ -460,7 +461,7 @@ describe("PublicRecipes", () => {
 
   describe("Pagination", () => {
     it("hides pagination when only one page", async () => {
-      (ApiService.recipes.getPublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getPublic as Mock).mockResolvedValue({
         data: {
           recipes: [sampleRecipes[0]],
           pagination: { ...samplePagination, pages: 1 },
@@ -493,7 +494,7 @@ describe("PublicRecipes", () => {
 
     it("calls API with correct page when previous is clicked", async () => {
       // Start on page 2
-      (ApiService.recipes.getPublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getPublic as Mock).mockResolvedValue({
         data: {
           recipes: sampleRecipes,
           pagination: { ...samplePagination, page: 2, has_prev: true },
@@ -513,7 +514,7 @@ describe("PublicRecipes", () => {
     });
 
     it("disables next button on last page", async () => {
-      (ApiService.recipes.getPublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getPublic as Mock).mockResolvedValue({
         data: {
           recipes: sampleRecipes,
           pagination: { ...samplePagination, page: 3, has_next: false },
@@ -533,7 +534,7 @@ describe("PublicRecipes", () => {
 
   describe("Empty state", () => {
     it("handles empty recipe list gracefully", async () => {
-      (ApiService.recipes.getPublic as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getPublic as Mock).mockResolvedValue({
         data: {
           recipes: [],
           pagination: { ...samplePagination, total: 0, pages: 0 },
@@ -611,7 +612,7 @@ describe("PublicRecipes", () => {
       });
 
       // Mock a slow response for the next page
-      (ApiService.recipes.getPublic as jest.Mock).mockImplementation(() =>
+      (ApiService.recipes.getPublic as Mock).mockImplementation(() =>
         scenarios.loading()
       );
 
@@ -629,7 +630,7 @@ describe("PublicRecipes", () => {
       });
 
       // Mock a slow response for filtering
-      (ApiService.recipes.getPublic as jest.Mock).mockImplementation(() =>
+      (ApiService.recipes.getPublic as Mock).mockImplementation(() =>
         scenarios.loading()
       );
 

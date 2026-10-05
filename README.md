@@ -83,7 +83,7 @@ BrewTracker/
 │   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
 ├── frontend/
 │   ├── index.html                                        # Vite entry HTML (loads src/index.tsx)
-│   ├── vite.config.ts                                    # Vite configuration (path alias, env prefix, build output)
+│   ├── vite.config.mts                                    # Vite configuration (path alias, env prefix, build output)
 │   ├── scripts/
 │   │   └── sync-version.js                               # Automated script to sync version constant with package.json
 │   ├── public/
@@ -173,7 +173,7 @@ BrewTracker/
 │   │   │   └── formatUtils.ts                            # Utility functions for unit formatting and display
 │   │   ├── App.tsx                                       # Main React application component with routing and global providers
 │   │   └── index.tsx                                     # React application entry point and DOM rendering
-│   ├── tests/                                            # Jest + TypeScript tests for React components and utilities
+│   ├── tests/                                            # Vitest + TypeScript tests for React components and utilities
 │   ├── package.json                                      # Node.js dependencies, scripts, and project configuration
 │   └── .env                                              # Environment variables for API URLs and frontend configuration
 ├── LICENSE                                               # GNU GENERAL PUBLIC LICENSE Version 3
@@ -260,7 +260,7 @@ REACT_APP_API_URL="http://localhost:5000/api"
 REACT_APP_GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 ```
 
-> The frontend is built with Vite. The `REACT_APP_` prefix is kept (via `envPrefix` in `vite.config.ts`) so existing environment settings keep working; `VITE_`-prefixed variables are also exposed. Read them with `import.meta.env.REACT_APP_*`.
+> The frontend is built with Vite. The `REACT_APP_` prefix is kept (via `envPrefix` in `vite.config.mts`) so existing environment settings keep working; `VITE_`-prefixed variables are also exposed. Read them with `import.meta.env.REACT_APP_*`.
 
 #### Backend
 
@@ -504,7 +504,7 @@ BrewTracker implements a sophisticated system users architecture to handle accou
   - Axios
   - Fuse.js for fuzzy searching
   - TypeScript for type safety
-  - Jest for testing
+  - Vitest for testing
   - CRACO for webpack configuration override
   - Path aliases (`@/`) for clean imports
 
@@ -522,7 +522,7 @@ BrewTracker implements a sophisticated system users architecture to handle accou
 
 ### Test Coverage Overview
 
-- **Frontend**: 1,849 tests with Jest and React Testing Library
+- **Frontend**: 2,012 tests with Vitest and React Testing Library
 - **Backend**: 473+ tests with pytest and mongomock (includes security component tests)
 - **Coverage Target**: 70% minimum for both frontend and backend
 - **Security Testing**: Comprehensive security component testing including cryptographic utilities, rate limiting, input validation, and geolocation service mocking

@@ -6,22 +6,22 @@ import { UnitProvider } from "../../src/contexts/UnitContext";
 import { mockData } from "../testUtils";
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Suppress console errors and warnings during tests
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
+  console.error = vi.fn();
+  console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -84,7 +84,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("renders recipe scaling section when onScale provided", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics 
@@ -103,7 +103,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("handles recipe scaling", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics 
@@ -124,7 +124,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("disables scale button when no value entered", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics 
@@ -140,7 +140,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("disables scale button when calculating", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics
@@ -246,7 +246,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("clears scale input after successful scaling", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics 
@@ -267,7 +267,7 @@ describe("RecipeMetrics", () => {
   });
 
   test("displays typical batch size examples", () => {
-    const mockOnScale = jest.fn();
+    const mockOnScale = vi.fn();
 
     renderWithUnitProvider(
       <RecipeMetrics 

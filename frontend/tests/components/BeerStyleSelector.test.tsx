@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -7,22 +8,22 @@ import BeerStyleSelector from '../../src/components/RecipeBuilder/BeerStyles/Bee
 import BeerStyleService from '../../src/services/Data/BeerStyleService';
 
 // Mock the BeerStyleService
-jest.mock('../../src/services/Data/BeerStyleService', () => ({
-  getAllStylesList: jest.fn(),
-  findMatchingStyles: jest.fn(),
-  getStyleCategories: jest.fn(),
-}));
+vi.mock('../../src/services/Data/BeerStyleService', () => { const mod = {
+  getAllStylesList: vi.fn(),
+  findMatchingStyles: vi.fn(),
+  getStyleCategories: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock Fuse.js
-jest.mock('fuse.js', () => {
-  return jest.fn().mockImplementation(() => ({
-    search: jest.fn().mockReturnValue([]),
-  }));
-});
+vi.mock('fuse.js', () => ({
+  default: vi.fn().mockImplementation(function () {
+    return { search: vi.fn().mockReturnValue([]) };
+  }),
+}));
 
 // Mock the StyleAnalysis component
-jest.mock('../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis', () => {
-  return function MockStyleAnalysis({ onStyleSuggestionSelect }: any) {
+vi.mock('../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis', () => {
+  return { default: function MockStyleAnalysis({ onStyleSuggestionSelect }: any) {
     return (
       <div data-testid="style-analysis">
         <button
@@ -33,14 +34,14 @@ jest.mock('../../src/components/RecipeBuilder/BeerStyles/StyleAnalysis', () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
-  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  console.error = vi.fn();
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
 afterAll(() => {
@@ -86,8 +87,8 @@ describe('BeerStyleSelector', () => {
     },
   ];
 
-  const mockOnChange = jest.fn();
-  const mockOnStyleSuggestionSelect = jest.fn();
+  const mockOnChange = vi.fn();
+  const mockOnStyleSuggestionSelect = vi.fn();
 
   const mockMetrics = {
     og: 1.065,
@@ -98,11 +99,11 @@ describe('BeerStyleSelector', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup default service mocks
-    (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue(mockBeerStyles);
-    (BeerStyleService.findMatchingStyles as jest.Mock).mockResolvedValue([]);
+    (BeerStyleService.getAllStylesList as Mock).mockResolvedValue(mockBeerStyles);
+    (BeerStyleService.findMatchingStyles as Mock).mockResolvedValue([]);
   });
 
   describe('Initial Rendering', () => {
@@ -415,7 +416,7 @@ describe('BeerStyleSelector', () => {
 
   describe('Error Handling', () => {
     it('handles service errors gracefully', async () => {
-      (BeerStyleService.getAllStylesList as jest.Mock).mockRejectedValue(
+      (BeerStyleService.getAllStylesList as Mock).mockRejectedValue(
         new Error('Failed to load styles')
       );
 
@@ -434,7 +435,7 @@ describe('BeerStyleSelector', () => {
     });
 
     it('handles empty styles list', async () => {
-      (BeerStyleService.getAllStylesList as jest.Mock).mockResolvedValue([]);
+      (BeerStyleService.getAllStylesList as Mock).mockResolvedValue([]);
 
       render(<BeerStyleSelector onChange={mockOnChange} />);
       
@@ -593,7 +594,7 @@ describe('BeerStyleSelector', () => {
   describe('Loading States', () => {
     it('shows loading state while fetching styles', () => {
       // Mock a promise that never resolves
-      (BeerStyleService.getAllStylesList as jest.Mock).mockImplementation(
+      (BeerStyleService.getAllStylesList as Mock).mockImplementation(
         () => new Promise(() => {})
       );
 

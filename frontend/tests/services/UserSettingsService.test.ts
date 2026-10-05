@@ -1,21 +1,22 @@
+import type { Mock } from "vitest";
 import UserSettingsService from "../../src/services/User/UserSettingsService";
 import ApiService from "../../src/services/api";
 
 // Mock the ApiService
-jest.mock("../../src/services/api", () => ({
+vi.mock("../../src/services/api", () => { const mod = {
   user: {
-    getSettings: jest.fn(),
-    updateSettings: jest.fn(),
-    updateProfile: jest.fn(),
-    changePassword: jest.fn(),
-    deleteAccount: jest.fn(),
+    getSettings: vi.fn(),
+    updateSettings: vi.fn(),
+    updateProfile: vi.fn(),
+    changePassword: vi.fn(),
+    deleteAccount: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -47,17 +48,17 @@ describe("UserSettingsService", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     UserSettingsService.clearCache();
 
     // Default successful API responses
-    (ApiService.user.getSettings as jest.Mock).mockResolvedValue(sampleApiResponse);
-    (ApiService.user.updateSettings as jest.Mock).mockResolvedValue(sampleApiResponse);
-    (ApiService.user.updateProfile as jest.Mock).mockResolvedValue(sampleApiResponse);
-    (ApiService.user.changePassword as jest.Mock).mockResolvedValue({
+    (ApiService.user.getSettings as Mock).mockResolvedValue(sampleApiResponse);
+    (ApiService.user.updateSettings as Mock).mockResolvedValue(sampleApiResponse);
+    (ApiService.user.updateProfile as Mock).mockResolvedValue(sampleApiResponse);
+    (ApiService.user.changePassword as Mock).mockResolvedValue({
       data: { success: true },
     });
-    (ApiService.user.deleteAccount as jest.Mock).mockResolvedValue({
+    (ApiService.user.deleteAccount as Mock).mockResolvedValue({
       data: { success: true },
     });
   });
@@ -98,23 +99,23 @@ describe("UserSettingsService", () => {
     });
 
     it("refetches when cache expires", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       await UserSettingsService.getUserSettings();
 
       // Advance time by more than cache duration (2 minutes)
-      jest.advanceTimersByTime(3 * 60 * 1000);
+      vi.advanceTimersByTime(3 * 60 * 1000);
 
       await UserSettingsService.getUserSettings();
 
       expect(ApiService.user.getSettings).toHaveBeenCalledTimes(2);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("handles API errors gracefully", async () => {
       const apiError = new Error("Network error");
-      (ApiService.user.getSettings as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.user.getSettings as Mock).mockRejectedValue(apiError);
 
       await expect(UserSettingsService.getUserSettings()).rejects.toThrow(
         "Failed to load user settings: Network error"
@@ -122,7 +123,7 @@ describe("UserSettingsService", () => {
     });
 
     it("handles missing settings data gracefully", async () => {
-      (ApiService.user.getSettings as jest.Mock).mockResolvedValue({
+      (ApiService.user.getSettings as Mock).mockResolvedValue({
         data: {
           user: { username: "test" },
           settings: {},
@@ -137,7 +138,7 @@ describe("UserSettingsService", () => {
     });
 
     it("handles completely missing data", async () => {
-      (ApiService.user.getSettings as jest.Mock).mockResolvedValue({ data: {} });
+      (ApiService.user.getSettings as Mock).mockResolvedValue({ data: {} });
 
       const result = await UserSettingsService.getUserSettings();
 
@@ -191,7 +192,7 @@ describe("UserSettingsService", () => {
 
     it("handles API errors during update", async () => {
       const apiError = new Error("Update failed");
-      (ApiService.user.updateSettings as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.user.updateSettings as Mock).mockRejectedValue(apiError);
 
       await expect(
         UserSettingsService.updateSettings(settingsUpdate)
@@ -206,7 +207,7 @@ describe("UserSettingsService", () => {
           },
         },
       };
-      (ApiService.user.updateSettings as jest.Mock).mockRejectedValue(serverError);
+      (ApiService.user.updateSettings as Mock).mockRejectedValue(serverError);
 
       await expect(
         UserSettingsService.updateSettings(settingsUpdate)
@@ -249,7 +250,7 @@ describe("UserSettingsService", () => {
           user: { ...sampleApiResponse.data.user, username: "newusername" },
         },
       };
-      (ApiService.user.updateProfile as jest.Mock).mockResolvedValue(newUserData);
+      (ApiService.user.updateProfile as Mock).mockResolvedValue(newUserData);
 
       await UserSettingsService.updateProfile(profileUpdate);
 
@@ -260,7 +261,7 @@ describe("UserSettingsService", () => {
 
     it("handles API errors during profile update", async () => {
       const apiError = new Error("Profile update failed");
-      (ApiService.user.updateProfile as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.user.updateProfile as Mock).mockRejectedValue(apiError);
 
       await expect(
         UserSettingsService.updateProfile(profileUpdate)
@@ -296,7 +297,7 @@ describe("UserSettingsService", () => {
 
     it("handles API errors during password change", async () => {
       const apiError = new Error("Current password incorrect");
-      (ApiService.user.changePassword as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.user.changePassword as Mock).mockRejectedValue(apiError);
 
       await expect(
         UserSettingsService.changePassword(passwordData)
@@ -343,7 +344,7 @@ describe("UserSettingsService", () => {
 
     it("handles API errors during account deletion", async () => {
       const apiError = new Error("Deletion failed");
-      (ApiService.user.deleteAccount as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.user.deleteAccount as Mock).mockRejectedValue(apiError);
 
       await expect(
         UserSettingsService.deleteAccount(confirmationData)
@@ -796,16 +797,16 @@ describe("UserSettingsService", () => {
     });
 
     it("isCacheValid returns false for expired cache", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       await UserSettingsService.getUserSettings();
 
       // Advance time past cache duration
-      jest.advanceTimersByTime(3 * 60 * 1000);
+      vi.advanceTimersByTime(3 * 60 * 1000);
 
       expect(UserSettingsService.isCacheValid()).toBe(false);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("clearCache removes cache and timestamp", async () => {
@@ -835,13 +836,13 @@ describe("UserSettingsService", () => {
 
   describe("edge cases and error scenarios", () => {
     it("handles null API response", async () => {
-      (ApiService.user.getSettings as jest.Mock).mockResolvedValue({ data: null });
+      (ApiService.user.getSettings as Mock).mockResolvedValue({ data: null });
 
       await expect(UserSettingsService.getUserSettings()).rejects.toThrow();
     });
 
     it("handles undefined API response", async () => {
-      (ApiService.user.getSettings as jest.Mock).mockResolvedValue({ data: undefined });
+      (ApiService.user.getSettings as Mock).mockResolvedValue({ data: undefined });
 
       await expect(UserSettingsService.getUserSettings()).rejects.toThrow(
         "Failed to load user settings"
@@ -851,7 +852,7 @@ describe("UserSettingsService", () => {
     it("handles network timeout", async () => {
       const timeoutError = new Error("Request timeout") as Error & { code: string };
       timeoutError.code = "TIMEOUT";
-      (ApiService.user.getSettings as jest.Mock).mockRejectedValue(timeoutError);
+      (ApiService.user.getSettings as Mock).mockRejectedValue(timeoutError);
 
       await expect(UserSettingsService.getUserSettings()).rejects.toThrow(
         "Failed to load user settings: Request timeout"

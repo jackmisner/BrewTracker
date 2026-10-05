@@ -6,10 +6,10 @@ import HopInput from "../../src/components/RecipeBuilder/IngredientInputs/HopInp
 import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock SearchableSelect component
-jest.mock("../../src/components/SearchableSelect", () => {
-  const mockReact = require("react");
+vi.mock("../../src/components/SearchableSelect", async () => {
+  const mockReact = (await vi.importActual("react"));
 
-  return function MockSearchableSelect({
+  return { default: function MockSearchableSelect({
     onSelect,
     placeholder,
     disabled,
@@ -66,18 +66,18 @@ jest.mock("../../src/components/SearchableSelect", () => {
         },
       })
     );
-  };
+  } };
 });
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Helper function to render with UnitProvider
 const renderWithUnitProvider = (component: any) => {
@@ -104,7 +104,7 @@ describe("HopInput", () => {
 
   const defaultProps = {
     hops: mockHops,
-    onAdd: jest.fn(),
+    onAdd: vi.fn(),
     disabled: false,
   };
 
@@ -112,8 +112,8 @@ describe("HopInput", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
   });
 
   afterEach(() => {
@@ -316,7 +316,7 @@ describe("HopInput", () => {
 
   test("successfully adds hop with valid data", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue(undefined);
+    const mockOnAdd = vi.fn().mockResolvedValue(undefined);
 
     renderWithUnitProvider(
       <HopInput {...(defaultProps as any)} onAdd={mockOnAdd} />
@@ -447,7 +447,7 @@ describe("HopInput", () => {
 
   test("resets form after successful submission", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue(undefined);
+    const mockOnAdd = vi.fn().mockResolvedValue(undefined);
 
     renderWithUnitProvider(
       <HopInput {...(defaultProps as any)} onAdd={mockOnAdd} />
@@ -514,7 +514,7 @@ describe("HopInput", () => {
 
   test("handles submission error gracefully", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
+    const mockOnAdd = vi.fn().mockRejectedValue(new Error("Network error"));
 
     renderWithUnitProvider(
       <HopInput {...(defaultProps as any)} onAdd={mockOnAdd} />

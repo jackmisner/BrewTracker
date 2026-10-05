@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
@@ -8,23 +9,23 @@ import ingredientMatchingService from '../../src/services/BeerXML/IngredientMatc
 import ApiService from '../../src/services/api';
 
 // Mock the services
-jest.mock('../../src/services/BeerXML/IngredientMatchingService', () => ({
-  getMatchingSummary: jest.fn(),
-}));
+vi.mock('../../src/services/BeerXML/IngredientMatchingService', () => { const mod = {
+  getMatchingSummary: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
-jest.mock('../../src/services/api', () => ({
+vi.mock('../../src/services/api', () => { const mod = {
   ingredients: {
-    create: jest.fn(),
+    create: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock CSS import
-jest.mock('../../src/styles/IngredientMatchingReview.css', () => ({}));
+vi.mock('../../src/styles/IngredientMatchingReview.css', () => ({}));
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -32,7 +33,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {
@@ -118,12 +119,12 @@ describe('IngredientMatchingReview', () => {
     highConfidence: 1,
   };
 
-  const mockOnComplete = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnComplete = vi.fn();
+  const mockOnCancel = vi.fn();
 
   beforeEach(() => {
-    (ingredientMatchingService.getMatchingSummary as jest.Mock).mockReturnValue(mockMatchingSummary);
-    (ApiService.ingredients.create as jest.Mock).mockResolvedValue({
+    (ingredientMatchingService.getMatchingSummary as Mock).mockReturnValue(mockMatchingSummary);
+    (ApiService.ingredients.create as Mock).mockResolvedValue({
       data: {
         ingredient_id: 'new-123',
         name: 'Pale Malt',
@@ -548,7 +549,7 @@ describe('IngredientMatchingReview', () => {
       const user = userEvent.setup();
       
       // Mock a delayed response
-      (ApiService.ingredients.create as jest.Mock).mockImplementation(
+      (ApiService.ingredients.create as Mock).mockImplementation(
         () => new Promise(resolve => setTimeout(() => resolve({
           data: { ingredient_id: 'new-123', name: 'Pale Malt', type: 'grain' }
         }), 100))
@@ -576,7 +577,7 @@ describe('IngredientMatchingReview', () => {
     it('handles completion errors gracefully', async () => {
       const user = userEvent.setup();
       
-      (ApiService.ingredients.create as jest.Mock).mockRejectedValue(
+      (ApiService.ingredients.create as Mock).mockRejectedValue(
         new Error('Failed to create ingredient')
       );
 
@@ -643,7 +644,7 @@ describe('IngredientMatchingReview', () => {
       const user = userEvent.setup();
       
       // Mock a delayed response to keep loading state
-      (ApiService.ingredients.create as jest.Mock).mockImplementation(
+      (ApiService.ingredients.create as Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -927,7 +928,7 @@ describe('IngredientMatchingReview', () => {
 
       // Mock API to return different ingredient IDs but track call count
       let createCallCount = 0;
-      (ApiService.ingredients.create as jest.Mock).mockImplementation(() => {
+      (ApiService.ingredients.create as Mock).mockImplementation(() => {
         createCallCount++;
         return Promise.resolve({
           data: {
@@ -1044,7 +1045,7 @@ describe('IngredientMatchingReview', () => {
       ];
 
       let createCallCount = 0;
-      (ApiService.ingredients.create as jest.Mock).mockImplementation(() => {
+      (ApiService.ingredients.create as Mock).mockImplementation(() => {
         createCallCount++;
         return Promise.resolve({
           data: {
