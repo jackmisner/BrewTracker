@@ -21,13 +21,14 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
-    "version:patch": "npm version patch --no-git-tag-version && node scripts/sync-version.js",
-    "version:minor": "npm version minor --no-git-tag-version && node scripts/sync-version.js",
-    "version:major": "npm version major --no-git-tag-version && node scripts/sync-version.js",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version",
     "sync-version": "node scripts/sync-version.js",
     "preview": "vite preview",
     "lint": "oxlint src tests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postversion": "node scripts/sync-version.js && prettier --write src/constants/version.ts"
   },
   "browserslist": {
     "production": [

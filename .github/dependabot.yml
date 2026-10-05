@@ -1,0 +1,78 @@
+version: 2
+updates:
+  # CI-only updates: grouped into one weekly PR, no semver label (merging
+  # one must NOT trigger a release - workflow changes don't ship to users).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Frontend (Vite + React + TypeScript SPA, deployed to Vercel).
+  #   * minor + patch -> grouped into ONE weekly PR, auto-labeled semver:patch so
+  #     merging it cuts the normal patch release (see release.yml).
+  #   * major bumps are deliberately NOT grouped - Dependabot raises one PR per
+  #     major so each can be triaged on its own (peer-dep conflicts, breaking
+  #     changes / migrations). A grouped batch must never be blocked by one
+  #     incompatible major. A major PR still inherits the labels below, so
+  #     re-label it (semver:minor / semver:major, drop semver:patch) before
+  #     merging if it warrants a bigger release.
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "semver:patch"
+      - "dependencies"
+    ignore:
+      # @types/node must track the Node major we run (22, see engines +
+      # workflows); a newer types major describes APIs the runtime lacks.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Backend (Flask API, deployed to Fly.io). Same policy as the frontend.
+  # NOTE: requirements.txt (dev + prod) and requirements-prod.txt (prod only)
+  # pin the same versions. backend-ci fails if they drift, so if Dependabot
+  # only edits one of them, bump the other by hand in the same PR.
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "semver:patch"
+      - "dependencies"
+    groups:
+      pip-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Backend container base image (python:3.13-slim). Ships to production, so
+  # it carries the semver:patch label like the other runtime dependencies.
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "semver:patch"
+      - "dependencies"

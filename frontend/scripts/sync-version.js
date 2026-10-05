@@ -4,8 +4,9 @@
  * Version Sync Script
  *
  * This script updates the version constant in src/constants/version.ts
- * to match the version in package.json. It's called automatically
- * when running npm version commands.
+ * to match the version in package.json. It runs from the `postversion`
+ * npm hook, so `npm run version:<bump>` (locally or from the release
+ * workflow) updates both files; `postversion` then formats the result.
  */
 
 const fs = require("fs");
@@ -42,7 +43,8 @@ function syncVersion() {
  * This file is automatically updated when running npm version commands.
  * Do not edit manually - it will be overwritten.
  */
-export const APP_VERSION = "${version}";`;
+export const APP_VERSION = "${version}";
+`;
 
     fs.writeFileSync(versionFilePath, versionFileContent);
     console.log(`✅ Version constant updated to ${version}`);

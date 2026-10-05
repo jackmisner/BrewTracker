@@ -565,7 +565,7 @@ pytest tests/test_auth.py tests/test_crypto_utils.py  # Security tests
 # Run tests with verbose output
 pytest --cov -v
 
-# Note: Parallel execution (pytest -n auto) may cause issues due to 
+# Note: Parallel execution (pytest -n auto) may cause issues due to
 # security monitoring components and shared database state
 ```
 
@@ -573,21 +573,47 @@ pytest --cov -v
 
 **Security Testing**: The test suite now includes comprehensive security component testing including geolocation service mocking (London, UK), cryptographic utilities, rate limiting, and input validation.
 
-### Version Management
+### Releases & Versioning
 
-The frontend uses automated version synchronization to keep the displayed version in sync with `package.json`:
+The app has a single version, kept in `frontend/package.json` and mirrored to `frontend/src/constants/version.ts` (shown in the footer). Releases are driven by labels on pull requests:
+
+| Label          | Use for                                               | Example         |
+| -------------- | ----------------------------------------------------- | --------------- |
+| `semver:patch` | Bug fixes, dependency updates, non-functional changes | 1.11.1 → 1.11.2 |
+| `semver:minor` | New backwards-compatible features                     | 1.11.1 → 1.12.0 |
+| `semver:major` | Breaking changes                                      | 1.11.1 → 2.0.0  |
+
+When a PR **with one of these labels is merged to `main`**, the `Release` workflow (`.github/workflows/release.yml`) bumps the version, commits `chore(release): X.Y.Z`, creates an annotated tag `X.Y.Z` and publishes a GitHub Release with auto-generated notes. If a PR carries more than one semver label, the highest wins. PRs with no semver label (docs, CI-only changes) do not cut a release. The release commit touches `frontend/`, so it also re-runs the frontend deploy, which is what ships the new version number.
+
+To bump manually (e.g. for a local build), from `frontend/`:
 
 ```bash
-# Bump version and automatically update version constant
-npm run version:patch   # 1.7.10 -> 1.7.11
-npm run version:minor   # 1.7.10 -> 1.8.0  
-npm run version:major   # 1.7.10 -> 2.0.0
-
-# Manually sync version constant if needed
-npm run sync-version
+npm run version:patch   # 1.11.1 -> 1.11.2
+npm run version:minor   # 1.11.1 -> 1.12.0
+npm run version:major   # 1.11.1 -> 2.0.0
 ```
 
-The version is displayed in the footer and automatically updates when using npm version commands.
+`npm version` runs the `postversion` hook, which syncs `src/constants/version.ts` and formats it with Prettier.
+
+**One-time repository setup** (needs admin on the repo):
+
+```bash
+gh label create semver:patch --color cccccc --description "Bug fix, dependency update or non-functional change"
+gh label create semver:minor --color 0e8a16 --description "New feature, backwards-compatible"
+gh label create semver:major --color b60205 --description "Breaking change"
+gh label create dependencies --color 0366d6 --description "Dependency updates"
+```
+
+Then add a repository secret named `RELEASE_PAT`: a fine-grained personal access token for this repo with **Contents: read & write**. A PAT is used rather than `GITHUB_TOKEN` so the release commit can be pushed to `main` and still triggers the deploy workflows. If `main` has branch protection, the PAT's owner must be allowed to bypass it for the release push.
+
+### Dependency Updates
+
+Dependabot (`.github/dependabot.yml`) checks npm (`/frontend`), pip (`/backend`), the backend Docker base image and GitHub Actions weekly:
+
+- **Minor and patch updates** are grouped into one PR per ecosystem and labelled `semver:patch`, so merging one cuts a patch release.
+- **Major updates** each get their own PR (also labelled `semver:patch` by default), so breaking changes can be triaged separately. Re-label to `semver:minor` / `semver:major` before merging if it warrants it.
+- **GitHub Actions** updates are grouped and unlabelled, so they never trigger a release.
+- `backend/requirements.txt` and `backend/requirements-prod.txt` pin the same versions; backend CI fails if they drift (`backend/scripts/check_requirements_sync.py`).
 
 ### Path Aliases & Clean Imports
 
@@ -606,8 +632,9 @@ import { Recipe } from "../../types";
 ```
 
 **Configured aliases:**
+
 - `@/components/*` → `src/components/*`
-- `@/services/*` → `src/services/*`  
+- `@/services/*` → `src/services/*`
 - `@/hooks/*` → `src/hooks/*`
 - `@/types/*` → `src/types/*`
 - `@/constants/*` → `src/constants/*`
