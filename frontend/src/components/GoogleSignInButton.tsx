@@ -66,7 +66,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       // Initialize Google Sign-In
       try {
         window.google.accounts.id.initialize({
-          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          client_id: import.meta.env.REACT_APP_GOOGLE_CLIENT_ID,
           callback: handleCredentialResponse,
           use_fedcm_for_prompt: true,
         });

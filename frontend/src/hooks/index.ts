@@ -123,7 +123,7 @@ export function useErrorBoundaryReporting(hookName: string) {
     // You could integrate with error reporting services here
     // e.g., Sentry, LogRocket, etc.
 
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       console.trace("Hook error stack trace");
     }
   };
