@@ -1,4 +1,6 @@
 import React from "react";
+import beerHallPhoto from "@/images/jack-beer-hall.jpg";
+import homebrewBottlesPhoto from "@/images/homebrew-bottles-2015.jpg";
 
 const About: React.FC = () => {
   return (
@@ -21,7 +23,7 @@ const About: React.FC = () => {
 
             <div className="about-photo-section">
               <img
-                src={require("../images/jack-beer-hall.jpg")}
+                src={beerHallPhoto}
                 alt="Jack enjoying traditional German beer in a beer hall"
                 className="about-photo"
               />
@@ -51,7 +53,7 @@ const About: React.FC = () => {
 
             <div className="about-photo-section">
               <img
-                src={require("../images/homebrew-bottles-2015.jpg")}
+                src={homebrewBottlesPhoto}
                 alt="Golden Promise IPA homebrew bottles from 2015"
                 className="about-photo homebrew-photo"
               />
