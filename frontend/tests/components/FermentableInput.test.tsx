@@ -6,10 +6,10 @@ import { UnitProvider } from "../../src/contexts/UnitContext";
 import { IngredientFormData } from "../../src/types";
 
 // Mock SearchableSelect component
-jest.mock("../../src/components/SearchableSelect", () => {
-  const mockReact = require("react");
+vi.mock("../../src/components/SearchableSelect", async () => {
+  const mockReact = (await vi.importActual("react"));
 
-  return function MockSearchableSelect({
+  return { default: function MockSearchableSelect({
     onSelect,
     placeholder,
     disabled,
@@ -66,18 +66,18 @@ jest.mock("../../src/components/SearchableSelect", () => {
         },
       })
     );
-  };
+  } };
 });
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Helper function to render with UnitProvider
 const renderWithUnitProvider = (component: React.ReactElement) => {
@@ -110,7 +110,7 @@ describe("FermentableInput", () => {
 
   const defaultProps = {
     grains: mockGrains,
-    onAdd: jest.fn<Promise<void>, [IngredientFormData]>(),
+    onAdd: vi.fn<Promise<void>, [IngredientFormData]>(),
     disabled: false,
   };
 
@@ -118,9 +118,9 @@ describe("FermentableInput", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock console.error to suppress expected error messages
-    console.error = jest.fn();
+    console.error = vi.fn();
   });
 
   afterEach(() => {
@@ -243,7 +243,7 @@ describe("FermentableInput", () => {
 
   test("successfully adds fermentable with valid data", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue(undefined);
+    const mockOnAdd = vi.fn().mockResolvedValue(undefined);
 
     renderWithUnitProvider(
       <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
@@ -278,7 +278,7 @@ describe("FermentableInput", () => {
 
   test("resets form after successful submission", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue(undefined);
+    const mockOnAdd = vi.fn().mockResolvedValue(undefined);
 
     renderWithUnitProvider(
       <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
@@ -429,7 +429,7 @@ describe("FermentableInput", () => {
 
   test("handles submission error gracefully", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockRejectedValue(new Error("Network error"));
+    const mockOnAdd = vi.fn().mockRejectedValue(new Error("Network error"));
 
     renderWithUnitProvider(
       <FermentableInput {...defaultProps} onAdd={mockOnAdd} />
@@ -471,7 +471,7 @@ describe("FermentableInput", () => {
 
   test("allows submission without color (optional field)", async () => {
     const user = userEvent.setup();
-    const mockOnAdd = jest.fn().mockResolvedValue(undefined);
+    const mockOnAdd = vi.fn().mockResolvedValue(undefined);
 
     renderWithUnitProvider(
       <FermentableInput {...defaultProps} onAdd={mockOnAdd} />

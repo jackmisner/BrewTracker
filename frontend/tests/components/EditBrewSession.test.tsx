@@ -1,3 +1,5 @@
+import * as ReactRouter from "react-router";
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { screen, fireEvent, waitFor } from "@testing-library/react";
@@ -7,26 +9,26 @@ import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
 import { renderWithProviders, mockData } from "../testUtils";
 
 // Mock the CSS import
-jest.mock("../../src/styles/BrewSessions.css", () => ({}));
+vi.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock services and cache manager
-jest.mock("../../src/services/Brewing/BrewSessionService", () => ({
-  fetchBrewSession: jest.fn(),
-  updateBrewSession: jest.fn(),
-}));
+vi.mock("../../src/services/Brewing/BrewSessionService", () => { const mod = {
+  fetchBrewSession: vi.fn(),
+  updateBrewSession: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
-jest.mock("../../src/services/CacheManager", () => ({
+vi.mock("../../src/services/CacheManager", () => { const mod = {
   invalidateBrewSessionCaches: {
-    onUpdated: jest.fn(),
+    onUpdated: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock useNavigate and useParams
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
-  useParams: () => ({ sessionId: "1" }),
+  useParams: vi.fn(() => ({ sessionId: "1" })),
 }));
 
 // Create mock data
@@ -53,11 +55,11 @@ describe("EditBrewSession", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
 
     // Default successful session fetch
-    (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(mockSession);
+    (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(mockSession);
   });
 
   afterEach(() => {
@@ -66,7 +68,7 @@ describe("EditBrewSession", () => {
 
   describe("Loading State", () => {
     it("renders loading state initially", async () => {
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockReturnValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockReturnValue(
         new Promise(() => {})
       ); // never resolves
 
@@ -78,7 +80,7 @@ describe("EditBrewSession", () => {
 
   describe("Error Handling", () => {
     it("renders error if fetch fails", async () => {
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockRejectedValue(
         new Error("Failed to load brew session data")
       );
 
@@ -97,7 +99,7 @@ describe("EditBrewSession", () => {
     });
 
     it("shows error if update fails", async () => {
-      (BrewSessionService.updateBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.updateBrewSession as Mock).mockRejectedValue(
         new Error("Update failed")
       );
 
@@ -123,7 +125,7 @@ describe("EditBrewSession", () => {
     });
 
     it("dismisses error message when clicking the close button", async () => {
-      (BrewSessionService.updateBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.updateBrewSession as Mock).mockRejectedValue(
         new Error("Update failed")
       );
 
@@ -155,9 +157,9 @@ describe("EditBrewSession", () => {
     it("redirects to sessions list if session not found", async () => {
       const error = new Error("Session not found") as any;
       error.response = { status: 404 };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockRejectedValue(error);
+      (BrewSessionService.fetchBrewSession as Mock).mockRejectedValue(error);
 
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       renderWithProviders(<EditBrewSession />);
 
       await waitFor(() => {
@@ -168,11 +170,11 @@ describe("EditBrewSession", () => {
       });
 
       // Fast-forward the timer for redirect
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions");
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -332,7 +334,7 @@ describe("EditBrewSession", () => {
 
   describe("Form Submission", () => {
     it("disables form controls while submitting", async () => {
-      (BrewSessionService.updateBrewSession as jest.Mock).mockReturnValue(
+      (BrewSessionService.updateBrewSession as Mock).mockReturnValue(
         new Promise((resolve) => setTimeout(() => resolve(mockSession), 100))
       );
 
@@ -366,10 +368,10 @@ describe("EditBrewSession", () => {
 
     it("properly formats and submits data when form is submitted", async () => {
       // For this test, let's use a different sessionId
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "123" });
-      (BrewSessionService.updateBrewSession as jest.Mock).mockResolvedValue(mockSession);
+      (BrewSessionService.updateBrewSession as Mock).mockResolvedValue(mockSession);
 
       renderWithProviders(<EditBrewSession />);
 
@@ -414,7 +416,7 @@ describe("EditBrewSession", () => {
 
         // Should not contain the empty brew_date
         const updateCall =
-          (BrewSessionService.updateBrewSession as jest.Mock).mock.calls[0][1];
+          (BrewSessionService.updateBrewSession as Mock).mock.calls[0][1];
         expect(updateCall).not.toHaveProperty("brew_date");
 
         // Check numeric values are converted to numbers
@@ -434,13 +436,13 @@ describe("EditBrewSession", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions/123");
 
       // Reset the mock for other tests
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "1" });
     });
 
     it("re-enables form after error", async () => {
-      (BrewSessionService.updateBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.updateBrewSession as Mock).mockRejectedValue(
         new Error("Update failed")
       );
 
@@ -479,8 +481,8 @@ describe("EditBrewSession", () => {
   describe("Navigation", () => {
     it("navigates to session view on cancel", async () => {
       // Set specific sessionId for this test
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "123" });
 
       renderWithProviders(<EditBrewSession />);
@@ -500,17 +502,17 @@ describe("EditBrewSession", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions/123");
 
       // Reset the mock for other tests
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "1" });
     });
 
     it("navigates to session view after successful update", async () => {
       // Set specific sessionId for this test
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "123" });
-      (BrewSessionService.updateBrewSession as jest.Mock).mockResolvedValue(mockSession);
+      (BrewSessionService.updateBrewSession as Mock).mockResolvedValue(mockSession);
 
       renderWithProviders(<EditBrewSession />);
 
@@ -533,8 +535,8 @@ describe("EditBrewSession", () => {
       });
 
       // Reset the mock for other tests
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "1" });
     });
   });
@@ -559,7 +561,7 @@ describe("EditBrewSession", () => {
         batch_rating: undefined,
       });
 
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(minimalSession);
+      (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(minimalSession);
 
       renderWithProviders(<EditBrewSession />);
 
@@ -584,10 +586,10 @@ describe("EditBrewSession", () => {
 
     it("properly handles empty date and numeric fields during submission", async () => {
       // Set specific sessionId for this test
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "123" });
-      (BrewSessionService.updateBrewSession as jest.Mock).mockResolvedValue(mockSession);
+      (BrewSessionService.updateBrewSession as Mock).mockResolvedValue(mockSession);
 
       renderWithProviders(<EditBrewSession />);
 
@@ -617,7 +619,7 @@ describe("EditBrewSession", () => {
       // Check updateBrewSession was called with proper data transformation
       await waitFor(() => {
         const updateCall =
-          (BrewSessionService.updateBrewSession as jest.Mock).mock.calls[0][1];
+          (BrewSessionService.updateBrewSession as Mock).mock.calls[0][1];
         expect(updateCall).not.toHaveProperty("brew_date"); // Should be removed
         expect(updateCall).not.toHaveProperty("actual_abv"); // Should be removed
         expect(updateCall).not.toHaveProperty("actual_og"); // Should be removed
@@ -625,8 +627,8 @@ describe("EditBrewSession", () => {
       });
 
       // Reset the mock for other tests
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "1" });
     });
   });

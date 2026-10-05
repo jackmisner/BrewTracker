@@ -1,19 +1,20 @@
+import type { Mock } from "vitest";
 import attenuationAnalyticsService from '../../src/services/Analytics/AttenuationAnalyticsService';
 import ApiService from '../../src/services/api';
 import { AttenuationAnalytics } from '../../src/types';
 
 // Mock the API service
-jest.mock('../../src/services/api', () => ({
+vi.mock('../../src/services/api', () => ({
   __esModule: true,
   default: {
     attenuationAnalytics: {
-      getYeastAnalytics: jest.fn(),
-      getAllYeastAnalytics: jest.fn(),
-      getImprovedEstimate: jest.fn(),
-      getSystemStats: jest.fn(),
-      recordAttenuationData: jest.fn(),
-      getYeastComparison: jest.fn(),
-      updateYeastAnalytics: jest.fn()
+      getYeastAnalytics: vi.fn(),
+      getAllYeastAnalytics: vi.fn(),
+      getImprovedEstimate: vi.fn(),
+      getSystemStats: vi.fn(),
+      recordAttenuationData: vi.fn(),
+      getYeastComparison: vi.fn(),
+      updateYeastAnalytics: vi.fn()
     }
   }
 }));
@@ -51,7 +52,7 @@ describe('AttenuationAnalyticsService', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Clear the service cache to ensure clean state between tests
     service.clearCache();
   });
@@ -59,7 +60,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('getYeastAnalytics', () => {
     it('should fetch analytics for a specific yeast ingredient', async () => {
       const mockResponse = { data: mockYeastAnalytics };
-      (ApiService.attenuationAnalytics.getYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getYeastAnalytics('yeast-123');
 
@@ -69,7 +70,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should handle errors when fetching yeast analytics', async () => {
       const errorMessage = 'Network error';
-      (ApiService.attenuationAnalytics.getYeastAnalytics as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (ApiService.attenuationAnalytics.getYeastAnalytics as Mock).mockRejectedValue(new Error(errorMessage));
 
       await expect(service.getYeastAnalytics('yeast-123')).rejects.toThrow('Failed to load analytics for yeast yeast-123');
       expect(ApiService.attenuationAnalytics.getYeastAnalytics).toHaveBeenCalledWith('yeast-123');
@@ -79,7 +80,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('getAllYeastAnalytics', () => {
     it('should fetch all yeast analytics and cache the results', async () => {
       const mockResponse = { data: { yeast_analytics: mockAllYeastAnalytics } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getAllYeastAnalytics();
 
@@ -89,7 +90,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should return cached results when cache is valid', async () => {
       const mockResponse = { data: { yeast_analytics: mockAllYeastAnalytics } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       // Clear cache first to ensure clean state
       service.clearCache();
@@ -106,7 +107,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should bypass cache when useCache is false', async () => {
       const mockResponse = { data: { yeast_analytics: mockAllYeastAnalytics } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       // Ensure cache is clear
       service.clearCache();
@@ -125,8 +126,8 @@ describe('AttenuationAnalyticsService', () => {
       
       // Clear cache and reset mock
       service.clearCache();
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockClear();
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockClear();
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockRejectedValue(new Error(errorMessage));
 
       await expect(service.getAllYeastAnalytics()).rejects.toThrow('Failed to load yeast analytics');
       expect(ApiService.attenuationAnalytics.getAllYeastAnalytics).toHaveBeenCalledTimes(1);
@@ -136,7 +137,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('getImprovedEstimate', () => {
     it('should fetch improved estimate for a yeast ingredient', async () => {
       const mockResponse = { data: { improved_estimate: 76.5 } };
-      (ApiService.attenuationAnalytics.getImprovedEstimate as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getImprovedEstimate as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getImprovedEstimate('yeast-123');
 
@@ -146,7 +147,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should handle errors when fetching improved estimate', async () => {
       const errorMessage = 'Estimate error';
-      (ApiService.attenuationAnalytics.getImprovedEstimate as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (ApiService.attenuationAnalytics.getImprovedEstimate as Mock).mockRejectedValue(new Error(errorMessage));
 
       await expect(service.getImprovedEstimate('yeast-123')).rejects.toThrow('Failed to get improved estimate for yeast yeast-123');
     });
@@ -162,7 +163,7 @@ describe('AttenuationAnalyticsService', () => {
         data_coverage_percentage: 56.7
       };
       const mockResponse = { data: mockStats };
-      (ApiService.attenuationAnalytics.getSystemStats as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getSystemStats as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getSystemStats();
 
@@ -172,7 +173,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should handle errors when fetching system stats', async () => {
       const errorMessage = 'Stats error';
-      (ApiService.attenuationAnalytics.getSystemStats as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (ApiService.attenuationAnalytics.getSystemStats as Mock).mockRejectedValue(new Error(errorMessage));
 
       await expect(service.getSystemStats()).rejects.toThrow('Failed to load system statistics');
     });
@@ -264,7 +265,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('getRecipeYeastAnalytics', () => {
     it('should fetch analytics for multiple yeast ingredients', async () => {
       const mockResponse = { data: mockYeastAnalytics };
-      (ApiService.attenuationAnalytics.getYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getRecipeYeastAnalytics(['yeast-123', 'yeast-456']);
 
@@ -278,7 +279,7 @@ describe('AttenuationAnalyticsService', () => {
     });
 
     it('should filter out failed requests', async () => {
-      (ApiService.attenuationAnalytics.getYeastAnalytics as jest.Mock)
+      (ApiService.attenuationAnalytics.getYeastAnalytics as Mock)
         .mockResolvedValueOnce({ data: mockYeastAnalytics })
         .mockRejectedValueOnce(new Error('Failed'));
 
@@ -292,7 +293,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('clearCache and refreshAnalytics', () => {
     it('should clear the analytics cache', async () => {
       const mockResponse = { data: { yeast_analytics: mockAllYeastAnalytics } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
       
       // Populate cache
       await service.getAllYeastAnalytics();
@@ -308,7 +309,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should refresh analytics by clearing cache and fetching new data', async () => {
       const mockResponse = { data: { yeast_analytics: mockAllYeastAnalytics } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.refreshAnalytics();
 
@@ -320,7 +321,7 @@ describe('AttenuationAnalyticsService', () => {
   describe('edge cases and error handling', () => {
     it('should handle empty analytics arrays', async () => {
       const mockResponse = { data: { yeast_analytics: [] } };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(mockResponse);
 
       const result = await service.getAllYeastAnalytics();
 
@@ -328,7 +329,7 @@ describe('AttenuationAnalyticsService', () => {
     });
 
     it('should handle invalid ingredient IDs', async () => {
-      (ApiService.attenuationAnalytics.getYeastAnalytics as jest.Mock).mockRejectedValue(
+      (ApiService.attenuationAnalytics.getYeastAnalytics as Mock).mockRejectedValue(
         new Error('Ingredient not found')
       );
 
@@ -339,7 +340,7 @@ describe('AttenuationAnalyticsService', () => {
 
     it('should handle malformed API responses', async () => {
       const malformedResponse = { data: null };
-      (ApiService.attenuationAnalytics.getAllYeastAnalytics as jest.Mock).mockResolvedValue(malformedResponse);
+      (ApiService.attenuationAnalytics.getAllYeastAnalytics as Mock).mockResolvedValue(malformedResponse);
 
       await expect(service.getAllYeastAnalytics()).rejects.toThrow();
     });

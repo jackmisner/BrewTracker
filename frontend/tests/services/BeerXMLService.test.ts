@@ -1,19 +1,20 @@
+import type { Mock } from "vitest";
 import BeerXMLService from '../../src/services/BeerXML/BeerXMLService';
 import ApiService from '../../src/services/api';
 
 // Mock ApiService
-jest.mock('../../src/services/api', () => ({
+vi.mock('../../src/services/api', () => { const mod = {
   beerxml: {
-    export: jest.fn(),
-    parse: jest.fn(),
-    matchIngredients: jest.fn(),
-    createIngredients: jest.fn(),
+    export: vi.fn(),
+    parse: vi.fn(),
+    matchIngredients: vi.fn(),
+    createIngredients: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock FileReader for file operations
 const mockFileReader = {
-  readAsText: jest.fn(),
+  readAsText: vi.fn(),
   onload: null as any,
   onerror: null as any,
   result: null as any,
@@ -21,26 +22,26 @@ const mockFileReader = {
 
 Object.defineProperty(global, 'FileReader', {
   writable: true,
-  value: jest.fn().mockImplementation(() => mockFileReader),
+  value: vi.fn().mockImplementation(function () { return mockFileReader; }),
 });
 
 // Mock URL and document for download functionality
 Object.defineProperty(global, 'URL', {
   writable: true,
   value: {
-    createObjectURL: jest.fn(),
-    revokeObjectURL: jest.fn(),
+    createObjectURL: vi.fn(),
+    revokeObjectURL: vi.fn(),
   },
 });
 
 Object.defineProperty(global, 'Blob', {
   writable: true,
-  value: jest.fn().mockImplementation(() => ({})),
+  value: vi.fn().mockImplementation(function () { return {}; }),
 });
 
-const mockAppendChild = jest.fn();
-const mockRemoveChild = jest.fn();
-const mockClick = jest.fn();
+const mockAppendChild = vi.fn();
+const mockRemoveChild = vi.fn();
+const mockClick = vi.fn();
 
 // Mock document methods instead of redefining the whole object
 const mockAnchorElement = {
@@ -54,7 +55,7 @@ const mockAnchorElement = {
 const originalCreateElement = document.createElement.bind(document);
 
 // Mock createElement to return our mock anchor for 'a' elements
-document.createElement = jest.fn((tagName: string) => {
+document.createElement = vi.fn((tagName: string) => {
   if (tagName === 'a') {
     return mockAnchorElement as any;
   }
@@ -67,7 +68,7 @@ document.body.removeChild = mockRemoveChild as any;
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -75,7 +76,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockFileReader.onload = null;
   mockFileReader.onerror = null;
   mockFileReader.result = null;
@@ -128,7 +129,7 @@ describe('BeerXMLService', () => {
 
   describe('Export Functionality', () => {
     beforeEach(() => {
-      (ApiService.beerxml.export as jest.Mock).mockResolvedValue(mockExportResponse);
+      (ApiService.beerxml.export as Mock).mockResolvedValue(mockExportResponse);
     });
 
     it('exports recipe successfully', async () => {
@@ -148,7 +149,7 @@ describe('BeerXMLService', () => {
           filename: 'test-recipe.xml',
         },
       };
-      (ApiService.beerxml.export as jest.Mock).mockResolvedValue(alternativeResponse);
+      (ApiService.beerxml.export as Mock).mockResolvedValue(alternativeResponse);
 
       const result = await BeerXMLService.exportRecipe(mockRecipeId);
 
@@ -157,7 +158,7 @@ describe('BeerXMLService', () => {
 
     it('handles export errors gracefully', async () => {
       const error = new Error('Export failed');
-      (ApiService.beerxml.export as jest.Mock).mockRejectedValue(error);
+      (ApiService.beerxml.export as Mock).mockRejectedValue(error);
 
       await expect(BeerXMLService.exportRecipe(mockRecipeId)).rejects.toThrow(
         'Failed to export recipe: Export failed'
@@ -174,7 +175,7 @@ describe('BeerXMLService', () => {
         },
         message: undefined,
       };
-      (ApiService.beerxml.export as jest.Mock).mockRejectedValue(serverError);
+      (ApiService.beerxml.export as Mock).mockRejectedValue(serverError);
 
       await expect(BeerXMLService.exportRecipe(mockRecipeId)).rejects.toThrow(
         'Failed to export recipe: undefined'
@@ -184,7 +185,7 @@ describe('BeerXMLService', () => {
 
   describe('Parsing Functionality', () => {
     beforeEach(() => {
-      (ApiService.beerxml.parse as jest.Mock).mockResolvedValue(mockParseResponse);
+      (ApiService.beerxml.parse as Mock).mockResolvedValue(mockParseResponse);
     });
 
     it('parses BeerXML content successfully', async () => {
@@ -226,7 +227,7 @@ describe('BeerXMLService', () => {
 
     it('handles parsing errors from backend', async () => {
       const error = new Error('Parse failed');
-      (ApiService.beerxml.parse as jest.Mock).mockRejectedValue(error);
+      (ApiService.beerxml.parse as Mock).mockRejectedValue(error);
 
       await expect(BeerXMLService.parseBeerXML(mockXmlContent)).rejects.toThrow(
         'Failed to parse BeerXML: Parse failed'
@@ -245,7 +246,7 @@ describe('BeerXMLService', () => {
 
   describe('Ingredient Matching', () => {
     beforeEach(() => {
-      (ApiService.beerxml.matchIngredients as jest.Mock).mockResolvedValue(mockMatchingResponse);
+      (ApiService.beerxml.matchIngredients as Mock).mockResolvedValue(mockMatchingResponse);
     });
 
     it('matches ingredients successfully', async () => {
@@ -289,7 +290,7 @@ describe('BeerXMLService', () => {
           matched_ingredients: [{ id: 'match-1' }],
         },
       };
-      (ApiService.beerxml.matchIngredients as jest.Mock).mockResolvedValue(alternativeResponse);
+      (ApiService.beerxml.matchIngredients as Mock).mockResolvedValue(alternativeResponse);
 
       const result = await BeerXMLService.matchIngredients([{ name: 'Test', type: 'hop' } as any]);
 
@@ -298,7 +299,7 @@ describe('BeerXMLService', () => {
 
     it('handles matching errors gracefully', async () => {
       const error = new Error('Matching failed');
-      (ApiService.beerxml.matchIngredients as jest.Mock).mockRejectedValue(error);
+      (ApiService.beerxml.matchIngredients as Mock).mockRejectedValue(error);
 
       await expect(BeerXMLService.matchIngredients([])).rejects.toThrow(
         'Failed to match ingredients: Matching failed'
@@ -319,7 +320,7 @@ describe('BeerXMLService', () => {
     };
 
     beforeEach(() => {
-      (ApiService.beerxml.createIngredients as jest.Mock).mockResolvedValue(mockCreateResponse);
+      (ApiService.beerxml.createIngredients as Mock).mockResolvedValue(mockCreateResponse);
     });
 
     it('creates ingredients successfully', async () => {
@@ -338,7 +339,7 @@ describe('BeerXMLService', () => {
 
     it('handles creation errors gracefully', async () => {
       const error = new Error('Creation failed');
-      (ApiService.beerxml.createIngredients as jest.Mock).mockRejectedValue(error);
+      (ApiService.beerxml.createIngredients as Mock).mockRejectedValue(error);
 
       await expect(BeerXMLService.createIngredients([])).rejects.toThrow(
         'Failed to create ingredients: Creation failed'
@@ -468,7 +469,7 @@ describe('BeerXMLService', () => {
 
   describe('File Download', () => {
     beforeEach(() => {
-      (global.URL.createObjectURL as jest.Mock).mockReturnValue('blob:mock-url');
+      (global.URL.createObjectURL as Mock).mockReturnValue('blob:mock-url');
     });
 
     it('downloads BeerXML file successfully', () => {
@@ -488,12 +489,12 @@ describe('BeerXMLService', () => {
     it('uses default filename when none provided', () => {
       BeerXMLService.downloadBeerXML(mockXmlContent);
 
-      const mockElement = (document.createElement as jest.Mock).mock.results[0].value;
+      const mockElement = (document.createElement as Mock).mock.results[0].value;
       expect(mockElement.download).toBe('recipe.xml');
     });
 
     it('handles download errors gracefully', () => {
-      (global.Blob as jest.Mock).mockImplementation(() => {
+      (global.Blob as Mock).mockImplementation(() => {
         throw new Error('Blob creation failed');
       });
 
@@ -533,15 +534,15 @@ describe('BeerXMLService', () => {
 
   describe('Complete Import Workflow', () => {
     beforeEach(() => {
-      (ApiService.beerxml.parse as jest.Mock).mockResolvedValue(mockParseResponse);
-      (ApiService.beerxml.matchIngredients as jest.Mock).mockResolvedValue(mockMatchingResponse);
+      (ApiService.beerxml.parse as Mock).mockResolvedValue(mockParseResponse);
+      (ApiService.beerxml.matchIngredients as Mock).mockResolvedValue(mockMatchingResponse);
       
       // Mock the readFileContent method to avoid FileReader issues
-      jest.spyOn(BeerXMLService, 'readFileContent').mockResolvedValue(mockXmlContent);
+      vi.spyOn(BeerXMLService, 'readFileContent').mockResolvedValue(mockXmlContent);
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('processes import file through complete workflow', async () => {
@@ -572,7 +573,7 @@ describe('BeerXMLService', () => {
           ],
         },
       };
-      (ApiService.beerxml.parse as jest.Mock).mockResolvedValue(noIngredientsResponse);
+      (ApiService.beerxml.parse as Mock).mockResolvedValue(noIngredientsResponse);
 
       const result = await BeerXMLService.processImportFile(mockFile);
 
@@ -581,7 +582,7 @@ describe('BeerXMLService', () => {
     });
 
     it('handles no recipes found', async () => {
-      (ApiService.beerxml.parse as jest.Mock).mockResolvedValue({ data: { recipes: [] } });
+      (ApiService.beerxml.parse as Mock).mockResolvedValue({ data: { recipes: [] } });
 
       await expect(BeerXMLService.processImportFile(mockFile)).rejects.toThrow(
         'No valid recipes found in BeerXML file'

@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { waitFor, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
@@ -5,18 +6,18 @@ import { UnitProvider, useUnits } from "../../src/contexts/UnitContext";
 import userSettingsServiceInstance from "../../src/services/User/UserSettingsService";
 
 // Mock the UserSettingsService
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn(),
-  updateSettings: jest.fn(),
-}));
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn(),
+  updateSettings: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Suppress console errors and warnings during tests
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
+  console.error = vi.fn();
+  console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -26,12 +27,12 @@ afterAll(() => {
 
 describe("UnitContext", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("UnitProvider", () => {
     it("provides default imperial units when no user settings available", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: {},
       });
 
@@ -48,7 +49,7 @@ describe("UnitContext", () => {
     });
 
     it("loads metric units from user settings", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -65,7 +66,7 @@ describe("UnitContext", () => {
     });
 
     it("falls back to imperial on settings load error", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockRejectedValue(
+      (userSettingsServiceInstance.getUserSettings as Mock).mockRejectedValue(
         new Error("Settings service error")
       );
 
@@ -84,7 +85,7 @@ describe("UnitContext", () => {
     });
 
     it("shows loading state initially", () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockImplementation(
+      (userSettingsServiceInstance.getUserSettings as Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -105,10 +106,10 @@ describe("UnitContext", () => {
 
   describe("updateUnitSystem", () => {
     it("updates unit system and persists to backend", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "imperial" },
       });
-      (userSettingsServiceInstance.updateSettings as jest.Mock).mockResolvedValue({});
+      (userSettingsServiceInstance.updateSettings as Mock).mockResolvedValue({});
 
       const wrapper = ({ children }: { children: React.ReactNode }) => <UnitProvider>{children}</UnitProvider>;
       const { result } = renderHook(() => useUnits(), { wrapper });
@@ -128,10 +129,10 @@ describe("UnitContext", () => {
     });
 
     it("reverts changes on backend error", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "imperial" },
       });
-      (userSettingsServiceInstance.updateSettings as jest.Mock).mockRejectedValue(
+      (userSettingsServiceInstance.updateSettings as Mock).mockRejectedValue(
         new Error("Update failed")
       );
 
@@ -157,7 +158,7 @@ describe("UnitContext", () => {
 
   describe("getPreferredUnit", () => {
     it("returns correct metric units", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -177,10 +178,10 @@ describe("UnitContext", () => {
     });
 
     it("returns correct imperial units", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "imperial" },
       });
-      (userSettingsServiceInstance.updateSettings as jest.Mock).mockResolvedValue({});
+      (userSettingsServiceInstance.updateSettings as Mock).mockResolvedValue({});
 
       const wrapper = ({ children }: { children: React.ReactNode }) => <UnitProvider>{children}</UnitProvider>;
       const { result } = renderHook(() => useUnits(), { wrapper });
@@ -198,7 +199,7 @@ describe("UnitContext", () => {
     });
 
     it("returns default unit for unknown type", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -217,7 +218,7 @@ describe("UnitContext", () => {
     let unitUtils: any;
 
     beforeEach(async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -361,7 +362,7 @@ describe("UnitContext", () => {
     let unitUtils: any;
 
     beforeEach(async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -386,7 +387,7 @@ describe("UnitContext", () => {
     let unitUtils: any;
 
     beforeEach(async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -435,7 +436,7 @@ describe("UnitContext", () => {
     let unitUtils: any;
 
     beforeEach(async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -477,7 +478,7 @@ describe("UnitContext", () => {
 
   describe("getCommonUnits", () => {
     it("returns metric weight units", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -496,7 +497,7 @@ describe("UnitContext", () => {
     });
 
     it("returns metric volume units", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -515,7 +516,7 @@ describe("UnitContext", () => {
     });
 
     it("returns imperial units when system is imperial", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "imperial" },
       });
 
@@ -534,7 +535,7 @@ describe("UnitContext", () => {
     });
 
     it("returns empty array for unknown measurement type", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -554,7 +555,7 @@ describe("UnitContext", () => {
     let unitUtils: any;
 
     beforeEach(async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -608,7 +609,7 @@ describe("UnitContext", () => {
 
   describe("getTypicalBatchSizes", () => {
     it("returns metric batch sizes", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -628,7 +629,7 @@ describe("UnitContext", () => {
     });
 
     it("returns imperial batch sizes", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "imperial" },
       });
 
@@ -650,7 +651,7 @@ describe("UnitContext", () => {
 
   describe("error handling", () => {
     it("can clear errors", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 
@@ -681,7 +682,7 @@ describe("UnitContext", () => {
 
   describe("integration tests", () => {
     it("provides complete context value with all methods", async () => {
-      (userSettingsServiceInstance.getUserSettings as jest.Mock).mockResolvedValue({
+      (userSettingsServiceInstance.getUserSettings as Mock).mockResolvedValue({
         settings: { preferred_units: "metric" },
       });
 

@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -7,23 +8,23 @@ import UserSettingsService from "../../src/services/User/UserSettingsService";
 import { renderWithProviders, scenarios } from "../testUtils";
 
 // Mock the UserSettingsService
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn(),
-  updateProfile: jest.fn(),
-  changePassword: jest.fn(),
-  updateSettings: jest.fn(),
-  deleteAccount: jest.fn(),
-}));
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn(),
+  updateProfile: vi.fn(),
+  changePassword: vi.fn(),
+  updateSettings: vi.fn(),
+  deleteAccount: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock the UnitContext
-const mockUpdateUnitSystem = jest.fn();
+const mockUpdateUnitSystem = vi.fn();
 const mockUseUnits = {
   unitSystem: "imperial",
   updateUnitSystem: mockUpdateUnitSystem,
   loading: false,
 };
 
-jest.mock("../../src/contexts/UnitContext", () => ({
+vi.mock("../../src/contexts/UnitContext", () => ({
   useUnits: () => mockUseUnits,
   UnitProvider: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
@@ -31,14 +32,14 @@ jest.mock("../../src/contexts/UnitContext", () => ({
 }));
 
 // Mock useNavigate and useBlocker
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 const mockBlocker = {
   state: "unblocked",
-  reset: jest.fn(),
-  proceed: jest.fn(),
+  reset: vi.fn(),
+  proceed: vi.fn(),
 };
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
   useBlocker: () => mockBlocker,
   Outlet: ({ children }: { children?: React.ReactNode }) => (
@@ -47,13 +48,13 @@ jest.mock("react-router", () => ({
 }));
 
 // Mock window.confirm
-const mockConfirm = jest.fn();
+const mockConfirm = vi.fn();
 global.confirm = mockConfirm;
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -82,7 +83,7 @@ describe("UserSettings", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockNavigate.mockClear();
     mockUpdateUnitSystem.mockClear();
     mockConfirm.mockClear();
@@ -91,13 +92,13 @@ describe("UserSettings", () => {
     mockBlocker.state = "unblocked";
 
     // Default successful API response
-    (UserSettingsService.getUserSettings as jest.Mock).mockResolvedValue(
+    (UserSettingsService.getUserSettings as Mock).mockResolvedValue(
       sampleUserSettings
     );
-    (UserSettingsService.updateProfile as jest.Mock).mockResolvedValue({});
-    (UserSettingsService.changePassword as jest.Mock).mockResolvedValue({});
-    (UserSettingsService.updateSettings as jest.Mock).mockResolvedValue({});
-    (UserSettingsService.deleteAccount as jest.Mock).mockResolvedValue({});
+    (UserSettingsService.updateProfile as Mock).mockResolvedValue({});
+    (UserSettingsService.changePassword as Mock).mockResolvedValue({});
+    (UserSettingsService.updateSettings as Mock).mockResolvedValue({});
+    (UserSettingsService.deleteAccount as Mock).mockResolvedValue({});
 
     // Reset localStorage mock
     global.mockLocalStorage.clear();
@@ -109,7 +110,7 @@ describe("UserSettings", () => {
 
   describe("Initial render and loading", () => {
     it("shows loading state initially", () => {
-      (UserSettingsService.getUserSettings as jest.Mock).mockImplementation(
+      (UserSettingsService.getUserSettings as Mock).mockImplementation(
         () => scenarios.loading()
       );
 
@@ -169,7 +170,7 @@ describe("UserSettings", () => {
 
   describe("Error handling", () => {
     it("displays error message when settings fail to load", async () => {
-      (UserSettingsService.getUserSettings as jest.Mock).mockRejectedValue(
+      (UserSettingsService.getUserSettings as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -185,8 +186,8 @@ describe("UserSettings", () => {
     });
 
     it("logs error to console when settings fail to load", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      (UserSettingsService.getUserSettings as jest.Mock).mockRejectedValue(
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation();
+      (UserSettingsService.getUserSettings as Mock).mockRejectedValue(
         new Error("Network Error")
       );
 
@@ -203,7 +204,7 @@ describe("UserSettings", () => {
     });
 
     it("can dismiss error messages", async () => {
-      (UserSettingsService.getUserSettings as jest.Mock).mockRejectedValue(
+      (UserSettingsService.getUserSettings as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -339,7 +340,7 @@ describe("UserSettings", () => {
     });
 
     it("handles profile update error", async () => {
-      (UserSettingsService.updateProfile as jest.Mock).mockRejectedValue(
+      (UserSettingsService.updateProfile as Mock).mockRejectedValue(
         new Error("Update failed")
       );
 
@@ -358,7 +359,7 @@ describe("UserSettings", () => {
     });
 
     it("shows saving state during profile update", async () => {
-      (UserSettingsService.updateProfile as jest.Mock).mockImplementation(() =>
+      (UserSettingsService.updateProfile as Mock).mockImplementation(() =>
         scenarios.loading()
       );
 
@@ -392,7 +393,7 @@ describe("UserSettings", () => {
         ...sampleUserSettings,
         user: { ...sampleUserSettings.user, last_login: null },
       };
-      (UserSettingsService.getUserSettings as jest.Mock).mockResolvedValue(
+      (UserSettingsService.getUserSettings as Mock).mockResolvedValue(
         settingsWithoutLogin
       );
 
@@ -568,7 +569,7 @@ describe("UserSettings", () => {
     });
 
     it("handles preferences update error", async () => {
-      (UserSettingsService.updateSettings as jest.Mock).mockRejectedValue(
+      (UserSettingsService.updateSettings as Mock).mockRejectedValue(
         new Error("Preferences failed")
       );
 
@@ -736,7 +737,7 @@ describe("UserSettings", () => {
     });
 
     it("handles password change error", async () => {
-      (UserSettingsService.changePassword as jest.Mock).mockRejectedValue(
+      (UserSettingsService.changePassword as Mock).mockRejectedValue(
         new Error("Wrong password")
       );
 
@@ -870,7 +871,7 @@ describe("UserSettings", () => {
 
     it("handles account deletion error", async () => {
       mockConfirm.mockReturnValue(true);
-      (UserSettingsService.deleteAccount as jest.Mock).mockRejectedValue(
+      (UserSettingsService.deleteAccount as Mock).mockRejectedValue(
         new Error("Deletion failed")
       );
 
@@ -896,7 +897,7 @@ describe("UserSettings", () => {
 
   describe("Success message handling", () => {
     it("auto-dismisses success messages after 3 seconds", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       renderWithProviders(<UserSettings />);
 
@@ -914,7 +915,7 @@ describe("UserSettings", () => {
       });
 
       // Fast-forward time
-      jest.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(3000);
 
       await waitFor(() => {
         expect(
@@ -922,7 +923,7 @@ describe("UserSettings", () => {
         ).not.toBeInTheDocument();
       });
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("can manually dismiss success messages", async () => {

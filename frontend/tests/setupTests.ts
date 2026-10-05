@@ -1,7 +1,14 @@
-import "@testing-library/jest-dom";
-import { TextEncoder, TextDecoder } from "util";
+import "@testing-library/jest-dom/vitest";
+import { TextEncoder, TextDecoder } from "node:util";
 import { cleanup } from "@testing-library/react";
 import React from "react";
+
+// Testing Library's waitFor detects fake timers through a global `jest` object
+// and advances them with jest.advanceTimersByTime. Point that at Vitest so
+// waitFor keeps working when a test uses vi.useFakeTimers().
+(globalThis as any).jest = {
+  advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms),
+};
 
 // Polyfills for Node.js environment
 global.TextEncoder = TextEncoder;
@@ -106,38 +113,42 @@ global.Headers = class Headers {
 // Mock window.matchMedia (used by some UI libraries)
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation((query: string) => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
 // Mock ResizeObserver (used by some chart libraries)
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock scrollTo
-global.scrollTo = jest.fn();
+global.scrollTo = vi.fn();
 
 // Mock URL.createObjectURL (used for file handling)
-global.URL.createObjectURL = jest.fn(() => "mocked-url");
-global.URL.revokeObjectURL = jest.fn();
+global.URL.createObjectURL = vi.fn(() => "mocked-url");
+global.URL.revokeObjectURL = vi.fn();
 
 // Mock requestAnimationFrame
 global.requestAnimationFrame = (callback) => setTimeout(callback, 0);
@@ -148,20 +159,20 @@ const createLocalStorageMock = () => {
   let store: Record<string, string> = {};
 
   return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value?.toString() || "";
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: vi.fn((key: string) => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
     }),
     get length() {
       return Object.keys(store).length;
     },
-    key: jest.fn((index: number) => {
+    key: vi.fn((index: number) => {
       const keys = Object.keys(store);
       return keys[index] || null;
     }),
@@ -188,7 +199,7 @@ Object.defineProperty(window, "sessionStorage", {
 });
 
 // Mock window.dispatchEvent for auth events
-const mockDispatchEvent = jest.fn();
+const mockDispatchEvent = vi.fn();
 Object.defineProperty(window, "dispatchEvent", {
   value: mockDispatchEvent,
   writable: true,
@@ -196,13 +207,15 @@ Object.defineProperty(window, "dispatchEvent", {
 (global as any).mockDispatchEvent = mockDispatchEvent;
 
 // Mock fetch for any components that use it directly
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 // Setup for testing library cleanup
 afterEach(() => {
   cleanup();
+  // Never leak fake timers into the next test
+  vi.useRealTimers();
   // Clear all mock calls but preserve mock implementations
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   // Reset localStorage store
   (global as any).mockLocalStorage.clear();
   (global as any).mockLocalStorage._setStore({});
@@ -231,20 +244,20 @@ expect.extend({
 // Mock crypto for any UUID generation
 Object.defineProperty(global, "crypto", {
   value: {
-    getRandomValues: jest.fn().mockReturnValue(new Uint32Array(10)),
-    randomUUID: jest.fn().mockReturnValue("mock-uuid"),
+    getRandomValues: vi.fn().mockReturnValue(new Uint32Array(10)),
+    randomUUID: vi.fn().mockReturnValue("mock-uuid"),
   },
 });
 
 // Mock HTMLCanvasElement (for any canvas-based charts)
-HTMLCanvasElement.prototype.getContext = jest.fn();
+HTMLCanvasElement.prototype.getContext = vi.fn();
 
 // Global test utilities
 (global as any).testUtils = {
   // Helper to create mock events
   createMockEvent: (overrides = {}) => ({
-    preventDefault: jest.fn(),
-    stopPropagation: jest.fn(),
+    preventDefault: vi.fn(),
+    stopPropagation: vi.fn(),
     target: { value: "" },
     ...overrides,
   }),
@@ -263,9 +276,9 @@ HTMLCanvasElement.prototype.getContext = jest.fn();
 };
 
 // Mock react-router for tests that don't explicitly test routing
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
-  useNavigate: () => jest.fn(),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
+  useNavigate: () => vi.fn(),
   useParams: () => ({}),
   useLocation: () => ({
     pathname: "/",
@@ -276,8 +289,8 @@ jest.mock("react-router", () => ({
 }));
 
 // Mock recharts to avoid canvas issues in tests
-jest.mock("recharts", () => {
-  const mockReact = require("react");
+vi.mock("recharts", async () => {
+  const mockReact = (await vi.importActual("react"));
   return {
     LineChart: ({ children }: { children: React.ReactNode }) => 
       mockReact.createElement("div", { "data-testid": "line-chart" }, children),

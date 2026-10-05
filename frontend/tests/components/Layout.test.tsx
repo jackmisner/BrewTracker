@@ -5,17 +5,19 @@ import { BrowserRouter } from "react-router";
 import Layout from "../../src/components/Layout/Layout";
 
 // Mock the Header component
-jest.mock("../../src/components/Layout/Header", () => ({ user, onLogout }: { user: any; onLogout: any }) => (
-  <div data-testid="header-mock">
-    Header - {user ? user.name : "Guest"}
-    <button onClick={onLogout}>Logout</button>
-  </div>
-));
+vi.mock("../../src/components/Layout/Header", () => ({
+  default: ({ user, onLogout }: { user: any; onLogout: any }) => (
+    <div data-testid="header-mock">
+      Header - {user ? user.name : "Guest"}
+      <button onClick={onLogout}>Logout</button>
+    </div>
+  ),
+}));
 
 // Mock the Footer component
-jest.mock("../../src/components/Layout/Footer", () => () => (
+vi.mock("../../src/components/Layout/Footer", () => ({ default: () => (
   <div data-testid="footer-mock">Footer</div>
-));
+) }));
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(
@@ -26,7 +28,7 @@ const renderWithRouter = (ui: React.ReactElement) => {
 describe("Layout", () => {
   it("renders Header with user and onLogout props", () => {
     const user = { name: "Alice", user_id: "1", username: "alice", email: "alice@test.com", is_active: true, date_joined: "2024-01-01", last_login: "2024-01-01" } as any;
-    const onLogout = jest.fn();
+    const onLogout = vi.fn();
 
     renderWithRouter(
       <Layout user={user} onLogout={onLogout}>

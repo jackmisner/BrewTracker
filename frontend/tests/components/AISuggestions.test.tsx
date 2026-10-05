@@ -1,3 +1,4 @@
+import type { MockInstance } from "vitest";
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -6,22 +7,33 @@ import { Recipe, RecipeIngredient, RecipeMetrics } from '../../src/types';
 import { UnitProvider } from '../../src/contexts/UnitContext';
 
 // Create mock functions
-const mockAnalyzeRecipe = jest.fn();
-const mockFetchIngredients = jest.fn();
-const mockGetAllStylesListService = jest.fn();
-const mockGetAllStylesList = jest.fn();
-const mockCalculateStyleMatch = jest.fn();
-const mockGetUserSettings = jest.fn();
-const mockUpdateSettings = jest.fn();
+// vi.mock factories are hoisted, so the mock functions they close over must be too
+const {
+  mockAnalyzeRecipe,
+  mockFetchIngredients,
+  mockGetAllStylesListService,
+  mockGetAllStylesList,
+  mockCalculateStyleMatch,
+  mockGetUserSettings,
+  mockUpdateSettings,
+} = vi.hoisted(() => ({
+  mockAnalyzeRecipe: vi.fn(),
+  mockFetchIngredients: vi.fn(),
+  mockGetAllStylesListService: vi.fn(),
+  mockGetAllStylesList: vi.fn(),
+  mockCalculateStyleMatch: vi.fn(),
+  mockGetUserSettings: vi.fn(),
+  mockUpdateSettings: vi.fn(),
+}));
 
 // Mock Services object first - this is the main mock that the component uses
-jest.mock('../../src/services', () => ({
+vi.mock('../../src/services', () => ({
   Services: {
     AI: {
       service: {
         analyzeRecipe: mockAnalyzeRecipe,
-        checkHealth: jest.fn(),
-        convertRecipeToAnalysisRequest: jest.fn(),
+        checkHealth: vi.fn(),
+        convertRecipeToAnalysisRequest: vi.fn(),
       }
     },
     Data: {
@@ -36,14 +48,14 @@ jest.mock('../../src/services', () => ({
 }));
 
 // Mock individual services for backwards compatibility
-jest.mock('../../src/services/Data/BeerStyleService', () => ({
+vi.mock('../../src/services/Data/BeerStyleService', () => ({
   default: {
     getAllStylesList: mockGetAllStylesList,
     calculateStyleMatch: mockCalculateStyleMatch,
   },
 }));
 
-jest.mock('../../src/services/User/UserSettingsService', () => ({
+vi.mock('../../src/services/User/UserSettingsService', () => ({
   default: {
     getUserSettings: mockGetUserSettings,
     updateSettings: mockUpdateSettings,
@@ -51,14 +63,14 @@ jest.mock('../../src/services/User/UserSettingsService', () => ({
 }));
 
 // Mock the formatUtils functions
-jest.mock('../../src/utils/formatUtils', () => ({
-  formatIngredientAmount: jest.fn((amount, unit, type, unitSystem) => `${amount} ${unit}`),
-  formatIbu: jest.fn((ibu) => `${ibu} IBU`),
+vi.mock('../../src/utils/formatUtils', () => ({
+  formatIngredientAmount: vi.fn((amount, unit, type, unitSystem) => `${amount} ${unit}`),
+  formatIbu: vi.fn((ibu) => `${ibu} IBU`),
 }));
 
 describe('AISuggestions Component', () => {
-  let consoleWarnSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleWarnSpy: MockInstance;
+  let consoleErrorSpy: MockInstance;
 
   const mockRecipe: Recipe = {
     id: 'test-recipe',
@@ -131,27 +143,27 @@ describe('AISuggestions Component', () => {
     srm: 4,
   };
 
-  const mockOnBulkIngredientUpdate = jest.fn();
-  const mockOnUpdateIngredient = jest.fn();
-  const mockOnRemoveIngredient = jest.fn();
-  const mockOnUpdateRecipe = jest.fn();
-  const mockOnBulkUpdateRecipe = jest.fn();
-  const mockReplaceIngredients = jest.fn();
+  const mockOnBulkIngredientUpdate = vi.fn();
+  const mockOnUpdateIngredient = vi.fn();
+  const mockOnRemoveIngredient = vi.fn();
+  const mockOnUpdateRecipe = vi.fn();
+  const mockOnBulkUpdateRecipe = vi.fn();
+  const mockReplaceIngredients = vi.fn();
 
   // Helper to render with UnitProvider
   const renderWithUnitProvider = (ui: React.ReactElement) => {
     return render(<UnitProvider>{ui}</UnitProvider>);
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.clearAllMocks();
     
     // Mock console.warn and console.error to suppress expected error logs
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     
     // After clearing mocks, we need to reassign them to the Services object
-    const { Services } = require('../../src/services');
+    const { Services } = await import('../../src/services');
     Services.AI.service.analyzeRecipe = mockAnalyzeRecipe;
     Services.Data.ingredient.fetchIngredients = mockFetchIngredients;
     Services.Data.beerStyle.getAllStylesList = mockGetAllStylesListService;

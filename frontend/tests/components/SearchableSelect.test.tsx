@@ -1,11 +1,12 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import SearchableSelect from "../../src/components/SearchableSelect";
 
 // Mock React hooks to prevent infinite loops
-jest.mock("react", () => {
-  const originalReact = jest.requireActual("react");
+vi.mock("react", async () => {
+  const originalReact = await vi.importActual("react");
 
   return {
     ...originalReact,
@@ -25,10 +26,10 @@ jest.mock("react", () => {
 });
 
 // Mock Fuse.js
-jest.mock("fuse.js", () => {
-  return class MockFuse {
+vi.mock("fuse.js", () => ({
+  default: class MockFuse {
     items: any[];
-    
+
     constructor(items: any[]) {
       this.items = items;
     }
@@ -37,8 +38,8 @@ jest.mock("fuse.js", () => {
       // Just return the first 2 items to keep it simple
       return this.items.slice(0, 2).map((item) => ({ item, matches: [] }));
     }
-  };
-});
+  },
+}));
 
 // Mock options data - include various fields for testing
 const mockOptions = [
@@ -68,17 +69,17 @@ const mockOptions = [
 
 describe("SearchableSelect", () => {
   // Mock handlers
-  const mockOnChange = jest.fn();
-  const mockOnSelect = jest.fn();
+  const mockOnChange = vi.fn();
+  const mockOnSelect = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Suppress React warnings about hooks
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    (console.error as jest.Mock).mockRestore();
+    (console.error as Mock).mockRestore();
   });
 
   // Basic Rendering Tests
@@ -128,7 +129,7 @@ describe("SearchableSelect", () => {
   describe("Selection Behavior", () => {
     it("calls handlers when clear button is clicked", () => {
       // Create our own test implementation of the clear button handler
-      const handleClear = jest.fn();
+      const handleClear = vi.fn();
 
       // Render a div with our test implementation
       render(

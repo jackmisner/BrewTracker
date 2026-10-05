@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, waitFor } from "@testing-library/react";
@@ -10,13 +11,13 @@ const renderWithRouter = (ui: React.ReactElement) =>
   render(<MemoryRouter>{ui}</MemoryRouter>);
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("Login", () => {
-  const mockOnLogin = jest.fn();
+  const mockOnLogin = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders login form", () => {
@@ -79,7 +80,7 @@ describe("Login", () => {
       },
     };
 
-    (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
+    (ApiService.auth.login as Mock).mockResolvedValue(mockLoginResponse);
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -114,7 +115,7 @@ describe("Login", () => {
       },
     };
 
-    (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
+    (ApiService.auth.login as Mock).mockResolvedValue(mockLoginResponse);
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -134,7 +135,7 @@ describe("Login", () => {
     const user = userEvent.setup();
 
     // Mock a delayed login response
-    (ApiService.auth.login as jest.Mock).mockImplementation(
+    (ApiService.auth.login as Mock).mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
@@ -171,7 +172,7 @@ describe("Login", () => {
       },
     };
 
-    (ApiService.auth.login as jest.Mock).mockRejectedValue(mockError);
+    (ApiService.auth.login as Mock).mockRejectedValue(mockError);
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -195,7 +196,7 @@ describe("Login", () => {
   test("displays generic error message when no specific error provided", async () => {
     const user = userEvent.setup();
 
-    (ApiService.auth.login as jest.Mock).mockRejectedValue(new Error("Network error"));
+    (ApiService.auth.login as Mock).mockRejectedValue(new Error("Network error"));
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -218,7 +219,7 @@ describe("Login", () => {
     const user = userEvent.setup();
 
     // First, cause an error
-    (ApiService.auth.login as jest.Mock).mockRejectedValueOnce(new Error("Login failed"));
+    (ApiService.auth.login as Mock).mockRejectedValueOnce(new Error("Login failed"));
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -237,7 +238,7 @@ describe("Login", () => {
     });
 
     // Now mock a successful login
-    (ApiService.auth.login as jest.Mock).mockResolvedValue({
+    (ApiService.auth.login as Mock).mockResolvedValue({
       data: {
         user: { username: "testuser" },
         access_token: "token",
@@ -289,7 +290,7 @@ describe("Login", () => {
   test("disables form during loading", async () => {
     const user = userEvent.setup();
 
-    (ApiService.auth.login as jest.Mock).mockImplementation(
+    (ApiService.auth.login as Mock).mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
@@ -321,7 +322,7 @@ describe("Login", () => {
       },
     };
 
-    (ApiService.auth.login as jest.Mock).mockResolvedValue(mockLoginResponse);
+    (ApiService.auth.login as Mock).mockResolvedValue(mockLoginResponse);
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -353,7 +354,7 @@ describe("Login", () => {
   test("error message has correct styling", async () => {
     const user = userEvent.setup();
 
-    (ApiService.auth.login as jest.Mock).mockRejectedValue(new Error("Test error"));
+    (ApiService.auth.login as Mock).mockRejectedValue(new Error("Test error"));
 
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 

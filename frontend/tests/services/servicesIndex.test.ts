@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import {
   ingredientServiceInstance,
   recipeServiceInstance,
@@ -16,18 +17,18 @@ import {
 } from "../../src/services/index";
 
 // Mock all the service instances
-jest.mock("../../src/services/Data/IngredientService");
-jest.mock("../../src/services/Data/RecipeService");
-jest.mock("../../src/services/Analytics/MetricService");
-jest.mock("../../src/services/Brewing/BrewSessionService");
-jest.mock("../../src/services/Data/BeerStyleService");
+vi.mock("../../src/services/Data/IngredientService");
+vi.mock("../../src/services/Data/RecipeService");
+vi.mock("../../src/services/Analytics/MetricService");
+vi.mock("../../src/services/Brewing/BrewSessionService");
+vi.mock("../../src/services/Data/BeerStyleService");
 
 describe("Services Index", () => {
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    vi.clearAllMocks();
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -88,13 +89,13 @@ describe("Services Index", () => {
   describe("ServiceUtils.clearAllCaches", () => {
     test("calls clearCache on all service instances", () => {
       // Mock the clearCache methods
-      ingredientServiceInstance.clearCache = jest.fn();
-      metricServiceInstance.clearCache = jest.fn();
-      brewSessionServiceInstance.clearCache = jest.fn();
-      IngredientMatchingService.clearCache = jest.fn();
-      UserSettingsService.clearCache = jest.fn();
-      attenuationAnalyticsServiceInstance.clearCache = jest.fn();
-      CacheManager.clearAllCaches = jest.fn();
+      ingredientServiceInstance.clearCache = vi.fn();
+      metricServiceInstance.clearCache = vi.fn();
+      brewSessionServiceInstance.clearCache = vi.fn();
+      IngredientMatchingService.clearCache = vi.fn();
+      UserSettingsService.clearCache = vi.fn();
+      attenuationAnalyticsServiceInstance.clearCache = vi.fn();
+      CacheManager.clearAllCaches = vi.fn();
 
       ServiceUtils.clearAllCaches();
 
@@ -110,12 +111,12 @@ describe("Services Index", () => {
     test("handles missing clearCache methods gracefully", () => {
       // Remove clearCache from one service
       ingredientServiceInstance.clearCache = undefined;
-      metricServiceInstance.clearCache = jest.fn();
-      brewSessionServiceInstance.clearCache = jest.fn();
-      IngredientMatchingService.clearCache = jest.fn();
-      UserSettingsService.clearCache = jest.fn();
-      attenuationAnalyticsServiceInstance.clearCache = jest.fn();
-      CacheManager.clearAllCaches = jest.fn();
+      metricServiceInstance.clearCache = vi.fn();
+      brewSessionServiceInstance.clearCache = vi.fn();
+      IngredientMatchingService.clearCache = vi.fn();
+      UserSettingsService.clearCache = vi.fn();
+      attenuationAnalyticsServiceInstance.clearCache = vi.fn();
+      CacheManager.clearAllCaches = vi.fn();
 
       // Should not throw
       expect(() => ServiceUtils.clearAllCaches()).not.toThrow();
@@ -132,13 +133,13 @@ describe("Services Index", () => {
   describe("ServiceUtils.healthCheck", () => {
     beforeEach(() => {
       // Mock service methods
-      ingredientServiceInstance.fetchIngredients = jest.fn();
-      brewSessionServiceInstance.fetchBrewSessions = jest.fn();
+      ingredientServiceInstance.fetchIngredients = vi.fn();
+      brewSessionServiceInstance.fetchBrewSessions = vi.fn();
     });
 
     test("returns healthy status when all services work", async () => {
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockResolvedValue([]);
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockResolvedValue({
+      (ingredientServiceInstance.fetchIngredients as Mock).mockResolvedValue([]);
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockResolvedValue({
         sessions: [],
       });
 
@@ -155,10 +156,10 @@ describe("Services Index", () => {
 
     test("marks ingredient service as unhealthy on error", async () => {
       const ingredientError = new Error("Ingredient service failed");
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockRejectedValue(
+      (ingredientServiceInstance.fetchIngredients as Mock).mockRejectedValue(
         ingredientError
       );
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockResolvedValue({
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockResolvedValue({
         sessions: [],
       });
 
@@ -172,8 +173,8 @@ describe("Services Index", () => {
 
     test("marks brew session service as unhealthy on error", async () => {
       const brewSessionError = new Error("Brew session service failed");
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockResolvedValue([]);
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockRejectedValue(
+      (ingredientServiceInstance.fetchIngredients as Mock).mockResolvedValue([]);
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockRejectedValue(
         brewSessionError
       );
 
@@ -189,10 +190,10 @@ describe("Services Index", () => {
       const ingredientError = new Error("Ingredient service failed");
       const brewSessionError = new Error("Brew session service failed");
 
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockRejectedValue(
+      (ingredientServiceInstance.fetchIngredients as Mock).mockRejectedValue(
         ingredientError
       );
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockRejectedValue(
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockRejectedValue(
         brewSessionError
       );
 
@@ -207,8 +208,8 @@ describe("Services Index", () => {
     });
 
     test("calls correct service methods with correct parameters", async () => {
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockResolvedValue([]);
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockResolvedValue({
+      (ingredientServiceInstance.fetchIngredients as Mock).mockResolvedValue([]);
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockResolvedValue({
         sessions: [],
       });
 
@@ -224,8 +225,8 @@ describe("Services Index", () => {
     test("includes timestamp in health check response", async () => {
       const beforeTime = new Date().toISOString();
 
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockResolvedValue([]);
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockResolvedValue({
+      (ingredientServiceInstance.fetchIngredients as Mock).mockResolvedValue([]);
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockResolvedValue({
         sessions: [],
       });
 
@@ -245,10 +246,10 @@ describe("Services Index", () => {
       detailedError.code = "TIMEOUT";
       detailedError.status = 408;
 
-      (ingredientServiceInstance.fetchIngredients as jest.Mock).mockRejectedValue(
+      (ingredientServiceInstance.fetchIngredients as Mock).mockRejectedValue(
         detailedError
       );
-      (brewSessionServiceInstance.fetchBrewSessions as jest.Mock).mockResolvedValue({
+      (brewSessionServiceInstance.fetchBrewSessions as Mock).mockResolvedValue({
         sessions: [],
       });
 
@@ -289,23 +290,23 @@ describe("Services Index", () => {
       const originalMetrics = metricServiceInstance;
 
       // Mock the imports to return null (simulate missing services)
-      jest.doMock("../../src/services/Data/IngredientService", () => null);
-      jest.doMock("../../src/services/Analytics/MetricService", () => null);
+      vi.doMock("../../src/services/Data/IngredientService", () => null);
+      vi.doMock("../../src/services/Analytics/MetricService", () => null);
 
       expect(() => ServiceUtils.clearAllCaches()).not.toThrow();
 
       // Restore
-      jest.doMock(
+      vi.doMock(
         "../../src/services/Data/IngredientService",
         () => originalIngredient
       );
-      jest.doMock("../../src/services/Analytics/MetricService", () => originalMetrics);
+      vi.doMock("../../src/services/Analytics/MetricService", () => originalMetrics);
     });
 
     test("healthCheck handles service method that doesn't exist", async () => {
       // Remove the method entirely
       delete ingredientServiceInstance.fetchIngredients;
-      brewSessionServiceInstance.fetchBrewSessions = jest
+      brewSessionServiceInstance.fetchBrewSessions = vi
         .fn()
         .mockResolvedValue({ sessions: [] });
 

@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -7,31 +8,31 @@ import { Services } from "../../src/services/index";
 import { UnitProvider } from "../../src/contexts/UnitContext";
 
 // Mock the Services module
-jest.mock("../../src/services/index", () => ({
+vi.mock("../../src/services/index", () => ({
   Services: {
     ingredient: {
-      sortIngredients: jest.fn(),
+      sortIngredients: vi.fn(),
     },
   },
 }));
 
 // Mock the UserSettingsService that UnitContext depends on
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn().mockResolvedValue({
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn().mockResolvedValue({
     settings: {
       preferred_units: "imperial",
     },
   }),
-  updateSettings: jest.fn().mockResolvedValue({}),
-}));
+  updateSettings: vi.fn().mockResolvedValue({}),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Suppress console errors and warnings during tests
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
+  console.error = vi.fn();
+  console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -45,8 +46,8 @@ const renderWithUnitProvider = (component: any) => {
 };
 
 describe("IngredientsList", () => {
-  const mockOnRemove = jest.fn();
-  const mockOnUpdate = jest.fn();
+  const mockOnRemove = vi.fn();
+  const mockOnUpdate = vi.fn();
 
   const sampleIngredients = [
     {
@@ -113,8 +114,8 @@ describe("IngredientsList", () => {
   beforeEach(() => {
     mockOnRemove.mockClear();
     mockOnUpdate.mockClear();
-    (Services.ingredient.sortIngredients as jest.Mock).mockClear();
-    (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(sampleIngredients);
+    (Services.ingredient.sortIngredients as Mock).mockClear();
+    (Services.ingredient.sortIngredients as Mock).mockReturnValue(sampleIngredients);
   });
 
   describe("Empty state", () => {
@@ -238,7 +239,7 @@ describe("IngredientsList", () => {
 
     it("shows dash for missing use field", () => {
       const ingredientWithoutUse = [{ ...sampleIngredients[0], use: null, ingredient_id: "grain-1" }];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(ingredientWithoutUse);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(ingredientWithoutUse);
 
       renderWithUnitProvider(
         <IngredientsList
@@ -276,7 +277,7 @@ describe("IngredientsList", () => {
           ingredient_id: "grain-1",
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(
         unknownGrainIngredient
       );
 
@@ -300,7 +301,7 @@ describe("IngredientsList", () => {
           ingredient_id: "grain-1",
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(nullGrainIngredient);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(nullGrainIngredient);
 
       renderWithUnitProvider(
         <IngredientsList
@@ -322,7 +323,7 @@ describe("IngredientsList", () => {
         { ...sampleIngredients[0], grain_type: "roasted", id: 3, ingredient_id: "grain-3" },
         { ...sampleIngredients[0], grain_type: "smoked", id: 4, ingredient_id: "grain-4" },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(allGrainTypes);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(allGrainTypes);
 
       renderWithUnitProvider(
         <IngredientsList
@@ -437,7 +438,7 @@ describe("IngredientsList", () => {
   describe("Inline editing functionality", () => {
     beforeEach(() => {
       // Ensure clean state for each test
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("starts editing when clicking on editable amount field", () => {
@@ -1023,7 +1024,7 @@ describe("IngredientsList", () => {
           use: "dry-hop",
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(dryHopIngredient);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(dryHopIngredient);
 
       renderWithUnitProvider(
         <IngredientsList
@@ -1164,7 +1165,7 @@ describe("IngredientsList", () => {
           time: 0,
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(zeroTimeIngredient);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(zeroTimeIngredient);
 
       renderWithUnitProvider(
         <IngredientsList
@@ -1186,7 +1187,7 @@ describe("IngredientsList", () => {
         { ...sampleIngredients[4], use: "secondary", id: "13" },
         { ...sampleIngredients[4], use: "packaging", id: "14" },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(
         specialUsageIngredients
       );
 
@@ -1213,7 +1214,7 @@ describe("IngredientsList", () => {
           amount: "invalid",
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(
         invalidAmountIngredient
       );
 
@@ -1237,7 +1238,7 @@ describe("IngredientsList", () => {
           time_unit: "minutes",
         },
       ];
-      (Services.ingredient.sortIngredients as jest.Mock).mockReturnValue(oneMinuteIngredient);
+      (Services.ingredient.sortIngredients as Mock).mockReturnValue(oneMinuteIngredient);
 
       renderWithUnitProvider(
         <IngredientsList

@@ -1,3 +1,5 @@
+import * as ReactRouter from "react-router";
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
@@ -8,30 +10,30 @@ import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
 import { renderWithProviders, mockData } from "../testUtils";
 
 // Mock the CSS import
-jest.mock("../../src/styles/BrewSessions.css", () => ({}));
+vi.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock services and cache manager
-jest.mock("../../src/services/Brewing/BrewSessionService", () => ({
-  fetchBrewSession: jest.fn(),
-  updateBrewSession: jest.fn(),
-  deleteBrewSession: jest.fn(),
-}));
+vi.mock("../../src/services/Brewing/BrewSessionService", () => { const mod = {
+  fetchBrewSession: vi.fn(),
+  updateBrewSession: vi.fn(),
+  deleteBrewSession: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
-jest.mock("../../src/services/Data/RecipeService", () => ({
-  fetchRecipe: jest.fn(),
-}));
+vi.mock("../../src/services/Data/RecipeService", () => { const mod = {
+  fetchRecipe: vi.fn(),
+}; return { __esModule: true, default: mod, ...mod }; });
 
-jest.mock("../../src/services/CacheManager", () => ({
+vi.mock("../../src/services/CacheManager", () => { const mod = {
   invalidateBrewSessionCaches: {
-    onUpdated: jest.fn(),
-    onDeleted: jest.fn(),
+    onUpdated: vi.fn(),
+    onDeleted: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock FermentationTracker component
-jest.mock("../../src/components/BrewSessions/FermentationTracker", () => ({
+vi.mock("../../src/components/BrewSessions/FermentationTracker", () => ({
   __esModule: true,
-  default: jest.fn(
+  default: vi.fn(
     ({ sessionId, recipeData, sessionData, onUpdateSession }) => (
       <div data-testid="fermentation-tracker">
         <button
@@ -52,11 +54,11 @@ jest.mock("../../src/components/BrewSessions/FermentationTracker", () => ({
 const originalConfirm = window.confirm;
 
 // Mock useNavigate and useParams
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
-  useParams: () => ({ sessionId: "1" }),
+  useParams: vi.fn(() => ({ sessionId: "1" })),
 }));
 
 // Create mock data
@@ -96,18 +98,18 @@ describe("ViewBrewSession", () => {
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock console.warn, console.error, and console.log
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     
-    window.confirm = jest.fn(() => true); // Default to confirming all dialogs
+    window.confirm = vi.fn(() => true); // Default to confirming all dialogs
 
     // Default successful session and recipe fetch
-    (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(mockSession);
-    (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
+    (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(mockSession);
+    (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
   });
 
   afterEach(() => {
@@ -120,7 +122,7 @@ describe("ViewBrewSession", () => {
 
   describe("Loading State", () => {
     it("renders loading state initially", async () => {
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockReturnValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockReturnValue(
         new Promise(() => {})
       ); // never resolves
 
@@ -132,7 +134,7 @@ describe("ViewBrewSession", () => {
 
   describe("Error Handling", () => {
     it("renders error if session fetch fails", async () => {
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockRejectedValue(
         new Error("Failed to load brew session data")
       );
 
@@ -151,7 +153,7 @@ describe("ViewBrewSession", () => {
     });
 
     it("renders session details even if recipe fetch fails", async () => {
-      (RecipeService.fetchRecipe as jest.Mock).mockRejectedValue(
+      (RecipeService.fetchRecipe as Mock).mockRejectedValue(
         new Error("Recipe not found")
       );
 
@@ -174,9 +176,9 @@ describe("ViewBrewSession", () => {
     it("redirects to sessions list if session not found", async () => {
       const error = new Error("Session not found") as any;
       error.response = { status: 404 };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockRejectedValue(error);
+      (BrewSessionService.fetchBrewSession as Mock).mockRejectedValue(error);
 
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       renderWithProviders(<ViewBrewSession />);
 
       await waitFor(() => {
@@ -187,15 +189,15 @@ describe("ViewBrewSession", () => {
       });
 
       // Fast-forward the timer for redirect
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(mockNavigate).toHaveBeenCalledWith("/brew-sessions");
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("shows error and allows dismissal when status update fails", async () => {
-      (BrewSessionService.updateBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.updateBrewSession as Mock).mockRejectedValue(
         new Error("Failed to update status")
       );
 
@@ -320,7 +322,7 @@ describe("ViewBrewSession", () => {
         fermentation_end_date: "2024-06-15",
       };
 
-      (BrewSessionService.updateBrewSession as jest.Mock).mockResolvedValue(updatedSession);
+      (BrewSessionService.updateBrewSession as Mock).mockResolvedValue(updatedSession);
 
       // Mock current date for consistent testing
       const mockDate = new Date("2024-06-15");
@@ -372,7 +374,7 @@ describe("ViewBrewSession", () => {
     });
 
     it("cancels status update when confirmation is rejected", async () => {
-      window.confirm = jest.fn(() => false);
+      window.confirm = vi.fn(() => false);
 
       renderWithProviders(<ViewBrewSession />);
 
@@ -527,7 +529,7 @@ describe("ViewBrewSession", () => {
     });
 
     it("confirms and deletes session when Delete button is clicked", async () => {
-      (BrewSessionService.deleteBrewSession as jest.Mock).mockResolvedValue({});
+      (BrewSessionService.deleteBrewSession as Mock).mockResolvedValue({});
 
       renderWithProviders(<ViewBrewSession />);
 
@@ -561,7 +563,7 @@ describe("ViewBrewSession", () => {
     });
 
     it("cancels deletion when confirmation is rejected", async () => {
-      window.confirm = jest.fn(() => false);
+      window.confirm = vi.fn(() => false);
 
       renderWithProviders(<ViewBrewSession />);
 
@@ -583,7 +585,7 @@ describe("ViewBrewSession", () => {
     });
 
     it("shows error when deletion fails", async () => {
-      (BrewSessionService.deleteBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.deleteBrewSession as Mock).mockRejectedValue(
         new Error("Failed to delete session")
       );
 
@@ -615,7 +617,7 @@ describe("ViewBrewSession", () => {
   describe("Edge Cases", () => {
     it("handles missing recipe gracefully", async () => {
       const sessionWithoutRecipe = { ...mockSession, recipe_id: null };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(
         sessionWithoutRecipe
       );
 
@@ -632,11 +634,11 @@ describe("ViewBrewSession", () => {
 
     it("handles empty session name gracefully", async () => {
       const sessionWithoutName = { ...mockSession, name: null };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(sessionWithoutName);
+      (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(sessionWithoutName);
 
       // Set specific sessionId for this test
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "abcdef123456" });
 
       renderWithProviders(<ViewBrewSession />);
@@ -646,8 +648,8 @@ describe("ViewBrewSession", () => {
       });
 
       // Reset the mock for other tests
-      jest
-        .spyOn(require("react-router"), "useParams")
+      vi
+        .mocked(ReactRouter.useParams)
         .mockReturnValue({ sessionId: "1" });
     });
 
@@ -659,7 +661,7 @@ describe("ViewBrewSession", () => {
         actual_abv: null,
         actual_efficiency: null,
       };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(
         sessionWithoutMetrics
       );
 
@@ -680,7 +682,7 @@ describe("ViewBrewSession", () => {
         notes: null,
         tasting_notes: null,
       };
-      (BrewSessionService.fetchBrewSession as jest.Mock).mockResolvedValue(
+      (BrewSessionService.fetchBrewSession as Mock).mockResolvedValue(
         sessionWithoutNotes
       );
 

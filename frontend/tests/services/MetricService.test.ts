@@ -1,8 +1,9 @@
+import type { Mock } from "vitest";
 import MetricService from "../../src/services/Analytics/MetricService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("MetricService", () => {
   let metricService: any;
@@ -12,15 +13,15 @@ describe("MetricService", () => {
   beforeEach(() => {
     metricService = MetricService;
     metricService.clearCache();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console.warn and console.error
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Clear any existing timers
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
@@ -29,8 +30,8 @@ describe("MetricService", () => {
     consoleErrorSpy.mockRestore();
 
     // Clear timers and restore real timers
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   describe("calculateMetrics", () => {
@@ -64,7 +65,7 @@ describe("MetricService", () => {
     };
 
     test("calculates metrics successfully and caches result", async () => {
-      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockResolvedValue(
+      (ApiService.recipes.calculateMetricsPreview as Mock).mockResolvedValue(
         mockApiResponse
       );
 
@@ -96,7 +97,7 @@ describe("MetricService", () => {
     });
 
     test("passes correct data structure to API with batch_size as number", async () => {
-      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockResolvedValue(
+      (ApiService.recipes.calculateMetricsPreview as Mock).mockResolvedValue(
         mockApiResponse
       );
 
@@ -119,14 +120,14 @@ describe("MetricService", () => {
       });
 
       // Verify batch_size is specifically a number, not a string
-      const callArgs = (ApiService.recipes.calculateMetricsPreview as jest.Mock).mock.calls[0][0];
+      const callArgs = (ApiService.recipes.calculateMetricsPreview as Mock).mock.calls[0][0];
       expect(typeof callArgs.batch_size).toBe("number");
       expect(typeof callArgs.efficiency).toBe("number");
       expect(typeof callArgs.boil_time).toBe("number");
     });
 
     test("handles API errors and returns default metrics", async () => {
-      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.calculateMetricsPreview as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -149,7 +150,7 @@ describe("MetricService", () => {
     });
 
     test("limits cache size to 50 entries", async () => {
-      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockResolvedValue(
+      (ApiService.recipes.calculateMetricsPreview as Mock).mockResolvedValue(
         mockApiResponse
       );
 
@@ -171,7 +172,7 @@ describe("MetricService", () => {
     };
 
     test("debounces multiple calls and only executes the last one", async () => {
-      (ApiService.recipes.calculateMetricsPreview as jest.Mock).mockResolvedValue(
+      (ApiService.recipes.calculateMetricsPreview as Mock).mockResolvedValue(
         mockApiResponse
       );
 
@@ -195,7 +196,7 @@ describe("MetricService", () => {
       );
 
       // Fast-forward time to trigger debounce
-      jest.advanceTimersByTime(500);
+      vi.advanceTimersByTime(500);
 
       const result = await promise3;
 

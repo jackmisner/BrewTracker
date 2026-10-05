@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import {
@@ -12,12 +13,12 @@ import Dashboard from "../../src/pages/Dashboard";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 // Mock react-router
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
 }));
 
@@ -27,7 +28,7 @@ const renderWithRouter = (component) => {
 
 describe("Dashboard", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockRecipesResponse = {
@@ -97,8 +98,8 @@ describe("Dashboard", () => {
   };
 
   test("renders loading state initially", () => {
-    (ApiService.recipes.getAll as jest.Mock).mockImplementation(() => new Promise(() => {}));
-    (ApiService.brewSessions.getAll as jest.Mock).mockImplementation(
+    (ApiService.recipes.getAll as Mock).mockImplementation(() => new Promise(() => {}));
+    (ApiService.brewSessions.getAll as Mock).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -108,8 +109,8 @@ describe("Dashboard", () => {
   });
 
   test("renders dashboard with data successfully", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -131,8 +132,8 @@ describe("Dashboard", () => {
   });
 
   test("displays recent recipes correctly", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -155,8 +156,8 @@ describe("Dashboard", () => {
   });
 
   test("displays recent brew sessions correctly", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -177,8 +178,8 @@ describe("Dashboard", () => {
   });
 
   test("handles empty recipes state", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue({ data: { recipes: [] } });
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue({ data: { recipes: [] } });
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -192,8 +193,8 @@ describe("Dashboard", () => {
   });
 
   test("handles empty brew sessions state", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue({
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue({
       data: { brew_sessions: [] },
     });
 
@@ -210,12 +211,12 @@ describe("Dashboard", () => {
 
   test("handles API errors", async () => {
     // Mock console.error to prevent it from cluttering test output
-    const consoleSpy = jest
+    const consoleSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    (ApiService.recipes.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
-    (ApiService.brewSessions.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+    (ApiService.recipes.getAll as Mock).mockRejectedValue(new Error("API Error"));
+    (ApiService.brewSessions.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
     renderWithRouter(<Dashboard />);
 
@@ -230,8 +231,8 @@ describe("Dashboard", () => {
   });
 
   test("navigates to recipe creation", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -244,8 +245,8 @@ describe("Dashboard", () => {
   });
 
   test("navigates to recipe view when View button clicked", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -260,8 +261,8 @@ describe("Dashboard", () => {
   });
 
   test("navigates to recipe edit when Edit button clicked", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -276,8 +277,8 @@ describe("Dashboard", () => {
   });
 
   test("navigates to brew session when Brew button clicked", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -294,8 +295,8 @@ describe("Dashboard", () => {
   });
 
   test("calculates dashboard stats correctly", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -320,8 +321,8 @@ describe("Dashboard", () => {
   });
 
   test("formats dates correctly", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -337,8 +338,8 @@ describe("Dashboard", () => {
   });
 
   test("displays session ratings correctly", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -350,8 +351,8 @@ describe("Dashboard", () => {
   });
 
   test("shows correct status colors", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 
@@ -371,8 +372,8 @@ describe("Dashboard", () => {
   });
 
   test("shows View all links", async () => {
-    (ApiService.recipes.getAll as jest.Mock).mockResolvedValue(mockRecipesResponse);
-    (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockSessionsResponse);
+    (ApiService.recipes.getAll as Mock).mockResolvedValue(mockRecipesResponse);
+    (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockSessionsResponse);
 
     renderWithRouter(<Dashboard />);
 

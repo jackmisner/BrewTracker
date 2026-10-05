@@ -6,26 +6,26 @@ import ApiService from "../../src/services/api";
 import userEvent from "@testing-library/user-event";
 
 // Mock ApiService
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 // Mock CompactRecipeCard component
-jest.mock(
+vi.mock(
   "../../src/components/CompactRecipeCard",
-  () =>
-    ({ recipe }) =>
-      (
-        <div data-testid={`recipe-${recipe.id}`} className="compact-recipe-card">
-          <div className="compact-recipe-name">{recipe.name}</div>
-          <div className="compact-recipe-style">{recipe.style}</div>
-        </div>
-      )
+  () => ({
+    default: ({ recipe }) => (
+      <div data-testid={`recipe-${recipe.id}`} className="compact-recipe-card">
+        <div className="compact-recipe-name">{recipe.name}</div>
+        <div className="compact-recipe-style">{recipe.style}</div>
+      </div>
+    ),
+  })
 );
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -43,7 +43,7 @@ const mockRecipes = [
 
 describe("AllRecipes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -55,7 +55,7 @@ describe("AllRecipes", () => {
     it("renders loading state initially", async () => {
       // Mock a promise that never resolves to simulate loading
       ApiService.recipes = {
-        getAll: jest.fn(() => new Promise(() => {})),
+        getAll: vi.fn(() => new Promise(() => {})),
       };
 
       await act(async () => {
@@ -69,7 +69,7 @@ describe("AllRecipes", () => {
   describe("Successful Data Loading", () => {
     it("renders all recipes after successful fetch", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: mockRecipes },
         }),
@@ -92,7 +92,7 @@ describe("AllRecipes", () => {
     it("renders all recipes when few exist", async () => {
       const fewRecipes = mockRecipes.slice(0, 3);
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: fewRecipes },
         }),
@@ -113,7 +113,7 @@ describe("AllRecipes", () => {
 
     it("shows 'No recipes found.' if API returns empty list", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: [] },
         }),
@@ -130,7 +130,7 @@ describe("AllRecipes", () => {
 
     it("handles missing recipes array in response", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: {}, // Missing recipes array
         }),
@@ -150,7 +150,7 @@ describe("AllRecipes", () => {
   describe("Error Handling", () => {
     it("shows error message if fetch fails (non-200 status)", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 500,
           data: {},
         }),
@@ -167,7 +167,7 @@ describe("AllRecipes", () => {
 
     it("shows error message if fetch throws", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockRejectedValue(new Error("Network error")),
+        getAll: vi.fn().mockRejectedValue(new Error("Network error")),
       };
 
       await act(async () => {
@@ -181,7 +181,7 @@ describe("AllRecipes", () => {
 
     it("shows error message for 401 unauthorized", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 401,
           data: {},
         }),
@@ -198,7 +198,7 @@ describe("AllRecipes", () => {
 
     it("shows error message for 500 server error", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 500,
           data: {},
         }),
@@ -215,7 +215,7 @@ describe("AllRecipes", () => {
 
     it("handles undefined API response gracefully", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue(undefined),
+        getAll: vi.fn().mockResolvedValue(undefined),
       };
 
       await act(async () => {
@@ -231,7 +231,7 @@ describe("AllRecipes", () => {
   describe("User Interactions", () => {
     it("recipes are properly displayed in grid layout", async () => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: mockRecipes },
         }),
@@ -253,7 +253,7 @@ describe("AllRecipes", () => {
     });
 
     it("no recipes are displayed during error state", async () => {
-      const getAllMock = jest
+      const getAllMock = vi
         .fn()
         .mockRejectedValue(new Error("Network error"));
 
@@ -275,7 +275,7 @@ describe("AllRecipes", () => {
     });
 
     it("displays correct number of recipes in grid", async () => {
-      const getAllMock = jest.fn().mockResolvedValue({
+      const getAllMock = vi.fn().mockResolvedValue({
         status: 200,
         data: { recipes: mockRecipes },
       });
@@ -305,7 +305,7 @@ describe("AllRecipes", () => {
       ];
 
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: unsortedRecipes },
         }),
@@ -335,7 +335,7 @@ describe("AllRecipes", () => {
       ];
 
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: recipesWithBadDates },
         }),
@@ -366,7 +366,7 @@ describe("AllRecipes", () => {
       }));
 
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: largeRecipeList },
         }),
@@ -390,7 +390,7 @@ describe("AllRecipes", () => {
   describe("Sorting Functionality", () => {
     beforeEach(() => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: mockRecipes },
         }),
@@ -491,7 +491,7 @@ describe("AllRecipes", () => {
   describe("Search Functionality", () => {
     beforeEach(() => {
       ApiService.recipes = {
-        getAll: jest.fn().mockResolvedValue({
+        getAll: vi.fn().mockResolvedValue({
           status: 200,
           data: { recipes: mockRecipes },
         }),

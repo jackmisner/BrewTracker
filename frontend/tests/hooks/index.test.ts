@@ -11,8 +11,8 @@ const originalConsoleError = console.error;
 const originalConsoleTrace = console.trace;
 
 beforeAll(() => {
-  console.error = jest.fn();
-  console.trace = jest.fn();
+  console.error = vi.fn();
+  console.trace = vi.fn();
 });
 
 afterAll(() => {
@@ -24,10 +24,10 @@ describe("HookUtils", () => {
   describe("createSafeStateSetter", () => {
     it("should call setState if mounted.current is true", () => {
       const mounted = { current: true };
-      const setState = jest.fn();
+      const setState = vi.fn();
       const safeSetter = HookUtils.createSafeStateSetter(mounted, setState);
 
-      const updater = jest.fn();
+      const updater = vi.fn();
       safeSetter(updater);
 
       expect(setState).toHaveBeenCalledWith(updater);
@@ -35,10 +35,10 @@ describe("HookUtils", () => {
 
     it("should not call setState if mounted.current is false", () => {
       const mounted = { current: false };
-      const setState = jest.fn();
+      const setState = vi.fn();
       const safeSetter = HookUtils.createSafeStateSetter(mounted, setState);
 
-      const updater = jest.fn();
+      const updater = vi.fn();
       safeSetter(updater);
 
       expect(setState).not.toHaveBeenCalled();
@@ -56,34 +56,34 @@ describe("HookUtils", () => {
 
   describe("createDebouncedFunction", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should debounce the function call", () => {
-      const func = jest.fn();
+      const func = vi.fn();
       const debounced = HookUtils.createDebouncedFunction(func, 100);
 
       debounced("a");
       debounced("b");
       expect(func).not.toHaveBeenCalled();
 
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
       expect(func).toHaveBeenCalledTimes(1);
       expect(func).toHaveBeenCalledWith("b");
     });
 
     it("should use default delay if not provided", () => {
-      const func = jest.fn();
+      const func = vi.fn();
       const debounced = HookUtils.createDebouncedFunction(func);
 
       debounced("test");
       expect(func).not.toHaveBeenCalled();
 
-      jest.advanceTimersByTime(300); // Default delay
+      vi.advanceTimersByTime(300); // Default delay
       expect(func).toHaveBeenCalledTimes(1);
       expect(func).toHaveBeenCalledWith("test");
     });
@@ -113,9 +113,9 @@ describe("HOOK_CONSTANTS", () => {
 describe("useComposedHooks", () => {
   it("should compose errors and loading state", () => {
     const hooks = [
-      { error: null, loading: false, clearError: jest.fn() },
-      { error: "Some error", loading: false, clearError: jest.fn() },
-      { error: null, loading: true, clearError: jest.fn() },
+      { error: null, loading: false, clearError: vi.fn() },
+      { error: "Some error", loading: false, clearError: vi.fn() },
+      { error: null, loading: true, clearError: vi.fn() },
     ];
     const { composedError, composedLoading } = useComposedHooks(hooks);
     expect(composedError).toBe("Some error");
@@ -123,8 +123,8 @@ describe("useComposedHooks", () => {
   });
 
   it("should clear all errors", () => {
-    const clearError1 = jest.fn();
-    const clearError2 = jest.fn();
+    const clearError1 = vi.fn();
+    const clearError2 = vi.fn();
     const hooks = [
       { error: "err1", loading: false, clearError: clearError1 },
       { error: "err2", loading: false, clearError: clearError2 },
@@ -138,7 +138,7 @@ describe("useComposedHooks", () => {
   it("should handle hooks without clearError method", () => {
     const hooks = [
       { error: "err1", loading: false }, // No clearError method
-      { error: "err2", loading: false, clearError: jest.fn() },
+      { error: "err2", loading: false, clearError: vi.fn() },
     ];
     const { clearAllErrors } = useComposedHooks(hooks);
 
@@ -148,8 +148,8 @@ describe("useComposedHooks", () => {
 
   it("should return null error when no errors exist", () => {
     const hooks = [
-      { error: null, loading: false, clearError: jest.fn() },
-      { error: null, loading: false, clearError: jest.fn() },
+      { error: null, loading: false, clearError: vi.fn() },
+      { error: null, loading: false, clearError: vi.fn() },
     ];
     const { composedError } = useComposedHooks(hooks);
     expect(composedError).toBe(null);
@@ -157,8 +157,8 @@ describe("useComposedHooks", () => {
 
   it("should return false loading when no hooks are loading", () => {
     const hooks = [
-      { error: null, loading: false, clearError: jest.fn() },
-      { error: null, loading: false, clearError: jest.fn() },
+      { error: null, loading: false, clearError: vi.fn() },
+      { error: null, loading: false, clearError: vi.fn() },
     ];
     const { composedLoading } = useComposedHooks(hooks);
     expect(composedLoading).toBe(false);
@@ -180,27 +180,25 @@ describe("useErrorBoundaryReporting", () => {
   });
 
   it("should log stack trace in development", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("DEV", true);
 
     const report = useErrorBoundaryReporting("useTestHook");
     report(new Error("Test"));
 
     expect(console.trace).toHaveBeenCalledWith("Hook error stack trace");
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 
   it("should not log stack trace in production", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("DEV", false);
 
     const report = useErrorBoundaryReporting("useTestHook");
     report(new Error("Test"));
 
     expect(console.trace).not.toHaveBeenCalled();
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 });
 

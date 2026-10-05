@@ -1,8 +1,9 @@
+import type { Mock } from "vitest";
 import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("BrewSessionService", () => {
   let brewSessionService: any;
@@ -13,12 +14,12 @@ describe("BrewSessionService", () => {
   beforeEach(() => {
     brewSessionService = BrewSessionService;
     brewSessionService.clearCache();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -56,7 +57,7 @@ describe("BrewSessionService", () => {
     };
 
     test("fetches and processes brew sessions successfully", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockApiResponse);
+      (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockApiResponse);
 
       const result = await brewSessionService.fetchBrewSessions(1, 10);
 
@@ -72,7 +73,7 @@ describe("BrewSessionService", () => {
     });
 
     test("handles empty sessions array", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.getAll as Mock).mockResolvedValue({
         data: { brew_sessions: [], pagination: {} },
       });
 
@@ -83,7 +84,7 @@ describe("BrewSessionService", () => {
     });
 
     test("handles API errors", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.brewSessions.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(brewSessionService.fetchBrewSessions()).rejects.toThrow(
         "Failed to load brew sessions"
@@ -95,7 +96,7 @@ describe("BrewSessionService", () => {
     });
 
     test("uses default pagination values", async () => {
-      (ApiService.brewSessions.getAll as jest.Mock).mockResolvedValue(mockApiResponse);
+      (ApiService.brewSessions.getAll as Mock).mockResolvedValue(mockApiResponse);
 
       await brewSessionService.fetchBrewSessions();
 
@@ -113,7 +114,7 @@ describe("BrewSessionService", () => {
     };
 
     test("fetches and processes single brew session", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockResolvedValue({ data: mockSession });
+      (ApiService.brewSessions.getById as Mock).mockResolvedValue({ data: mockSession });
 
       const result = await brewSessionService.fetchBrewSession("session-1");
 
@@ -126,7 +127,7 @@ describe("BrewSessionService", () => {
     });
 
     test("handles API errors", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.brewSessions.getById as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(
         brewSessionService.fetchBrewSession("session-1")
@@ -150,7 +151,7 @@ describe("BrewSessionService", () => {
           brew_date: "2024-01-15T10:00:00Z",
         },
       };
-      (ApiService.brewSessions.create as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.brewSessions.create as Mock).mockResolvedValue(mockResponse);
 
       const result = await brewSessionService.createBrewSession(
         validSessionData
@@ -178,11 +179,11 @@ describe("BrewSessionService", () => {
     });
 
     test("clears recipe cache after creation", async () => {
-      (ApiService.brewSessions.create as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.create as Mock).mockResolvedValue({
         data: { session_id: "new-session", ...validSessionData },
       });
 
-      const clearCacheSpy = jest.spyOn(brewSessionService, "clearRecipeCache");
+      const clearCacheSpy = vi.spyOn(brewSessionService, "clearRecipeCache");
 
       await brewSessionService.createBrewSession(validSessionData);
 
@@ -190,7 +191,7 @@ describe("BrewSessionService", () => {
     });
 
     test("handles API errors during creation", async () => {
-      (ApiService.brewSessions.create as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.brewSessions.create as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(
         brewSessionService.createBrewSession(validSessionData)
@@ -215,7 +216,7 @@ describe("BrewSessionService", () => {
           ...validUpdateData,
         },
       };
-      (ApiService.brewSessions.update as jest.Mock).mockResolvedValue(mockResponse);
+      (ApiService.brewSessions.update as Mock).mockResolvedValue(mockResponse);
 
       const result = await brewSessionService.updateBrewSession(
         "session-1",
@@ -245,15 +246,15 @@ describe("BrewSessionService", () => {
     });
 
     test("clears caches after update", async () => {
-      (ApiService.brewSessions.update as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.update as Mock).mockResolvedValue({
         data: { session_id: "session-1", ...validUpdateData },
       });
 
-      const clearSessionCacheSpy = jest.spyOn(
+      const clearSessionCacheSpy = vi.spyOn(
         brewSessionService,
         "clearSessionCache"
       );
-      const clearRecipeCacheSpy = jest.spyOn(
+      const clearRecipeCacheSpy = vi.spyOn(
         brewSessionService,
         "clearRecipeCache"
       );
@@ -268,10 +269,10 @@ describe("BrewSessionService", () => {
   describe("deleteBrewSession", () => {
     test("deletes brew session successfully", async () => {
       // Mock fetching session to get recipe_id
-      (ApiService.brewSessions.getById as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.getById as Mock).mockResolvedValue({
         data: { session_id: "session-1", recipe_id: "recipe-1" },
       });
-      (ApiService.brewSessions.delete as jest.Mock).mockResolvedValue({});
+      (ApiService.brewSessions.delete as Mock).mockResolvedValue({});
 
       const result = await brewSessionService.deleteBrewSession("session-1");
 
@@ -280,20 +281,20 @@ describe("BrewSessionService", () => {
     });
 
     test("clears all relevant caches", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.getById as Mock).mockResolvedValue({
         data: { session_id: "session-1", recipe_id: "recipe-1" },
       });
-      (ApiService.brewSessions.delete as jest.Mock).mockResolvedValue({});
+      (ApiService.brewSessions.delete as Mock).mockResolvedValue({});
 
-      const clearSessionCacheSpy = jest.spyOn(
+      const clearSessionCacheSpy = vi.spyOn(
         brewSessionService,
         "clearSessionCache"
       );
-      const clearRecipeCacheSpy = jest.spyOn(
+      const clearRecipeCacheSpy = vi.spyOn(
         brewSessionService,
         "clearRecipeCache"
       );
-      const clearAllRecipeCachesSpy = jest.spyOn(
+      const clearAllRecipeCachesSpy = vi.spyOn(
         brewSessionService,
         "clearAllRecipeCaches"
       );
@@ -306,8 +307,8 @@ describe("BrewSessionService", () => {
     });
 
     test("handles case where session fetch fails before deletion", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockRejectedValue(new Error("Not found"));
-      (ApiService.brewSessions.delete as jest.Mock).mockResolvedValue({});
+      (ApiService.brewSessions.getById as Mock).mockRejectedValue(new Error("Not found"));
+      (ApiService.brewSessions.delete as Mock).mockResolvedValue({});
 
       const result = await brewSessionService.deleteBrewSession("session-1");
 
@@ -331,7 +332,7 @@ describe("BrewSessionService", () => {
     ];
 
     test("fetches and caches recipe sessions", async () => {
-      (ApiService.recipes.getBrewSessions as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getBrewSessions as Mock).mockResolvedValue({
         data: { brew_sessions: mockSessions },
       });
 
@@ -354,7 +355,7 @@ describe("BrewSessionService", () => {
     });
 
     test("respects force refresh flag", async () => {
-      (ApiService.recipes.getBrewSessions as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getBrewSessions as Mock).mockResolvedValue({
         data: { brew_sessions: mockSessions },
       });
 
@@ -398,7 +399,7 @@ describe("BrewSessionService", () => {
     });
 
     test("returns empty array when no cache available and API fails", async () => {
-      (ApiService.recipes.getBrewSessions as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.getBrewSessions as Mock).mockRejectedValue(
         new Error("API Error")
       );
 
@@ -436,7 +437,7 @@ describe("BrewSessionService", () => {
     ];
 
     test("calculates brew session summary correctly", async () => {
-      jest
+      vi
         .spyOn(brewSessionService, "getBrewSessionsForRecipe")
         .mockResolvedValue(mockSessions);
 
@@ -454,7 +455,7 @@ describe("BrewSessionService", () => {
     });
 
     test("returns default summary on error", async () => {
-      jest
+      vi
         .spyOn(brewSessionService, "getBrewSessionsForRecipe")
         .mockRejectedValue(new Error("API Error"));
 
@@ -1021,7 +1022,7 @@ describe("BrewSessionService", () => {
   describe("fermentation methods", () => {
     test("getFermentationData", async () => {
       const mockData = []; // Backend returns direct array of fermentation entries
-      (ApiService.brewSessions.getFermentationData as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.getFermentationData as Mock).mockResolvedValue({
         data: mockData,
       });
 
@@ -1036,7 +1037,7 @@ describe("BrewSessionService", () => {
     test("addFermentationEntry validates and adds entry", async () => {
       const validEntry = { gravity: 1.045, temperature: 68 };
       const mockData = [{ id: "entry-1", ...validEntry }]; // Backend returns updated array of fermentation entries
-      (ApiService.brewSessions.addFermentationEntry as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.addFermentationEntry as Mock).mockResolvedValue({
         data: mockData,
       });
 
@@ -1063,7 +1064,7 @@ describe("BrewSessionService", () => {
 
   describe("sessionExists", () => {
     test("returns true for existing session", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockResolvedValue({
+      (ApiService.brewSessions.getById as Mock).mockResolvedValue({
         data: { session_id: "session-1" },
       });
 
@@ -1072,7 +1073,7 @@ describe("BrewSessionService", () => {
     });
 
     test("returns false for non-existing session", async () => {
-      (ApiService.brewSessions.getById as jest.Mock).mockRejectedValue(new Error("Not found"));
+      (ApiService.brewSessions.getById as Mock).mockRejectedValue(new Error("Not found"));
 
       const exists = await brewSessionService.sessionExists("session-1");
       expect(exists).toBe(false);

@@ -5,9 +5,9 @@ import CompactRecipeCard from "../../src/components/CompactRecipeCard";
 import { Recipe } from "../../src/types";
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
 }));
 
@@ -46,7 +46,7 @@ const mockRecipeMinimal: Recipe = {
 
 describe("CompactRecipeCard", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const renderWithRouter = (component: React.ReactElement) => {

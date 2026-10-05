@@ -1,15 +1,16 @@
+import type { Mock } from "vitest";
 import { AIService } from "../../src/services/AI/AIService";
 import ApiService from "../../src/services/api";
 import { Recipe, RecipeIngredient } from "../../src/types";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 // Mock the services index to avoid circular dependencies
-jest.mock("../../src/services/index", () => ({
+vi.mock("../../src/services/index", () => ({
   Services: {
     beerStyle: {
-      getAllStylesList: jest.fn(),
+      getAllStylesList: vi.fn(),
     },
   },
 }));
@@ -21,11 +22,11 @@ describe("AIService", () => {
 
   beforeEach(() => {
     aiService = new AIService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console methods
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -137,7 +138,7 @@ describe("AIService", () => {
     };
 
     test("analyzes recipe successfully", async () => {
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockResolvedValue({
+      (ApiService.ai.analyzeRecipe as Mock).mockResolvedValue({
         data: mockAnalysisResponse,
       });
 
@@ -156,7 +157,7 @@ describe("AIService", () => {
         data: { error: "Invalid recipe data" },
         status: 400,
       };
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.analyzeRecipe as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.analyzeRecipe(mockAnalysisRequest)).rejects.toThrow(
         "AI analysis failed: Invalid recipe data"
@@ -174,7 +175,7 @@ describe("AIService", () => {
 
     test("handles API errors without response data", async () => {
       const apiError = new Error("Network Error");
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.analyzeRecipe as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.analyzeRecipe(mockAnalysisRequest)).rejects.toThrow(
         "AI analysis failed: Network Error"
@@ -191,7 +192,7 @@ describe("AIService", () => {
 
     test("handles generic error messages", async () => {
       const apiError = {};
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.analyzeRecipe as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.analyzeRecipe(mockAnalysisRequest)).rejects.toThrow(
         "AI analysis failed: AI analysis failed"
@@ -213,7 +214,7 @@ describe("AIService", () => {
         unit_system: "imperial" as "metric" | "imperial",
       };
 
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockResolvedValue({
+      (ApiService.ai.analyzeRecipe as Mock).mockResolvedValue({
         data: mockAnalysisResponse,
       });
 
@@ -233,7 +234,7 @@ describe("AIService", () => {
         },
       };
 
-      (ApiService.ai.analyzeRecipe as jest.Mock).mockResolvedValue({
+      (ApiService.ai.analyzeRecipe as Mock).mockResolvedValue({
         data: mockAnalysisResponse,
       });
 
@@ -256,7 +257,7 @@ describe("AIService", () => {
     };
 
     test("checks AI service health successfully", async () => {
-      (ApiService.ai.checkHealth as jest.Mock).mockResolvedValue({
+      (ApiService.ai.checkHealth as Mock).mockResolvedValue({
         data: mockHealthResponse,
       });
 
@@ -274,7 +275,7 @@ describe("AIService", () => {
         data: { error: "Service unavailable" },
         status: 503,
       };
-      (ApiService.ai.checkHealth as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.checkHealth as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.checkHealth()).rejects.toThrow(
         "AI health check failed: Service unavailable"
@@ -283,7 +284,7 @@ describe("AIService", () => {
 
     test("handles health check API errors without response data", async () => {
       const apiError = new Error("Connection timeout");
-      (ApiService.ai.checkHealth as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.checkHealth as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.checkHealth()).rejects.toThrow(
         "AI health check failed: Connection timeout"
@@ -292,7 +293,7 @@ describe("AIService", () => {
 
     test("handles generic health check errors", async () => {
       const apiError = {};
-      (ApiService.ai.checkHealth as jest.Mock).mockRejectedValue(apiError);
+      (ApiService.ai.checkHealth as Mock).mockRejectedValue(apiError);
 
       await expect(aiService.checkHealth()).rejects.toThrow(
         "AI health check failed: AI health check failed"
@@ -355,13 +356,13 @@ describe("AIService", () => {
       const mockServices = {
         Services: {
           beerStyle: {
-            getAllStylesList: jest.fn().mockResolvedValue(mockStyles),
+            getAllStylesList: vi.fn().mockResolvedValue(mockStyles),
           },
         },
       };
 
       // Mock the dynamic import
-      jest.doMock("../../src/services/index", () => mockServices);
+      vi.doMock("../../src/services/index", () => mockServices);
 
       const result = await aiService.convertRecipeToAnalysisRequest(
         mockRecipe,
@@ -535,12 +536,12 @@ describe("AIService", () => {
       const mockServices = {
         Services: {
           beerStyle: {
-            getAllStylesList: jest.fn().mockResolvedValue(mockStyles),
+            getAllStylesList: vi.fn().mockResolvedValue(mockStyles),
           },
         },
       };
 
-      jest.doMock("../../src/services/index", () => mockServices);
+      vi.doMock("../../src/services/index", () => mockServices);
 
       const result = await aiService.convertRecipeToAnalysisRequest(
         mockRecipe,
@@ -599,12 +600,12 @@ describe("AIService", () => {
       const mockServices = {
         Services: {
           beerStyle: {
-            getAllStylesList: jest.fn().mockResolvedValue(mockStyles),
+            getAllStylesList: vi.fn().mockResolvedValue(mockStyles),
           },
         },
       };
 
-      jest.doMock("../../src/services/index", () => mockServices);
+      vi.doMock("../../src/services/index", () => mockServices);
 
       const result = await aiService.convertRecipeToAnalysisRequest(
         recipeWithUppercaseStyle,
@@ -617,13 +618,13 @@ describe("AIService", () => {
   });
 
   describe("singleton instance", () => {
-    test("exports singleton instance", () => {
-      const { aiService } = require("../../src/services/AI/AIService");
+    test("exports singleton instance", async () => {
+      const { aiService } = (await import("../../src/services/AI/AIService"));
       expect(aiService).toBeInstanceOf(AIService);
     });
 
-    test("exports default instance", () => {
-      const defaultExport = require("../../src/services/AI/AIService").default;
+    test("exports default instance", async () => {
+      const defaultExport = (await import("../../src/services/AI/AIService")).default;
       expect(defaultExport).toBeInstanceOf(AIService);
     });
   });

@@ -7,18 +7,18 @@ import { renderHook } from "@testing-library/react";
 // Mock the UnitContext
 const mockUseUnits = {
   unitSystem: "imperial",
-  updateUnitSystem: jest.fn(),
+  updateUnitSystem: vi.fn(),
   loading: false,
 };
 
-jest.mock("../../src/contexts/UnitContext", () => ({
+vi.mock("../../src/contexts/UnitContext", () => ({
   useUnits: () => mockUseUnits,
   UnitProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 describe("RecipeDefaultsService", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset to imperial as default for consistent test behavior
     mockUseUnits.unitSystem = "imperial";
   });

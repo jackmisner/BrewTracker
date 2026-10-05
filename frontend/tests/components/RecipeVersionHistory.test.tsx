@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { render, screen, waitFor } from "@testing-library/react";
@@ -6,14 +7,14 @@ import RecipeVersionHistory from "../../src/components/RecipeBuilder/RecipeVersi
 import ApiService from "../../src/services/api";
 
 // Mock the ApiService
-jest.mock("../../src/services/api", () => ({
+vi.mock("../../src/services/api", () => { const mod = {
   recipes: {
-    getVersionHistory: jest.fn(),
+    getVersionHistory: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock React Router Link component
-jest.mock("react-router", () => ({
+vi.mock("react-router", () => ({
   Link: ({ to, children, className }: { to: any; children: any; className?: any }) => (
     <a href={to} className={className}>
       {children}
@@ -22,7 +23,7 @@ jest.mock("react-router", () => ({
 }));
 
 // Mock console.error to avoid noise in tests
-const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 describe("RecipeVersionHistory", () => {
   const defaultProps = {
@@ -52,7 +53,7 @@ describe("RecipeVersionHistory", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     consoleSpy.mockClear();
   });
 
@@ -100,7 +101,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("renders when version is greater than 1", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -115,7 +116,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("renders when parentRecipeId is provided even if version is 1", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -134,7 +135,7 @@ describe("RecipeVersionHistory", () => {
 
   describe("Loading state", () => {
     it("shows loading message initially", () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockImplementation(
+      (ApiService.recipes.getVersionHistory as Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -146,7 +147,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("calls API with correct recipeId", () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -171,7 +172,7 @@ describe("RecipeVersionHistory", () => {
   describe("Error handling", () => {
     it("shows error message when API call fails", async () => {
       const errorMessage = "Network error";
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.getVersionHistory as Mock).mockRejectedValue(
         new Error(errorMessage)
       );
 
@@ -190,7 +191,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("handles API rejection gracefully", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockRejectedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockRejectedValue({
         response: { status: 404, data: { message: "Not found" } },
       });
 
@@ -206,7 +207,7 @@ describe("RecipeVersionHistory", () => {
 
   describe("Successful data rendering", () => {
     beforeEach(() => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
     });
@@ -268,7 +269,7 @@ describe("RecipeVersionHistory", () => {
         child_versions: mockVersionHistoryData.child_versions,
       };
 
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: dataWithoutParent,
       });
 
@@ -288,7 +289,7 @@ describe("RecipeVersionHistory", () => {
         child_versions: [],
       };
 
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: dataWithoutChildren,
       });
 
@@ -308,7 +309,7 @@ describe("RecipeVersionHistory", () => {
         child_versions: null,
       };
 
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: dataWithNullChildren,
       });
 
@@ -323,7 +324,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("handles empty version history data", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: {
           parent_recipe: null,
           child_versions: [],
@@ -345,7 +346,7 @@ describe("RecipeVersionHistory", () => {
 
   describe("useEffect dependencies", () => {
     it("refetches data when recipeId changes", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -370,7 +371,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("refetches data when version changes", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -391,7 +392,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("refetches data when parentRecipeId changes", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -410,7 +411,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("does not refetch when unrelated props change", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
 
@@ -432,7 +433,7 @@ describe("RecipeVersionHistory", () => {
 
   describe("CSS classes and structure", () => {
     beforeEach(() => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockResolvedValue({
+      (ApiService.recipes.getVersionHistory as Mock).mockResolvedValue({
         data: mockVersionHistoryData,
       });
     });
@@ -465,7 +466,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("applies loading state CSS class", () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockImplementation(
+      (ApiService.recipes.getVersionHistory as Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -477,7 +478,7 @@ describe("RecipeVersionHistory", () => {
     });
 
     it("applies error state CSS class", async () => {
-      (ApiService.recipes.getVersionHistory as jest.Mock).mockRejectedValue(
+      (ApiService.recipes.getVersionHistory as Mock).mockRejectedValue(
         new Error("Test error")
       );
 

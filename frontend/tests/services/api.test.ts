@@ -1,63 +1,65 @@
+import type { Mock, MockInstance, MockedFunction } from "vitest";
 import axios, { AxiosInstance } from "axios";
 import ApiService from "../../src/services/api";
 
 // Define types for our mocks
 interface MockAxiosInstance extends Partial<AxiosInstance> {
-  get: jest.MockedFunction<any>;
-  post: jest.MockedFunction<any>;
-  put: jest.MockedFunction<any>;
-  delete: jest.MockedFunction<any>;
+  get: MockedFunction<any>;
+  post: MockedFunction<any>;
+  put: MockedFunction<any>;
+  delete: MockedFunction<any>;
   interceptors: {
     request: {
-      use: jest.MockedFunction<any>;
+      use: MockedFunction<any>;
     };
     response: {
-      use: jest.MockedFunction<any>;
+      use: MockedFunction<any>;
     };
   };
 }
 
 interface MockAxios {
-  create: jest.MockedFunction<any>;
+  create: MockedFunction<any>;
   __mockInstance: MockAxiosInstance;
 }
 
-jest.mock("axios", () => {
+vi.mock("axios", () => {
   const mockAxiosInstance: MockAxiosInstance = {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
     interceptors: {
       request: {
-        use: jest.fn(),
+        use: vi.fn(),
       },
       response: {
-        use: jest.fn(),
+        use: vi.fn(),
       },
     },
   };
 
-  return {
-    create: jest.fn(() => mockAxiosInstance),
+  const mockAxios = {
+    create: vi.fn(() => mockAxiosInstance),
     // Store a reference to the mock instance for tests to access
     __mockInstance: mockAxiosInstance,
   };
+  return { default: mockAxios, ...mockAxios };
 });
 
 // Mock localStorage
 interface MockLocalStorage {
-  getItem: jest.MockedFunction<(key: string) => string | null>;
-  setItem: jest.MockedFunction<(key: string, value: string) => void>;
-  removeItem: jest.MockedFunction<(key: string) => void>;
-  clear: jest.MockedFunction<() => void>;
+  getItem: MockedFunction<(key: string) => string | null>;
+  setItem: MockedFunction<(key: string, value: string) => void>;
+  removeItem: MockedFunction<(key: string) => void>;
+  clear: MockedFunction<() => void>;
 }
 
 const mockLocalStorage: MockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, "localStorage", {
   value: mockLocalStorage,
@@ -69,17 +71,17 @@ const mockedAxios = axios as unknown as MockAxios;
 const mockAxiosInstance = mockedAxios.__mockInstance;
 
 describe("ApiService", () => {
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleErrorSpy: MockInstance;
 
   beforeEach(() => {
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console.error
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Clear localStorage mock
-    (mockLocalStorage.getItem as jest.Mock).mockClear();
+    (mockLocalStorage.getItem as Mock).mockClear();
   });
 
   afterEach(() => {
@@ -490,7 +492,7 @@ describe("ApiService", () => {
   describe("Integration Tests", () => {
     test("ApiService methods return axios promises", () => {
       const mockPromise = Promise.resolve({ data: {} });
-      (mockAxiosInstance.get as jest.Mock).mockReturnValue(mockPromise);
+      (mockAxiosInstance.get as Mock).mockReturnValue(mockPromise);
 
       const result = ApiService.recipes.getAll();
 
@@ -523,7 +525,7 @@ describe("ApiService", () => {
   describe("Error Scenarios", () => {
     test("handles network errors gracefully", () => {
       const networkError = new Error("Network Error");
-      (mockAxiosInstance.get as jest.Mock).mockRejectedValue(networkError);
+      (mockAxiosInstance.get as Mock).mockRejectedValue(networkError);
 
       return expect(ApiService.recipes.getAll()).rejects.toEqual(networkError);
     });
@@ -535,7 +537,7 @@ describe("ApiService", () => {
           data: { error: "Not found" },
         },
       };
-      (mockAxiosInstance.get as jest.Mock).mockRejectedValue(notFoundError);
+      (mockAxiosInstance.get as Mock).mockRejectedValue(notFoundError);
 
       return expect(ApiService.recipes.getById("nonexistent")).rejects.toEqual(
         notFoundError
@@ -549,7 +551,7 @@ describe("ApiService", () => {
           data: { error: "Internal server error" },
         },
       };
-      (mockAxiosInstance.post as jest.Mock).mockRejectedValue(serverError);
+      (mockAxiosInstance.post as Mock).mockRejectedValue(serverError);
 
       return expect(
         ApiService.recipes.create({ name: "Test" })

@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { screen, waitFor, within, act } from "@testing-library/react";
@@ -12,33 +13,33 @@ import RecipeService from "../../src/services/Data/RecipeService";
 import BrewSessionService from "../../src/services/Brewing/BrewSessionService";
 
 // Mock the services
-jest.mock("../../src/services/Data/RecipeService");
-jest.mock("../../src/services/Brewing/BrewSessionService");
-jest.mock("../../src/services/Data/BeerStyleService", () => ({
-  getAllStylesList: jest.fn(() => Promise.resolve([])),
-  getStyleCategories: jest.fn(() => Promise.resolve({})),
-  getRecipeStyleAnalysis: jest.fn(() => Promise.resolve(null)),
-  findMatchingStyles: jest.fn(() => Promise.resolve([])),
-}));
+vi.mock("../../src/services/Data/RecipeService");
+vi.mock("../../src/services/Brewing/BrewSessionService");
+vi.mock("../../src/services/Data/BeerStyleService", () => { const mod = {
+  getAllStylesList: vi.fn(() => Promise.resolve([])),
+  getStyleCategories: vi.fn(() => Promise.resolve({})),
+  getRecipeStyleAnalysis: vi.fn(() => Promise.resolve(null)),
+  findMatchingStyles: vi.fn(() => Promise.resolve([])),
+}; return { __esModule: true, default: mod, ...mod }; });
 
-jest.mock("../../src/services/User/UserSettingsService", () => ({
-  getUserSettings: jest.fn(() => Promise.resolve({ unit_system: "imperial" })),
-  updateUserSettings: jest.fn(() => Promise.resolve()),
-}));
+vi.mock("../../src/services/User/UserSettingsService", () => { const mod = {
+  getUserSettings: vi.fn(() => Promise.resolve({ unit_system: "imperial" })),
+  updateUserSettings: vi.fn(() => Promise.resolve()),
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock react-router hooks
-const mockNavigate = jest.fn();
-const mockUseParams = jest.fn();
+const mockNavigate = vi.fn();
+const mockUseParams = vi.fn();
 
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
   useParams: () => mockUseParams(),
 }));
 
 // Mock the child components to focus on ViewRecipe logic
-jest.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
-  return function MockRecipeMetrics({ metrics }) {
+vi.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
+  return { default: function MockRecipeMetrics({ metrics }) {
     return (
       <div data-testid="recipe-metrics">
         <div data-testid="recipe-og">Recipe OG: {metrics.og}</div>
@@ -48,22 +49,22 @@ jest.mock("../../src/components/RecipeBuilder/RecipeMetrics", () => {
         <div data-testid="recipe-srm">Recipe SRM: {metrics.srm}</div>
       </div>
     );
-  };
+  } };
 });
 
-jest.mock("../../src/components/RecipeBuilder/RecipeVersionHistory", () => {
-  return function MockRecipeVersionHistory({
+vi.mock("../../src/components/RecipeBuilder/RecipeVersionHistory", () => {
+  return { default: function MockRecipeVersionHistory({
     recipeId,
     version,
     parentRecipeId,
   }) {
     if (version <= 1 && !parentRecipeId) return null;
     return <div data-testid="version-history">Recipe Version: {version}</div>;
-  };
+  } };
 });
 
-jest.mock("../../src/components/RecipeActions", () => {
-  return function MockRecipeActions({ recipe, showViewButton }) {
+vi.mock("../../src/components/RecipeActions", () => {
+  return { default: function MockRecipeActions({ recipe, showViewButton }) {
     return (
       <div data-testid="recipe-actions">
         <button
@@ -80,13 +81,13 @@ jest.mock("../../src/components/RecipeActions", () => {
         </button>
       </div>
     );
-  };
+  } };
 });
 
 // Suppress console errors during tests
 const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -97,19 +98,19 @@ describe("ViewRecipe", () => {
   const mockRecipeId = "test-recipe-123";
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseParams.mockReturnValue({ recipeId: mockRecipeId });
 
     // Reset service mocks
-    RecipeService.fetchRecipe = jest.fn();
-    BrewSessionService.getBrewSessionsForRecipe = jest.fn();
-    BrewSessionService.getBrewSessionSummary = jest.fn();
-    BrewSessionService.getBrewingStats = jest.fn();
+    RecipeService.fetchRecipe = vi.fn();
+    BrewSessionService.getBrewSessionsForRecipe = vi.fn();
+    BrewSessionService.getBrewSessionSummary = vi.fn();
+    BrewSessionService.getBrewingStats = vi.fn();
   });
 
   describe("Loading States", () => {
     it("displays loading state while fetching recipe", async () => {
-      (RecipeService.fetchRecipe as jest.Mock).mockImplementation(() => scenarios.loading());
+      (RecipeService.fetchRecipe as Mock).mockImplementation(() => scenarios.loading());
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -125,14 +126,14 @@ describe("ViewRecipe", () => {
         ingredients: [mockData.ingredient("grain"), mockData.ingredient("hop")],
       });
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockImplementation(() =>
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockImplementation(() =>
         scenarios.loading()
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockImplementation(() =>
+      (BrewSessionService.getBrewSessionSummary as Mock).mockImplementation(() =>
         scenarios.loading()
       );
-      (BrewSessionService.getBrewingStats as jest.Mock).mockImplementation(() =>
+      (BrewSessionService.getBrewingStats as Mock).mockImplementation(() =>
         scenarios.loading()
       );
 
@@ -151,7 +152,7 @@ describe("ViewRecipe", () => {
   describe("Error Handling", () => {
     it("displays error message when recipe fetch fails", async () => {
       const errorMessage = "Failed to load recipe";
-      (RecipeService.fetchRecipe as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (RecipeService.fetchRecipe as Mock).mockRejectedValue(new Error(errorMessage));
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -163,7 +164,7 @@ describe("ViewRecipe", () => {
     });
 
     it("displays recipe not found message", async () => {
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(null);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(null);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -180,10 +181,10 @@ describe("ViewRecipe", () => {
         name: "Test IPA",
       });
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue([]);
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 0 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue([]);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 0 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -241,10 +242,10 @@ describe("ViewRecipe", () => {
     });
 
     beforeEach(() => {
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue([]);
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 0 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue([]);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 0 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
     });
 
     it("displays recipe header information", async () => {
@@ -353,7 +354,7 @@ describe("ViewRecipe", () => {
         ingredients: [],
       });
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(basicRecipe);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(basicRecipe);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -376,13 +377,13 @@ describe("ViewRecipe", () => {
     const mockRecipe = mockData.recipe({ recipe_id: mockRecipeId });
 
     beforeEach(() => {
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
     });
 
     it("displays empty state when no brew sessions exist", async () => {
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue([]);
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 0 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue([]);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 0 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -445,11 +446,11 @@ describe("ViewRecipe", () => {
         consistency: { abv: 0.2 },
       };
 
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue(mockSummary);
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(mockStats);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue(mockSummary);
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(mockStats);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -487,11 +488,11 @@ describe("ViewRecipe", () => {
         },
       ];
 
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 1 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 1 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -531,10 +532,10 @@ describe("ViewRecipe", () => {
     const mockRecipe = mockData.recipe({ recipe_id: mockRecipeId });
 
     beforeEach(() => {
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue([]);
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 0 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue([]);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 0 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
     });
 
     it("navigates to brew session creation from recipe actions", async () => {
@@ -600,10 +601,10 @@ describe("ViewRecipe", () => {
           brew_date: new Date("2024-01-15"),
         },
       ];
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 1 });
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 1 });
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -632,10 +633,10 @@ describe("ViewRecipe", () => {
         },
       ];
 
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 1 });
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 1 });
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -678,11 +679,11 @@ describe("ViewRecipe", () => {
         },
       ];
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 1 });
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 1 });
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -711,11 +712,11 @@ describe("ViewRecipe", () => {
         },
       ];
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue(
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue(
         mockSessions
       );
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 1 });
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 1 });
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);
@@ -741,10 +742,10 @@ describe("ViewRecipe", () => {
     const mockRecipe = mockData.recipe({ recipe_id: mockRecipeId });
 
     beforeEach(() => {
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
-      (BrewSessionService.getBrewSessionsForRecipe as jest.Mock).mockResolvedValue([]);
-      (BrewSessionService.getBrewSessionSummary as jest.Mock).mockResolvedValue({ total: 0 });
-      (BrewSessionService.getBrewingStats as jest.Mock).mockResolvedValue(null);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
+      (BrewSessionService.getBrewSessionsForRecipe as Mock).mockResolvedValue([]);
+      (BrewSessionService.getBrewSessionSummary as Mock).mockResolvedValue({ total: 0 });
+      (BrewSessionService.getBrewingStats as Mock).mockResolvedValue(null);
     });
 
     it("has proper heading hierarchy", async () => {
@@ -767,7 +768,7 @@ describe("ViewRecipe", () => {
         ingredients: [mockData.ingredient("grain")],
       };
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipeWithIngredients);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipeWithIngredients);
 
       await act(async () => {
         renderWithProviders(<ViewRecipe />);

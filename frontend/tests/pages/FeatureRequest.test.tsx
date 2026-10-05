@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,12 +7,12 @@ import FeatureRequest from "../../src/pages/FeatureRequest";
 // Mock window.open
 Object.defineProperty(window, "open", {
   writable: true,
-  value: jest.fn(),
+  value: vi.fn(),
 });
 
 describe("FeatureRequest", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock navigator.userAgent
     Object.defineProperty(navigator, "userAgent", {
@@ -293,7 +294,7 @@ describe("FeatureRequest", () => {
         "_blank"
       );
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
 
       // Check that URL contains expected parameters
       expect(githubUrl).toContain(
@@ -386,7 +387,7 @@ describe("FeatureRequest", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
       const decodedUrl = decodeURIComponent(githubUrl);
       expect(decodedUrl).toContain(
         "## Alternative Solutions\nNo alternatives considered"
@@ -397,7 +398,7 @@ describe("FeatureRequest", () => {
   describe("Error Handling", () => {
     test("handles submission errors gracefully", async () => {
       // Mock window.open to throw an error
-      (window.open as jest.Mock).mockImplementation(() => {
+      (window.open as Mock).mockImplementation(() => {
         throw new Error("Failed to open window");
       });
 
@@ -443,7 +444,7 @@ describe("FeatureRequest", () => {
 
     test("recovers from error state on subsequent submission", async () => {
       // First submission fails
-      (window.open as jest.Mock).mockImplementationOnce(() => {
+      (window.open as Mock).mockImplementationOnce(() => {
         throw new Error("Failed to open window");
       });
 
@@ -477,7 +478,7 @@ describe("FeatureRequest", () => {
       });
 
       // Second submission succeeds
-      (window.open as jest.Mock).mockImplementationOnce(() => window);
+      (window.open as Mock).mockImplementationOnce(() => window);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -519,7 +520,7 @@ describe("FeatureRequest", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
 
       // Check that special characters are properly encoded
       expect(githubUrl).toContain("Feature%20with%20%26%20special%20chars!");
@@ -562,7 +563,7 @@ describe("FeatureRequest", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
       const decodedUrl = decodeURIComponent(githubUrl);
 
       expect(decodedUrl).toContain("## Feature Description\nTest Description");
@@ -605,7 +606,7 @@ describe("FeatureRequest", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
       expect(githubUrl).toContain(
         "labels=feature-request,medium-priority,integration"
       );

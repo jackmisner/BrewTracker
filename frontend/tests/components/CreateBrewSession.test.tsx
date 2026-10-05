@@ -1,3 +1,5 @@
+import * as ReactRouter from "react-router";
+import type { Mock } from "vitest";
 // @ts-ignore - React needed for JSX in test files
 import React from 'react';
 import { screen, fireEvent, waitFor } from "@testing-library/react";
@@ -8,25 +10,25 @@ import { invalidateBrewSessionCaches } from "../../src/services/CacheManager";
 import { renderWithProviders, mockData } from "../testUtils";
 
 // Mock the CSS import
-jest.mock("../../src/styles/BrewSessions.css", () => ({}));
+vi.mock("../../src/styles/BrewSessions.css", () => ({}));
 
 // Mock services and cache manager
-jest.mock("../../src/services/Brewing/BrewSessionService");
-jest.mock("../../src/services/Data/RecipeService");
-jest.mock("../../src/services/CacheManager", () => ({
+vi.mock("../../src/services/Brewing/BrewSessionService");
+vi.mock("../../src/services/Data/RecipeService");
+vi.mock("../../src/services/CacheManager", () => { const mod = {
   invalidateBrewSessionCaches: {
-    onCreated: jest.fn(),
+    onCreated: vi.fn(),
   },
-}));
+}; return { __esModule: true, default: mod, ...mod }; });
 
 // Mock useNavigate and useLocation
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 const mockLocation = { search: "?recipeId=123" };
 
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => mockNavigate,
-  useLocation: () => mockLocation,
+  useLocation: vi.fn(() => mockLocation),
 }));
 
 // Create mock data using existing patterns
@@ -53,16 +55,16 @@ describe("CreateBrewSession", () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    console.error = jest.fn();
+    vi.clearAllMocks();
+    console.error = vi.fn();
 
     // Reset useLocation mock to default
-    jest.spyOn(require("react-router"), "useLocation").mockReturnValue({
+    vi.mocked(ReactRouter.useLocation).mockReturnValue({
       search: "?recipeId=123",
     });
 
     // Default successful recipe fetch
-    (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(mockRecipe);
+    (RecipeService.fetchRecipe as Mock).mockResolvedValue(mockRecipe);
   });
 
   afterEach(() => {
@@ -71,7 +73,7 @@ describe("CreateBrewSession", () => {
 
   describe("Loading State", () => {
     it("should show loading message initially", () => {
-      (RecipeService.fetchRecipe as jest.Mock).mockReturnValue(new Promise(() => {})); // Never resolves
+      (RecipeService.fetchRecipe as Mock).mockReturnValue(new Promise(() => {})); // Never resolves
 
       renderWithProviders(<CreateBrewSession />);
 
@@ -81,7 +83,7 @@ describe("CreateBrewSession", () => {
 
   describe("No Recipe Selected", () => {
     it("should show warning when no recipeId in query", () => {
-      jest.spyOn(require("react-router"), "useLocation").mockReturnValue({
+      vi.mocked(ReactRouter.useLocation).mockReturnValue({
         search: "",
       });
 
@@ -95,7 +97,7 @@ describe("CreateBrewSession", () => {
 
   describe("Recipe Fetch Error", () => {
     it("should show error message when recipe fetch fails", async () => {
-      (RecipeService.fetchRecipe as jest.Mock).mockRejectedValue(
+      (RecipeService.fetchRecipe as Mock).mockRejectedValue(
         new Error("Failed to load recipe details")
       );
 
@@ -261,7 +263,7 @@ describe("CreateBrewSession", () => {
 
   describe("Form Submission", () => {
     beforeEach(() => {
-      (BrewSessionService.createBrewSession as jest.Mock).mockResolvedValue(mockBrewSession);
+      (BrewSessionService.createBrewSession as Mock).mockResolvedValue(mockBrewSession);
     });
 
     it("should submit form with correct data and navigate to new session", async () => {
@@ -305,7 +307,7 @@ describe("CreateBrewSession", () => {
 
     it("should show creating state during submission", async () => {
       // Mock a delayed response
-      (BrewSessionService.createBrewSession as jest.Mock).mockReturnValue(
+      (BrewSessionService.createBrewSession as Mock).mockReturnValue(
         new Promise((resolve) =>
           setTimeout(() => resolve(mockBrewSession), 100)
         )
@@ -328,7 +330,7 @@ describe("CreateBrewSession", () => {
 
     it("should disable form fields during submission", async () => {
       // Mock a delayed response
-      (BrewSessionService.createBrewSession as jest.Mock).mockReturnValue(
+      (BrewSessionService.createBrewSession as Mock).mockReturnValue(
         new Promise((resolve) =>
           setTimeout(() => resolve(mockBrewSession), 100)
         )
@@ -355,7 +357,7 @@ describe("CreateBrewSession", () => {
 
   describe("Form Submission Errors", () => {
     it("should show error message when submission fails", async () => {
-      (BrewSessionService.createBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.createBrewSession as Mock).mockRejectedValue(
         new Error("Create failed")
       );
 
@@ -380,7 +382,7 @@ describe("CreateBrewSession", () => {
     });
 
     it("should allow dismissing error message", async () => {
-      (BrewSessionService.createBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.createBrewSession as Mock).mockRejectedValue(
         new Error("Create failed")
       );
 
@@ -406,7 +408,7 @@ describe("CreateBrewSession", () => {
     });
 
     it("should re-enable form after error", async () => {
-      (BrewSessionService.createBrewSession as jest.Mock).mockRejectedValue(
+      (BrewSessionService.createBrewSession as Mock).mockRejectedValue(
         new Error("Create failed")
       );
 
@@ -458,7 +460,7 @@ describe("CreateBrewSession", () => {
     });
 
     it("should not call RecipeService.fetchRecipe when no recipeId", () => {
-      jest.spyOn(require("react-router"), "useLocation").mockReturnValue({
+      vi.mocked(ReactRouter.useLocation).mockReturnValue({
         search: "",
       });
 
@@ -483,7 +485,7 @@ describe("CreateBrewSession", () => {
         style: undefined,
       });
 
-      (RecipeService.fetchRecipe as jest.Mock).mockResolvedValue(minimalRecipe);
+      (RecipeService.fetchRecipe as Mock).mockResolvedValue(minimalRecipe);
 
       renderWithProviders(<CreateBrewSession />);
 

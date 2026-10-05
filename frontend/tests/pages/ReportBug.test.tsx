@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,12 +7,12 @@ import ReportBug from "../../src/pages/ReportBug";
 // Mock window.open
 Object.defineProperty(window, "open", {
   writable: true,
-  value: jest.fn(),
+  value: vi.fn(),
 });
 
 describe("ReportBug", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock navigator.userAgent
     Object.defineProperty(navigator, "userAgent", {
@@ -251,7 +252,7 @@ describe("ReportBug", () => {
         "_blank"
       );
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
 
       // Check that URL contains expected parameters
       expect(githubUrl).toContain("title=Bug%20Report%3A%20Test%20Bug%20Title");
@@ -327,7 +328,7 @@ describe("ReportBug", () => {
   describe("Error Handling", () => {
     test("handles submission errors gracefully", async () => {
       // Mock window.open to throw an error
-      (window.open as jest.Mock).mockImplementation(() => {
+      (window.open as Mock).mockImplementation(() => {
         throw new Error("Failed to open window");
       });
 
@@ -374,7 +375,7 @@ describe("ReportBug", () => {
 
     test("recovers from error state on subsequent submission", async () => {
       // First submission fails
-      (window.open as jest.Mock).mockImplementationOnce(() => {
+      (window.open as Mock).mockImplementationOnce(() => {
         throw new Error("Failed to open window");
       });
 
@@ -409,7 +410,7 @@ describe("ReportBug", () => {
       });
 
       // Second submission succeeds
-      (window.open as jest.Mock).mockImplementationOnce(() => window);
+      (window.open as Mock).mockImplementationOnce(() => window);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -453,7 +454,7 @@ describe("ReportBug", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
 
       // Check that special characters are properly encoded
       expect(githubUrl).toContain("Bug%20with%20%26%20special%20chars!");
@@ -492,7 +493,7 @@ describe("ReportBug", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
       const decodedUrl = decodeURIComponent(githubUrl);
 
       expect(decodedUrl).toContain("## Bug Description\nTest Description");
@@ -524,7 +525,7 @@ describe("ReportBug", () => {
       });
       await userEvent.click(submitButton);
 
-      const githubUrl = (window.open as jest.Mock).mock.calls[0][0];
+      const githubUrl = (window.open as Mock).mock.calls[0][0];
       expect(githubUrl).toContain("labels=bug,low-priority");
     });
   });

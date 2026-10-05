@@ -1,8 +1,9 @@
+import type { Mock } from "vitest";
 import IngredientService from "../../src/services/Data/IngredientService";
 import ApiService from "../../src/services/api";
 
 // Mock the API service
-jest.mock("../../src/services/api");
+vi.mock("../../src/services/api");
 
 describe("IngredientService", () => {
   let ingredientService: any;
@@ -12,11 +13,11 @@ describe("IngredientService", () => {
   beforeEach(() => {
     ingredientService = IngredientService;
     ingredientService.clearCache();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock console.warn and console.error
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -438,7 +439,7 @@ describe("IngredientService", () => {
         { ingredient_id: 2, name: "Cascade", type: "hop" },
       ];
 
-      (ApiService.ingredients.getAll as jest.Mock).mockResolvedValue({
+      (ApiService.ingredients.getAll as Mock).mockResolvedValue({
         data: mockIngredients,
       });
 
@@ -459,7 +460,7 @@ describe("IngredientService", () => {
     });
 
     test("handles API errors", async () => {
-      (ApiService.ingredients.getAll as jest.Mock).mockRejectedValue(new Error("API Error"));
+      (ApiService.ingredients.getAll as Mock).mockRejectedValue(new Error("API Error"));
 
       await expect(ingredientService.fetchIngredients()).rejects.toThrow(
         "Failed to load ingredients"
