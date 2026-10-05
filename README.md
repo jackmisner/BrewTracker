@@ -82,11 +82,11 @@ BrewTracker/
 │   ├── requirements.txt                                  # Python package dependencies for backend
 │   └── .env                                              # Environment variables for database URI, JWT secrets, and Flask configuration
 ├── frontend/
-│   ├── craco.config.js                                   # CRACO configuration for webpack path alias resolution
+│   ├── index.html                                        # Vite entry HTML (loads src/index.tsx)
+│   ├── vite.config.ts                                    # Vite configuration (path alias, env prefix, build output)
 │   ├── scripts/
 │   │   └── sync-version.js                               # Automated script to sync version constant with package.json
 │   ├── public/
-│   │   ├── index.html                                    # Main HTML template for React application
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── BeerXML/                                  # BeerXML import/export components with ingredient matching and validation
@@ -259,6 +259,8 @@ Create `frontend/.env`:
 REACT_APP_API_URL="http://localhost:5000/api"
 REACT_APP_GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 ```
+
+> The frontend is built with Vite. The `REACT_APP_` prefix is kept (via `envPrefix` in `vite.config.ts`) so existing environment settings keep working; `VITE_`-prefixed variables are also exposed. Read them with `import.meta.env.REACT_APP_*`.
 
 #### Backend
 

@@ -92,7 +92,7 @@ import {
 
 // API Configuration
 const API_URL: string =
-  process.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api";
+  import.meta.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api";
 
 // Create typed axios instance
 const api: AxiosInstance = axios.create({
