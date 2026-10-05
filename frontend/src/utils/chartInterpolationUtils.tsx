@@ -13,10 +13,11 @@ export interface ChartDataPoint {
 }
 
 interface PayloadEntry {
-  value: number | null | undefined;
-  name?: string;
+  // Recharts types tooltip values as ValueType (number | string | array)
+  value?: number | string | readonly (number | string)[] | null;
+  name?: string | number;
   color?: string;
-  dataKey?: string;
+  dataKey?: unknown;
   payload?: ChartDataPoint;
 }
 
@@ -316,7 +317,8 @@ export const CustomTooltip = (props: CustomTooltipProps) => {
           return null;
         }
 
-        if (value === null || value === undefined) {
+        // Chart series are always numeric; skip anything else
+        if (typeof value !== "number") {
           return null;
         }
 
