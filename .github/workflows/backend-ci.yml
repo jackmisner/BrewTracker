@@ -29,21 +29,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check requirements files are in sync
         working-directory: ./backend
         run: python3 scripts/check_requirements_sync.py
 
       - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           cache: "pip"
           cache-dependency-path: "./backend/requirements.txt"
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
@@ -98,7 +98,7 @@ jobs:
           pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=70 -v -n auto
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           directory: ./backend
           flags: backend
