@@ -1,5 +1,5 @@
 # Build stage: Install build dependencies and compile Python packages
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ COPY requirements-prod.txt .
 RUN python -m pip install --no-cache-dir --prefix=/install -r requirements-prod.txt
 
 # Runtime stage: Create clean, minimal runtime image
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 # Set working directory
 WORKDIR /app
