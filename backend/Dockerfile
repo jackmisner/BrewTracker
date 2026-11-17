@@ -56,10 +56,11 @@ EXPOSE 5000
 # - SECURITY_SUSPICIOUS_REQUEST_THRESHOLD: Suspicious request threshold (default: 25)
 # - SECURITY_SUSPICIOUS_REQUEST_WINDOW: Time window in seconds (default: 600)
 # - SECURITY_IP_ALLOWLIST: Comma-separated IPs to bypass security
-# MongoDB TLS: set tls, tlsCAFile and tlsCertificateKeyFile (one PEM holding the
-# client certificate and unencrypted key) as MONGO_URI query parameters, and
-# mount the files into the container. On Fly, a [[files]] entry in fly.toml with
-# secret_name writes a base64-encoded secret to a file.
+# MongoDB TLS: configured only through MONGO_URI query parameters (see .env.example):
+# tlsCAFile for a private CA, tlsCertificateKeyFile (one PEM holding client
+# certificate and key) for client-certificate auth. Mount the files under
+# /app/certs, which must stay readable by the app user. On Fly, a [[files]]
+# entry in fly.toml with secret_name writes a base64-encoded secret to a file.
 # MONGO_TLS_* and MONGO_SSL_* variables are not supported: startup fails if set.
 
 # Health check using stdlib urllib (no third-party dependencies)
