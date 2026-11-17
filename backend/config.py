@@ -6,6 +6,33 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _reject_removed_tls_vars():
+    """Raise ValueError if any removed MONGO_TLS_*/MONGO_SSL_* variable is
+    non-empty. MongoDB TLS is configured only through MONGO_URI."""
+    removed_vars = {
+        "MONGO_TLS_CA_FILE": "use the tlsCAFile",
+        "MONGO_SSL_CA_CERTS": "use the tlsCAFile",
+        "MONGO_TLS_CERT_FILE": "use the tlsCertificateKeyFile",
+        "MONGO_SSL_CERTFILE": "use the tlsCertificateKeyFile",
+        "MONGO_TLS_KEY_FILE": "append the key to the PEM named by the tlsCertificateKeyFile",
+        "MONGO_SSL_KEYFILE": "append the key to the PEM named by the tlsCertificateKeyFile",
+    }
+    set_vars = [
+        f"{var} ({replacement} MONGO_URI option)"
+        for var, replacement in removed_vars.items()
+        if os.getenv(var)
+    ]
+    if set_vars:
+        raise ValueError(
+            "Unsupported MongoDB TLS environment variables are set: "
+            f"{'; '.join(set_vars)}. Unset them and configure TLS with "
+            "MONGO_URI query parameters."
+        )
+
+
+_reject_removed_tls_vars()
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/brewtracker")
@@ -75,32 +102,6 @@ class Config:
     # Google OAuth configuration
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-
-    @staticmethod
-    def _reject_removed_tls_vars():
-        """Raise ValueError if any removed MONGO_TLS_*/MONGO_SSL_* variable is
-        non-empty. MongoDB TLS is configured only through MONGO_URI."""
-        removed_vars = {
-            "MONGO_TLS_CA_FILE": "use the tlsCAFile",
-            "MONGO_SSL_CA_CERTS": "use the tlsCAFile",
-            "MONGO_TLS_CERT_FILE": "use the tlsCertificateKeyFile",
-            "MONGO_SSL_CERTFILE": "use the tlsCertificateKeyFile",
-            "MONGO_TLS_KEY_FILE": "append the key to the PEM named by the tlsCertificateKeyFile",
-            "MONGO_SSL_KEYFILE": "append the key to the PEM named by the tlsCertificateKeyFile",
-        }
-        set_vars = [
-            f"{var} ({replacement} MONGO_URI option)"
-            for var, replacement in removed_vars.items()
-            if os.getenv(var)
-        ]
-        if set_vars:
-            raise ValueError(
-                "Unsupported MongoDB TLS environment variables are set: "
-                f"{'; '.join(set_vars)}. Unset them and configure TLS with "
-                "MONGO_URI query parameters."
-            )
-
-    _reject_removed_tls_vars.__func__()
 
     # MongoDB connection options (explicit uuidRepresentation for PyMongo 4.x compatibility)
     MONGO_OPTIONS = {"uuidRepresentation": "standard"}
