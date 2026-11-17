@@ -50,6 +50,7 @@ RapidFuzz==3.14.6
 requests==2.34.2
 sentinels==1.1.1
 six==1.17.0
+trustme==1.2.1
 typing_extensions==4.16.0
 tzdata==2026.6
 urllib3==2.8.0
