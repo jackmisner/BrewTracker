@@ -1,6 +1,6 @@
 import type { Mock } from "vitest";
 import React from "react";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor, act } from "@testing-library/react";
 import FermentationTracker from "../../src/components/BrewSessions/FermentationTracker";
 import { Services } from "../../src/services";
 import { renderWithProviders } from "../testUtils";
@@ -840,6 +840,8 @@ describe("FermentationTracker", () => {
           screen.getByText("No fermentation data recorded yet.")
         ).toBeInTheDocument();
       });
+      // The auto-OG decision runs in a passive effect after the loaded render.
+      await act(async () => {});
 
       expect(
         screen.queryByText("New Fermentation Reading")
