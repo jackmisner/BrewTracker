@@ -1,0 +1,16 @@
+# Allowlist: everything is excluded unless re-included below. A new top-level
+# directory, or a new top-level file other than *.py, that the image needs must
+# be added here. A file the Dockerfile copies by name then fails the build; any
+# other file is silently missing from the image.
+*
+!*.py
+!requirements-prod.txt
+!data/
+!models/
+!routes/
+!seeds/
+!services/
+!utils/
+
+**/__pycache__
+**/*.py[cod]

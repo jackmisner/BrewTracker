@@ -28,8 +28,7 @@ migrations/
 .env.*.local
 .env.production
 
-# Deployment files (some should be tracked for CI/CD)
-.dockerignore
+# Deployment files
 deploy.sh
 DEPLOYMENT.md
 
