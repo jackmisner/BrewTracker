@@ -73,9 +73,9 @@ jobs:
           
           # Push to the correct branch based on context
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-            git push origin "HEAD:$GITHUB_HEAD_REF"
+            git push origin "HEAD:refs/heads/$GITHUB_HEAD_REF"
           else
-            git push origin "HEAD:$GITHUB_REF_NAME"
+            git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
           fi
 
       - name: Run tests with coverage
