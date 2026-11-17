@@ -1,22 +1,77 @@
 name: Deploy Backend to Fly.io
 
+# Deploys only commits that Backend CI passed on a push to main, and only while
+# backend/ at that commit matches backend/ at main's tip. The workflow name
+# "Backend CI" must match backend-ci.yml; renaming it stops automatic deploys.
+# workflow_dispatch from main is an ungated manual deploy of main's tip.
 on:
-  push:
+  workflow_run:
+    workflows: ["Backend CI"]
+    types: [completed]
     branches: [main]
-    paths: ['backend/**']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  check:
+    name: Check Deployable
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.tree.outputs.deploy }}
+    steps:
+      - name: Skip if backend/ has changed on main since the tested commit
+        id: tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          backend_tree() {
+            gh api "repos/$REPO/git/trees/$1" --jq '.tree[] | select(.path == "backend") | .sha'
+          }
+          tip=$(gh api "repos/$REPO/branches/main" --jq .commit.sha)
+          head_tree=$(backend_tree "$HEAD_SHA")
+          tip_tree=$(backend_tree "$tip")
+          if [ -n "$head_tree" ] && [ "$head_tree" = "$tip_tree" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Not deploying $HEAD_SHA: backend/ differs at main's tip $tip"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
     name: Deploy Backend
+    needs: check
+    if: needs.check.outputs.deploy == 'true'
     runs-on: ubuntu-latest
-    
+    # Job-level, because every run enters a workflow-level group. A job entering
+    # a group cancels the job pending there, so a run whose check did not output
+    # deploy=true must not share it, even if GitHub enters skipped jobs into it.
+    concurrency:
+      group: ${{ needs.check.outputs.deploy == 'true' && 'deploy-backend' || format('deploy-backend-skip-{0}', github.run_id) }}
+      cancel-in-progress: false
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
 
       - name: Setup Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
 
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only --app brewtracker-backend
@@ -28,11 +83,11 @@ jobs:
         run: |
           sleep 30
           curl -f https://brewtracker-backend.fly.dev/api/health || exit 1
-        
+
       - name: Notify Success
         if: success()
         run: echo "✅ Backend deployed successfully to https://brewtracker-backend.fly.dev"
-        
+
       - name: Notify Failure
         if: failure()
         run: echo "❌ Backend deployment failed. Check logs above."
