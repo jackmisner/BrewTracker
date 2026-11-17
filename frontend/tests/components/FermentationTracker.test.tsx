@@ -822,7 +822,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should not auto-show form if not in fermenting status", async () => {
-      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]); // No fermentation data
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]);
 
       const propsWithPlannedStatus = {
         ...defaultProps,
