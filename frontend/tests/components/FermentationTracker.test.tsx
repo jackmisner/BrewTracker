@@ -749,6 +749,10 @@ describe("FermentationTracker", () => {
 
       expect(screen.getByText("Saving...")).toBeInTheDocument();
       expect(submitButton).toBeDisabled();
+
+      await waitFor(() => {
+        expect(screen.queryByText("Saving...")).not.toBeInTheDocument();
+      });
     });
   });
 
@@ -818,9 +822,7 @@ describe("FermentationTracker", () => {
     });
 
     it("should not auto-show form if not in fermenting status", async () => {
-      (Services.brewSession.getFermentationData as Mock).mockResolvedValue({
-        data: [], // No fermentation data
-      });
+      (Services.brewSession.getFermentationData as Mock).mockResolvedValue([]); // No fermentation data
 
       const propsWithPlannedStatus = {
         ...defaultProps,
@@ -834,7 +836,9 @@ describe("FermentationTracker", () => {
       renderWithProviders(<FermentationTracker {...propsWithPlannedStatus as any} />);
 
       await waitFor(() => {
-        expect(screen.getByText("Add Entry")).toBeInTheDocument();
+        expect(
+          screen.getByText("No fermentation data recorded yet.")
+        ).toBeInTheDocument();
       });
 
       expect(
