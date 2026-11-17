@@ -77,45 +77,33 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
     @staticmethod
-    def _build_tls_options():
-        """Helper to build TLS/SSL options from environment variables."""
-        options = {}
-
-        # Check if any TLS or legacy SSL environment variables are present
-        tls_vars = [
-            "MONGO_TLS_CA_FILE",
-            "MONGO_TLS_CERT_FILE",
-            "MONGO_TLS_KEY_FILE",
-            "MONGO_SSL_CA_CERTS",
-            "MONGO_SSL_CERTFILE",
-            "MONGO_SSL_KEYFILE",
+    def _reject_removed_tls_vars():
+        """Raise ValueError if any removed MONGO_TLS_*/MONGO_SSL_* variable is
+        non-empty. MongoDB TLS is configured only through MONGO_URI."""
+        removed_vars = {
+            "MONGO_TLS_CA_FILE": "use the tlsCAFile",
+            "MONGO_SSL_CA_CERTS": "use the tlsCAFile",
+            "MONGO_TLS_CERT_FILE": "use the tlsCertificateKeyFile",
+            "MONGO_SSL_CERTFILE": "use the tlsCertificateKeyFile",
+            "MONGO_TLS_KEY_FILE": "append the key to the PEM named by the tlsCertificateKeyFile",
+            "MONGO_SSL_KEYFILE": "append the key to the PEM named by the tlsCertificateKeyFile",
+        }
+        set_vars = [
+            f"{var} ({replacement} MONGO_URI option)"
+            for var, replacement in removed_vars.items()
+            if os.getenv(var)
         ]
+        if set_vars:
+            raise ValueError(
+                "Unsupported MongoDB TLS environment variables are set: "
+                f"{'; '.join(set_vars)}. Unset them and configure TLS with "
+                "MONGO_URI query parameters."
+            )
 
-        has_tls_config = any(os.getenv(var) for var in tls_vars)
-        if has_tls_config:
-            options["tls"] = True
-
-        # Modern TLS options (preferred)
-        if os.getenv("MONGO_TLS_CA_FILE"):
-            options["tlsCAFile"] = os.getenv("MONGO_TLS_CA_FILE")
-        if os.getenv("MONGO_TLS_CERT_FILE"):
-            options["tlsCertificateKeyFile"] = os.getenv("MONGO_TLS_CERT_FILE")
-        if os.getenv("MONGO_TLS_KEY_FILE"):
-            options["tlsPrivateKeyFile"] = os.getenv("MONGO_TLS_KEY_FILE")
-
-        # Legacy SSL options (mapped to TLS parameters)
-        if os.getenv("MONGO_SSL_CA_CERTS"):
-            options["tlsCAFile"] = os.getenv("MONGO_SSL_CA_CERTS")
-        if os.getenv("MONGO_SSL_CERTFILE"):
-            options["tlsCertificateKeyFile"] = os.getenv("MONGO_SSL_CERTFILE")
-        if os.getenv("MONGO_SSL_KEYFILE"):
-            options["tlsPrivateKeyFile"] = os.getenv("MONGO_SSL_KEYFILE")
-
-        return options
+    _reject_removed_tls_vars.__func__()
 
     # MongoDB connection options (explicit uuidRepresentation for PyMongo 4.x compatibility)
     MONGO_OPTIONS = {"uuidRepresentation": "standard"}
-    MONGO_OPTIONS.update(_build_tls_options.__func__())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
@@ -142,7 +130,6 @@ class ProductionConfig(Config):
 
     # Production MongoDB settings (explicit uuidRepresentation for PyMongo 4.x compatibility)
     MONGO_OPTIONS = {"uuidRepresentation": "standard"}
-    MONGO_OPTIONS.update(Config._build_tls_options())
 
     MONGODB_SETTINGS = {"host": MONGO_URI, **MONGO_OPTIONS}
 
