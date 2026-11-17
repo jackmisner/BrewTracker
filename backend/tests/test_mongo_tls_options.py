@@ -30,6 +30,9 @@ URI_OPTIONS = ["tlsCAFile", "tlsCertificateKeyFile"]
 def import_config(extra_env):
     env = {k: v for k, v in os.environ.items() if k not in REMOVED_TLS_VARS}
     env["PYTHON_DOTENV_DISABLED"] = "1"
+    env["PYTHONPATH"] = os.pathsep.join(
+        filter(None, [str(BACKEND_DIR), env.get("PYTHONPATH")])
+    )
     env.update(extra_env)
     return subprocess.run(
         [
