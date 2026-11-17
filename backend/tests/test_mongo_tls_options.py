@@ -24,10 +24,12 @@ REMOVED_TLS_VARS = [
     "MONGO_SSL_CERTFILE",
     "MONGO_SSL_KEYFILE",
 ]
+URI_OPTIONS = ["tlsCAFile", "tlsCertificateKeyFile"]
 
 
 def import_config(extra_env):
     env = {k: v for k, v in os.environ.items() if k not in REMOVED_TLS_VARS}
+    env["PYTHON_DOTENV_DISABLED"] = "1"
     env.update(extra_env)
     return subprocess.run(
         [
@@ -41,7 +43,13 @@ def import_config(extra_env):
         env=env,
         capture_output=True,
         text=True,
+        timeout=60,
     )
+
+
+def raised_error(result):
+    assert result.returncode != 0, result.stdout
+    return result.stderr.strip().splitlines()[-1]
 
 
 class TestRemovedTlsEnvVars:
@@ -57,25 +65,35 @@ class TestRemovedTlsEnvVars:
         ],
     )
     def test_import_fails_naming_var_and_uri_option(self, var, uri_option):
-        result = import_config({var: "/certs/file.pem"})
+        error = raised_error(import_config({var: "/certs/file.pem"}))
 
-        assert result.returncode != 0
-        assert "ValueError" in result.stderr
-        assert var in result.stderr
-        assert uri_option in result.stderr
-        assert "MONGO_URI" in result.stderr
+        assert error.startswith("ValueError: ")
+        assert var in error
+        assert uri_option in error
+        assert "MONGO_URI" in error
+        for other_var in REMOVED_TLS_VARS:
+            if other_var != var:
+                assert other_var not in error
+        for other_option in URI_OPTIONS:
+            if other_option != uri_option:
+                assert other_option not in error
 
     def test_import_fails_naming_every_var_set(self):
-        result = import_config(
-            {
-                "MONGO_TLS_CA_FILE": "/certs/ca.pem",
-                "MONGO_SSL_KEYFILE": "/certs/key.pem",
-            }
+        error = raised_error(
+            import_config(
+                {
+                    "MONGO_TLS_CA_FILE": "/certs/ca.pem",
+                    "MONGO_SSL_KEYFILE": "/certs/key.pem",
+                }
+            )
         )
 
-        assert result.returncode != 0
-        assert "MONGO_TLS_CA_FILE" in result.stderr
-        assert "MONGO_SSL_KEYFILE" in result.stderr
+        assert error.startswith("ValueError: ")
+        assert "MONGO_TLS_CA_FILE" in error
+        assert "MONGO_SSL_KEYFILE" in error
+        for unset_var in REMOVED_TLS_VARS:
+            if unset_var not in ("MONGO_TLS_CA_FILE", "MONGO_SSL_KEYFILE"):
+                assert unset_var not in error
 
     def test_import_succeeds_without_removed_vars(self):
         result = import_config({})
@@ -86,8 +104,16 @@ class TestRemovedTlsEnvVars:
             "{'uuidRepresentation': 'standard'}",
         ]
 
+    def test_empty_removed_var_counts_as_unset(self):
+        result = import_config({var: "" for var in REMOVED_TLS_VARS})
+
+        assert result.returncode == 0, result.stderr
+
 
 class TestTlsThroughMongoUri:
+    """Pins the pymongo behaviour the removed-variable error relies on: the
+    client key goes inside the tlsCertificateKeyFile PEM."""
+
     @pytest.fixture
     def certs(self, tmp_path):
         ca = trustme.CA()
@@ -100,8 +126,9 @@ class TestTlsThroughMongoUri:
         return tmp_path
 
     def tls_uri(self, ca_file, cert_key_file):
+        # Nothing listens on port 1, so a client that did connect reaches no real server.
         return (
-            "mongodb://localhost:27017/brewtracker"
+            "mongodb://localhost:1/brewtracker"
             f"?tls=true&tlsCAFile={ca_file}&tlsCertificateKeyFile={cert_key_file}"
         )
 
