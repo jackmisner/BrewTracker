@@ -129,7 +129,6 @@ class TestTlsThroughMongoUri:
         return tmp_path
 
     def tls_uri(self, ca_file, cert_key_file):
-        # Nothing listens on port 1, so a client that did connect reaches no real server.
         return (
             "mongodb://localhost:1/brewtracker"
             f"?tls=true&tlsCAFile={ca_file}&tlsCertificateKeyFile={cert_key_file}"

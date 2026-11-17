@@ -60,8 +60,11 @@ EXPOSE 5000
 # tlsCAFile for a private CA, tlsCertificateKeyFile (one PEM holding client
 # certificate and key) for client-certificate auth. Mount the files under
 # /app/certs, which must stay readable by the app user. On Fly, a [[files]]
-# entry in fly.toml with secret_name writes a base64-encoded secret to a file.
-# MONGO_TLS_* and MONGO_SSL_* variables are not supported: startup fails if set.
+# entry in fly.toml with secret_name writes a secret (set base64-encoded) to a
+# file; Fly's docs do not state the file's owner or mode, so confirm the app
+# user can read it before relying on it.
+# MONGO_TLS_* and MONGO_SSL_* variables are not supported: startup fails if any
+# is non-empty.
 
 # Health check using stdlib urllib (no third-party dependencies)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
