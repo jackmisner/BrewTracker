@@ -44,11 +44,11 @@ jobs:
           echo "PR #$PR_NUMBER labels: $LABELS"
 
           if [[ ",$LABELS," == *",semver:major,"* ]]; then
-            BUMP=major
+            BUMP="major"
           elif [[ ",$LABELS," == *",semver:minor,"* ]]; then
-            BUMP=minor
+            BUMP="minor"
           elif [[ ",$LABELS," == *",semver:patch,"* ]]; then
-            BUMP=patch
+            BUMP="patch"
           else
             BUMP=""
           fi

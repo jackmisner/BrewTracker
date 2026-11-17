@@ -55,9 +55,9 @@ jobs:
         id: verify-changed-files
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit formatting changes
@@ -72,10 +72,10 @@ jobs:
           to ensure consistent code formatting across the project."
           
           # Push to the correct branch based on context
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            git push origin HEAD:${{ github.head_ref }}
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            git push origin "HEAD:refs/heads/$GITHUB_HEAD_REF"
           else
-            git push origin HEAD:${{ github.ref_name }}
+            git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
           fi
 
       - name: Run tests with coverage
