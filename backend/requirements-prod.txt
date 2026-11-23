@@ -17,11 +17,11 @@ Jinja2==3.1.6
 MarkupSafe==3.0.4
 marshmallow==4.4.0
 mongoengine==0.29.3
-numpy==2.5.4
+numpy==2.5.5
 packaging==25.0
 pandas==3.1.1
 PyJWT==2.15.1
-pymongo==4.20.0
+pymongo==4.20.1
 python-dateutil==4.0.0
 python-dotenv==1.2.4
 pytz==2026.6
